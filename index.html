@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tactical Cogitator — Horus Heresy Shooting Resolver</title>
+  <title>Tactical Cogitator — Horus Heresy Shooting Resolver v1.05</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1027,6 +1027,100 @@ function resolveShootingPhase(params) {
 
 // ━━━ STATISTICAL CALCULATOR ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+// ━━━ RETURN FIRE RESOLVER (Shooting Phase Reaction) ━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Defender fires back as a reaction during the shooting phase using snap shots (6+)
+function resolveReturnFire(params) {
+  const {
+    defenderModels, returnFireShots, returnFireS, returnFireAP,
+    attackerT, attackerSv, attackerInv, attackerFnp, attackerW,
+  } = params;
+
+  const log = [];
+  const rolls = { hit: [], wound: [], save: [], fnp: [] };
+
+  log.push({ phase: "Return Fire", text: `🎯 Defender fires Return Fire reaction! (Snap Shots — hits on 6+)` });
+  const totalShots = defenderModels * returnFireShots;
+  log.push({ phase: "Return Fire", text: `${defenderModels} model(s) × ${returnFireShots} shot(s) = ${totalShots} total shots` });
+
+  // Hit (snap shots = 6+)
+  const hitRolls = rollD6s(totalShots);
+  rolls.hit = hitRolls.map(r => ({ value: r, success: r >= 6 }));
+  const hits = hitRolls.filter(r => r >= 6).length;
+  log.push({ phase: "Return Fire", text: `To Hit (6+): ${hits} hit(s) from ${totalShots} shots` });
+
+  if (hits === 0) {
+    log.push({ phase: "Return Fire", text: `Return Fire inflicts no casualties.` });
+    return { log, rolls, casualties: 0 };
+  }
+
+  // Wound
+  const woundNeeded = getWoundRoll(returnFireS, attackerT);
+  if (woundNeeded === null) {
+    log.push({ phase: "Return Fire", text: `S${returnFireS} vs T${attackerT}: Cannot wound!` });
+    return { log, rolls, casualties: 0 };
+  }
+  log.push({ phase: "Return Fire", text: `To Wound: S${returnFireS} vs T${attackerT} → needs ${woundNeeded}+` });
+  const woundRolls = rollD6s(hits);
+  rolls.wound = woundRolls.map(r => ({ value: r, success: r >= woundNeeded }));
+  const wounds = woundRolls.filter(r => r >= woundNeeded).length;
+  log.push({ phase: "Return Fire", text: `${wounds} wound(s) from ${hits} hit(s)` });
+
+  if (wounds === 0) {
+    log.push({ phase: "Return Fire", text: `Return Fire inflicts no casualties.` });
+    return { log, rolls, casualties: 0 };
+  }
+
+  // Save
+  const svN = attackerSv !== "-" ? parseInt(attackerSv) : null;
+  const invN = attackerInv !== "-" ? parseInt(attackerInv) : null;
+  const apNum = returnFireAP !== "-" ? parseInt(returnFireAP) : null;
+  let bestSave = null;
+  if (invN) bestSave = invN;
+  if (svN && apNum && svN < apNum) {
+    bestSave = bestSave ? Math.min(bestSave, svN) : svN;
+  } else if (svN && !apNum) {
+    bestSave = bestSave ? Math.min(bestSave, svN) : svN;
+  }
+
+  let unsaved = wounds;
+  if (bestSave && bestSave <= 6) {
+    const saveRolls = rollD6s(wounds);
+    rolls.save = saveRolls.map(r => ({ value: r, success: r >= bestSave }));
+    const saved = saveRolls.filter(r => r >= bestSave).length;
+    unsaved = wounds - saved;
+    log.push({ phase: "Return Fire", text: `Saves (${bestSave}+): ${saved} saved, ${unsaved} unsaved wound(s)` });
+  } else {
+    log.push({ phase: "Return Fire", text: `No save available — ${unsaved} unsaved wound(s)` });
+  }
+
+  if (unsaved === 0) {
+    log.push({ phase: "Return Fire", text: `Return Fire inflicts no casualties.` });
+    return { log, rolls, casualties: 0 };
+  }
+
+  // FNP
+  const fnpN = attackerFnp !== "-" ? parseInt(attackerFnp) : null;
+  if (fnpN && unsaved > 0) {
+    const fnpRolls = rollD6s(unsaved);
+    rolls.fnp = fnpRolls.map(r => ({ value: r, success: r >= fnpN }));
+    const fnpSaved = fnpRolls.filter(r => r >= fnpN).length;
+    unsaved -= fnpSaved;
+    log.push({ phase: "Return Fire", text: `FNP (${fnpN}+): ${fnpSaved} saved → ${unsaved} unsaved` });
+  }
+
+  // Multi-wound
+  const w = attackerW || 1;
+  const casualties = w > 1 ? Math.floor(unsaved / w) : unsaved;
+  if (w > 1 && unsaved > 0) {
+    const remainder = unsaved % w;
+    log.push({ phase: "Return Fire", text: `${unsaved} unsaved vs ${w}W models → ${casualties} model(s) slain${remainder > 0 ? `, ${remainder} wound(s) on a model` : ""}` });
+  } else {
+    log.push({ phase: "Return Fire", text: `☠ ${casualties} attacker model(s) slain by Return Fire!` });
+  }
+
+  return { log, rolls, casualties };
+}
+
 function calculateExpected(params) {
   const { numModels, numShots, bs, strength, ap, toughness, armourSave, invulnSave, coverSave, fnp, specialRules, halfRange, indirect, weaponType, sgtEnabled, sgtWeapon } = params;
 
@@ -1224,6 +1318,8 @@ const MELEE_WEAPON_PROFILES = {
     { name: "Power Weapon", ws: 6, s: 4, ap: "3", i: 5, a: 4, w: 3, t: 4, sv: "2", inv: "4", fnp: "-", rules: {} },
   ],
   praetor_sat: [
+    { name: "Saturnine Concussion Hammer", ws: 6, s: 10, ap: "2", i: 1, a: 4, w: 4, t: 5, sv: "2", inv: "4", fnp: "-", rules: { m_unwieldy: true, m_specialist: true } },
+    { name: "Saturnine War Axe", ws: 6, s: 7, ap: "2", i: 4, a: 4, w: 4, t: 5, sv: "2", inv: "4", fnp: "-", rules: { m_specialist: true } },
     { name: "Power Fist", ws: 6, s: 8, ap: "2", i: 1, a: 4, w: 4, t: 5, sv: "2", inv: "4", fnp: "-", rules: { m_unwieldy: true, m_specialist: true } },
     { name: "Chainfist", ws: 6, s: 8, ap: "2", i: 1, a: 4, w: 4, t: 5, sv: "2", inv: "4", fnp: "-", rules: { m_unwieldy: true, m_specialist: true } },
     { name: "Thunder Hammer", ws: 6, s: 8, ap: "2", i: 1, a: 4, w: 4, t: 5, sv: "2", inv: "4", fnp: "-", rules: { m_unwieldy: true, m_specialist: true } },
@@ -1292,6 +1388,8 @@ const MELEE_WEAPON_PROFILES = {
     { name: "Thunder Hammer", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 2, t: 5, sv: "2", inv: "5", fnp: "-", rules: { m_unwieldy: true, m_specialist: true } },
   ],
   saturnine: [
+    { name: "Saturnine Concussion Hammer", ws: 4, s: 10, ap: "2", i: 1, a: 2, w: 3, t: 5, sv: "2", inv: "5", fnp: "-", rules: { m_unwieldy: true, m_specialist: true } },
+    { name: "Saturnine War Axe", ws: 4, s: 7, ap: "2", i: 4, a: 2, w: 3, t: 5, sv: "2", inv: "5", fnp: "-", rules: { m_specialist: true } },
     { name: "Power Fist", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 3, t: 5, sv: "2", inv: "5", fnp: "-", rules: { m_unwieldy: true, m_specialist: true } },
     { name: "Chainfist", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 3, t: 5, sv: "2", inv: "5", fnp: "-", rules: { m_unwieldy: true, m_specialist: true } },
     { name: "Thunder Hammer", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 3, t: 5, sv: "2", inv: "5", fnp: "-", rules: { m_unwieldy: true, m_specialist: true } },
@@ -1384,22 +1482,103 @@ function resolveChargePhase(params) {
     doOverwatch, // whether defender fires overwatch
     chargerSv, chargerInv, chargerFnp, // charger's saves for overwatch resolution
     chargerT, // charger's T for overwatch
+    // Volley Fire
+    doVolleyFire, volleyFireShots, volleyFireS, volleyFireAP,
+    defenderW_target, // defender wounds per model (for volley fire casualty calc)
   } = params;
 
   const log = [];
-  const rolls = { charge: [], overwatch: { hit: [], wound: [], save: [] }, melee: { hit: [], wound: [], save: [], fnp: [] }, defender: { hit: [], wound: [], save: [], fnp: [] } };
+  const rolls = { charge: [], volley: { hit: [], wound: [], save: [] }, overwatch: { hit: [], wound: [], save: [] }, melee: { hit: [], wound: [], save: [], fnp: [] }, defender: { hit: [], wound: [], save: [], fnp: [] } };
   
   // ━━ STEP 1: Declare Charge ━━
   log.push({ phase: "Charge", text: `Declaring charge against target ${chargeDistance}" away` });
   if (terrain) log.push({ phase: "Charge", text: `⚠ Charging through Difficult Terrain — subtract 2" from charge roll` });
   if (disordered) log.push({ phase: "Charge", text: `⚠ Disordered Charge — charging unit loses +1A bonus` });
 
+  // ━━ STEP 1b: Volley Fire (Charger fires Assault weapons at snap shot) ━━
+  let volleyCasualties = 0;
+  let remainingDefendersAfterVolley = defenderModels;
+  if (doVolleyFire && volleyFireShots > 0 && chargingModels > 0) {
+    log.push({ phase: "Volley Fire", text: `🔫 Charger fires Volley Fire! (Assault weapons — Snap Shots, hits on 6+)` });
+    const vfTotalShots = chargingModels * volleyFireShots;
+    log.push({ phase: "Volley Fire", text: `${chargingModels} model(s) × ${volleyFireShots} shot(s) = ${vfTotalShots} total shots` });
+
+    const vfHitRolls = rollD6s(vfTotalShots);
+    rolls.volley.hit = vfHitRolls.map(r => ({ value: r, success: r >= 6 }));
+    const vfHits = vfHitRolls.filter(r => r >= 6).length;
+    log.push({ phase: "Volley Fire", text: `To Hit (6+): ${vfHits} hit(s) from ${vfTotalShots} shots` });
+
+    if (vfHits > 0) {
+      const vfWoundNeeded = getWoundRoll(volleyFireS, defenderT);
+      if (vfWoundNeeded !== null) {
+        log.push({ phase: "Volley Fire", text: `To Wound: S${volleyFireS} vs T${defenderT} → needs ${vfWoundNeeded}+` });
+        const vfWoundRolls = rollD6s(vfHits);
+        rolls.volley.wound = vfWoundRolls.map(r => ({ value: r, success: r >= vfWoundNeeded }));
+        const vfWounds = vfWoundRolls.filter(r => r >= vfWoundNeeded).length;
+        log.push({ phase: "Volley Fire", text: `${vfWounds} wound(s) from ${vfHits} hit(s)` });
+
+        if (vfWounds > 0) {
+          // Save
+          const svN = defenderSv !== "-" ? parseInt(defenderSv) : null;
+          const invN = defenderInv !== "-" ? parseInt(defenderInv) : null;
+          const apNum = volleyFireAP !== "-" ? parseInt(volleyFireAP) : null;
+          let vfBestSave = null;
+          if (invN) vfBestSave = invN;
+          if (svN && apNum && svN < apNum) {
+            vfBestSave = vfBestSave ? Math.min(vfBestSave, svN) : svN;
+          } else if (svN && !apNum) {
+            vfBestSave = vfBestSave ? Math.min(vfBestSave, svN) : svN;
+          }
+
+          if (vfBestSave && vfBestSave <= 6) {
+            const vfSaveRolls = rollD6s(vfWounds);
+            rolls.volley.save = vfSaveRolls.map(r => ({ value: r, success: r >= vfBestSave }));
+            const vfSaved = vfSaveRolls.filter(r => r >= vfBestSave).length;
+            let vfUnsaved = vfWounds - vfSaved;
+
+            // FNP
+            const vfFnpN = defenderFnp !== "-" ? parseInt(defenderFnp) : null;
+            if (vfFnpN && vfUnsaved > 0) {
+              const fnpRolls = rollD6s(vfUnsaved);
+              const fnpSaved = fnpRolls.filter(r => r >= vfFnpN).length;
+              vfUnsaved -= fnpSaved;
+              log.push({ phase: "Volley Fire", text: `Saves (${vfBestSave}+): ${vfSaved} saved, FNP (${vfFnpN}+): ${fnpSaved} saved → ${vfUnsaved} unsaved` });
+            } else {
+              log.push({ phase: "Volley Fire", text: `Saves (${vfBestSave}+): ${vfSaved} saved, ${vfUnsaved} unsaved wound(s)` });
+            }
+
+            const defW = defenderW_target || defenderW || 1;
+            volleyCasualties = defW > 1 ? Math.floor(vfUnsaved / defW) : vfUnsaved;
+            if (defW > 1 && vfUnsaved > 0) {
+              const remainder = vfUnsaved % defW;
+              log.push({ phase: "Volley Fire", text: `${vfUnsaved} unsaved vs ${defW}W models → ${volleyCasualties} model(s) slain${remainder > 0 ? `, ${remainder} wound(s) on a model` : ""}` });
+            }
+          } else {
+            volleyCasualties = vfWounds;
+            const defW = defenderW_target || defenderW || 1;
+            volleyCasualties = defW > 1 ? Math.floor(vfWounds / defW) : vfWounds;
+            log.push({ phase: "Volley Fire", text: `No save available — ${volleyCasualties} model(s) slain` });
+          }
+        }
+      } else {
+        log.push({ phase: "Volley Fire", text: `S${volleyFireS} vs T${defenderT}: Cannot wound!` });
+      }
+    }
+
+    if (volleyCasualties > 0) {
+      log.push({ phase: "Volley Fire", text: `🔫 ${volleyCasualties} model(s) slain by Volley Fire!` });
+      remainingDefendersAfterVolley = Math.max(defenderModels - volleyCasualties, 0);
+    } else {
+      log.push({ phase: "Volley Fire", text: `Volley Fire inflicts no casualties.` });
+    }
+  }
+
   // ━━ STEP 2: Overwatch ━━
   let overwatchCasualties = 0;
-  if (doOverwatch && overwatchShots > 0 && defenderModels > 0) {
+  if (doOverwatch && overwatchShots > 0 && remainingDefendersAfterVolley > 0) {
     log.push({ phase: "Overwatch", text: `🔥 Defender fires Overwatch! (Snap Shots — BS1 equivalent, hits on 6+)` });
-    const owTotalShots = defenderModels * overwatchShots;
-    log.push({ phase: "Overwatch", text: `${defenderModels} model(s) × ${overwatchShots} shot(s) = ${owTotalShots} total shots` });
+    const owTotalShots = remainingDefendersAfterVolley * overwatchShots;
+    log.push({ phase: "Overwatch", text: `${remainingDefendersAfterVolley} model(s) × ${overwatchShots} shot(s) = ${owTotalShots} total shots` });
     
     const owHitRolls = rollD6s(owTotalShots);
     rolls.overwatch.hit = owHitRolls.map(r => ({ value: r, success: r >= 6 }));
@@ -1461,7 +1640,7 @@ function resolveChargePhase(params) {
   const survivingChargers = Math.max(chargingModels - overwatchCasualties, 0);
   if (survivingChargers === 0) {
     log.push({ phase: "Charge", text: `All charging models slain by Overwatch! Charge fails.` });
-    return { log, rolls, chargeSucceeded: false, chargeRoll: 0, overwatchCasualties, survivingChargers: 0, meleeAttackerCasualties: 0, meleeDefenderCasualties: 0, combatResult: null };
+    return { log, rolls, chargeSucceeded: false, chargeRoll: 0, overwatchCasualties, volleyCasualties, survivingChargers: 0, meleeAttackerCasualties: 0, meleeDefenderCasualties: 0, combatResult: null };
   }
 
   // ━━ STEP 3: Roll Charge Distance ━━
@@ -1478,7 +1657,7 @@ function resolveChargePhase(params) {
   
   if (!chargeSucceeded) {
     log.push({ phase: "Charge", text: `❌ Charge FAILED! Needed ${chargeDistance}", rolled ${effectiveCharge}". Unit moves ${effectiveCharge}" toward target.` });
-    return { log, rolls, chargeSucceeded: false, chargeRoll: effectiveCharge, overwatchCasualties, survivingChargers, meleeAttackerCasualties: 0, meleeDefenderCasualties: 0, combatResult: null };
+    return { log, rolls, chargeSucceeded: false, chargeRoll: effectiveCharge, overwatchCasualties, volleyCasualties, survivingChargers, meleeAttackerCasualties: 0, meleeDefenderCasualties: 0, combatResult: null };
   }
   
   log.push({ phase: "Charge", text: `✅ Charge SUCCEEDED! ${effectiveCharge}" ≥ ${chargeDistance}" needed.` });
@@ -1507,7 +1686,7 @@ function resolveChargePhase(params) {
   }
 
   const totalChargerAttacks = survivingChargers * chargerAttacks;
-  const totalDefenderAttacks = defenderModels * defenderA;
+  const totalDefenderAttacks = remainingDefendersAfterVolley * defenderA;
   
   log.push({ phase: "Melee", text: `Initiative order: Charger I${chargerEffI} vs Defender I${defenderEffI} → ${chargerFirst ? "Charger strikes first" : "Defender strikes first"}` });
 
@@ -1633,7 +1812,7 @@ function resolveChargePhase(params) {
   // Resolve in Initiative order
   let meleeDefenderCasualties = 0;
   let meleeAttackerCasualties = 0;
-  let remainingDefenders = defenderModels;
+  let remainingDefenders = remainingDefendersAfterVolley;
   let remainingChargers = survivingChargers;
 
   if (chargerFirst) {
@@ -1708,7 +1887,7 @@ function resolveChargePhase(params) {
 
   return { 
     log, rolls, chargeSucceeded: true, chargeRoll: effectiveCharge, 
-    overwatchCasualties, survivingChargers, 
+    overwatchCasualties, volleyCasualties, survivingChargers, 
     meleeAttackerCasualties, meleeDefenderCasualties,
     combatResult, remainingChargers, remainingDefenders
   };
@@ -2132,6 +2311,8 @@ const phaseColors = {
   "Checks": "#8b5a2b",
   "Result": "#2e7d32",
   "Charge": "#9b2d2d",
+  "Volley Fire": "#6b8e23",
+  "Return Fire": "#8b4513",
   "Overwatch": "#c46a1b",
   "Melee": "#7a1e1e",
   "Combat Res": "#4a148c"
@@ -2148,6 +2329,8 @@ const phaseIcons = {
   "Checks": "📋",
   "Result": "☠",
   "Charge": "🏃",
+  "Volley Fire": "🔫",
+  "Return Fire": "🎯",
   "Overwatch": "🔥",
   "Melee": "⚔",
   "Combat Res": "⚖"
@@ -2351,6 +2534,18 @@ function ShootingResolver() {
   const [overwatchShots, setOverwatchShots] = useState(1);
   const [overwatchS, setOverwatchS] = useState(4);
   const [overwatchAP, setOverwatchAP] = useState("5");
+  // Volley Fire (charger fires Assault weapons at snap shot before charging)
+  const [doVolleyFire, setDoVolleyFire] = useState(false);
+  const [volleyFireShots, setVolleyFireShots] = useState(1);
+  const [volleyFireS, setVolleyFireS] = useState(4);
+  const [volleyFireAP, setVolleyFireAP] = useState("5");
+  const [selectedVolleyWeapon, setSelectedVolleyWeapon] = useState(null);
+  // Return Fire (defender reaction — fires ranged weapons at snap shot)
+  const [doReturnFire, setDoReturnFire] = useState(false);
+  const [returnFireShots, setReturnFireShots] = useState(1);
+  const [returnFireS, setReturnFireS] = useState(4);
+  const [returnFireAP, setReturnFireAP] = useState("5");
+  const [selectedReturnWeapon, setSelectedReturnWeapon] = useState(null);
   // Charger melee stats
   const [chargerWS, setChargerWS] = useState(4);
   const [chargerS_melee, setChargerS_melee] = useState(4);
@@ -2384,6 +2579,37 @@ function ShootingResolver() {
     if (!selectedUnit) return [];
     return MELEE_WEAPON_PROFILES[selectedUnit.id] || [];
   }, [selectedUnit]);
+
+  // Assault weapons available for Volley Fire (charger fires before charging)
+  const chargerAssaultWeapons = useMemo(() => {
+    if (!selectedUnit) return [];
+    const weapons = WEAPON_PROFILES[selectedUnit.id] || [];
+    return weapons.filter(w => w.type === "Assault" || w.type === "Pistol");
+  }, [selectedUnit]);
+
+  const applyVolleyWeapon = useCallback((weapon) => {
+    setSelectedVolleyWeapon(weapon);
+    setVolleyFireShots(weapon.shots);
+    setVolleyFireS(weapon.s);
+    setVolleyFireAP(weapon.ap);
+  }, []);
+
+  // Defender's ranged weapons for Return Fire reaction
+  const defenderRangedWeapons = useMemo(() => {
+    if (!targetPresetName) return [];
+    for (const cat of UNIT_PRESETS) {
+      const found = cat.units.find(u => u.name === targetPresetName);
+      if (found && found.id) return WEAPON_PROFILES[found.id] || [];
+    }
+    return [];
+  }, [targetPresetName]);
+
+  const applyReturnWeapon = useCallback((weapon) => {
+    setSelectedReturnWeapon(weapon);
+    setReturnFireShots(weapon.shots);
+    setReturnFireS(weapon.s);
+    setReturnFireAP(weapon.ap);
+  }, []);
 
   const defenderMeleeWeapons = useMemo(() => {
     if (!targetPresetName) return [];
@@ -2453,6 +2679,25 @@ function ShootingResolver() {
     setResult(res);
     setHistory(prev => [{ ...res, timestamp: Date.now() }, ...prev].slice(0, 20));
     setChargeResult(null); // Reset charge when re-resolving shooting
+    setReturnFireResult(null); // Reset return fire
+  };
+
+  // Return Fire state
+  const [returnFireResult, setReturnFireResult] = useState(null);
+
+  const handleReturnFire = () => {
+    // Use attacker's defensive stats from the selected unit
+    const attackerUnit = selectedUnit || {};
+    const res = resolveReturnFire({
+      defenderModels: targetModels,
+      returnFireShots, returnFireS, returnFireAP,
+      attackerT: attackerUnit.t || toughness || 4,
+      attackerSv: attackerUnit.sv || "3",
+      attackerInv: attackerUnit.inv || "-",
+      attackerFnp: attackerUnit.fnp || "-",
+      attackerW: attackerUnit.w || 1,
+    });
+    setReturnFireResult(res);
   };
 
   const handleChargeResolve = () => {
@@ -2475,6 +2720,10 @@ function ShootingResolver() {
       overwatchRules: {},
       chargerSv, chargerInv: chargerInvSv, chargerFnp: chargerFnpSv,
       chargerT: chargerT_melee,
+      // Volley Fire
+      doVolleyFire,
+      volleyFireShots, volleyFireS, volleyFireAP,
+      defenderW_target: defenderW_melee,
     };
     const res = resolveChargePhase(chargeParams);
     setChargeResult(res);
@@ -2514,7 +2763,7 @@ function ShootingResolver() {
                 SHOOTING PHASE RESOLVER
               </h1>
               <div style={{ fontSize: 12, color: "#8a7e6e", fontFamily: "'Cinzel', serif", letterSpacing: 3 }}>
-                THE HORUS HERESY · AGE OF DARKNESS · 3RD EDITION · v1.01
+                THE HORUS HERESY · AGE OF DARKNESS · 3RD EDITION · v1.05
               </div>
             </div>
           </div>
@@ -2910,6 +3159,142 @@ function ShootingResolver() {
           </div>
         )}
 
+        {/* ━━━ RETURN FIRE PANEL (Shooting Phase Reaction) ━━━ */}
+        {result && (
+          <div style={{ ...panelStyle, marginBottom: 16, borderColor: doReturnFire ? "#8b4513" : "#d0c4aa", transition: "border-color 0.3s ease" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: doReturnFire ? 12 : 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 18, color: "#8b4513" }}>🎯</span>
+                <span style={{ fontFamily: "'Cinzel', serif", fontWeight: 700, fontSize: 12, color: "#8b4513", letterSpacing: 2 }}>RETURN FIRE REACTION</span>
+              </div>
+              <CheckToggle checked={doReturnFire} label="Enabled" onChange={(v) => { setDoReturnFire(v); if (!v) setReturnFireResult(null); }} />
+            </div>
+
+            {doReturnFire && (
+              <div style={{ animation: "fadeIn 0.2s ease" }}>
+                <div style={{ fontSize: 10, color: "#8a7e6e", fontFamily: "'EB Garamond', serif", marginBottom: 10, fontStyle: "italic" }}>
+                  Defender elects to fire back as a reaction — Snap Shots (6+ to hit)
+                </div>
+
+                {/* Weapon Selector */}
+                {defenderRangedWeapons.length > 0 && (
+                  <div style={{ marginBottom: 10 }}>
+                    <div style={{ fontSize: 9, fontFamily: "'Cinzel', serif", color: "#8a7e6e", letterSpacing: 1, marginBottom: 4 }}>SELECT WEAPON</div>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                      {defenderRangedWeapons.map(w => {
+                        const active = selectedReturnWeapon?.name === w.name;
+                        return (
+                          <button key={w.name} onClick={() => applyReturnWeapon(w)} style={{
+                            padding: "6px 12px", borderRadius: 6, fontSize: 11, cursor: "pointer",
+                            fontFamily: "'Cinzel', serif", fontWeight: active ? 700 : 400,
+                            background: active ? "rgba(139,69,19,0.15)" : "#f0ebe2",
+                            border: `1.5px solid ${active ? "#8b4513" : "#d0c4aa"}`,
+                            color: active ? "#6b3410" : "#6a5e4e",
+                            transition: "all 0.15s ease", textAlign: "left",
+                            display: "flex", flexDirection: "column", gap: 1, minWidth: 100,
+                          }}>
+                            <div style={{ fontWeight: 600, fontSize: 11 }}>{w.name}</div>
+                            <div style={{ fontSize: 8, color: active ? "#5a2a0c" : "#8a7e6e", letterSpacing: 0.5 }}>
+                              {w.shots} shots S{w.s} AP{w.ap} {w.type}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 12 }}>
+                  <NumberInput label="Shots/Model" value={returnFireShots} onChange={setReturnFireShots} min={1} max={10} />
+                  <NumberInput label="Strength" value={returnFireS} onChange={setReturnFireS} min={1} max={10} />
+                  <SelectInput label="AP" value={returnFireAP} onChange={setReturnFireAP} options={apOptions} />
+                </div>
+
+                <button onClick={handleReturnFire} style={{
+                  width: "100%", padding: "12px 24px", fontSize: 14, fontFamily: "'Cinzel', serif", fontWeight: 700,
+                  letterSpacing: 2, background: "linear-gradient(180deg, #a0622a 0%, #7a4a1a 100%)",
+                  border: "none", borderRadius: 6, color: "#fff", cursor: "pointer",
+                  textTransform: "uppercase", boxShadow: "0 2px 12px rgba(139,69,19,0.25)",
+                  marginBottom: returnFireResult ? 14 : 0
+                }}>
+                  🎯 RESOLVE RETURN FIRE
+                </button>
+
+                {/* Return Fire Results */}
+                {returnFireResult && (
+                  <div style={{ animation: "fadeIn 0.3s ease", marginTop: 12 }}>
+                    {/* Summary */}
+                    <div style={{
+                      display: "flex", gap: 12, alignItems: "center", justifyContent: "center",
+                      padding: "10px 16px", borderRadius: 8, marginBottom: 12,
+                      background: returnFireResult.casualties > 0 ? "rgba(139,69,19,0.08)" : "rgba(100,100,100,0.05)",
+                      border: `2px solid ${returnFireResult.casualties > 0 ? "#8b4513" : "#aaa"}`
+                    }}>
+                      <span style={{ fontSize: 24 }}>{returnFireResult.casualties > 0 ? "🎯" : "✖"}</span>
+                      <div style={{ textAlign: "center" }}>
+                        <div style={{
+                          fontFamily: "'Cinzel', serif", fontWeight: 900, fontSize: 16, letterSpacing: 2,
+                          color: returnFireResult.casualties > 0 ? "#8b4513" : "#8a7e6e"
+                        }}>
+                          {returnFireResult.casualties > 0 ? `${returnFireResult.casualties} ATTACKER MODEL(S) SLAIN` : "NO CASUALTIES"}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Dice Displays */}
+                    {returnFireResult.rolls.hit.length > 0 && (
+                      <div style={{ marginBottom: 8 }}>
+                        <div style={{ fontSize: 11, color: "#8b4513", marginBottom: 4, fontFamily: "'Cinzel', serif" }}>RETURN FIRE — TO HIT (6+)</div>
+                        <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                          {returnFireResult.rolls.hit.map((d, i) => <DieIcon key={`rfh${i}`} value={d.value} success={d.success} small />)}
+                        </div>
+                      </div>
+                    )}
+                    {returnFireResult.rolls.wound.length > 0 && (
+                      <div style={{ marginBottom: 8 }}>
+                        <div style={{ fontSize: 11, color: "#8b4513", marginBottom: 4, fontFamily: "'Cinzel', serif" }}>RETURN FIRE — TO WOUND</div>
+                        <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                          {returnFireResult.rolls.wound.map((d, i) => <DieIcon key={`rfw${i}`} value={d.value} success={d.success} small />)}
+                        </div>
+                      </div>
+                    )}
+                    {returnFireResult.rolls.save.length > 0 && (
+                      <div style={{ marginBottom: 8 }}>
+                        <div style={{ fontSize: 11, color: "#8b4513", marginBottom: 4, fontFamily: "'Cinzel', serif" }}>RETURN FIRE — SAVES</div>
+                        <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                          {returnFireResult.rolls.save.map((d, i) => <DieIcon key={`rfs${i}`} value={d.value} success={d.success} small />)}
+                        </div>
+                      </div>
+                    )}
+                    {returnFireResult.rolls.fnp && returnFireResult.rolls.fnp.length > 0 && (
+                      <div style={{ marginBottom: 8 }}>
+                        <div style={{ fontSize: 11, color: "#8b4513", marginBottom: 4, fontFamily: "'Cinzel', serif" }}>RETURN FIRE — FNP</div>
+                        <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                          {returnFireResult.rolls.fnp.map((d, i) => <DieIcon key={`rff${i}`} value={d.value} success={d.success} small />)}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Log */}
+                    <div style={{ marginTop: 8 }}>
+                      {returnFireResult.log.map((entry, i) => (
+                        <div key={i} style={{
+                          fontSize: 12, padding: "3px 8px", borderRadius: 4,
+                          marginBottom: 2, display: "flex", alignItems: "center", gap: 6,
+                          background: "rgba(139,69,19,0.04)"
+                        }}>
+                          <span style={{ fontSize: 10 }}>{phaseIcons[entry.phase] || "•"}</span>
+                          <span style={{ color: phaseColors[entry.phase] || "#6a5e4e", fontFamily: "'EB Garamond', serif" }}>{entry.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ━━━ CHARGE PHASE PANEL ━━━ */}
         {result && (
           <div style={{ ...panelStyle, marginBottom: 16, borderColor: showCharge ? "#9b2d2d" : "#d0c4aa", transition: "border-color 0.3s ease" }}>
@@ -2941,8 +3326,52 @@ function ShootingResolver() {
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8, justifyContent: "flex-end" }}>
                     <CheckToggle checked={doOverwatch} label="Overwatch" onChange={setDoOverwatch} />
+                    <CheckToggle checked={doVolleyFire} label="Volley Fire" onChange={setDoVolleyFire} />
                   </div>
                 </div>
+
+                {/* Volley Fire Configuration */}
+                {doVolleyFire && (
+                  <div style={{
+                    padding: 12, borderRadius: 6, marginBottom: 14,
+                    background: "rgba(107,142,35,0.06)", border: "1px solid rgba(107,142,35,0.25)"
+                  }}>
+                    <div style={{ fontSize: 10, fontFamily: "'Cinzel', serif", fontWeight: 700, color: "#6b8e23", letterSpacing: 1.5, marginBottom: 8 }}>
+                      🔫 VOLLEY FIRE (CHARGER — ASSAULT WEAPONS, SNAP SHOTS 6+)
+                    </div>
+                    {chargerAssaultWeapons.length > 0 && (
+                      <div style={{ marginBottom: 10 }}>
+                        <div style={{ fontSize: 9, fontFamily: "'Cinzel', serif", color: "#8a7e6e", letterSpacing: 1, marginBottom: 4 }}>SELECT WEAPON</div>
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                          {chargerAssaultWeapons.map(w => {
+                            const active = selectedVolleyWeapon?.name === w.name;
+                            return (
+                              <button key={w.name} onClick={() => applyVolleyWeapon(w)} style={{
+                                padding: "6px 12px", borderRadius: 6, fontSize: 11, cursor: "pointer",
+                                fontFamily: "'Cinzel', serif", fontWeight: active ? 700 : 400,
+                                background: active ? "rgba(107,142,35,0.15)" : "#f0ebe2",
+                                border: `1.5px solid ${active ? "#6b8e23" : "#d0c4aa"}`,
+                                color: active ? "#4a6a10" : "#6a5e4e",
+                                transition: "all 0.15s ease", textAlign: "left",
+                                display: "flex", flexDirection: "column", gap: 1, minWidth: 100,
+                              }}>
+                                <div style={{ fontWeight: 600, fontSize: 11 }}>{w.name}</div>
+                                <div style={{ fontSize: 8, color: active ? "#3a5a08" : "#8a7e6e", letterSpacing: 0.5 }}>
+                                  {w.shots} shots S{w.s} AP{w.ap} {w.type}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+                      <NumberInput label="Shots/Model" value={volleyFireShots} onChange={setVolleyFireShots} min={1} max={10} />
+                      <NumberInput label="Strength" value={volleyFireS} onChange={setVolleyFireS} min={1} max={10} />
+                      <SelectInput label="AP" value={volleyFireAP} onChange={setVolleyFireAP} options={apOptions} />
+                    </div>
+                  </div>
+                )}
 
                 {/* Overwatch Configuration */}
                 {doOverwatch && (
@@ -3118,6 +3547,9 @@ function ShootingResolver() {
 
                     {/* Stats Summary */}
                     <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap", justifyContent: "center" }}>
+                      {chargeResult.volleyCasualties > 0 && (
+                        <MiniStat label="Volley Kills" value={chargeResult.volleyCasualties} color="#6b8e23" />
+                      )}
                       {chargeResult.overwatchCasualties > 0 && (
                         <MiniStat label="Overwatch Kills" value={chargeResult.overwatchCasualties} color="#c46a1b" />
                       )}
@@ -3138,6 +3570,14 @@ function ShootingResolver() {
                     </div>
 
                     {/* Dice Displays */}
+                    {chargeResult.rolls.volley && chargeResult.rolls.volley.hit.length > 0 && (
+                      <div style={{ marginBottom: 8 }}>
+                        <div style={{ fontSize: 11, color: "#6b8e23", marginBottom: 4, fontFamily: "'Cinzel', serif" }}>VOLLEY FIRE</div>
+                        <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                          {chargeResult.rolls.volley.hit.map((d, i) => <DieIcon key={`vh${i}`} value={d.value} success={d.success} small />)}
+                        </div>
+                      </div>
+                    )}
                     {chargeResult.rolls.charge.length > 0 && (
                       <div style={{ marginBottom: 8 }}>
                         <div style={{ fontSize: 11, color: "#6a5e4e", marginBottom: 4, fontFamily: "'Cinzel', serif" }}>CHARGE ROLL</div>
@@ -3259,7 +3699,7 @@ function ShootingResolver() {
         <div style={{ textAlign: "center", marginTop: 24, padding: 16, color: "#a09888", fontSize: 11, fontFamily: "'Cinzel', serif" }}>
           Rules Reference: Warhammer — The Horus Heresy: Age of Darkness Rulebook (3rd Edition)
           <br />All dice rolls are simulated. Use for quick resolution and statistical analysis.
-          <br />Version 1.01
+          <br />Version 1.05
         </div>
       </div>
     </div>
