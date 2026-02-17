@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tactical Cogitator — Horus Heresy Shooting Resolver</title>
+  <title>Tactical Cogitator — Horus Heresy Shooting Resolver v1.09</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -149,9 +149,29 @@ const UNIT_PRESETS = [
     { id: "aquilon", name: "Aquilon Terminators", models: 3, bs: 5, t: 6, w: 4, sv: "2", inv: "4", fnp: "-", ld: 10 },
     { id: "caladius", name: "Caladius Grav-Tank", models: 1, bs: 5, t: 7, w: 7, sv: "2", inv: "4", fnp: "-", ld: 10 },
   ]},
-  { category: "PRIMARCHS & DAEMONS", units: [
-    { id: "primarch_t6", name: "Primarch (T6)", models: 1, bs: 6, t: 6, w: 7, sv: "2", inv: "3", fnp: "-", ld: 10 },
-    { id: "primarch_t7", name: "Primarch (T7)", models: 1, bs: 6, t: 7, w: 7, sv: "2", inv: "3", fnp: "-", ld: 10 },
+  { category: "PRIMARCHS (LOYALIST)", units: [
+    { id: "lion", name: "Lion El'Jonson (I)", models: 1, bs: 6, t: 6, w: 8, sv: "2", inv: "4", fnp: "-", ld: 12 },
+    { id: "khan", name: "Jaghatai Khan (V)", models: 1, bs: 5, t: 6, w: 7, sv: "2", inv: "4", fnp: "-", ld: 12 },
+    { id: "russ", name: "Leman Russ (VI)", models: 1, bs: 5, t: 7, w: 8, sv: "2", inv: "4", fnp: "-", ld: 12 },
+    { id: "dorn", name: "Rogal Dorn (VII)", models: 1, bs: 5, t: 7, w: 8, sv: "2", inv: "4", fnp: "-", ld: 12 },
+    { id: "sanguinius", name: "Sanguinius (IX)", models: 1, bs: 6, t: 6, w: 8, sv: "2", inv: "4", fnp: "-", ld: 12 },
+    { id: "ferrus", name: "Ferrus Manus (X)", models: 1, bs: 5, t: 7, w: 8, sv: "2", inv: "3", fnp: "-", ld: 12 },
+    { id: "guilliman", name: "Roboute Guilliman (XIII)", models: 1, bs: 6, t: 6, w: 7, sv: "2", inv: "4", fnp: "-", ld: 12 },
+    { id: "vulkan", name: "Vulkan (XVIII)", models: 1, bs: 5, t: 7, w: 9, sv: "2", inv: "3", fnp: "-", ld: 12 },
+    { id: "corax", name: "Corvus Corax (XIX)", models: 1, bs: 6, t: 6, w: 7, sv: "2", inv: "4", fnp: "-", ld: 12 },
+  ]},
+  { category: "PRIMARCHS (TRAITOR)", units: [
+    { id: "fulgrim", name: "Fulgrim (III)", models: 1, bs: 6, t: 6, w: 7, sv: "2", inv: "4", fnp: "-", ld: 12 },
+    { id: "perturabo", name: "Perturabo (IV)", models: 1, bs: 6, t: 7, w: 8, sv: "2", inv: "3", fnp: "-", ld: 12 },
+    { id: "curze", name: "Konrad Curze (VIII)", models: 1, bs: 5, t: 6, w: 7, sv: "2", inv: "4", fnp: "-", ld: 12 },
+    { id: "angron", name: "Angron (XII)", models: 1, bs: 5, t: 7, w: 8, sv: "2", inv: "4", fnp: "-", ld: 12 },
+    { id: "lorgar", name: "Lorgar Aurelian (XVII)", models: 1, bs: 5, t: 6, w: 7, sv: "2", inv: "4", fnp: "-", ld: 12 },
+    { id: "mortarion", name: "Mortarion (XIV)", models: 1, bs: 5, t: 7, w: 9, sv: "2", inv: "4", fnp: "5", ld: 12 },
+    { id: "magnus", name: "Magnus the Red (XV)", models: 1, bs: 6, t: 6, w: 7, sv: "2", inv: "3", fnp: "-", ld: 12 },
+    { id: "horus", name: "Horus Lupercal (XVI)", models: 1, bs: 6, t: 7, w: 8, sv: "2", inv: "4", fnp: "-", ld: 12 },
+    { id: "alpharius", name: "Alpharius (XX)", models: 1, bs: 6, t: 6, w: 7, sv: "2", inv: "4", fnp: "-", ld: 12 },
+  ]},
+  { category: "DAEMONS", units: [
     { id: "daemon_lesser", name: "Lesser Daemon", models: 10, bs: 3, t: 4, w: 1, sv: "-", inv: "5", fnp: "-", ld: 7 },
     { id: "daemon_greater", name: "Greater Daemon", models: 1, bs: 5, t: 6, w: 6, sv: "-", inv: "4", fnp: "-", ld: 9 },
   ]},
@@ -389,11 +409,65 @@ const WEAPON_PROFILES = {
     { name: "Rotor Cannon x2", shots: 8, s: 3, ap: "6", damage: 1, type: "Salvo", rules: { suppressive: true } },
     { name: "Lightning Gun", shots: 3, s: 7, ap: "5", damage: 1, type: "Assault", rules: { rending: true, shred: true } },
   ],
-  primarch_t6: [
-    { name: "Primarch Ranged Weapon", shots: 3, s: 6, ap: "2", damage: 2, type: "Assault", rules: {} },
+  // PRIMARCHS (LOYALIST)
+  lion: [
+    { name: "Fusil Actinaeus (Plasma)", shots: 2, s: 7, ap: "2", damage: 2, type: "Pistol", rules: { breaching: true } },
   ],
-  primarch_t7: [
-    { name: "Primarch Ranged Weapon", shots: 3, s: 6, ap: "2", damage: 2, type: "Assault", rules: {} },
+  khan: [
+    { name: "Bolt Pistol", shots: 1, s: 4, ap: "5", damage: 1, type: "Pistol", rules: {} },
+  ],
+  russ: [
+    { name: "Bolt Pistol", shots: 1, s: 4, ap: "5", damage: 1, type: "Pistol", rules: {} },
+  ],
+  dorn: [
+    { name: "Voice of Terra", shots: 4, s: 6, ap: "3", damage: 2, type: "Assault", rules: { pinning: true } },
+  ],
+  sanguinius: [
+    { name: "Infernus Pistol", shots: 1, s: 8, ap: "1", damage: 2, type: "Pistol", rules: {} },
+  ],
+  ferrus: [
+    { name: "Graviton Imploder", shots: 1, s: 8, ap: "2", damage: 2, type: "Assault", rules: {} },
+    { name: "Plasma Imploder", shots: 2, s: 7, ap: "2", damage: 2, type: "Assault", rules: { breaching: true, getshot: true } },
+  ],
+  guilliman: [
+    { name: "Arbitrator (Combi)", shots: 2, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {} },
+  ],
+  vulkan: [
+    { name: "Furnace's Heart (Beam)", shots: 1, s: 8, ap: "1", damage: 2, type: "Assault", rules: { panic: true } },
+    { name: "Furnace's Heart (Flame)", shots: 1, s: 6, ap: "3", damage: 1, type: "Assault", rules: { panic: true } },
+  ],
+  corax: [
+    { name: "Panoply of the Raven (Archeotech)", shots: 2, s: 6, ap: "3", damage: 1, type: "Assault", rules: {} },
+  ],
+  // PRIMARCHS (TRAITOR)
+  fulgrim: [
+    { name: "Fireblade (Volkite)", shots: 4, s: 6, ap: "5", damage: 1, type: "Pistol", rules: { deflagrate: true } },
+  ],
+  perturabo: [
+    { name: "Logos (Wrist Guns)", shots: 4, s: 7, ap: "3", damage: 2, type: "Assault", rules: {} },
+    { name: "Logos (Missile)", shots: 1, s: 8, ap: "2", damage: 2, type: "Heavy", rules: { blast: true } },
+  ],
+  curze: [
+    { name: "Mercy & Forgiveness (Thrown)", shots: 2, s: 5, ap: "3", damage: 1, type: "Assault", rules: {} },
+  ],
+  angron: [
+    { name: "Bolt Pistol", shots: 1, s: 4, ap: "5", damage: 1, type: "Pistol", rules: {} },
+  ],
+  lorgar: [
+    { name: "Archaeotech Pistol", shots: 1, s: 6, ap: "3", damage: 1, type: "Pistol", rules: {} },
+  ],
+  mortarion: [
+    { name: "The Lantern (Beam)", shots: 2, s: 8, ap: "2", damage: 2, type: "Assault", rules: { sunder: true } },
+  ],
+  magnus: [
+    { name: "Psychic Bolt", shots: 3, s: 8, ap: "2", damage: 2, type: "Assault", rules: {} },
+  ],
+  horus: [
+    { name: "Warmaster's Combi (Bolter)", shots: 4, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {} },
+    { name: "Warmaster's Combi (Disintegrator)", shots: 1, s: 5, ap: "2", damage: 2, type: "Assault", rules: { getshot: true } },
+  ],
+  alpharius: [
+    { name: "Pale Spear (Ranged)", shots: 2, s: 6, ap: "2", damage: 2, type: "Assault", rules: {} },
   ],
   daemon_lesser: [
     { name: "Warp Bolt", shots: 1, s: 4, ap: "5", damage: 1, type: "Assault", rules: {} },
@@ -1027,6 +1101,100 @@ function resolveShootingPhase(params) {
 
 // ━━━ STATISTICAL CALCULATOR ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+// ━━━ RETURN FIRE RESOLVER (Shooting Phase Reaction) ━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Defender fires back as a reaction during the shooting phase using snap shots (6+)
+function resolveReturnFire(params) {
+  const {
+    defenderModels, returnFireShots, returnFireS, returnFireAP,
+    attackerT, attackerSv, attackerInv, attackerFnp, attackerW,
+  } = params;
+
+  const log = [];
+  const rolls = { hit: [], wound: [], save: [], fnp: [] };
+
+  log.push({ phase: "Return Fire", text: `🎯 Defender fires Return Fire reaction! (Snap Shots — hits on 6+)` });
+  const totalShots = defenderModels * returnFireShots;
+  log.push({ phase: "Return Fire", text: `${defenderModels} model(s) × ${returnFireShots} shot(s) = ${totalShots} total shots` });
+
+  // Hit (snap shots = 6+)
+  const hitRolls = rollD6s(totalShots);
+  rolls.hit = hitRolls.map(r => ({ value: r, success: r >= 6 }));
+  const hits = hitRolls.filter(r => r >= 6).length;
+  log.push({ phase: "Return Fire", text: `To Hit (6+): ${hits} hit(s) from ${totalShots} shots` });
+
+  if (hits === 0) {
+    log.push({ phase: "Return Fire", text: `Return Fire inflicts no casualties.` });
+    return { log, rolls, casualties: 0 };
+  }
+
+  // Wound
+  const woundNeeded = getWoundRoll(returnFireS, attackerT);
+  if (woundNeeded === null) {
+    log.push({ phase: "Return Fire", text: `S${returnFireS} vs T${attackerT}: Cannot wound!` });
+    return { log, rolls, casualties: 0 };
+  }
+  log.push({ phase: "Return Fire", text: `To Wound: S${returnFireS} vs T${attackerT} → needs ${woundNeeded}+` });
+  const woundRolls = rollD6s(hits);
+  rolls.wound = woundRolls.map(r => ({ value: r, success: r >= woundNeeded }));
+  const wounds = woundRolls.filter(r => r >= woundNeeded).length;
+  log.push({ phase: "Return Fire", text: `${wounds} wound(s) from ${hits} hit(s)` });
+
+  if (wounds === 0) {
+    log.push({ phase: "Return Fire", text: `Return Fire inflicts no casualties.` });
+    return { log, rolls, casualties: 0 };
+  }
+
+  // Save
+  const svN = attackerSv !== "-" ? parseInt(attackerSv) : null;
+  const invN = attackerInv !== "-" ? parseInt(attackerInv) : null;
+  const apNum = returnFireAP !== "-" ? parseInt(returnFireAP) : null;
+  let bestSave = null;
+  if (invN) bestSave = invN;
+  if (svN && apNum && svN < apNum) {
+    bestSave = bestSave ? Math.min(bestSave, svN) : svN;
+  } else if (svN && !apNum) {
+    bestSave = bestSave ? Math.min(bestSave, svN) : svN;
+  }
+
+  let unsaved = wounds;
+  if (bestSave && bestSave <= 6) {
+    const saveRolls = rollD6s(wounds);
+    rolls.save = saveRolls.map(r => ({ value: r, success: r >= bestSave }));
+    const saved = saveRolls.filter(r => r >= bestSave).length;
+    unsaved = wounds - saved;
+    log.push({ phase: "Return Fire", text: `Saves (${bestSave}+): ${saved} saved, ${unsaved} unsaved wound(s)` });
+  } else {
+    log.push({ phase: "Return Fire", text: `No save available — ${unsaved} unsaved wound(s)` });
+  }
+
+  if (unsaved === 0) {
+    log.push({ phase: "Return Fire", text: `Return Fire inflicts no casualties.` });
+    return { log, rolls, casualties: 0 };
+  }
+
+  // FNP
+  const fnpN = attackerFnp !== "-" ? parseInt(attackerFnp) : null;
+  if (fnpN && unsaved > 0) {
+    const fnpRolls = rollD6s(unsaved);
+    rolls.fnp = fnpRolls.map(r => ({ value: r, success: r >= fnpN }));
+    const fnpSaved = fnpRolls.filter(r => r >= fnpN).length;
+    unsaved -= fnpSaved;
+    log.push({ phase: "Return Fire", text: `FNP (${fnpN}+): ${fnpSaved} saved → ${unsaved} unsaved` });
+  }
+
+  // Multi-wound
+  const w = attackerW || 1;
+  const casualties = w > 1 ? Math.floor(unsaved / w) : unsaved;
+  if (w > 1 && unsaved > 0) {
+    const remainder = unsaved % w;
+    log.push({ phase: "Return Fire", text: `${unsaved} unsaved vs ${w}W models → ${casualties} model(s) slain${remainder > 0 ? `, ${remainder} wound(s) on a model` : ""}` });
+  } else {
+    log.push({ phase: "Return Fire", text: `☠ ${casualties} attacker model(s) slain by Return Fire!` });
+  }
+
+  return { log, rolls, casualties };
+}
+
 function calculateExpected(params) {
   const { numModels, numShots, bs, strength, ap, toughness, armourSave, invulnSave, coverSave, fnp, specialRules, halfRange, indirect, weaponType, sgtEnabled, sgtWeapon } = params;
 
@@ -1121,6 +1289,532 @@ function calculateExpected(params) {
   const totalExpCas = expCasualties + sgtExpCas;
 
   return { expHits: (expHits + (hasSgt ? sgtWeapon.shots * ((7 - (BS_TO_HIT[bs] || 6)) / 6) : 0)).toFixed(1), expWounds: (expWounds + sgtExpCas / (pNormalFail * pFnpFail || 1)).toFixed(1), expUnsaved: (expUnsaved + sgtExpCas / (pFnpFail || 1)).toFixed(1), expCasualties: totalExpCas.toFixed(1) };
+}
+
+// ━━━ CHALLENGE SUB-PHASE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+const CHALLENGE_GAMBITS = [
+  { id: "none", name: "No Gambit", desc: "No special effect", focusMod: 0, effect: null },
+  { id: "seize", name: "Seize the Initiative", desc: "Roll extra Focus die, discard lowest", focusMod: 0, effect: "extraFocusDie" },
+  { id: "flurry", name: "Flurry of Blows", desc: "+D3 Attacks, but Damage set to 1", focusMod: 0, effect: "flurry" },
+  { id: "finishing", name: "Finishing Blow", desc: "Roll extra Focus die discard highest; +1 S & Damage", focusMod: 0, effect: "finishing" },
+  { id: "feint", name: "Feint and Riposte", desc: "Deny opponent one Gambit (first picker only)", focusMod: 0, effect: "feint" },
+  { id: "guard", name: "Guard Up", desc: "Reduce your attacks to 1; opponent gets -1 to hit", focusMod: 0, effect: "guard" },
+  { id: "press", name: "Press the Attack", desc: "+1 to Focus Roll; +1 Attack", focusMod: 1, effect: "press" },
+  { id: "measured", name: "Measured Strike", desc: "+1 AP improvement (min AP1)", focusMod: 0, effect: "measured" },
+  { id: "taunt", name: "Taunt and Bait", desc: "If you lose Focus, opponent must re-roll one hit", focusMod: -1, effect: "taunt" },
+];
+
+function resolveChallenge(params) {
+  const {
+    // Attacker champion
+    atkWS, atkS, atkAP, atkI, atkA, atkW, atkT, atkSv, atkInv, atkFnp, atkRules,
+    atkGambit, atkName,
+    // Defender champion
+    defWS, defS, defAP, defI, defA, defW, defT, defSv, defInv, defFnp, defRules,
+    defGambit, defName,
+    // Context
+    atkSupport, defSupport, // number of supporting models (per 5 = +2 Focus)
+    isCharging,
+  } = params;
+
+  const log = [];
+  const rolls = {
+    attacker: { focus: [], hit: [], wound: [], save: [], fnp: [] },
+    defender: { focus: [], hit: [], wound: [], save: [], fnp: [] },
+  };
+
+  const atkGambitData = CHALLENGE_GAMBITS.find(g => g.id === atkGambit) || CHALLENGE_GAMBITS[0];
+  const defGambitData = CHALLENGE_GAMBITS.find(g => g.id === defGambit) || CHALLENGE_GAMBITS[0];
+
+  log.push({ phase: "Challenge", text: `⚔ CHALLENGE DECLARED!` });
+  log.push({ phase: "Challenge", text: `${atkName || "Attacker Champion"} vs ${defName || "Defender Champion"}` });
+  log.push({ phase: "Gambit", text: `Attacker Gambit: ${atkGambitData.name} — ${atkGambitData.desc}` });
+  log.push({ phase: "Gambit", text: `Defender Gambit: ${defGambitData.name} — ${defGambitData.desc}` });
+
+  // ━━ STEP 1: Focus Roll ━━
+  // D6 + Initiative + Gambit modifiers + Support
+  function rollFocus(baseI, gambitData, support, label, rollKey) {
+    let dice;
+    if (gambitData.effect === "extraFocusDie") {
+      // Seize: roll 2, discard lowest
+      dice = rollD6s(2);
+      rolls[rollKey].focus.push(...dice.map(d => ({ value: d, success: true })));
+      const best = Math.max(...dice);
+      log.push({ phase: "Focus", text: `${label} Seize the Initiative: rolled ${dice.join(", ")} → keeps ${best}` });
+      return best + baseI + gambitData.focusMod + support;
+    } else if (gambitData.effect === "finishing") {
+      // Finishing Blow: roll 2, discard highest
+      dice = rollD6s(2);
+      rolls[rollKey].focus.push(...dice.map(d => ({ value: d, success: true })));
+      const worst = Math.min(...dice);
+      log.push({ phase: "Focus", text: `${label} Finishing Blow: rolled ${dice.join(", ")} → keeps ${worst} (discards highest)` });
+      return worst + baseI + gambitData.focusMod + support;
+    } else {
+      dice = rollD6s(1);
+      rolls[rollKey].focus.push({ value: dice[0], success: true });
+      return dice[0] + baseI + gambitData.focusMod + support;
+    }
+  }
+
+  const atkSupportBonus = Math.floor((atkSupport || 0) / 5) * 2;
+  const defSupportBonus = Math.floor((defSupport || 0) / 5) * 2;
+
+  let atkFocus = rollFocus(atkI, atkGambitData, atkSupportBonus, "Attacker", "attacker");
+  let defFocus = rollFocus(defI, defGambitData, defSupportBonus, "Defender", "defender");
+
+  // Duelist's Edge
+  if (atkRules?.m_duelist) { atkFocus += 1; log.push({ phase: "Focus", text: `Attacker: Duelist's Edge +1 Focus` }); }
+  if (defRules?.m_duelist) { defFocus += 1; log.push({ phase: "Focus", text: `Defender: Duelist's Edge +1 Focus` }); }
+
+  log.push({ phase: "Focus", text: `Focus Totals: Attacker ${atkFocus} vs Defender ${defFocus}` });
+
+  // Tie-breaker
+  while (atkFocus === defFocus) {
+    const a = rollD6(); const d = rollD6();
+    log.push({ phase: "Focus", text: `Tied! Re-roll: Attacker ${a} vs Defender ${d}` });
+    atkFocus = a; defFocus = d;
+  }
+
+  const atkWinsFocus = atkFocus > defFocus;
+  const focusWinner = atkWinsFocus ? "Attacker" : "Defender";
+  log.push({ phase: "Focus", text: `🏆 ${focusWinner} wins Focus! Strikes first & gains +1 Attack.` });
+
+  // ━━ STEP 2: Apply Gambit Effects to stats ━━
+  let effAtkA = atkA, effAtkS = atkS, effAtkAP = atkAP;
+  let effDefA = defA, effDefS = defS, effDefAP = defAP;
+  let atkHitPenalty = 0, defHitPenalty = 0;
+  let atkDamageCap = null, defDamageCap = null;
+  let tauntAtk = false, tauntDef = false;
+
+  // Focus winner gets +1A
+  if (atkWinsFocus) effAtkA += 1; else effDefA += 1;
+
+  // Attacker gambit
+  if (atkGambitData.effect === "flurry") {
+    const bonus = Math.ceil(Math.random() * 3);
+    effAtkA += bonus; atkDamageCap = 1;
+    log.push({ phase: "Gambit", text: `Attacker Flurry: +${bonus} Attacks (Damage capped to 1)` });
+  }
+  if (atkGambitData.effect === "finishing") {
+    effAtkS += 1;
+    log.push({ phase: "Gambit", text: `Attacker Finishing Blow: +1 Strength (now S${effAtkS}), +1 Damage` });
+  }
+  if (atkGambitData.effect === "guard") {
+    effAtkA = 1; defHitPenalty += 1;
+    log.push({ phase: "Gambit", text: `Attacker Guard Up: 1 attack only; Defender -1 to hit` });
+  }
+  if (atkGambitData.effect === "press") {
+    effAtkA += 1;
+    log.push({ phase: "Gambit", text: `Attacker Press the Attack: +1 Attack` });
+  }
+  if (atkGambitData.effect === "measured") {
+    const curAP = effAtkAP === "-" ? 7 : parseInt(effAtkAP);
+    effAtkAP = String(Math.max(curAP - 1, 1));
+    log.push({ phase: "Gambit", text: `Attacker Measured Strike: AP improved to ${effAtkAP}` });
+  }
+  if (atkGambitData.effect === "taunt") { tauntAtk = true; }
+
+  // Defender gambit
+  if (defGambitData.effect === "flurry") {
+    const bonus = Math.ceil(Math.random() * 3);
+    effDefA += bonus; defDamageCap = 1;
+    log.push({ phase: "Gambit", text: `Defender Flurry: +${bonus} Attacks (Damage capped to 1)` });
+  }
+  if (defGambitData.effect === "finishing") {
+    effDefS += 1;
+    log.push({ phase: "Gambit", text: `Defender Finishing Blow: +1 Strength (now S${effDefS}), +1 Damage` });
+  }
+  if (defGambitData.effect === "guard") {
+    effDefA = 1; atkHitPenalty += 1;
+    log.push({ phase: "Gambit", text: `Defender Guard Up: 1 attack only; Attacker -1 to hit` });
+  }
+  if (defGambitData.effect === "press") {
+    effDefA += 1;
+    log.push({ phase: "Gambit", text: `Defender Press the Attack: +1 Attack` });
+  }
+  if (defGambitData.effect === "measured") {
+    const curAP = effDefAP === "-" ? 7 : parseInt(effDefAP);
+    effDefAP = String(Math.max(curAP - 1, 1));
+    log.push({ phase: "Gambit", text: `Defender Measured Strike: AP improved to ${effDefAP}` });
+  }
+  if (defGambitData.effect === "taunt") { tauntDef = true; }
+
+  // ━━ STEP 3: Resolve strikes in Focus order ━━
+  function resolveStrike(label, numA, aWS, dWS, aS, dT, aAP, dSv, dInv, dFnp, dW, rules, hitPen, damageCap, tauntOpp, rollKey) {
+    const strikeLog = [];
+    const toHitBase = getMeleeToHit(aWS, dWS);
+    const toHit = Math.min(Math.max(toHitBase + hitPen, 2), 6);
+    strikeLog.push(`${label}: ${numA} attack(s), needs ${toHit}+ (WS${aWS} vs WS${dWS}${hitPen ? `, ${hitPen > 0 ? "+" : ""}${hitPen} penalty` : ""})`);
+
+    const hitRolls = rollD6s(numA);
+    rolls[rollKey].hit.push(...hitRolls.map(r => ({ value: r, success: r >= toHit })));
+    let hits = hitRolls.filter(r => r >= toHit).length;
+
+    // Taunt: opponent must re-roll one successful hit
+    if (tauntOpp && hits > 0) {
+      const reroll = rollD6();
+      if (reroll < toHit) { hits -= 1; strikeLog.push(`Taunt & Bait: forced re-roll → ${reroll} (miss!) — ${hits} hit(s)`); }
+      else { strikeLog.push(`Taunt & Bait: forced re-roll → ${reroll} (still hits)`); }
+    }
+
+    strikeLog.push(`To Hit: ${hits} hit(s) from ${numA} attack(s)`);
+    if (hits === 0) { strikeLog.forEach(t => log.push({ phase: "Strike", text: t })); return { wounds: 0 }; }
+
+    // Wound
+    const toWoundNeeded = getWoundRoll(aS, dT);
+    if (toWoundNeeded === null) {
+      strikeLog.push(`S${aS} vs T${dT}: Cannot wound!`);
+      strikeLog.forEach(t => log.push({ phase: "Strike", text: t })); return { wounds: 0 };
+    }
+
+    const woundRolls = rollD6s(hits);
+    let wounds = 0, rendingW = 0, murderousW = 0, normalW = 0;
+    woundRolls.forEach(r => {
+      if (r >= toWoundNeeded) {
+        wounds++;
+        if (rules?.m_rending && r === 6) rendingW++;
+        else if (rules?.m_murderous && r === 6) murderousW++;
+        else normalW++;
+      }
+      rolls[rollKey].wound.push({ value: r, success: r >= toWoundNeeded });
+    });
+
+    // Shred
+    if (rules?.m_shred) {
+      const misses = woundRolls.filter(r => r < toWoundNeeded);
+      const rerolls = rollD6s(misses.length);
+      rerolls.forEach(r => {
+        if (r >= toWoundNeeded) { wounds++; if (rules?.m_rending && r === 6) rendingW++; else normalW++; }
+        rolls[rollKey].wound.push({ value: r, success: r >= toWoundNeeded, reroll: true });
+      });
+      strikeLog.push(`Shred: re-rolled ${misses.length} → ${rerolls.filter(r => r >= toWoundNeeded).length} extra`);
+    }
+
+    normalW = wounds - rendingW - murderousW;
+    if (rendingW > 0) strikeLog.push(`🗡 Rending: ${rendingW} at AP2`);
+    if (murderousW > 0) strikeLog.push(`💀 Murderous Strike: ${murderousW} — Instant Death`);
+    strikeLog.push(`Wounds: ${wounds} from ${hits} hit(s)`);
+    if (wounds === 0) { strikeLog.forEach(t => log.push({ phase: "Strike", text: t })); return { wounds: 0 }; }
+
+    // Saves
+    let unsaved = 0;
+    function doSave(count, effAP, saveLabel) {
+      if (count === 0) return 0;
+      let best = null;
+      const armNeg = effAP !== "-" && parseInt(effAP) <= parseInt(dSv);
+      if (!armNeg && dSv && dSv !== "-" && dSv !== "0") best = parseInt(dSv);
+      if (dInv && dInv !== "-" && dInv !== "0") { const iv = parseInt(dInv); if (best === null || iv < best) best = iv; }
+      if (best === null) return count;
+      const saveRolls = rollD6s(count);
+      rolls[rollKey].save.push(...saveRolls.map(r => ({ value: r, success: r >= best })));
+      const saved = saveRolls.filter(r => r >= best).length;
+      strikeLog.push(`${saveLabel} (${best}+, AP${effAP}): ${saved} saved, ${count - saved} unsaved`);
+      return count - saved;
+    }
+
+    unsaved += doSave(normalW, aAP, "Normal saves");
+    if (rendingW > 0) unsaved += doSave(rendingW, "2", "Rending saves");
+    if (murderousW > 0) unsaved += doSave(murderousW, aAP, "Murderous saves");
+
+    // FNP
+    let totalWounds = unsaved;
+    if (dFnp && dFnp !== "-" && dFnp !== "0" && unsaved > 0) {
+      const fnpN = parseInt(dFnp);
+      const instantDeath = aS >= dT * 2 || murderousW > 0;
+      if (!instantDeath) {
+        const fnpRolls = rollD6s(unsaved);
+        const fnpSaved = fnpRolls.filter(r => r >= fnpN).length;
+        totalWounds = unsaved - fnpSaved;
+        rolls[rollKey].fnp.push(...fnpRolls.map(r => ({ value: r, success: r >= fnpN })));
+        strikeLog.push(`FNP (${fnpN}+): ${fnpSaved} saved → ${totalWounds} unsaved`);
+      } else { strikeLog.push(`Instant Death — FNP cannot be used!`); }
+    }
+
+    // Damage cap from Flurry
+    if (damageCap) {
+      strikeLog.push(`Flurry: Damage capped to ${damageCap} per wound`);
+    }
+
+    strikeLog.forEach(t => log.push({ phase: "Strike", text: t }));
+    return { wounds: totalWounds };
+  }
+
+  let atkWoundsRemaining = atkW;
+  let defWoundsRemaining = defW;
+  let atkWoundsDealt = 0, defWoundsDealt = 0;
+
+  if (atkWinsFocus) {
+    // Attacker strikes first
+    const atkResult = resolveStrike(`⚔ ${atkName || "Attacker"} (Focus winner)`, effAtkA, atkWS, defWS, effAtkS, defT, effAtkAP, defSv, defInv, defFnp, defW, atkRules, 0, atkDamageCap, tauntDef, "attacker");
+    defWoundsRemaining -= atkResult.wounds;
+    atkWoundsDealt = atkResult.wounds;
+
+    if (defWoundsRemaining > 0) {
+      const defResult = resolveStrike(`🛡 ${defName || "Defender"} strikes back`, effDefA, defWS, atkWS, effDefS, atkT, effDefAP, atkSv, atkInv, atkFnp, atkW, defRules, 0, defDamageCap, tauntAtk, "defender");
+      atkWoundsRemaining -= defResult.wounds;
+      defWoundsDealt = defResult.wounds;
+    } else {
+      log.push({ phase: "Strike", text: `💀 ${defName || "Defender"} is SLAIN! No strike back.` });
+    }
+  } else {
+    // Defender strikes first
+    const defResult = resolveStrike(`🛡 ${defName || "Defender"} (Focus winner)`, effDefA, defWS, atkWS, effDefS, atkT, effDefAP, atkSv, atkInv, atkFnp, atkW, defRules, 0, defDamageCap, tauntAtk, "defender");
+    atkWoundsRemaining -= defResult.wounds;
+    defWoundsDealt = defResult.wounds;
+
+    if (atkWoundsRemaining > 0) {
+      const atkResult = resolveStrike(`⚔ ${atkName || "Attacker"} strikes back`, effAtkA, atkWS, defWS, effAtkS, defT, effAtkAP, defSv, defInv, defFnp, defW, atkRules, 0, atkDamageCap, tauntDef, "attacker");
+      defWoundsRemaining -= atkResult.wounds;
+      atkWoundsDealt = atkResult.wounds;
+    } else {
+      log.push({ phase: "Strike", text: `💀 ${atkName || "Attacker"} is SLAIN! No strike back.` });
+    }
+  }
+
+  // ━━ STEP 4: Challenge Result ━━
+  const atkSlain = atkWoundsRemaining <= 0;
+  const defSlain = defWoundsRemaining <= 0;
+
+  let result;
+  if (atkSlain && defSlain) {
+    result = { winner: "Mutual Kill", glory: 0 };
+    log.push({ phase: "Result", text: `💀 Both champions fall! Mutual destruction.` });
+  } else if (defSlain) {
+    const glory = atkWoundsDealt;
+    result = { winner: "Attacker", glory, slain: defName || "Defender" };
+    log.push({ phase: "Result", text: `⚔ ${atkName || "Attacker"} SLAYS ${defName || "Defender"}! (+${glory} to Combat Resolution)` });
+  } else if (atkSlain) {
+    const glory = defWoundsDealt;
+    result = { winner: "Defender", glory, slain: atkName || "Attacker" };
+    log.push({ phase: "Result", text: `🛡 ${defName || "Defender"} SLAYS ${atkName || "Attacker"}! (+${glory} to Combat Resolution)` });
+  } else {
+    const diff = atkWoundsDealt - defWoundsDealt;
+    result = { winner: diff > 0 ? "Attacker" : diff < 0 ? "Defender" : "Draw", glory: Math.abs(diff) };
+    log.push({ phase: "Result", text: `Challenge ongoing — ${atkName || "Attacker"}: ${Math.max(atkWoundsRemaining, 0)}W remaining, ${defName || "Defender"}: ${Math.max(defWoundsRemaining, 0)}W remaining` });
+    log.push({ phase: "Result", text: `Round result: ${diff > 0 ? "Attacker" : diff < 0 ? "Defender" : "Draw"} by ${Math.abs(diff)} wound(s)` });
+  }
+
+  return {
+    log, rolls, result, focusWinner,
+    atkWoundsDealt, defWoundsDealt,
+    atkWoundsRemaining: Math.max(atkWoundsRemaining, 0),
+    defWoundsRemaining: Math.max(defWoundsRemaining, 0),
+    atkSlain, defSlain, atkGambitData, defGambitData,
+  };
+}
+
+// ━━━ ASSAULT PHASE RESOLVER (Standalone melee combat) ━━━━━━━━━━━━━━━━━━━━━━━━
+function resolveAssaultPhase(params) {
+  const {
+    // Attacker
+    attackerModels, attackerWS, attackerS, attackerAP, attackerI, attackerA, attackerW,
+    attackerSv, attackerInv, attackerFnp, attackerT,
+    attackerRules,
+    // Defender
+    defenderModels, defenderWS, defenderS, defenderAP, defenderI, defenderA, defenderW,
+    defenderSv, defenderInv, defenderFnp, defenderT,
+    defenderRules,
+    // Charge
+    isCharging, disordered,
+  } = params;
+
+  const log = [];
+  const rolls = {
+    attacker: { hit: [], wound: [], save: [], fnp: [] },
+    defender: { hit: [], wound: [], save: [], fnp: [] },
+  };
+
+  // ━━ STEP 1: Calculate Attacks ━━
+  let atkAttacks = attackerA;
+  if (isCharging && !disordered) {
+    atkAttacks += 1;
+    log.push({ phase: "Setup", text: `Attacker gets +1 Attack for charging (${attackerA} + 1 = ${atkAttacks})` });
+  } else if (isCharging && disordered) {
+    log.push({ phase: "Setup", text: `Disordered Charge: no +1 Attack bonus (${atkAttacks} attacks)` });
+  }
+
+  // Rampage
+  if (attackerRules?.m_rampage && defenderModels > attackerModels) {
+    const rampageBonus = Math.ceil(Math.random() * 3);
+    atkAttacks += rampageBonus;
+    log.push({ phase: "Setup", text: `Rampage: Outnumbered! +${rampageBonus} attacks (now ${atkAttacks})` });
+  }
+
+  const totalAtkAttacks = attackerModels * atkAttacks;
+  const totalDefAttacks = defenderModels * defenderA;
+
+  // ━━ STEP 2: Initiative Order ━━
+  const atkEffI = attackerRules?.m_unwieldy ? 1 : attackerI;
+  const defEffI = defenderRules?.m_unwieldy ? 1 : defenderI;
+  const attackerFirst = isCharging ? atkEffI >= defEffI : atkEffI > defEffI;
+
+  log.push({ phase: "Melee", text: `Initiative: Attacker I${atkEffI} vs Defender I${defEffI} → ${attackerFirst ? "Attacker strikes first" : "Defender strikes first"}` });
+  log.push({ phase: "Melee", text: `Attacker: ${attackerModels} model(s) × ${atkAttacks} attack(s) = ${totalAtkAttacks}` });
+  log.push({ phase: "Melee", text: `Defender: ${defenderModels} model(s) × ${defenderA} attack(s) = ${totalDefAttacks}` });
+
+  // ━━ Helper: resolve one side's attacks ━━
+  function resolveSide(label, numAttacks, aWS, dWS, aS, dT, aAP, dSv, dInv, dFnp, dW, rules, rollKey) {
+    if (numAttacks <= 0) return { casualties: 0, unsavedWounds: 0 };
+    const sideLog = [];
+    const toHitNeeded = getMeleeToHit(aWS, dWS);
+    sideLog.push(`${label}: ${numAttacks} attacks, needs ${toHitNeeded}+ to hit (WS${aWS} vs WS${dWS})`);
+
+    // Hit
+    const hitRolls = rollD6s(numAttacks);
+    rolls[rollKey].hit.push(...hitRolls.map(r => ({ value: r, success: r >= toHitNeeded })));
+    let hits = hitRolls.filter(r => r >= toHitNeeded).length;
+    sideLog.push(`To Hit: ${hits} hit(s) from ${numAttacks} attacks`);
+    if (hits === 0) { sideLog.forEach(t => log.push({ phase: "Melee", text: t })); return { casualties: 0, unsavedWounds: 0 }; }
+
+    // Wound
+    const toWoundNeeded = getWoundRoll(aS, dT);
+    if (toWoundNeeded === null) {
+      sideLog.push(`S${aS} vs T${dT}: Cannot wound!`);
+      sideLog.forEach(t => log.push({ phase: "Melee", text: t }));
+      return { casualties: 0, unsavedWounds: 0 };
+    }
+    sideLog.push(`To Wound: S${aS} vs T${dT} → needs ${toWoundNeeded}+`);
+
+    const woundRolls = rollD6s(hits);
+    let wounds = 0, rendingW = 0, normalW = 0, murderousW = 0;
+    woundRolls.forEach(r => {
+      const success = r >= toWoundNeeded;
+      if (success) {
+        wounds++;
+        if (rules?.m_rending && r === 6) rendingW++;
+        else if (rules?.m_murderous && r === 6) murderousW++;
+        else normalW++;
+      }
+      rolls[rollKey].wound.push({ value: r, success });
+    });
+
+    // Shred re-rolls
+    if (rules?.m_shred) {
+      const misses = woundRolls.filter(r => r < toWoundNeeded);
+      const rerolls = rollD6s(misses.length);
+      rerolls.forEach(r => {
+        if (r >= toWoundNeeded) {
+          wounds++;
+          if (rules?.m_rending && r === 6) rendingW++;
+          else normalW++;
+        }
+        rolls[rollKey].wound.push({ value: r, success: r >= toWoundNeeded, reroll: true });
+      });
+      sideLog.push(`Shred: re-rolled ${misses.length} → ${rerolls.filter(r => r >= toWoundNeeded).length} extra wound(s)`);
+    }
+
+    if (rendingW > 0) sideLog.push(`🗡 Rending: ${rendingW} wound(s) at AP2`);
+    if (murderousW > 0) sideLog.push(`💀 Murderous Strike: ${murderousW} wound(s) cause Instant Death`);
+    normalW = wounds - rendingW - murderousW;
+    sideLog.push(`Wounds: ${wounds} wound(s) from ${hits} hit(s)`);
+    if (wounds === 0) { sideLog.forEach(t => log.push({ phase: "Melee", text: t })); return { casualties: 0, unsavedWounds: 0 }; }
+
+    // Saves
+    let unsaved = 0;
+    function doSaves(count, effAP, saveLabel) {
+      if (count === 0) return 0;
+      let best = null;
+      const armNeg = effAP !== "-" && parseInt(effAP) <= parseInt(dSv);
+      if (!armNeg && dSv && dSv !== "-" && dSv !== "0") best = parseInt(dSv);
+      if (dInv && dInv !== "-" && dInv !== "0") {
+        const iv = parseInt(dInv);
+        if (best === null || iv < best) best = iv;
+      }
+      if (best === null) return count;
+      const saveRolls = rollD6s(count);
+      rolls[rollKey].save.push(...saveRolls.map(r => ({ value: r, success: r >= best })));
+      const saved = saveRolls.filter(r => r >= best).length;
+      sideLog.push(`${saveLabel} saves (${best}+, AP${effAP}): ${saved} saved, ${count - saved} unsaved`);
+      return count - saved;
+    }
+
+    unsaved += doSaves(normalW, aAP, "Normal");
+    if (rendingW > 0) unsaved += doSaves(rendingW, "2", "Rending (AP2)");
+    if (murderousW > 0) unsaved += doSaves(murderousW, aAP, "Murderous Strike");
+
+    // FNP
+    let casualties = unsaved;
+    if (dFnp && dFnp !== "-" && dFnp !== "0" && unsaved > 0) {
+      const fnpN = parseInt(dFnp);
+      const instantDeath = aS >= dT * 2 || murderousW > 0;
+      if (!instantDeath) {
+        const fnpRolls = rollD6s(unsaved);
+        const fnpSaved = fnpRolls.filter(r => r >= fnpN).length;
+        casualties = unsaved - fnpSaved;
+        rolls[rollKey].fnp.push(...fnpRolls.map(r => ({ value: r, success: r >= fnpN })));
+        sideLog.push(`FNP (${fnpN}+): ${fnpSaved} saved → ${casualties} unsaved`);
+      } else {
+        sideLog.push(`Instant Death — FNP cannot be used!`);
+      }
+    }
+
+    // Multi-wound
+    const modelCas = dW > 1 ? Math.floor(casualties / dW) : casualties;
+    if (dW > 1 && casualties > 0) {
+      const rem = casualties % dW;
+      sideLog.push(`${casualties} unsaved vs ${dW}W models → ${modelCas} model(s) slain${rem > 0 ? `, ${rem} wound(s) remaining` : ""}`);
+    }
+
+    sideLog.forEach(t => log.push({ phase: "Melee", text: t }));
+    return { casualties: modelCas, unsavedWounds: casualties };
+  }
+
+  // ━━ STEP 3: Resolve in Initiative Order ━━
+  let atkCasualties = 0, defCasualties = 0;
+  let remainAtk = attackerModels, remainDef = defenderModels;
+
+  if (attackerFirst) {
+    const atkRes = resolveSide(`⚔ Attacker (I${atkEffI})`, totalAtkAttacks, attackerWS, defenderWS, attackerS, defenderT, attackerAP, defenderSv, defenderInv, defenderFnp, defenderW, attackerRules, "attacker");
+    defCasualties = atkRes.casualties;
+    remainDef = Math.max(defenderModels - defCasualties, 0);
+
+    if (remainDef > 0) {
+      const defTotal = remainDef * defenderA;
+      const defRes = resolveSide(`🛡 Defender strikes back (I${defEffI}, ${remainDef} remaining)`, defTotal, defenderWS, attackerWS, defenderS, attackerT, defenderAP, attackerSv, attackerInv, attackerFnp, attackerW, defenderRules, "defender");
+      atkCasualties = defRes.casualties;
+      remainAtk = Math.max(attackerModels - atkCasualties, 0);
+    }
+  } else {
+    const defRes = resolveSide(`🛡 Defender (I${defEffI}) strikes first`, totalDefAttacks, defenderWS, attackerWS, defenderS, attackerT, defenderAP, attackerSv, attackerInv, attackerFnp, attackerW, defenderRules, "defender");
+    atkCasualties = defRes.casualties;
+    remainAtk = Math.max(attackerModels - atkCasualties, 0);
+
+    if (remainAtk > 0) {
+      const atkTotal = remainAtk * atkAttacks;
+      const atkRes = resolveSide(`⚔ Attacker strikes back (I${atkEffI}, ${remainAtk} remaining)`, atkTotal, attackerWS, defenderWS, attackerS, defenderT, attackerAP, defenderSv, defenderInv, defenderFnp, defenderW, attackerRules, "attacker");
+      defCasualties = atkRes.casualties;
+      remainDef = Math.max(defenderModels - defCasualties, 0);
+    }
+  }
+
+  // ━━ STEP 4: Combat Resolution ━━
+  const atkWoundsInflicted = defCasualties;
+  const defWoundsInflicted = atkCasualties;
+  const diff = atkWoundsInflicted - defWoundsInflicted;
+
+  let combatResult;
+  if (diff > 0) {
+    combatResult = { winner: "Attacker", diff };
+    log.push({ phase: "Combat Res", text: `⚔ Attacker wins by ${diff} (${atkWoundsInflicted} vs ${defWoundsInflicted})` });
+    log.push({ phase: "Combat Res", text: `Defender must take Morale check at Ld -${diff}` });
+  } else if (diff < 0) {
+    combatResult = { winner: "Defender", diff: Math.abs(diff) };
+    log.push({ phase: "Combat Res", text: `🛡 Defender wins by ${Math.abs(diff)} (${defWoundsInflicted} vs ${atkWoundsInflicted})` });
+    log.push({ phase: "Combat Res", text: `Attacker must take Morale check at Ld -${Math.abs(diff)}` });
+  } else {
+    combatResult = { winner: "Draw", diff: 0 };
+    log.push({ phase: "Combat Res", text: `⚖ Draw! (${atkWoundsInflicted} vs ${defWoundsInflicted}) — combat continues.` });
+  }
+
+  log.push({ phase: "Combat Res", text: `Survivors: ${remainAtk} attacker(s), ${remainDef} defender(s)` });
+
+  return {
+    log, rolls, combatResult,
+    attackerCasualties: atkCasualties, defenderCasualties: defCasualties,
+    remainingAttackers: remainAtk, remainingDefenders: remainDef,
+    isCharging,
+  };
 }
 
 // ━━━ CHARGE PHASE RESOLVER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1224,6 +1918,8 @@ const MELEE_WEAPON_PROFILES = {
     { name: "Power Weapon", ws: 6, s: 4, ap: "3", i: 5, a: 4, w: 3, t: 4, sv: "2", inv: "4", fnp: "-", rules: {} },
   ],
   praetor_sat: [
+    { name: "Saturnine Concussion Hammer", ws: 6, s: 10, ap: "2", i: 1, a: 4, w: 4, t: 5, sv: "2", inv: "4", fnp: "-", rules: { m_unwieldy: true, m_specialist: true } },
+    { name: "Saturnine War Axe", ws: 6, s: 7, ap: "2", i: 4, a: 4, w: 4, t: 5, sv: "2", inv: "4", fnp: "-", rules: { m_specialist: true } },
     { name: "Power Fist", ws: 6, s: 8, ap: "2", i: 1, a: 4, w: 4, t: 5, sv: "2", inv: "4", fnp: "-", rules: { m_unwieldy: true, m_specialist: true } },
     { name: "Chainfist", ws: 6, s: 8, ap: "2", i: 1, a: 4, w: 4, t: 5, sv: "2", inv: "4", fnp: "-", rules: { m_unwieldy: true, m_specialist: true } },
     { name: "Thunder Hammer", ws: 6, s: 8, ap: "2", i: 1, a: 4, w: 4, t: 5, sv: "2", inv: "4", fnp: "-", rules: { m_unwieldy: true, m_specialist: true } },
@@ -1292,6 +1988,8 @@ const MELEE_WEAPON_PROFILES = {
     { name: "Thunder Hammer", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 2, t: 5, sv: "2", inv: "5", fnp: "-", rules: { m_unwieldy: true, m_specialist: true } },
   ],
   saturnine: [
+    { name: "Saturnine Concussion Hammer", ws: 4, s: 10, ap: "2", i: 1, a: 2, w: 3, t: 5, sv: "2", inv: "5", fnp: "-", rules: { m_unwieldy: true, m_specialist: true } },
+    { name: "Saturnine War Axe", ws: 4, s: 7, ap: "2", i: 4, a: 2, w: 3, t: 5, sv: "2", inv: "5", fnp: "-", rules: { m_specialist: true } },
     { name: "Power Fist", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 3, t: 5, sv: "2", inv: "5", fnp: "-", rules: { m_unwieldy: true, m_specialist: true } },
     { name: "Chainfist", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 3, t: 5, sv: "2", inv: "5", fnp: "-", rules: { m_unwieldy: true, m_specialist: true } },
     { name: "Thunder Hammer", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 3, t: 5, sv: "2", inv: "5", fnp: "-", rules: { m_unwieldy: true, m_specialist: true } },
@@ -1353,12 +2051,76 @@ const MELEE_WEAPON_PROFILES = {
     { name: "Solerite Power Gauntlet", ws: 5, s: 10, ap: "1", i: 5, a: 4, w: 4, t: 6, sv: "2", inv: "4", fnp: "-", rules: {} },
     { name: "Solerite Power Talon", ws: 5, s: 6, ap: "2", i: 5, a: 5, w: 4, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_shred: true } },
   ],
-  // PRIMARCHS & DAEMONS
-  primarch_t6: [
-    { name: "Primarch Melee Weapon", ws: 8, s: 7, ap: "1", i: 7, a: 6, w: 7, t: 6, sv: "2", inv: "3", fnp: "-", rules: { m_murderous: true } },
+  // PRIMARCHS (LOYALIST)
+  lion: [
+    { name: "Lion Sword", ws: 9, s: 7, ap: "2", i: 7, a: 6, w: 8, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_murderous: true } },
+    { name: "Wolf Blade", ws: 9, s: 6, ap: "2", i: 7, a: 6, w: 8, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_shred: true, m_rending: true } },
   ],
-  primarch_t7: [
-    { name: "Primarch Melee Weapon", ws: 7, s: 8, ap: "1", i: 6, a: 6, w: 7, t: 7, sv: "2", inv: "3", fnp: "-", rules: { m_murderous: true } },
+  khan: [
+    { name: "White Tiger Dao", ws: 8, s: 7, ap: "2", i: 7, a: 6, w: 7, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_murderous: true } },
+  ],
+  russ: [
+    { name: "Sword of Balenight", ws: 8, s: 7, ap: "2", i: 6, a: 7, w: 8, t: 7, sv: "2", inv: "4", fnp: "-", rules: { m_murderous: true } },
+    { name: "The Axe of Helwinter", ws: 8, s: 8, ap: "2", i: 5, a: 7, w: 8, t: 7, sv: "2", inv: "4", fnp: "-", rules: { m_shred: true } },
+  ],
+  dorn: [
+    { name: "Storm's Teeth (Chainsword)", ws: 8, s: 8, ap: "2", i: 5, a: 6, w: 8, t: 7, sv: "2", inv: "4", fnp: "-", rules: { m_shred: true } },
+    { name: "Auric Fist (Power Fist)", ws: 8, s: 10, ap: "1", i: 1, a: 6, w: 8, t: 7, sv: "2", inv: "4", fnp: "-", rules: { m_unwieldy: true } },
+  ],
+  sanguinius: [
+    { name: "The Blade Encarmine", ws: 9, s: 7, ap: "2", i: 7, a: 7, w: 8, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_murderous: true } },
+    { name: "The Spear of Telesto", ws: 9, s: 8, ap: "1", i: 6, a: 6, w: 8, t: 6, sv: "2", inv: "4", fnp: "-", rules: {} },
+    { name: "Moonsilver Blade", ws: 9, s: 6, ap: "2", i: 7, a: 7, w: 8, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_murderous: true } },
+  ],
+  ferrus: [
+    { name: "Forgebreaker", ws: 7, s: 10, ap: "1", i: 5, a: 5, w: 8, t: 7, sv: "2", inv: "3", fnp: "-", rules: { m_murderous: true } },
+    { name: "Medusan Fists", ws: 7, s: 8, ap: "2", i: 5, a: 5, w: 8, t: 7, sv: "2", inv: "3", fnp: "-", rules: {} },
+  ],
+  guilliman: [
+    { name: "The Gladius Incandor", ws: 7, s: 6, ap: "2", i: 6, a: 6, w: 7, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_murderous: true } },
+    { name: "Hand of Dominion (Fist)", ws: 7, s: 10, ap: "1", i: 1, a: 6, w: 7, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_unwieldy: true } },
+  ],
+  vulkan: [
+    { name: "Dawnbringer", ws: 7, s: 10, ap: "1", i: 5, a: 5, w: 9, t: 7, sv: "2", inv: "3", fnp: "-", rules: { m_murderous: true } },
+  ],
+  corax: [
+    { name: "Raven's Talons (pair)", ws: 8, s: 6, ap: "2", i: 7, a: 7, w: 7, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_shred: true, m_rending: true } },
+    { name: "Sable's Edge", ws: 8, s: 7, ap: "2", i: 6, a: 6, w: 7, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_murderous: true } },
+  ],
+  // PRIMARCHS (TRAITOR)
+  fulgrim: [
+    { name: "Fireblade (Sword)", ws: 9, s: 6, ap: "2", i: 8, a: 7, w: 7, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_murderous: true } },
+    { name: "Laer Blade", ws: 9, s: 7, ap: "2", i: 8, a: 7, w: 7, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_rending: true } },
+  ],
+  perturabo: [
+    { name: "Forgebreaker", ws: 7, s: 10, ap: "1", i: 5, a: 5, w: 8, t: 7, sv: "2", inv: "3", fnp: "-", rules: { m_murderous: true } },
+    { name: "Logos (Melee)", ws: 7, s: 8, ap: "2", i: 5, a: 5, w: 8, t: 7, sv: "2", inv: "3", fnp: "-", rules: {} },
+  ],
+  curze: [
+    { name: "Mercy & Forgiveness (Claws)", ws: 8, s: 6, ap: "2", i: 7, a: 7, w: 7, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_shred: true, m_rending: true } },
+  ],
+  angron: [
+    { name: "Gorefather & Gorechild", ws: 9, s: 8, ap: "2", i: 6, a: 8, w: 8, t: 7, sv: "2", inv: "4", fnp: "-", rules: { m_shred: true } },
+    { name: "Spite Furnace (Fists)", ws: 9, s: 7, ap: "2", i: 6, a: 8, w: 8, t: 7, sv: "2", inv: "4", fnp: "-", rules: {} },
+  ],
+  lorgar: [
+    { name: "Illuminarum (Crozius)", ws: 7, s: 7, ap: "2", i: 6, a: 5, w: 7, t: 6, sv: "2", inv: "4", fnp: "-", rules: {} },
+    { name: "Illuminarum (Force)", ws: 7, s: 7, ap: "2", i: 6, a: 5, w: 7, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_murderous: true } },
+  ],
+  mortarion: [
+    { name: "Silence (Scythe)", ws: 7, s: 8, ap: "2", i: 5, a: 5, w: 9, t: 7, sv: "2", inv: "4", fnp: "5", rules: { m_murderous: true } },
+    { name: "The Lantern (Melee)", ws: 7, s: 7, ap: "2", i: 5, a: 5, w: 9, t: 7, sv: "2", inv: "4", fnp: "5", rules: {} },
+  ],
+  magnus: [
+    { name: "Akhenteru (Force Staff)", ws: 7, s: 8, ap: "1", i: 6, a: 5, w: 7, t: 6, sv: "2", inv: "3", fnp: "-", rules: { m_murderous: true } },
+    { name: "Psychic Blades", ws: 7, s: 6, ap: "2", i: 6, a: 6, w: 7, t: 6, sv: "2", inv: "3", fnp: "-", rules: {} },
+  ],
+  horus: [
+    { name: "Worldbreaker (Mace)", ws: 8, s: 10, ap: "1", i: 6, a: 6, w: 8, t: 7, sv: "2", inv: "4", fnp: "-", rules: { m_murderous: true } },
+    { name: "Talon of Horus (Claw)", ws: 8, s: 7, ap: "2", i: 7, a: 7, w: 8, t: 7, sv: "2", inv: "4", fnp: "-", rules: { m_shred: true } },
+  ],
+  alpharius: [
+    { name: "The Pale Spear", ws: 7, s: 7, ap: "1", i: 6, a: 6, w: 7, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_murderous: true } },
   ],
   daemon_lesser: [
     { name: "Warp Claws", ws: 3, s: 4, ap: "-", i: 4, a: 2, w: 1, t: 4, sv: "-", inv: "5", fnp: "-", rules: {} },
@@ -1384,22 +2146,103 @@ function resolveChargePhase(params) {
     doOverwatch, // whether defender fires overwatch
     chargerSv, chargerInv, chargerFnp, // charger's saves for overwatch resolution
     chargerT, // charger's T for overwatch
+    // Volley Fire
+    doVolleyFire, volleyFireShots, volleyFireS, volleyFireAP,
+    defenderW_target, // defender wounds per model (for volley fire casualty calc)
   } = params;
 
   const log = [];
-  const rolls = { charge: [], overwatch: { hit: [], wound: [], save: [] }, melee: { hit: [], wound: [], save: [], fnp: [] }, defender: { hit: [], wound: [], save: [], fnp: [] } };
+  const rolls = { charge: [], volley: { hit: [], wound: [], save: [] }, overwatch: { hit: [], wound: [], save: [] }, melee: { hit: [], wound: [], save: [], fnp: [] }, defender: { hit: [], wound: [], save: [], fnp: [] } };
   
   // ━━ STEP 1: Declare Charge ━━
   log.push({ phase: "Charge", text: `Declaring charge against target ${chargeDistance}" away` });
   if (terrain) log.push({ phase: "Charge", text: `⚠ Charging through Difficult Terrain — subtract 2" from charge roll` });
   if (disordered) log.push({ phase: "Charge", text: `⚠ Disordered Charge — charging unit loses +1A bonus` });
 
+  // ━━ STEP 1b: Volley Fire (Charger fires Assault weapons at snap shot) ━━
+  let volleyCasualties = 0;
+  let remainingDefendersAfterVolley = defenderModels;
+  if (doVolleyFire && volleyFireShots > 0 && chargingModels > 0) {
+    log.push({ phase: "Volley Fire", text: `🔫 Charger fires Volley Fire! (Assault weapons — Snap Shots, hits on 6+)` });
+    const vfTotalShots = chargingModels * volleyFireShots;
+    log.push({ phase: "Volley Fire", text: `${chargingModels} model(s) × ${volleyFireShots} shot(s) = ${vfTotalShots} total shots` });
+
+    const vfHitRolls = rollD6s(vfTotalShots);
+    rolls.volley.hit = vfHitRolls.map(r => ({ value: r, success: r >= 6 }));
+    const vfHits = vfHitRolls.filter(r => r >= 6).length;
+    log.push({ phase: "Volley Fire", text: `To Hit (6+): ${vfHits} hit(s) from ${vfTotalShots} shots` });
+
+    if (vfHits > 0) {
+      const vfWoundNeeded = getWoundRoll(volleyFireS, defenderT);
+      if (vfWoundNeeded !== null) {
+        log.push({ phase: "Volley Fire", text: `To Wound: S${volleyFireS} vs T${defenderT} → needs ${vfWoundNeeded}+` });
+        const vfWoundRolls = rollD6s(vfHits);
+        rolls.volley.wound = vfWoundRolls.map(r => ({ value: r, success: r >= vfWoundNeeded }));
+        const vfWounds = vfWoundRolls.filter(r => r >= vfWoundNeeded).length;
+        log.push({ phase: "Volley Fire", text: `${vfWounds} wound(s) from ${vfHits} hit(s)` });
+
+        if (vfWounds > 0) {
+          // Save
+          const svN = defenderSv !== "-" ? parseInt(defenderSv) : null;
+          const invN = defenderInv !== "-" ? parseInt(defenderInv) : null;
+          const apNum = volleyFireAP !== "-" ? parseInt(volleyFireAP) : null;
+          let vfBestSave = null;
+          if (invN) vfBestSave = invN;
+          if (svN && apNum && svN < apNum) {
+            vfBestSave = vfBestSave ? Math.min(vfBestSave, svN) : svN;
+          } else if (svN && !apNum) {
+            vfBestSave = vfBestSave ? Math.min(vfBestSave, svN) : svN;
+          }
+
+          if (vfBestSave && vfBestSave <= 6) {
+            const vfSaveRolls = rollD6s(vfWounds);
+            rolls.volley.save = vfSaveRolls.map(r => ({ value: r, success: r >= vfBestSave }));
+            const vfSaved = vfSaveRolls.filter(r => r >= vfBestSave).length;
+            let vfUnsaved = vfWounds - vfSaved;
+
+            // FNP
+            const vfFnpN = defenderFnp !== "-" ? parseInt(defenderFnp) : null;
+            if (vfFnpN && vfUnsaved > 0) {
+              const fnpRolls = rollD6s(vfUnsaved);
+              const fnpSaved = fnpRolls.filter(r => r >= vfFnpN).length;
+              vfUnsaved -= fnpSaved;
+              log.push({ phase: "Volley Fire", text: `Saves (${vfBestSave}+): ${vfSaved} saved, FNP (${vfFnpN}+): ${fnpSaved} saved → ${vfUnsaved} unsaved` });
+            } else {
+              log.push({ phase: "Volley Fire", text: `Saves (${vfBestSave}+): ${vfSaved} saved, ${vfUnsaved} unsaved wound(s)` });
+            }
+
+            const defW = defenderW_target || defenderW || 1;
+            volleyCasualties = defW > 1 ? Math.floor(vfUnsaved / defW) : vfUnsaved;
+            if (defW > 1 && vfUnsaved > 0) {
+              const remainder = vfUnsaved % defW;
+              log.push({ phase: "Volley Fire", text: `${vfUnsaved} unsaved vs ${defW}W models → ${volleyCasualties} model(s) slain${remainder > 0 ? `, ${remainder} wound(s) on a model` : ""}` });
+            }
+          } else {
+            volleyCasualties = vfWounds;
+            const defW = defenderW_target || defenderW || 1;
+            volleyCasualties = defW > 1 ? Math.floor(vfWounds / defW) : vfWounds;
+            log.push({ phase: "Volley Fire", text: `No save available — ${volleyCasualties} model(s) slain` });
+          }
+        }
+      } else {
+        log.push({ phase: "Volley Fire", text: `S${volleyFireS} vs T${defenderT}: Cannot wound!` });
+      }
+    }
+
+    if (volleyCasualties > 0) {
+      log.push({ phase: "Volley Fire", text: `🔫 ${volleyCasualties} model(s) slain by Volley Fire!` });
+      remainingDefendersAfterVolley = Math.max(defenderModels - volleyCasualties, 0);
+    } else {
+      log.push({ phase: "Volley Fire", text: `Volley Fire inflicts no casualties.` });
+    }
+  }
+
   // ━━ STEP 2: Overwatch ━━
   let overwatchCasualties = 0;
-  if (doOverwatch && overwatchShots > 0 && defenderModels > 0) {
+  if (doOverwatch && overwatchShots > 0 && remainingDefendersAfterVolley > 0) {
     log.push({ phase: "Overwatch", text: `🔥 Defender fires Overwatch! (Snap Shots — BS1 equivalent, hits on 6+)` });
-    const owTotalShots = defenderModels * overwatchShots;
-    log.push({ phase: "Overwatch", text: `${defenderModels} model(s) × ${overwatchShots} shot(s) = ${owTotalShots} total shots` });
+    const owTotalShots = remainingDefendersAfterVolley * overwatchShots;
+    log.push({ phase: "Overwatch", text: `${remainingDefendersAfterVolley} model(s) × ${overwatchShots} shot(s) = ${owTotalShots} total shots` });
     
     const owHitRolls = rollD6s(owTotalShots);
     rolls.overwatch.hit = owHitRolls.map(r => ({ value: r, success: r >= 6 }));
@@ -1461,7 +2304,7 @@ function resolveChargePhase(params) {
   const survivingChargers = Math.max(chargingModels - overwatchCasualties, 0);
   if (survivingChargers === 0) {
     log.push({ phase: "Charge", text: `All charging models slain by Overwatch! Charge fails.` });
-    return { log, rolls, chargeSucceeded: false, chargeRoll: 0, overwatchCasualties, survivingChargers: 0, meleeAttackerCasualties: 0, meleeDefenderCasualties: 0, combatResult: null };
+    return { log, rolls, chargeSucceeded: false, chargeRoll: 0, overwatchCasualties, volleyCasualties, survivingChargers: 0, meleeAttackerCasualties: 0, meleeDefenderCasualties: 0, combatResult: null };
   }
 
   // ━━ STEP 3: Roll Charge Distance ━━
@@ -1478,7 +2321,7 @@ function resolveChargePhase(params) {
   
   if (!chargeSucceeded) {
     log.push({ phase: "Charge", text: `❌ Charge FAILED! Needed ${chargeDistance}", rolled ${effectiveCharge}". Unit moves ${effectiveCharge}" toward target.` });
-    return { log, rolls, chargeSucceeded: false, chargeRoll: effectiveCharge, overwatchCasualties, survivingChargers, meleeAttackerCasualties: 0, meleeDefenderCasualties: 0, combatResult: null };
+    return { log, rolls, chargeSucceeded: false, chargeRoll: effectiveCharge, overwatchCasualties, volleyCasualties, survivingChargers, meleeAttackerCasualties: 0, meleeDefenderCasualties: 0, combatResult: null };
   }
   
   log.push({ phase: "Charge", text: `✅ Charge SUCCEEDED! ${effectiveCharge}" ≥ ${chargeDistance}" needed.` });
@@ -1507,7 +2350,7 @@ function resolveChargePhase(params) {
   }
 
   const totalChargerAttacks = survivingChargers * chargerAttacks;
-  const totalDefenderAttacks = defenderModels * defenderA;
+  const totalDefenderAttacks = remainingDefendersAfterVolley * defenderA;
   
   log.push({ phase: "Melee", text: `Initiative order: Charger I${chargerEffI} vs Defender I${defenderEffI} → ${chargerFirst ? "Charger strikes first" : "Defender strikes first"}` });
 
@@ -1633,7 +2476,7 @@ function resolveChargePhase(params) {
   // Resolve in Initiative order
   let meleeDefenderCasualties = 0;
   let meleeAttackerCasualties = 0;
-  let remainingDefenders = defenderModels;
+  let remainingDefenders = remainingDefendersAfterVolley;
   let remainingChargers = survivingChargers;
 
   if (chargerFirst) {
@@ -1708,7 +2551,7 @@ function resolveChargePhase(params) {
 
   return { 
     log, rolls, chargeSucceeded: true, chargeRoll: effectiveCharge, 
-    overwatchCasualties, survivingChargers, 
+    overwatchCasualties, volleyCasualties, survivingChargers, 
     meleeAttackerCasualties, meleeDefenderCasualties,
     combatResult, remainingChargers, remainingDefenders
   };
@@ -1718,7 +2561,7 @@ function resolveChargePhase(params) {
 
 function getUnitIconType(name) {
   const n = name.toLowerCase();
-  if (n.includes("primarch")) return "primarch";
+  if (n.includes("primarch") || n.includes("lion el") || n.includes("jaghatai") || n.includes("leman russ") || n.includes("rogal dorn") || n.includes("sanguinius") || n.includes("ferrus") || n.includes("guilliman") || n.includes("vulkan") || n.includes("corax") || n.includes("fulgrim") || n.includes("perturabo") || n.includes("curze") || n.includes("angron") || n.includes("lorgar") || n.includes("mortarion") || n.includes("magnus") || n.includes("horus") || n.includes("alpharius")) return "primarch";
   if (n.includes("daemon")) return "daemon";
   if (n.includes("saturnine") && n.includes("dread")) return "dreadnought";
   // HQ characters - must check before terminator matching
@@ -2132,6 +2975,8 @@ const phaseColors = {
   "Checks": "#8b5a2b",
   "Result": "#2e7d32",
   "Charge": "#9b2d2d",
+  "Volley Fire": "#6b8e23",
+  "Return Fire": "#8b4513",
   "Overwatch": "#c46a1b",
   "Melee": "#7a1e1e",
   "Combat Res": "#4a148c"
@@ -2148,6 +2993,8 @@ const phaseIcons = {
   "Checks": "📋",
   "Result": "☠",
   "Charge": "🏃",
+  "Volley Fire": "🔫",
+  "Return Fire": "🎯",
   "Overwatch": "🔥",
   "Melee": "⚔",
   "Combat Res": "⚖"
@@ -2233,6 +3080,112 @@ function CheckToggle({ checked, label, onChange }) {
 // ━━━ MAIN APP ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 function ShootingResolver() {
+  // ━━ PHASE SELECTOR ━━
+  const [activePhase, setActivePhase] = useState("shooting"); // "shooting" or "assault"
+
+  // ━━ ASSAULT PHASE STATE ━━
+  const [assaultResult, setAssaultResult] = useState(null);
+  // Attacker
+  const [aUnit, setAUnit] = useState(null);
+  const [aShowPresets, setAShowPresets] = useState(false);
+  const [aSelectedMelee, setASelectedMelee] = useState(null);
+  const [aModels, setAModels] = useState(10);
+  const [aWS, setAWS] = useState(4);
+  const [aS, setAS] = useState(4);
+  const [aAP, setAAP] = useState("-");
+  const [aI, setAI] = useState(4);
+  const [aA, setAA] = useState(1);
+  const [aW, setAW] = useState(1);
+  const [aT, setAT] = useState(4);
+  const [aSv, setASv] = useState("3");
+  const [aInv, setAInv] = useState("-");
+  const [aFnp, setAFnp] = useState("-");
+  const [aRules, setARules] = useState({});
+  // Defender
+  const [dUnit, setDUnit] = useState(null);
+  const [dShowPresets, setDShowPresets] = useState(false);
+  const [dSelectedMelee, setDSelectedMelee] = useState(null);
+  const [dModels, setDModels] = useState(10);
+  const [dWS, setDWS] = useState(4);
+  const [dS, setDS] = useState(4);
+  const [dAP, setDAP] = useState("-");
+  const [dI, setDI] = useState(4);
+  const [dA, setDA] = useState(1);
+  const [dW, setDW] = useState(1);
+  const [dT, setDT] = useState(4);
+  const [dSv, setDSv] = useState("3");
+  const [dInv, setDInv] = useState("-");
+  const [dFnp, setDFnp] = useState("-");
+  const [dRules, setDRules] = useState({});
+  // Options
+  const [assaultCharging, setAssaultCharging] = useState(true);
+  const [assaultDisordered, setAssaultDisordered] = useState(false);
+
+  // Challenge sub-phase
+  const [challengeEnabled, setChallengeEnabled] = useState(false);
+  const [challengeResult, setChallengeResult] = useState(null);
+  const [atkGambit, setAtkGambit] = useState("none");
+  const [defGambit, setDefGambit] = useState("none");
+  const [atkSupport, setAtkSupport] = useState(0);
+  const [defSupport, setDefSupport] = useState(0);
+
+  const handleChallengeResolve = () => {
+    const res = resolveChallenge({
+      atkWS: aWS, atkS: aS, atkAP: aAP, atkI: aI, atkA: aA, atkW: aW, atkT: aT,
+      atkSv: aSv, atkInv: aInv, atkFnp: aFnp, atkRules: aRules,
+      atkGambit, atkName: aUnit?.name || "Attacker Champion",
+      defWS: dWS, defS: dS, defAP: dAP, defI: dI, defA: dA, defW: dW, defT: dT,
+      defSv: dSv, defInv: dInv, defFnp: dFnp, defRules: dRules,
+      defGambit, defName: dUnit?.name || "Defender Champion",
+      atkSupport, defSupport, isCharging: assaultCharging,
+    });
+    setChallengeResult(res);
+  };
+
+  // Melee weapons for assault phase
+  const aMeleeWeapons = useMemo(() => aUnit ? (MELEE_WEAPON_PROFILES[aUnit.id] || []) : [], [aUnit]);
+  const dMeleeWeapons = useMemo(() => dUnit ? (MELEE_WEAPON_PROFILES[dUnit.id] || []) : [], [dUnit]);
+
+  const meleeUnitRoster = useMemo(() => {
+    return UNIT_PRESETS.map(cat => ({
+      ...cat,
+      units: cat.units.filter(u => MELEE_WEAPON_PROFILES[u.id]?.length > 0)
+    })).filter(cat => cat.units.length > 0);
+  }, []);
+
+  const applyAssaultUnit = useCallback((unit, side) => {
+    const meleeWeapons = MELEE_WEAPON_PROFILES[unit.id] || [];
+    const w0 = meleeWeapons[0];
+    if (side === "attacker") {
+      setAUnit(unit); setAShowPresets(false); setAModels(unit.models);
+      if (w0) { setASelectedMelee(w0); setAWS(w0.ws); setAS(w0.s); setAAP(w0.ap); setAI(w0.i); setAA(w0.a); setAW(w0.w); setAT(w0.t); setASv(w0.sv); setAInv(w0.inv); setAFnp(w0.fnp); setARules(w0.rules || {}); }
+    } else {
+      setDUnit(unit); setDShowPresets(false); setDModels(unit.models);
+      if (w0) { setDSelectedMelee(w0); setDWS(w0.ws); setDS(w0.s); setDAP(w0.ap); setDI(w0.i); setDA(w0.a); setDW(w0.w); setDT(w0.t); setDSv(w0.sv); setDInv(w0.inv); setDFnp(w0.fnp); setDRules(w0.rules || {}); }
+    }
+  }, []);
+
+  const applyAssaultMelee = useCallback((w, side) => {
+    if (side === "attacker") {
+      setASelectedMelee(w); setAWS(w.ws); setAS(w.s); setAAP(w.ap); setAI(w.i); setAA(w.a); setAW(w.w); setAT(w.t); setASv(w.sv); setAInv(w.inv); setAFnp(w.fnp); setARules(w.rules || {});
+    } else {
+      setDSelectedMelee(w); setDWS(w.ws); setDS(w.s); setDAP(w.ap); setDI(w.i); setDA(w.a); setDW(w.w); setDT(w.t); setDSv(w.sv); setDInv(w.inv); setDFnp(w.fnp); setDRules(w.rules || {});
+    }
+  }, []);
+
+  const handleAssaultResolve = () => {
+    const res = resolveAssaultPhase({
+      attackerModels: aModels, attackerWS: aWS, attackerS: aS, attackerAP: aAP,
+      attackerI: aI, attackerA: aA, attackerW: aW, attackerSv: aSv, attackerInv: aInv,
+      attackerFnp: aFnp, attackerT: aT, attackerRules: aRules,
+      defenderModels: dModels, defenderWS: dWS, defenderS: dS, defenderAP: dAP,
+      defenderI: dI, defenderA: dA, defenderW: dW, defenderSv: dSv, defenderInv: dInv,
+      defenderFnp: dFnp, defenderT: dT, defenderRules: dRules,
+      isCharging: assaultCharging, disordered: assaultDisordered,
+    });
+    setAssaultResult(res);
+  };
+
   // Attacker
   const [numModels, setNumModels] = useState(10);
   const [numShots, setNumShots] = useState(1);
@@ -2351,6 +3304,18 @@ function ShootingResolver() {
   const [overwatchShots, setOverwatchShots] = useState(1);
   const [overwatchS, setOverwatchS] = useState(4);
   const [overwatchAP, setOverwatchAP] = useState("5");
+  // Volley Fire (charger fires Assault weapons at snap shot before charging)
+  const [doVolleyFire, setDoVolleyFire] = useState(false);
+  const [volleyFireShots, setVolleyFireShots] = useState(1);
+  const [volleyFireS, setVolleyFireS] = useState(4);
+  const [volleyFireAP, setVolleyFireAP] = useState("5");
+  const [selectedVolleyWeapon, setSelectedVolleyWeapon] = useState(null);
+  // Return Fire (defender reaction — fires ranged weapons at snap shot)
+  const [doReturnFire, setDoReturnFire] = useState(false);
+  const [returnFireShots, setReturnFireShots] = useState(1);
+  const [returnFireS, setReturnFireS] = useState(4);
+  const [returnFireAP, setReturnFireAP] = useState("5");
+  const [selectedReturnWeapon, setSelectedReturnWeapon] = useState(null);
   // Charger melee stats
   const [chargerWS, setChargerWS] = useState(4);
   const [chargerS_melee, setChargerS_melee] = useState(4);
@@ -2384,6 +3349,37 @@ function ShootingResolver() {
     if (!selectedUnit) return [];
     return MELEE_WEAPON_PROFILES[selectedUnit.id] || [];
   }, [selectedUnit]);
+
+  // Assault weapons available for Volley Fire (charger fires before charging)
+  const chargerAssaultWeapons = useMemo(() => {
+    if (!selectedUnit) return [];
+    const weapons = WEAPON_PROFILES[selectedUnit.id] || [];
+    return weapons.filter(w => w.type === "Assault" || w.type === "Pistol");
+  }, [selectedUnit]);
+
+  const applyVolleyWeapon = useCallback((weapon) => {
+    setSelectedVolleyWeapon(weapon);
+    setVolleyFireShots(weapon.shots);
+    setVolleyFireS(weapon.s);
+    setVolleyFireAP(weapon.ap);
+  }, []);
+
+  // Defender's ranged weapons for Return Fire reaction
+  const defenderRangedWeapons = useMemo(() => {
+    if (!targetPresetName) return [];
+    for (const cat of UNIT_PRESETS) {
+      const found = cat.units.find(u => u.name === targetPresetName);
+      if (found && found.id) return WEAPON_PROFILES[found.id] || [];
+    }
+    return [];
+  }, [targetPresetName]);
+
+  const applyReturnWeapon = useCallback((weapon) => {
+    setSelectedReturnWeapon(weapon);
+    setReturnFireShots(weapon.shots);
+    setReturnFireS(weapon.s);
+    setReturnFireAP(weapon.ap);
+  }, []);
 
   const defenderMeleeWeapons = useMemo(() => {
     if (!targetPresetName) return [];
@@ -2453,6 +3449,25 @@ function ShootingResolver() {
     setResult(res);
     setHistory(prev => [{ ...res, timestamp: Date.now() }, ...prev].slice(0, 20));
     setChargeResult(null); // Reset charge when re-resolving shooting
+    setReturnFireResult(null); // Reset return fire
+  };
+
+  // Return Fire state
+  const [returnFireResult, setReturnFireResult] = useState(null);
+
+  const handleReturnFire = () => {
+    // Use attacker's defensive stats from the selected unit
+    const attackerUnit = selectedUnit || {};
+    const res = resolveReturnFire({
+      defenderModels: targetModels,
+      returnFireShots, returnFireS, returnFireAP,
+      attackerT: attackerUnit.t || toughness || 4,
+      attackerSv: attackerUnit.sv || "3",
+      attackerInv: attackerUnit.inv || "-",
+      attackerFnp: attackerUnit.fnp || "-",
+      attackerW: attackerUnit.w || 1,
+    });
+    setReturnFireResult(res);
   };
 
   const handleChargeResolve = () => {
@@ -2475,6 +3490,10 @@ function ShootingResolver() {
       overwatchRules: {},
       chargerSv, chargerInv: chargerInvSv, chargerFnp: chargerFnpSv,
       chargerT: chargerT_melee,
+      // Volley Fire
+      doVolleyFire,
+      volleyFireShots, volleyFireS, volleyFireAP,
+      defenderW_target: defenderW_melee,
     };
     const res = resolveChargePhase(chargeParams);
     setChargeResult(res);
@@ -2511,17 +3530,40 @@ function ShootingResolver() {
             <div style={{ fontSize: 28, color: "#b8860b" }}>⚔</div>
             <div>
               <h1 style={{ margin: 0, fontSize: 22, fontFamily: "'Cinzel', serif", fontWeight: 700, color: "#8b6508", letterSpacing: 2 }}>
-                SHOOTING PHASE RESOLVER
+                COMBAT PHASE RESOLVER
               </h1>
               <div style={{ fontSize: 12, color: "#8a7e6e", fontFamily: "'Cinzel', serif", letterSpacing: 3 }}>
-                THE HORUS HERESY · AGE OF DARKNESS · 3RD EDITION · v1.01
+                THE HORUS HERESY · AGE OF DARKNESS · 3RD EDITION · v1.09
               </div>
             </div>
+          </div>
+          {/* Phase Selector Tabs */}
+          <div style={{ display: "flex", gap: 0, marginTop: 14 }}>
+            {[
+              { id: "shooting", label: "⚔ SHOOTING PHASE", color: "#b8860b" },
+              { id: "assault", label: "🗡 ASSAULT PHASE", color: "#9b2d2d" },
+            ].map(phase => {
+              const active = activePhase === phase.id;
+              return (
+                <button key={phase.id} onClick={() => setActivePhase(phase.id)} style={{
+                  flex: 1, padding: "10px 16px", fontSize: 13, fontFamily: "'Cinzel', serif", fontWeight: 700,
+                  letterSpacing: 2, cursor: "pointer", border: "none", borderBottom: active ? `3px solid ${phase.color}` : "3px solid transparent",
+                  background: active ? "rgba(255,255,255,0.6)" : "transparent",
+                  color: active ? phase.color : "#8a7e6e",
+                  transition: "all 0.2s ease",
+                }}>
+                  {phase.label}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
 
       <div style={{ maxWidth: 960, margin: "0 auto", padding: "20px 16px" }}>
+
+        {/* ━━━━━━━━━━━ SHOOTING PHASE ━━━━━━━━━━━ */}
+        {activePhase === "shooting" && (<>
         {/* Input Panels */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16, marginBottom: 16 }}>
 
@@ -2910,6 +3952,142 @@ function ShootingResolver() {
           </div>
         )}
 
+        {/* ━━━ RETURN FIRE PANEL (Shooting Phase Reaction) ━━━ */}
+        {result && (
+          <div style={{ ...panelStyle, marginBottom: 16, borderColor: doReturnFire ? "#8b4513" : "#d0c4aa", transition: "border-color 0.3s ease" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: doReturnFire ? 12 : 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 18, color: "#8b4513" }}>🎯</span>
+                <span style={{ fontFamily: "'Cinzel', serif", fontWeight: 700, fontSize: 12, color: "#8b4513", letterSpacing: 2 }}>RETURN FIRE REACTION</span>
+              </div>
+              <CheckToggle checked={doReturnFire} label="Enabled" onChange={(v) => { setDoReturnFire(v); if (!v) setReturnFireResult(null); }} />
+            </div>
+
+            {doReturnFire && (
+              <div style={{ animation: "fadeIn 0.2s ease" }}>
+                <div style={{ fontSize: 10, color: "#8a7e6e", fontFamily: "'EB Garamond', serif", marginBottom: 10, fontStyle: "italic" }}>
+                  Defender elects to fire back as a reaction — Snap Shots (6+ to hit)
+                </div>
+
+                {/* Weapon Selector */}
+                {defenderRangedWeapons.length > 0 && (
+                  <div style={{ marginBottom: 10 }}>
+                    <div style={{ fontSize: 9, fontFamily: "'Cinzel', serif", color: "#8a7e6e", letterSpacing: 1, marginBottom: 4 }}>SELECT WEAPON</div>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                      {defenderRangedWeapons.map(w => {
+                        const active = selectedReturnWeapon?.name === w.name;
+                        return (
+                          <button key={w.name} onClick={() => applyReturnWeapon(w)} style={{
+                            padding: "6px 12px", borderRadius: 6, fontSize: 11, cursor: "pointer",
+                            fontFamily: "'Cinzel', serif", fontWeight: active ? 700 : 400,
+                            background: active ? "rgba(139,69,19,0.15)" : "#f0ebe2",
+                            border: `1.5px solid ${active ? "#8b4513" : "#d0c4aa"}`,
+                            color: active ? "#6b3410" : "#6a5e4e",
+                            transition: "all 0.15s ease", textAlign: "left",
+                            display: "flex", flexDirection: "column", gap: 1, minWidth: 100,
+                          }}>
+                            <div style={{ fontWeight: 600, fontSize: 11 }}>{w.name}</div>
+                            <div style={{ fontSize: 8, color: active ? "#5a2a0c" : "#8a7e6e", letterSpacing: 0.5 }}>
+                              {w.shots} shots S{w.s} AP{w.ap} {w.type}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 12 }}>
+                  <NumberInput label="Shots/Model" value={returnFireShots} onChange={setReturnFireShots} min={1} max={10} />
+                  <NumberInput label="Strength" value={returnFireS} onChange={setReturnFireS} min={1} max={10} />
+                  <SelectInput label="AP" value={returnFireAP} onChange={setReturnFireAP} options={apOptions} />
+                </div>
+
+                <button onClick={handleReturnFire} style={{
+                  width: "100%", padding: "12px 24px", fontSize: 14, fontFamily: "'Cinzel', serif", fontWeight: 700,
+                  letterSpacing: 2, background: "linear-gradient(180deg, #a0622a 0%, #7a4a1a 100%)",
+                  border: "none", borderRadius: 6, color: "#fff", cursor: "pointer",
+                  textTransform: "uppercase", boxShadow: "0 2px 12px rgba(139,69,19,0.25)",
+                  marginBottom: returnFireResult ? 14 : 0
+                }}>
+                  🎯 RESOLVE RETURN FIRE
+                </button>
+
+                {/* Return Fire Results */}
+                {returnFireResult && (
+                  <div style={{ animation: "fadeIn 0.3s ease", marginTop: 12 }}>
+                    {/* Summary */}
+                    <div style={{
+                      display: "flex", gap: 12, alignItems: "center", justifyContent: "center",
+                      padding: "10px 16px", borderRadius: 8, marginBottom: 12,
+                      background: returnFireResult.casualties > 0 ? "rgba(139,69,19,0.08)" : "rgba(100,100,100,0.05)",
+                      border: `2px solid ${returnFireResult.casualties > 0 ? "#8b4513" : "#aaa"}`
+                    }}>
+                      <span style={{ fontSize: 24 }}>{returnFireResult.casualties > 0 ? "🎯" : "✖"}</span>
+                      <div style={{ textAlign: "center" }}>
+                        <div style={{
+                          fontFamily: "'Cinzel', serif", fontWeight: 900, fontSize: 16, letterSpacing: 2,
+                          color: returnFireResult.casualties > 0 ? "#8b4513" : "#8a7e6e"
+                        }}>
+                          {returnFireResult.casualties > 0 ? `${returnFireResult.casualties} ATTACKER MODEL(S) SLAIN` : "NO CASUALTIES"}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Dice Displays */}
+                    {returnFireResult.rolls.hit.length > 0 && (
+                      <div style={{ marginBottom: 8 }}>
+                        <div style={{ fontSize: 11, color: "#8b4513", marginBottom: 4, fontFamily: "'Cinzel', serif" }}>RETURN FIRE — TO HIT (6+)</div>
+                        <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                          {returnFireResult.rolls.hit.map((d, i) => <DieIcon key={`rfh${i}`} value={d.value} success={d.success} small />)}
+                        </div>
+                      </div>
+                    )}
+                    {returnFireResult.rolls.wound.length > 0 && (
+                      <div style={{ marginBottom: 8 }}>
+                        <div style={{ fontSize: 11, color: "#8b4513", marginBottom: 4, fontFamily: "'Cinzel', serif" }}>RETURN FIRE — TO WOUND</div>
+                        <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                          {returnFireResult.rolls.wound.map((d, i) => <DieIcon key={`rfw${i}`} value={d.value} success={d.success} small />)}
+                        </div>
+                      </div>
+                    )}
+                    {returnFireResult.rolls.save.length > 0 && (
+                      <div style={{ marginBottom: 8 }}>
+                        <div style={{ fontSize: 11, color: "#8b4513", marginBottom: 4, fontFamily: "'Cinzel', serif" }}>RETURN FIRE — SAVES</div>
+                        <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                          {returnFireResult.rolls.save.map((d, i) => <DieIcon key={`rfs${i}`} value={d.value} success={d.success} small />)}
+                        </div>
+                      </div>
+                    )}
+                    {returnFireResult.rolls.fnp && returnFireResult.rolls.fnp.length > 0 && (
+                      <div style={{ marginBottom: 8 }}>
+                        <div style={{ fontSize: 11, color: "#8b4513", marginBottom: 4, fontFamily: "'Cinzel', serif" }}>RETURN FIRE — FNP</div>
+                        <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                          {returnFireResult.rolls.fnp.map((d, i) => <DieIcon key={`rff${i}`} value={d.value} success={d.success} small />)}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Log */}
+                    <div style={{ marginTop: 8 }}>
+                      {returnFireResult.log.map((entry, i) => (
+                        <div key={i} style={{
+                          fontSize: 12, padding: "3px 8px", borderRadius: 4,
+                          marginBottom: 2, display: "flex", alignItems: "center", gap: 6,
+                          background: "rgba(139,69,19,0.04)"
+                        }}>
+                          <span style={{ fontSize: 10 }}>{phaseIcons[entry.phase] || "•"}</span>
+                          <span style={{ color: phaseColors[entry.phase] || "#6a5e4e", fontFamily: "'EB Garamond', serif" }}>{entry.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ━━━ CHARGE PHASE PANEL ━━━ */}
         {result && (
           <div style={{ ...panelStyle, marginBottom: 16, borderColor: showCharge ? "#9b2d2d" : "#d0c4aa", transition: "border-color 0.3s ease" }}>
@@ -2941,8 +4119,52 @@ function ShootingResolver() {
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8, justifyContent: "flex-end" }}>
                     <CheckToggle checked={doOverwatch} label="Overwatch" onChange={setDoOverwatch} />
+                    <CheckToggle checked={doVolleyFire} label="Volley Fire" onChange={setDoVolleyFire} />
                   </div>
                 </div>
+
+                {/* Volley Fire Configuration */}
+                {doVolleyFire && (
+                  <div style={{
+                    padding: 12, borderRadius: 6, marginBottom: 14,
+                    background: "rgba(107,142,35,0.06)", border: "1px solid rgba(107,142,35,0.25)"
+                  }}>
+                    <div style={{ fontSize: 10, fontFamily: "'Cinzel', serif", fontWeight: 700, color: "#6b8e23", letterSpacing: 1.5, marginBottom: 8 }}>
+                      🔫 VOLLEY FIRE (CHARGER — ASSAULT WEAPONS, SNAP SHOTS 6+)
+                    </div>
+                    {chargerAssaultWeapons.length > 0 && (
+                      <div style={{ marginBottom: 10 }}>
+                        <div style={{ fontSize: 9, fontFamily: "'Cinzel', serif", color: "#8a7e6e", letterSpacing: 1, marginBottom: 4 }}>SELECT WEAPON</div>
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                          {chargerAssaultWeapons.map(w => {
+                            const active = selectedVolleyWeapon?.name === w.name;
+                            return (
+                              <button key={w.name} onClick={() => applyVolleyWeapon(w)} style={{
+                                padding: "6px 12px", borderRadius: 6, fontSize: 11, cursor: "pointer",
+                                fontFamily: "'Cinzel', serif", fontWeight: active ? 700 : 400,
+                                background: active ? "rgba(107,142,35,0.15)" : "#f0ebe2",
+                                border: `1.5px solid ${active ? "#6b8e23" : "#d0c4aa"}`,
+                                color: active ? "#4a6a10" : "#6a5e4e",
+                                transition: "all 0.15s ease", textAlign: "left",
+                                display: "flex", flexDirection: "column", gap: 1, minWidth: 100,
+                              }}>
+                                <div style={{ fontWeight: 600, fontSize: 11 }}>{w.name}</div>
+                                <div style={{ fontSize: 8, color: active ? "#3a5a08" : "#8a7e6e", letterSpacing: 0.5 }}>
+                                  {w.shots} shots S{w.s} AP{w.ap} {w.type}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+                      <NumberInput label="Shots/Model" value={volleyFireShots} onChange={setVolleyFireShots} min={1} max={10} />
+                      <NumberInput label="Strength" value={volleyFireS} onChange={setVolleyFireS} min={1} max={10} />
+                      <SelectInput label="AP" value={volleyFireAP} onChange={setVolleyFireAP} options={apOptions} />
+                    </div>
+                  </div>
+                )}
 
                 {/* Overwatch Configuration */}
                 {doOverwatch && (
@@ -3118,6 +4340,9 @@ function ShootingResolver() {
 
                     {/* Stats Summary */}
                     <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap", justifyContent: "center" }}>
+                      {chargeResult.volleyCasualties > 0 && (
+                        <MiniStat label="Volley Kills" value={chargeResult.volleyCasualties} color="#6b8e23" />
+                      )}
                       {chargeResult.overwatchCasualties > 0 && (
                         <MiniStat label="Overwatch Kills" value={chargeResult.overwatchCasualties} color="#c46a1b" />
                       )}
@@ -3138,6 +4363,14 @@ function ShootingResolver() {
                     </div>
 
                     {/* Dice Displays */}
+                    {chargeResult.rolls.volley && chargeResult.rolls.volley.hit.length > 0 && (
+                      <div style={{ marginBottom: 8 }}>
+                        <div style={{ fontSize: 11, color: "#6b8e23", marginBottom: 4, fontFamily: "'Cinzel', serif" }}>VOLLEY FIRE</div>
+                        <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                          {chargeResult.rolls.volley.hit.map((d, i) => <DieIcon key={`vh${i}`} value={d.value} success={d.success} small />)}
+                        </div>
+                      </div>
+                    )}
                     {chargeResult.rolls.charge.length > 0 && (
                       <div style={{ marginBottom: 8 }}>
                         <div style={{ fontSize: 11, color: "#6a5e4e", marginBottom: 4, fontFamily: "'Cinzel', serif" }}>CHARGE ROLL</div>
@@ -3256,10 +4489,485 @@ function ShootingResolver() {
           </div>
         </div>
 
+        </>)}
+
+        {/* ━━━━━━━━━━━ ASSAULT PHASE ━━━━━━━━━━━ */}
+        {activePhase === "assault" && (<>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16, marginBottom: 16 }}>
+            {/* ATTACKER & DEFENDER — stacked, same style as shooting */}
+            {["attacker", "defender"].map(side => {
+              const isAtk = side === "attacker";
+              const unit = isAtk ? aUnit : dUnit;
+              const showPresets = isAtk ? aShowPresets : dShowPresets;
+              const setShowPresets = isAtk ? setAShowPresets : setDShowPresets;
+              const meleeWeapons = isAtk ? aMeleeWeapons : dMeleeWeapons;
+              const selectedMelee = isAtk ? aSelectedMelee : dSelectedMelee;
+              const sColor = isAtk ? "#9b2d2d" : "#2a6fb4";
+              const sIcon = isAtk ? "⚔" : "🛡";
+              const sLabel = isAtk ? "ATTACKING UNIT" : "DEFENDING UNIT";
+              const models = isAtk ? aModels : dModels;
+              const setModelsF = isAtk ? setAModels : setDModels;
+              const ws = isAtk ? aWS : dWS; const setWsF = isAtk ? setAWS : setDWS;
+              const sV = isAtk ? aS : dS; const setSF = isAtk ? setAS : setDS;
+              const apV = isAtk ? aAP : dAP; const setApF = isAtk ? setAAP : setDAP;
+              const iV = isAtk ? aI : dI; const setIF = isAtk ? setAI : setDI;
+              const aV = isAtk ? aA : dA; const setAF = isAtk ? setAA : setDA;
+              const wV = isAtk ? aW : dW; const setWF = isAtk ? setAW : setDW;
+              const tV = isAtk ? aT : dT; const setTF = isAtk ? setAT : setDT;
+              const svV = isAtk ? aSv : dSv; const setSvF = isAtk ? setASv : setDSv;
+              const invV = isAtk ? aInv : dInv; const setInvF = isAtk ? setAInv : setDInv;
+              const fnpV = isAtk ? aFnp : dFnp; const setFnpF = isAtk ? setAFnp : setDFnp;
+              const rules = isAtk ? aRules : dRules; const setRulesF = isAtk ? setARules : setDRules;
+              const rgbAccent = isAtk ? "155,45,45" : "42,111,180";
+
+              return (
+                <div key={side} style={panelStyle}>
+                  <div style={{ ...panelHeaderStyle, justifyContent: "space-between" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ color: sColor, fontSize: 16 }}>{sIcon}</span>
+                      <span style={{ color: sColor }}>{sLabel}</span>
+                    </div>
+                  </div>
+
+                  {/* Unit Display / Select Button — matches shooting style */}
+                  <div style={{ marginBottom: 14 }}>
+                    {unit ? (
+                      <button onClick={() => setShowPresets(true)} style={{
+                        display: "flex", alignItems: "center", gap: 12, width: "100%",
+                        padding: "10px 14px", borderRadius: 8, cursor: "pointer",
+                        background: `rgba(${rgbAccent},0.06)`, border: `1.5px solid ${sColor}`,
+                        transition: "all 0.15s ease", textAlign: "left"
+                      }}>
+                        <UnitIcon type={getUnitIconType(unit.name)} size={40} color={sColor} />
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontFamily: "'Cinzel', serif", fontWeight: 700, fontSize: 13, color: "#2a2418" }}>{unit.name}</div>
+                          <div style={{ fontSize: 10, color: "#8a7e6e", fontFamily: "'Cinzel', serif" }}>
+                            {models} model{models > 1 ? "s" : ""} · WS{ws} · I{iV} · A{aV}
+                          </div>
+                        </div>
+                        <span style={{ fontSize: 11, color: sColor, fontFamily: "'Cinzel', serif" }}>CHANGE ▸</span>
+                      </button>
+                    ) : (
+                      <button onClick={() => setShowPresets(true)} style={{
+                        display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                        width: "100%", padding: "14px", borderRadius: 8, cursor: "pointer",
+                        background: "#f9f6f0", border: "1.5px dashed #c0b498",
+                        color: "#8a7e6e", fontFamily: "'Cinzel', serif", fontSize: 12,
+                        letterSpacing: 1, transition: "all 0.15s ease"
+                      }}>
+                        <span style={{ fontSize: 18 }}>+</span> SELECT UNIT
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Unit Selector Modal — same component as shooting phase */}
+                  {showPresets && (
+                    <UnitSelectorModal
+                      presets={meleeUnitRoster}
+                      selectedId={unit?.id}
+                      title={`SELECT ${isAtk ? "ATTACKING" : "DEFENDING"} UNIT`}
+                      accentColor={sColor}
+                      onClose={() => setShowPresets(false)}
+                      onSelect={u => applyAssaultUnit(u, side)}
+                    />
+                  )}
+
+                  {/* Melee Weapon Selector — styled like shooting WeaponSelector */}
+                  {unit && meleeWeapons.length > 0 && (
+                    <div style={{ marginBottom: 14 }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        <label style={{ fontSize: 11, color: "#6a5e4e", textTransform: "uppercase", letterSpacing: 1, fontFamily: "'Cinzel', serif" }}>Melee Weapon</label>
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                          {meleeWeapons.map(w => {
+                            const active = selectedMelee?.name === w.name;
+                            return (
+                              <button key={w.name} onClick={() => applyAssaultMelee(w, side)} style={{
+                                display: "flex", alignItems: "center", gap: 8, padding: "8px 14px",
+                                borderRadius: 8, cursor: "pointer", transition: "all 0.15s ease",
+                                background: active ? `rgba(${rgbAccent},0.10)` : "#f9f6f0",
+                                border: `1.5px solid ${active ? sColor : "#e0dbd0"}`,
+                                boxShadow: active ? `0 2px 8px rgba(${rgbAccent},0.12)` : "none"
+                              }}>
+                                <div style={{ textAlign: "left" }}>
+                                  <div style={{ fontSize: 12, fontFamily: "'Cinzel', serif", fontWeight: 600, color: active ? sColor : "#4a4030" }}>{w.name}</div>
+                                  <div style={{ fontSize: 9, color: "#8a7e6e", fontFamily: "'Cinzel', serif", marginTop: 1 }}>
+                                    WS{w.ws} S{w.s} AP{w.ap} I{w.i} A{w.a}
+                                    {Object.keys(w.rules || {}).filter(r => w.rules[r]).length > 0 && (
+                                      <span style={{ color: sColor, marginLeft: 4 }}>
+                                        {Object.keys(w.rules).filter(r => w.rules[r]).map(r => MELEE_SPECIAL_RULES.find(sr => sr.id === r)?.label || r).join(", ")}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Selected weapon summary bar */}
+                  {selectedMelee && (
+                    <div style={{
+                      marginBottom: 14, padding: "8px 12px", borderRadius: 6,
+                      background: `rgba(${rgbAccent},0.06)`, border: "1px solid #e0dbd0",
+                      fontSize: 12, color: "#4a4030", fontFamily: "'EB Garamond', serif",
+                      display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center"
+                    }}>
+                      <span style={{ fontFamily: "'Cinzel', serif", fontWeight: 600, color: sColor }}>{selectedMelee.name}</span>
+                      <span>WS{ws}</span> <span>S{sV}</span> <span>AP{apV}</span>
+                      <span>I{iV}</span> <span>A{aV}</span>
+                    </div>
+                  )}
+
+                  {/* Stats Grid — 3 column layout matching shooting */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 12 }}>
+                    <NumberInput label="Models" value={models} onChange={setModelsF} min={1} max={40} />
+                    <NumberInput label="WS" value={ws} onChange={setWsF} min={1} max={10} />
+                    <NumberInput label="S" value={sV} onChange={setSF} min={1} max={20} />
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 12 }}>
+                    <SelectInput label="AP" value={apV} onChange={setApF} options={apOptions} />
+                    <NumberInput label="I" value={iV} onChange={setIF} min={1} max={10} />
+                    <NumberInput label="A" value={aV} onChange={setAF} min={1} max={10} />
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+                    <NumberInput label="W" value={wV} onChange={setWF} min={1} max={10} />
+                    <NumberInput label="T" value={tV} onChange={setTF} min={1} max={10} />
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 12 }}>
+                    <SelectInput label="Sv" value={svV} onChange={setSvF} options={saveOptions} />
+                    <SelectInput label="Inv" value={invV} onChange={setInvF} options={saveOptions} />
+                    <SelectInput label="FNP" value={fnpV} onChange={setFnpF} options={saveOptions} />
+                  </div>
+
+                  {/* Special Rules — same toggle style */}
+                  <div style={{ fontSize: 9, fontFamily: "'Cinzel', serif", color: "#8a7e6e", letterSpacing: 1, marginBottom: 4 }}>SPECIAL RULES</div>
+                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                    {MELEE_SPECIAL_RULES.map(rule => {
+                      const active = rules[rule.id];
+                      return (
+                        <button key={rule.id} onClick={() => setRulesF(prev => ({ ...prev, [rule.id]: !prev[rule.id] }))} style={{
+                          padding: "3px 8px", borderRadius: 4, fontSize: 9, cursor: "pointer",
+                          fontFamily: "'Cinzel', serif",
+                          background: active ? `rgba(${rgbAccent},0.12)` : "#f0ebe2",
+                          border: `1px solid ${active ? sColor : "#d0c4aa"}`,
+                          color: active ? sColor : "#8a7e6e", fontWeight: active ? 700 : 400,
+                        }}>
+                          {rule.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Charge Options */}
+          <div style={{ ...panelStyle, marginBottom: 16, display: "flex", gap: 16, alignItems: "center", justifyContent: "center" }}>
+            <CheckToggle checked={assaultCharging} label="Charging (+1A)" onChange={setAssaultCharging} />
+            <CheckToggle checked={assaultDisordered} label="Disordered Charge" onChange={setAssaultDisordered} />
+          </div>
+
+          {/* ━━━ CHALLENGE SUB-PHASE ━━━ */}
+          <div style={{ ...panelStyle, marginBottom: 16, borderColor: challengeEnabled ? "#8b008b" : "#d0c4aa", transition: "border-color 0.3s ease" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: challengeEnabled ? 14 : 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 18 }}>👑</span>
+                <span style={{ fontFamily: "'Cinzel', serif", fontWeight: 700, fontSize: 12, color: "#8b008b", letterSpacing: 2 }}>CHALLENGE SUB-PHASE</span>
+              </div>
+              <button onClick={() => { setChallengeEnabled(!challengeEnabled); setChallengeResult(null); }} style={{
+                padding: "5px 14px", borderRadius: 4, fontSize: 10, cursor: "pointer",
+                fontFamily: "'Cinzel', serif", fontWeight: 600, letterSpacing: 1,
+                background: challengeEnabled ? "rgba(139,0,139,0.12)" : "#f0ebe2",
+                border: `1.5px solid ${challengeEnabled ? "#8b008b" : "#d0c4aa"}`,
+                color: challengeEnabled ? "#8b008b" : "#8a7e6e",
+              }}>
+                {challengeEnabled ? "COLLAPSE ▴" : "ISSUE CHALLENGE ▾"}
+              </button>
+            </div>
+
+            {challengeEnabled && (
+              <div style={{ animation: "fadeIn 0.3s ease" }}>
+                <div style={{ fontSize: 11, color: "#6a5e4e", fontFamily: "'EB Garamond', serif", marginBottom: 12, fontStyle: "italic" }}>
+                  Champions with Command or Champion sub-type step forward for a duel. Each selects a Gambit, then rolls for Focus to determine strike order.
+                </div>
+
+                {/* Gambit Selection — Side by Side */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+                  {[
+                    { label: "ATTACKER GAMBIT", val: atkGambit, set: setAtkGambit, col: "#9b2d2d" },
+                    { label: "DEFENDER GAMBIT", val: defGambit, set: setDefGambit, col: "#2a6fb4" },
+                  ].map(side => (
+                    <div key={side.label}>
+                      <div style={{ fontSize: 9, fontFamily: "'Cinzel', serif", color: side.col, letterSpacing: 1, marginBottom: 4 }}>{side.label}</div>
+                      <div style={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+                        {CHALLENGE_GAMBITS.map(g => {
+                          const active = side.val === g.id;
+                          return (
+                            <button key={g.id} onClick={() => side.set(g.id)} title={g.desc} style={{
+                              padding: "3px 7px", borderRadius: 4, fontSize: 9, cursor: "pointer",
+                              fontFamily: "'Cinzel', serif", fontWeight: active ? 700 : 400,
+                              background: active ? "rgba(139,0,139,0.12)" : "#f8f4ec",
+                              border: `1px solid ${active ? "#8b008b" : "#e0d8c8"}`,
+                              color: active ? "#8b008b" : "#6a5e4e",
+                            }}>
+                              {g.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Gambit Descriptions */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+                  {[
+                    { g: CHALLENGE_GAMBITS.find(g => g.id === atkGambit), col: "#9b2d2d" },
+                    { g: CHALLENGE_GAMBITS.find(g => g.id === defGambit), col: "#2a6fb4" },
+                  ].map((s, i) => s.g && s.g.id !== "none" ? (
+                    <div key={i} style={{ padding: "6px 10px", borderRadius: 6, background: "rgba(139,0,139,0.04)", border: "1px solid rgba(139,0,139,0.15)", fontSize: 10, color: "#6a5e4e", fontFamily: "'EB Garamond', serif" }}>
+                      <span style={{ fontWeight: 700, color: "#8b008b" }}>{s.g.name}:</span> {s.g.desc}
+                    </div>
+                  ) : <div key={i} />)}
+                </div>
+
+                {/* Support Models */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+                  <NumberInput label="Atk Support Models" value={atkSupport} onChange={setAtkSupport} min={0} max={40} />
+                  <NumberInput label="Def Support Models" value={defSupport} onChange={setDefSupport} min={0} max={40} />
+                </div>
+
+                {/* Resolve Challenge Button */}
+                <button onClick={handleChallengeResolve} style={{
+                  width: "100%", padding: "12px 20px", fontSize: 14, fontFamily: "'Cinzel', serif", fontWeight: 700,
+                  letterSpacing: 3, background: "linear-gradient(180deg, #a020a0 0%, #6b106b 100%)",
+                  border: "none", borderRadius: 8, color: "#fff", cursor: "pointer",
+                  textTransform: "uppercase", boxShadow: "0 2px 12px rgba(139,0,139,0.3)", marginBottom: 12,
+                }}>
+                  👑 RESOLVE CHALLENGE 👑
+                </button>
+
+                {/* Challenge Results */}
+                {challengeResult && (
+                  <div style={{ animation: "fadeIn 0.3s ease" }}>
+                    {/* Result Banner */}
+                    <div style={{
+                      padding: "14px 20px", borderRadius: 8, marginBottom: 12, textAlign: "center",
+                      background: challengeResult.result.winner === "Attacker" ? "rgba(155,45,45,0.08)"
+                        : challengeResult.result.winner === "Defender" ? "rgba(42,111,180,0.08)"
+                        : "rgba(139,0,139,0.06)",
+                      border: `2px solid ${challengeResult.result.winner === "Attacker" ? "#9b2d2d" : challengeResult.result.winner === "Defender" ? "#2a6fb4" : "#8b008b"}`
+                    }}>
+                      <div style={{ fontSize: 24, marginBottom: 4 }}>
+                        {challengeResult.atkSlain && challengeResult.defSlain ? "💀💀" : challengeResult.defSlain ? "⚔" : challengeResult.atkSlain ? "🛡" : "👑"}
+                      </div>
+                      <div style={{ fontFamily: "'Cinzel', serif", fontWeight: 900, fontSize: 16, letterSpacing: 2, color: "#8b008b" }}>
+                        {challengeResult.result.winner === "Mutual Kill" ? "MUTUAL DESTRUCTION"
+                          : challengeResult.defSlain || challengeResult.atkSlain ? `${challengeResult.result.slain || ""} SLAIN!`
+                          : `ROUND: ${challengeResult.result.winner} AHEAD`}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#6a5e4e", fontFamily: "'EB Garamond', serif", marginTop: 4 }}>
+                        Focus: {challengeResult.focusWinner} struck first •
+                        Gambits: {challengeResult.atkGambitData.name} vs {challengeResult.defGambitData.name}
+                      </div>
+                    </div>
+
+                    {/* Wound Trackers */}
+                    <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap", marginBottom: 12 }}>
+                      <MiniStat label="Atk Wounds" value={`${challengeResult.atkWoundsRemaining}/${aW}`} color={challengeResult.atkSlain ? "#c74040" : "#2a5e2a"} />
+                      <MiniStat label="Def Wounds" value={`${challengeResult.defWoundsRemaining}/${dW}`} color={challengeResult.defSlain ? "#c74040" : "#2a5e2a"} />
+                      <MiniStat label="Atk Dealt" value={challengeResult.atkWoundsDealt} color="#9b2d2d" />
+                      <MiniStat label="Def Dealt" value={challengeResult.defWoundsDealt} color="#2a6fb4" />
+                    </div>
+
+                    {/* Dice Visualization */}
+                    {["attacker", "defender"].map(rk => {
+                      const r = challengeResult.rolls[rk];
+                      const label = rk === "attacker" ? "ATTACKER" : "DEFENDER";
+                      const col = rk === "attacker" ? "#9b2d2d" : "#2a6fb4";
+                      return (
+                        <div key={rk} style={{ marginBottom: 8 }}>
+                          {r.focus.length > 0 && (
+                            <div style={{ marginBottom: 4 }}>
+                              <div style={{ fontSize: 10, color: "#8b008b", marginBottom: 2, fontFamily: "'Cinzel', serif", letterSpacing: 1 }}>{label} — FOCUS</div>
+                              <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                                {r.focus.map((d, i) => <DieIcon key={`${rk}fo${i}`} value={d.value} success={d.success} small />)}
+                              </div>
+                            </div>
+                          )}
+                          {r.hit.length > 0 && (
+                            <div style={{ marginBottom: 4 }}>
+                              <div style={{ fontSize: 10, color: col, marginBottom: 2, fontFamily: "'Cinzel', serif", letterSpacing: 1 }}>{label} — TO HIT</div>
+                              <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                                {r.hit.map((d, i) => <DieIcon key={`${rk}ch${i}`} value={d.value} success={d.success} small />)}
+                              </div>
+                            </div>
+                          )}
+                          {r.wound.length > 0 && (
+                            <div style={{ marginBottom: 4 }}>
+                              <div style={{ fontSize: 10, color: col, marginBottom: 2, fontFamily: "'Cinzel', serif", letterSpacing: 1 }}>{label} — TO WOUND</div>
+                              <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                                {r.wound.map((d, i) => <DieIcon key={`${rk}cw${i}`} value={d.value} success={d.success} small />)}
+                              </div>
+                            </div>
+                          )}
+                          {r.save.length > 0 && (
+                            <div style={{ marginBottom: 4 }}>
+                              <div style={{ fontSize: 10, color: col, marginBottom: 2, fontFamily: "'Cinzel', serif", letterSpacing: 1 }}>{label} — SAVES</div>
+                              <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                                {r.save.map((d, i) => <DieIcon key={`${rk}cs${i}`} value={d.value} success={d.success} small />)}
+                              </div>
+                            </div>
+                          )}
+                          {r.fnp.length > 0 && (
+                            <div style={{ marginBottom: 4 }}>
+                              <div style={{ fontSize: 10, color: col, marginBottom: 2, fontFamily: "'Cinzel', serif", letterSpacing: 1 }}>{label} — FNP</div>
+                              <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                                {r.fnp.map((d, i) => <DieIcon key={`${rk}cf${i}`} value={d.value} success={d.success} small />)}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    {/* Challenge Log */}
+                    <div style={{ marginTop: 6 }}>
+                      <div style={{ fontSize: 10, fontFamily: "'Cinzel', serif", color: "#8b008b", letterSpacing: 1, marginBottom: 4 }}>CHALLENGE LOG</div>
+                      {challengeResult.log.map((entry, i) => (
+                        <div key={i} style={{
+                          fontSize: 11, padding: "3px 8px", borderRadius: 4, marginBottom: 2,
+                          display: "flex", alignItems: "center", gap: 6,
+                          background: entry.phase === "Challenge" ? "rgba(139,0,139,0.06)" : entry.phase === "Gambit" ? "rgba(139,0,139,0.04)" : entry.phase === "Focus" ? "rgba(184,134,11,0.05)" : entry.phase === "Strike" ? "rgba(155,45,45,0.04)" : "rgba(0,0,0,0.02)"
+                        }}>
+                          <span style={{ fontSize: 10 }}>
+                            {entry.phase === "Challenge" ? "👑" : entry.phase === "Gambit" ? "🎭" : entry.phase === "Focus" ? "🎯" : entry.phase === "Strike" ? "🗡" : "⚖"}
+                          </span>
+                          <span style={{ color: entry.phase === "Result" ? "#8b008b" : "#6a5e4e", fontFamily: "'EB Garamond', serif", fontWeight: entry.phase === "Result" ? 600 : 400 }}>{entry.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Resolve Button */}
+          <button onClick={handleAssaultResolve} style={{
+            width: "100%", padding: "16px 24px", fontSize: 16, fontFamily: "'Cinzel', serif", fontWeight: 700,
+            letterSpacing: 3, background: "linear-gradient(180deg, #a02020 0%, #7a1515 100%)",
+            border: "none", borderRadius: 8, color: "#fff", cursor: "pointer",
+            textTransform: "uppercase", boxShadow: "0 2px 16px rgba(155,45,45,0.3)", marginBottom: 16,
+          }}>
+            🗡 RESOLVE ASSAULT PHASE 🗡
+          </button>
+
+          {/* Results */}
+          {assaultResult && (
+            <div style={{ ...panelStyle, animation: "fadeIn 0.3s ease" }}>
+              {/* Summary Banner */}
+              <div style={{
+                display: "flex", gap: 16, alignItems: "center", justifyContent: "center",
+                padding: "14px 20px", borderRadius: 8, marginBottom: 14,
+                background: assaultResult.combatResult.winner === "Attacker" ? "rgba(155,45,45,0.08)"
+                  : assaultResult.combatResult.winner === "Defender" ? "rgba(42,111,180,0.08)"
+                  : "rgba(100,100,100,0.05)",
+                border: `2px solid ${assaultResult.combatResult.winner === "Attacker" ? "#9b2d2d" : assaultResult.combatResult.winner === "Defender" ? "#2a6fb4" : "#aaa"}`
+              }}>
+                <span style={{ fontSize: 28 }}>
+                  {assaultResult.combatResult.winner === "Attacker" ? "⚔" : assaultResult.combatResult.winner === "Defender" ? "🛡" : "⚖"}
+                </span>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{
+                    fontFamily: "'Cinzel', serif", fontWeight: 900, fontSize: 18, letterSpacing: 2,
+                    color: assaultResult.combatResult.winner === "Attacker" ? "#9b2d2d" : assaultResult.combatResult.winner === "Defender" ? "#2a6fb4" : "#6a5e4e"
+                  }}>
+                    {assaultResult.combatResult.winner === "Draw" ? "COMBAT DRAW" : `${assaultResult.combatResult.winner.toUpperCase()} WINS BY ${assaultResult.combatResult.diff}`}
+                  </div>
+                  <div style={{ fontSize: 12, color: "#8a7e6e", fontFamily: "'EB Garamond', serif" }}>
+                    {assaultResult.remainingAttackers} attacker(s) / {assaultResult.remainingDefenders} defender(s) survive
+                  </div>
+                </div>
+              </div>
+
+              {/* Stat Boxes */}
+              <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap", marginBottom: 14 }}>
+                <MiniStat label="Atk Killed" value={assaultResult.defenderCasualties} color="#9b2d2d" />
+                <MiniStat label="Def Killed" value={assaultResult.attackerCasualties} color="#2a6fb4" />
+                <MiniStat label="Atk Survive" value={assaultResult.remainingAttackers} color="#2a5e2a" />
+                <MiniStat label="Def Survive" value={assaultResult.remainingDefenders} color="#2a5e2a" />
+              </div>
+
+              {/* Dice Displays */}
+              {["attacker", "defender"].map(rollKey => {
+                const r = assaultResult.rolls[rollKey];
+                const label = rollKey === "attacker" ? "ATTACKER" : "DEFENDER";
+                const col = rollKey === "attacker" ? "#9b2d2d" : "#2a6fb4";
+                return (
+                  <div key={rollKey} style={{ marginBottom: 10 }}>
+                    {r.hit.length > 0 && (
+                      <div style={{ marginBottom: 6 }}>
+                        <div style={{ fontSize: 10, color: col, marginBottom: 3, fontFamily: "'Cinzel', serif", letterSpacing: 1 }}>{label} — TO HIT</div>
+                        <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                          {r.hit.map((d, i) => <DieIcon key={`${rollKey}h${i}`} value={d.value} success={d.success} small />)}
+                        </div>
+                      </div>
+                    )}
+                    {r.wound.length > 0 && (
+                      <div style={{ marginBottom: 6 }}>
+                        <div style={{ fontSize: 10, color: col, marginBottom: 3, fontFamily: "'Cinzel', serif", letterSpacing: 1 }}>{label} — TO WOUND</div>
+                        <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                          {r.wound.map((d, i) => <DieIcon key={`${rollKey}w${i}`} value={d.value} success={d.success} small />)}
+                        </div>
+                      </div>
+                    )}
+                    {r.save.length > 0 && (
+                      <div style={{ marginBottom: 6 }}>
+                        <div style={{ fontSize: 10, color: col, marginBottom: 3, fontFamily: "'Cinzel', serif", letterSpacing: 1 }}>{label} — SAVES</div>
+                        <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                          {r.save.map((d, i) => <DieIcon key={`${rollKey}s${i}`} value={d.value} success={d.success} small />)}
+                        </div>
+                      </div>
+                    )}
+                    {r.fnp.length > 0 && (
+                      <div style={{ marginBottom: 6 }}>
+                        <div style={{ fontSize: 10, color: col, marginBottom: 3, fontFamily: "'Cinzel', serif", letterSpacing: 1 }}>{label} — FNP</div>
+                        <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                          {r.fnp.map((d, i) => <DieIcon key={`${rollKey}f${i}`} value={d.value} success={d.success} small />)}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+              {/* Combat Log */}
+              <div style={{ marginTop: 8 }}>
+                <div style={{ fontSize: 10, fontFamily: "'Cinzel', serif", color: "#6a5e4e", letterSpacing: 1, marginBottom: 6 }}>COMBAT LOG</div>
+                {assaultResult.log.map((entry, i) => (
+                  <div key={i} style={{
+                    fontSize: 11, padding: "3px 8px", borderRadius: 4, marginBottom: 2,
+                    display: "flex", alignItems: "center", gap: 6,
+                    background: entry.phase === "Melee" ? "rgba(155,45,45,0.04)" : entry.phase === "Combat Res" ? "rgba(184,134,11,0.06)" : "rgba(0,0,0,0.02)"
+                  }}>
+                    <span style={{ fontSize: 10 }}>{entry.phase === "Melee" ? "🗡" : entry.phase === "Combat Res" ? "⚖" : "•"}</span>
+                    <span style={{ color: entry.phase === "Combat Res" ? "#8b6508" : "#6a5e4e", fontFamily: "'EB Garamond', serif" }}>{entry.text}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>)}
+
         <div style={{ textAlign: "center", marginTop: 24, padding: 16, color: "#a09888", fontSize: 11, fontFamily: "'Cinzel', serif" }}>
           Rules Reference: Warhammer — The Horus Heresy: Age of Darkness Rulebook (3rd Edition)
           <br />All dice rolls are simulated. Use for quick resolution and statistical analysis.
-          <br />Version 1.01
+          <br />Version 1.09
         </div>
       </div>
     </div>
