@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tactical Cogitator — Horus Heresy Shooting Resolver v1.17</title>
+  <title>Tactical Cogitator — Horus Heresy Shooting Resolver</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -85,36 +85,39 @@ const SPECIAL_RULES = [
 
 const UNIT_PRESETS = [
   { category: "LEGIONES ASTARTES", units: [
-    { id: "tactical", name: "Tactical Squad", models: 10, bs: 4, hasSgt: true, t: 4, w: 1, sv: "3", inv: "-", fnp: "-", ld: 8 },
-    { id: "tactical_support", name: "Tactical Support Squad", models: 5, bs: 4, hasSgt: true, t: 4, w: 1, sv: "3", inv: "-", fnp: "-", ld: 8 },
-    { id: "heavy_support", name: "Heavy Support Squad", models: 5, bs: 4, hasSgt: true, t: 4, w: 1, sv: "3", inv: "-", fnp: "-", ld: 8 },
-    { id: "seeker", name: "Seeker Squad", models: 5, bs: 4, hasSgt: true, t: 4, w: 1, sv: "3", inv: "-", fnp: "-", ld: 8 },
-    { id: "recon", name: "Recon Squad", models: 5, bs: 4, hasSgt: true, t: 4, w: 1, sv: "4", inv: "-", fnp: "-", ld: 8 },
-    { id: "destroyer", name: "Destroyer Squad", models: 5, bs: 4, hasSgt: true, t: 4, w: 1, sv: "3", inv: "-", fnp: "5", ld: 8 },
-    { id: "breacher", name: "Breacher Squad", models: 10, bs: 4, hasSgt: true, t: 4, w: 1, sv: "3", inv: "-", fnp: "-", ld: 8 },
-    { id: "assault", name: "Assault Squad", models: 10, bs: 4, hasSgt: true, t: 4, w: 1, sv: "3", inv: "-", fnp: "-", ld: 8 },
+    { id: "tactical",         name: "Tactical Squad",           models: 10, bs: 4, hasSgt: true, t: 4, w: 1, sv: "3", inv: "-", fnp: "-", ld: 8 },
+    { id: "despoiler",        name: "Despoiler Squad",          models: 10, bs: 4, hasSgt: true, t: 4, w: 1, sv: "3", inv: "-", fnp: "-", ld: 8 },
+    { id: "tactical_support", name: "Tactical Support Squad",   models: 5,  bs: 4, hasSgt: true, t: 4, w: 1, sv: "3", inv: "-", fnp: "-", ld: 8 },
+    { id: "heavy_support",    name: "Heavy Support Squad",      models: 5,  bs: 4, hasSgt: true, t: 4, w: 1, sv: "3", inv: "-", fnp: "-", ld: 8 },
+    { id: "breacher",         name: "Breacher Squad",           models: 10, bs: 4, hasSgt: true, t: 4, w: 1, sv: "3", inv: "6", fnp: "-", ld: 8 },
+    { id: "assault",          name: "Assault Squad",            models: 10, bs: 4, hasSgt: true, t: 4, w: 1, sv: "3", inv: "-", fnp: "-", ld: 8 },
+    { id: "seeker",           name: "Seeker Squad",             models: 5,  bs: 5, hasSgt: true, t: 4, w: 1, sv: "3", inv: "-", fnp: "-", ld: 8 },
+    { id: "recon",            name: "Recon Squad",              models: 5,  bs: 4, hasSgt: true, t: 4, w: 1, sv: "4", inv: "-", fnp: "-", ld: 8 },
+    { id: "destroyer",        name: "Destroyer Squad",          models: 5,  bs: 4, hasSgt: true, t: 4, w: 1, sv: "3", inv: "-", fnp: "5", ld: 8 },
   ]},
   { category: "HQ & ELITES", units: [
-    { id: "praetor_pa", name: "Praetor (Power Armour)", models: 1, bs: 5, t: 4, w: 3, sv: "2", inv: "4", fnp: "-", ld: 10 },
-    { id: "praetor_ta", name: "Praetor (Terminator)", models: 1, bs: 5, t: 4, w: 3, sv: "2", inv: "4", fnp: "-", ld: 10 },
-    { id: "praetor_sat", name: "Praetor (Saturnine)", models: 1, bs: 5, t: 5, w: 4, sv: "2", inv: "4", fnp: "-", ld: 10 },
-    { id: "centurion", name: "Centurion", models: 1, bs: 5, t: 4, w: 3, sv: "2", inv: "-", fnp: "-", ld: 9 },
-    { id: "champion", name: "Legion Champion", models: 1, bs: 5, t: 4, w: 2, sv: "2", inv: "4", fnp: "-", ld: 9 },
-    { id: "master_signals", name: "Master of Signals", models: 1, bs: 5, t: 4, w: 2, sv: "2", inv: "-", fnp: "-", ld: 9 },
-    { id: "vigilator", name: "Vigilator", models: 1, bs: 5, t: 4, w: 2, sv: "2", inv: "-", fnp: "-", ld: 9 },
-    { id: "forge_lord", name: "Forge Lord", models: 1, bs: 5, t: 4, w: 2, sv: "2", inv: "-", fnp: "-", ld: 9 },
-    { id: "chaplain", name: "Legion Chaplain", models: 1, bs: 5, t: 4, w: 2, sv: "2", inv: "4", fnp: "-", ld: 10 },
-    { id: "librarian", name: "Legion Librarian", models: 1, bs: 4, t: 4, w: 2, sv: "2", inv: "4", fnp: "-", ld: 9 },
-    { id: "herald", name: "Legion Herald", models: 1, bs: 5, t: 4, w: 2, sv: "2", inv: "-", fnp: "-", ld: 9 },
-    { id: "moritat", name: "Moritat", models: 1, bs: 5, t: 4, w: 2, sv: "2", inv: "-", fnp: "-", ld: 9 },
-    { id: "siege_breaker", name: "Siege Breaker", models: 1, bs: 5, t: 4, w: 2, sv: "2", inv: "-", fnp: "-", ld: 9 },
-    { id: "apothecary", name: "Apothecary Squad", models: 5, bs: 4, t: 4, w: 1, sv: "3", inv: "-", fnp: "5", ld: 8 },
-    { id: "veteran", name: "Veteran Squad", models: 10, bs: 5, hasSgt: true, t: 4, w: 1, sv: "3", inv: "-", fnp: "-", ld: 9 },
+    { id: "praetor_pa",     name: "Praetor (Power Armour)",   models: 1,  bs: 5, t: 4, w: 3, sv: "2", inv: "4", fnp: "-", ld: 10 },
+    { id: "praetor_ta",     name: "Praetor (Terminator)",     models: 1,  bs: 5, t: 4, w: 3, sv: "2", inv: "4", fnp: "-", ld: 10 },
+    { id: "praetor_sat",    name: "Praetor (Saturnine)",      models: 1,  bs: 5, t: 5, w: 4, sv: "2", inv: "4", fnp: "-", ld: 10 },
+    { id: "centurion",      name: "Centurion",                models: 1,  bs: 5, t: 4, w: 3, sv: "2", inv: "-", fnp: "-", ld: 9 },
+    { id: "champion",       name: "Legion Champion",          models: 1,  bs: 5, t: 4, w: 2, sv: "2", inv: "4", fnp: "-", ld: 9 },
+    { id: "master_signals", name: "Master of Signals",        models: 1,  bs: 5, t: 4, w: 2, sv: "2", inv: "-", fnp: "-", ld: 9 },
+    { id: "vigilator",      name: "Vigilator",                models: 1,  bs: 5, t: 4, w: 2, sv: "2", inv: "-", fnp: "-", ld: 9 },
+    { id: "forge_lord",     name: "Forge Lord",               models: 1,  bs: 5, t: 4, w: 2, sv: "2", inv: "-", fnp: "-", ld: 9 },
+    { id: "chaplain",       name: "Legion Chaplain",          models: 1,  bs: 5, t: 4, w: 2, sv: "2", inv: "4", fnp: "-", ld: 10 },
+    { id: "librarian",      name: "Legion Librarian",         models: 1,  bs: 4, t: 4, w: 2, sv: "2", inv: "4", fnp: "-", ld: 9 },
+    { id: "herald",         name: "Legion Herald",            models: 1,  bs: 5, t: 4, w: 2, sv: "2", inv: "-", fnp: "-", ld: 9 },
+    { id: "moritat",        name: "Moritat",                  models: 1,  bs: 5, t: 4, w: 2, sv: "2", inv: "-", fnp: "-", ld: 9 },
+    { id: "siege_breaker",  name: "Siege Breaker",            models: 1,  bs: 5, t: 4, w: 2, sv: "2", inv: "-", fnp: "-", ld: 9 },
+    { id: "apothecary",     name: "Apothecary",               models: 1,  bs: 4, t: 4, w: 2, sv: "3", inv: "-", fnp: "4", ld: 7 },
+    { id: "techmarine",     name: "Techmarine",               models: 1,  bs: 4, t: 4, w: 2, sv: "2", inv: "-", fnp: "-", ld: 7 },
+    { id: "veteran",        name: "Veteran Tactical Squad",   models: 5,  bs: 5, hasSgt: true, t: 4, w: 1, sv: "3", inv: "-", fnp: "-", ld: 8 },
+    { id: "veteran_assault",name: "Veteran Assault Squad",    models: 5,  bs: 4, hasSgt: true, t: 4, w: 1, sv: "3", inv: "-", fnp: "-", ld: 8 },
   ]},
   { category: "TERMINATORS", units: [
-    { id: "cataphractii", name: "Cataphractii Terminators", models: 5, bs: 4, hasSgt: true, t: 5, w: 2, sv: "2", inv: "4", fnp: "-", ld: 9 },
-    { id: "tartaros", name: "Tartaros Terminators", models: 5, bs: 4, hasSgt: true, t: 5, w: 2, sv: "2", inv: "5", fnp: "-", ld: 9 },
-    { id: "saturnine", name: "Saturnine Terminators", models: 5, bs: 4, hasSgt: true, t: 5, w: 3, sv: "2", inv: "5", fnp: "-", ld: 9 },
+    { id: "cataphractii", name: "Cataphractii Terminators", models: 5, bs: 4, hasSgt: true, t: 5, w: 2, sv: "2", inv: "4", fnp: "-", ld: 8 },
+    { id: "tartaros",     name: "Tartaros Terminators",    models: 5, bs: 4, hasSgt: true, t: 5, w: 2, sv: "2", inv: "5", fnp: "-", ld: 8 },
+    { id: "saturnine",    name: "Saturnine Terminators",   models: 3, bs: 4, hasSgt: true, t: 6, w: 3, sv: "2", inv: "4", fnp: "-", ld: 8 },
   ]},
   { category: "VEHICLES & DREADS", units: [
     { id: "contemptor", name: "Contemptor Dreadnought", models: 1, bs: 5, t: 7, w: 7, sv: "2", inv: "5", fnp: "-", ld: 9 },
@@ -127,7 +130,8 @@ const UNIT_PRESETS = [
     { id: "vindicator", name: "Vindicator", models: 1, bs: 4, t: 7, w: 5, sv: "3", inv: "-", fnp: "-", ld: 8 },
     { id: "land_raider", name: "Land Raider", models: 1, bs: 4, t: 8, w: 8, sv: "2", inv: "-", fnp: "-", ld: 8 },
     { id: "spartan", name: "Spartan", models: 1, bs: 4, t: 8, w: 9, sv: "2", inv: "-", fnp: "-", ld: 8 },
-    { id: "araknae", name: "Araknae", models: 1, bs: 4, t: 7, w: 6, sv: "3", inv: "-", fnp: "-", ld: 8 },
+    { id: "araknae", name: "Araknae Quad Accelerator", models: 1, bs: 4, t: 7, w: 5, sv: "3", inv: "-", fnp: "-", ld: 8 },
+    { id: "rapier_la", name: "Rapier Battery (Legiones)", models: 1, bs: 4, t: 6, w: 3, sv: "3", inv: "-", fnp: "-", ld: 8 },
   ]},
   { category: "SOLAR AUXILIA", units: [
     { id: "lasrifle", name: "Lasrifle Section", models: 20, bs: 3, hasSgt: true, t: 3, w: 1, sv: "4", inv: "-", fnp: "-", ld: 6 },
@@ -175,75 +179,292 @@ const UNIT_PRESETS = [
     { id: "daemon_lesser", name: "Lesser Daemon", models: 10, bs: 3, t: 4, w: 1, sv: "-", inv: "5", fnp: "-", ld: 7 },
     { id: "daemon_greater", name: "Greater Daemon", models: 1, bs: 5, t: 6, w: 6, sv: "-", inv: "4", fnp: "-", ld: 9 },
   ]},
+  { category: "FAST ATTACK", units: [
+    { id: "xiphon", name: "Xiphon Interceptor", models: 1, bs: 4, t: 7, w: 5, sv: "3", inv: "-", fnp: "-", ld: 8 },
+    { id: "storm_eagle", name: "Storm Eagle", models: 1, bs: 4, t: 8, w: 6, sv: "3", inv: "-", fnp: "-", ld: 8 },
+    { id: "fire_raptor", name: "Fire Raptor", models: 1, bs: 4, t: 8, w: 6, sv: "3", inv: "-", fnp: "-", ld: 8 },
+    { id: "scimitar_jetbike", name: "Scimitar Jetbike Squadron", models: 3, bs: 4, hasSgt: true, t: 4, w: 2, sv: "3", inv: "-", fnp: "-", ld: 7 },
+    { id: "javelin", name: "Javelin Squadron", models: 1, bs: 4, t: 6, w: 4, sv: "3", inv: "-", fnp: "-", ld: 8 },
+    { id: "land_speeder", name: "Land Speeder Squadron", models: 1, bs: 4, t: 5, w: 3, sv: "3", inv: "-", fnp: "-", ld: 8 },
+  ]},
 ];
+
+// ━━━ FOC SLOT CLASSIFICATION ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Determines which units can take equipment (Vexilla, Nox-Vox, Melta Bombs)
+const UNIT_FOC_SLOT = {
+  // TROOPS
+  tactical: "troops", despoiler: "troops", tactical_support: "troops",
+  breacher: "troops", assault: "troops", lasrifle: "troops",
+  veletaris: "troops", tech_thrall: "troops",
+  // ELITES
+  veteran: "elites", veteran_assault: "elites",
+  cataphractii: "elites", tartaros: "elites", saturnine: "elites",
+  apothecary: "elites", techmarine: "elites",
+  custodian_guard: "elites", sagittarum: "elites", aquilon: "elites",
+  thallax: "elites", castellax: "elites", myrmidon_dest: "elites",
+  ogryn: "elites",
+  // HEAVY SUPPORT
+  heavy_support: "heavy", contemptor: "heavy", leviathan: "heavy",
+  deredeo: "heavy", predator: "heavy", sicaran: "heavy",
+  sicaran_venator: "heavy", vindicator: "heavy", land_raider: "heavy",
+  spartan: "heavy", araknae: "heavy", rapier_la: "heavy",
+  saturnine_dread: "heavy", thanatar: "heavy", rapier: "heavy",
+  // FAST ATTACK
+  scimitar_jetbike: "fast", javelin: "fast", land_speeder: "fast",
+  xiphon: "fast", storm_eagle: "fast", fire_raptor: "fast",
+  seeker: "fast", recon: "fast", destroyer: "fast", vorax: "fast",
+  // HQ
+  praetor_pa: "hq", praetor_ta: "hq", praetor_sat: "hq",
+  centurion: "hq", champion: "hq", master_signals: "hq",
+  vigilator: "hq", forge_lord: "hq", chaplain: "hq",
+  librarian: "hq", herald: "hq", moritat: "hq", siege_breaker: "hq",
+};
+
+// Equipment available to Troops and Elites
+const EQUIPMENT_OPTIONS = {
+  vexilla:  { label: "Vexilla",     cost: 10, desc: "Re-roll failed Morale checks (Shooting & Assault)", icon: "⚑" },
+  noxVox:   { label: "Nox-Vox",     cost: 10, desc: "+1 Ld to Leadership & Cooldown checks", icon: "📡" },
+  metaBomb: { label: "Melta Bombs", cost: 25, desc: "S8 AP1 Armourbane in assault vs vehicles", icon: "💣" },
+};
+
+function canTakeEquipment(unitId) {
+  const slot = UNIT_FOC_SLOT[unitId];
+  return slot === "troops" || slot === "elites";
+}
+
+// ━━━ POINTS COSTS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// base: starting cost (includes minimum models per PDF)
+// perModel: cost per additional model beyond minimum
+// minModels: minimum unit size included in base cost
+// weapons: upgrade costs by weapon name (above free/default gear)
+
+const POINTS_DATA = {
+  // ── LEGIONES ASTARTES TROOPS ──
+  tactical:         { base: 100, perModel: 10, minModels: 10 },
+  despoiler:        { base: 100, perModel: 10, minModels: 10 },
+  tactical_support: { base: 40,  perModel: 8,  minModels: 5  },
+  heavy_support:    { base: 50,  perModel: 10, minModels: 5  },
+  breacher:         { base: 140, perModel: 12, minModels: 10 },
+  assault:          { base: 140, perModel: 12, minModels: 10 },
+  seeker:           { base: 105, perModel: 18, minModels: 5  },
+  recon:            { base: 75,  perModel: 15, minModels: 5  },
+  destroyer:        { base: 110, perModel: 20, minModels: 5  },
+  // ── ELITES ──
+  veteran:          { base: 85,  perModel: 15, minModels: 5  },
+  veteran_assault:  { base: 120, perModel: 22, minModels: 5  },
+  // ── HQ ──
+  praetor_pa:       { base: 90,  perModel: 0,  minModels: 1  },
+  praetor_ta:       { base: 115, perModel: 0,  minModels: 1  },
+  praetor_sat:      { base: 150, perModel: 0,  minModels: 1  },
+  centurion:        { base: 80,  perModel: 0,  minModels: 1  },
+  champion:         { base: 60,  perModel: 0,  minModels: 1  },
+  master_signals:   { base: 70,  perModel: 0,  minModels: 1  },
+  vigilator:        { base: 65,  perModel: 0,  minModels: 1  },
+  forge_lord:       { base: 65,  perModel: 0,  minModels: 1  },
+  chaplain:         { base: 70,  perModel: 0,  minModels: 1  },
+  librarian:        { base: 70,  perModel: 0,  minModels: 1  },
+  herald:           { base: 45,  perModel: 0,  minModels: 1  },
+  moritat:          { base: 65,  perModel: 0,  minModels: 1  },
+  siege_breaker:    { base: 55,  perModel: 0,  minModels: 1  },
+  apothecary:       { base: 30,  perModel: 0,  minModels: 1  },
+  techmarine:       { base: 50,  perModel: 0,  minModels: 1  },
+  // ── TERMINATORS ──
+  cataphractii:     { base: 150, perModel: 30, minModels: 5  },
+  tartaros:         { base: 150, perModel: 30, minModels: 5  },
+  saturnine:        { base: 200, perModel: 60, minModels: 3  },
+  // ── VEHICLES & DREADS ──
+  contemptor:       { base: 155, perModel: 0,  minModels: 1  },
+  saturnine_dread:  { base: 210, perModel: 0,  minModels: 1  },
+  leviathan:        { base: 260, perModel: 0,  minModels: 1  },
+  deredeo:          { base: 185, perModel: 0,  minModels: 1  },
+  predator:         { base: 105, perModel: 0,  minModels: 1  },
+  sicaran:          { base: 135, perModel: 0,  minModels: 1  },
+  sicaran_venator:  { base: 160, perModel: 0,  minModels: 1  },
+  vindicator:       { base: 130, perModel: 0,  minModels: 1  },
+  land_raider:      { base: 225, perModel: 0,  minModels: 1  },
+  spartan:          { base: 360, perModel: 0,  minModels: 1  },
+  araknae:          { base: 125, perModel: 0,  minModels: 1  },
+  rapier_la:        { base: 40,  perModel: 40, minModels: 1  },
+  // ── SOLAR AUXILIA ──
+  lasrifle:         { base: 60,  perModel: 3,  minModels: 20 },
+  veletaris:        { base: 80,  perModel: 7,  minModels: 10 },
+  rapier:           { base: 40,  perModel: 40, minModels: 1  },
+  ogryn:            { base: 100, perModel: 20, minModels: 5  },
+  // ── MECHANICUM ──
+  thallax:          { base: 100, perModel: 30, minModels: 3  },
+  myrmidon:         { base: 130, perModel: 40, minModels: 3  },
+  // ── CUSTODES ──
+  custodian_guard:  { base: 130, perModel: 40, minModels: 3  },
+  aquilon:          { base: 165, perModel: 50, minModels: 3  },
+};
+
+// Weapon upgrade costs (above free/default wargear) — from Legion Wargear PDF
+const WEAPON_UPGRADE_COSTS = {
+  // Legion Special Weapons (per model)
+  "Flamer": 5, "Plasma Gun (Sustained)": 10, "Plasma Gun (Maximal)": 10,
+  "Melta Gun": 15, "Volkite Charger": 5, "Volkite Caliver": 10, "Rotor Cannon": 10,
+  // Legion Heavy Weapons (per model)
+  "Heavy Bolter": 10, "Heavy Flamer": 10, "Autocannon": 20,
+  "Missile Launcher": 15, "Missile L. (Krak)": 15, "Missile L. (Frag)": 15,
+  "Multi-Melta": 25, "Plasma Cannon (Sustained)": 20, "Plasma Cannon (Maximal)": 20,
+  "Volkite Culverin": 15, "Lascannon": 25,
+  // Legion Combi-weapons (per model)
+  "Combi-Bolter": 0, "Combi-Flamer": 10, "Combi-Melta": 10,
+  "Combi-Plasma (Sustained)": 10, "Combi-Plasma (Maximal)": 10,
+  "Combi-Volkite": 10, "Combi-Disintegrator": 10,
+  // Legion Pistols
+  "Plasma Pistol (Sustained)": 5, "Plasma Pistol (Maximal)": 5,
+  "Volkite Serpenta": 5, "Disintegrator Pistol": 5,
+  "Archaeotech Pistol": 10, "Hand Flamer": 5,
+  // Terminator weapons
+  "Reaper Autocannon": 15, "Plasma Blaster (Sustained)": 10, "Plasma Blaster (Maximal)": 10,
+  "Heavy Disintegrator": 10, "Twin Heavy Disintegrator": 10,
+  "Plasma Bombard (Sustained)": 0, "Plasma Bombard (Maximal)": 0,
+  // Disintegrator weapons (Veteran/Seeker specials)
+  "Disintegrator Rifle": 5, "Disintegrator Blaster": 10,
+  // Breacher specials
+  "Graviton Gun": 10, "Lascutter": 10,
+  // Vehicle sponson weapons
+  "Heavy Bolter Sponsons": 0, "Lascannon Sponsons": 20,
+  // Sergeant melee upgrades (from Legion Sergeant Melee Weapons list)
+  "Chainsword": 0, "Chainaxe": 0, "Charnabal Sabre": 5,
+  "Power Weapon": 10, "Power Fist": 15, "Thunder Hammer": 15, "Lightning Claw": 10,
+  // Default/free weapons (no extra cost)
+  "Bolter": 0, "Bolt Pistol": 0, "Volkite Charger (Cataphractii)": 0,
+  "Combi-Bolter (Tartaros)": 0, "Volkite Charger (default)": 0,
+};
+
+// Calculate total points for a deployed unit
+function calcUnitPoints(unit) {
+  if (!unit.unitData) return null;
+  const ud = unit.unitData;
+  const pd = POINTS_DATA[ud.id];
+  if (!pd) return null;
+
+  // Base cost (includes minimum models)
+  let total = pd.base;
+
+  // Extra models beyond minimum
+  const extraModels = Math.max(0, ud.models - pd.minModels);
+  total += extraModels * pd.perModel;
+
+  // Ranged weapon upgrade cost (per squad model, not sgt)
+  if (unit.rangedWeapon) {
+    const wCost = WEAPON_UPGRADE_COSTS[unit.rangedWeapon.name] ?? 0;
+    const affectedModels = ud.models - (unit.sgtEnabled ? 1 : 0);
+    total += wCost * affectedModels;
+  }
+
+  // Sergeant weapon upgrade cost (single model)
+  if (unit.sgtEnabled && unit.sgtWeapon) {
+    const sCost = WEAPON_UPGRADE_COSTS[unit.sgtWeapon.name] ?? 0;
+    total += sCost;
+  }
+
+  // Equipment costs (Vexilla, Nox-Vox, Melta Bombs)
+  if (unit.equipment) {
+    if (unit.equipment.vexilla) total += EQUIPMENT_OPTIONS.vexilla.cost;
+    if (unit.equipment.noxVox) total += EQUIPMENT_OPTIONS.noxVox.cost;
+    if (unit.equipment.metaBomb) total += EQUIPMENT_OPTIONS.metaBomb.cost;
+  }
+
+  return total;
+}
 
 // Weapons keyed by unit id
 const WEAPON_PROFILES = {
   // LEGIONES ASTARTES
   tactical: [
     { name: "Bolter", shots: 2, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {} },
-    { name: "Fury of the Legion", shots: 3, s: 4, ap: "5", damage: 1, type: "Heavy", rules: {} },
+    { name: "Fury of the Legion", shots: 4, s: 4, ap: "5", damage: 1, type: "Heavy", rules: {} },
   ],
   tactical_support: [
-    { name: "Plasma Gun", shots: 1, s: 7, ap: "4", damage: 1, type: "Rapid Fire", rules: { getshot: true, breaching: true } },
-    { name: "Melta Gun", shots: 1, s: 8, ap: "1", damage: 2, type: "Assault", rules: {} },
+    { name: "Plasma Gun (Sustained)", shots: 2, s: 6, ap: "4", damage: 1, type: "Rapid Fire", rules: { breaching6: true } },
+    { name: "Plasma Gun (Maximal)", shots: 2, s: 7, ap: "4", damage: 1, type: "Rapid Fire", rules: { getshot: true, breaching: true } },
+    { name: "Melta Gun", shots: 1, s: 8, ap: "2", damage: 3, type: "Assault", rules: { melta: true } },
     { name: "Volkite Charger", shots: 2, s: 5, ap: "5", damage: 1, type: "Assault", rules: { deflagrate: true } },
     { name: "Volkite Caliver", shots: 2, s: 6, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true } },
-    { name: "Rotor Cannon", shots: 4, s: 3, ap: "6", damage: 1, type: "Salvo", rules: { suppressive: true } },
-    { name: "Flamer", shots: 1, s: 4, ap: "5", damage: 1, type: "Assault", rules: { panic: true } },
+    { name: "Rotor Cannon", shots: 3, s: 3, ap: "-", damage: 1, type: "Heavy", rules: { suppressive: true } },
+    { name: "Flamer", shots: 1, s: 4, ap: "5", damage: 1, type: "Assault", rules: { panic: true, template: true } },
+    { name: "Heavy Flamer", shots: 1, s: 5, ap: "4", damage: 1, type: "Assault", rules: { panic: true, template: true } },
   ],
   heavy_support: [
-    { name: "Lascannon", shots: 1, s: 9, ap: "2", damage: 2, type: "Heavy", rules: {} },
-    { name: "Autocannon", shots: 2, s: 7, ap: "4", damage: 1, type: "Heavy", rules: {} },
-    { name: "Heavy Bolter", shots: 4, s: 5, ap: "4", damage: 1, type: "Heavy", rules: { suppressive: true } },
+    { name: "Lascannon", shots: 1, s: 9, ap: "2", damage: 1, type: "Heavy", rules: { armourbane: true } },
+    { name: "Autocannon", shots: 2, s: 7, ap: "4", damage: 2, type: "Heavy", rules: { breaching6: true } },
+    { name: "Heavy Bolter", shots: 3, s: 5, ap: "4", damage: 1, type: "Heavy", rules: {} },
     { name: "Missile L. (Frag)", shots: 1, s: 4, ap: "6", damage: 1, type: "Heavy", rules: { blast: true } },
     { name: "Missile L. (Krak)", shots: 1, s: 8, ap: "3", damage: 1, type: "Heavy", rules: {} },
-    { name: "Volkite Culverin", shots: 4, s: 6, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true } },
-    { name: "Plasma Cannon", shots: 1, s: 7, ap: "4", damage: 1, type: "Heavy", rules: { getshot: true, breaching: true, blast: true } },
-    { name: "Multi-Melta", shots: 1, s: 8, ap: "1", damage: 3, type: "Heavy", rules: {} },
+    { name: "Volkite Culverin", shots: 3, s: 6, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true } },
+    { name: "Plasma Cannon (Sustained)", shots: 1, s: 6, ap: "4", damage: 1, type: "Heavy", rules: { blast: true, breaching6: true } },
+    { name: "Plasma Cannon (Maximal)", shots: 1, s: 6, ap: "4", damage: 1, type: "Heavy", rules: { blast: true, getshot: true, breaching: true } },
+    { name: "Multi-Melta", shots: 1, s: 8, ap: "2", damage: 3, type: "Heavy", rules: { melta: true } },
   ],
   seeker: [
-    { name: "Kraken Bolter", shots: 2, s: 4, ap: "4", damage: 1, type: "Heavy", rules: { precision: true, breaching: true } },
-    { name: "Scorpius Bolter", shots: 2, s: 5, ap: "4", damage: 1, type: "Heavy", rules: { breaching6: true } },
+    { name: "Kraken Bolter", shots: 2, s: 4, ap: "4", damage: 1, type: "Bolt", rules: { precision: true, breaching: true } },
+    { name: "Nemesis Bolter", shots: 1, s: 4, ap: "5", damage: 1, type: "Heavy", rules: { pinning: true, precision: true, breaching: true } },
   ],
   recon: [
-    { name: "Nemesis Bolter", shots: 1, s: 5, ap: "5", damage: 1, type: "Heavy", rules: { pinning: true, precision: true } },
+    { name: "Nemesis Bolter", shots: 1, s: 4, ap: "5", damage: 1, type: "Heavy", rules: { pinning: true, precision: true, breaching: true } },
+    { name: "Sniper Rifle", shots: 1, s: 3, ap: "6", damage: 1, type: "Heavy", rules: { precision: true, pinning: true } },
   ],
   destroyer: [
     { name: "Rad Missile", shots: 1, s: 4, ap: "3", damage: 1, type: "Assault", rules: { blast: true, fleshbane: true, poisoned: true } },
   ],
   breacher: [
     { name: "Bolter", shots: 2, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {} },
+    { name: "Graviton Gun", shots: 1, s: 6, ap: "4", damage: 1, type: "Heavy", rules: { blast: true, pinning: true }, defaultModels: 2 },
+  ],
+  despoiler: [
+    { name: "Bolt Pistol", shots: 1, s: 4, ap: "5", damage: 1, type: "Pistol", rules: {} },
   ],
   assault: [
     { name: "Bolt Pistol", shots: 1, s: 4, ap: "5", damage: 1, type: "Pistol", rules: {} },
+    { name: "Plasma Pistol (Sustained)", shots: 1, s: 6, ap: "4", damage: 1, type: "Pistol", rules: { breaching6: true }, defaultModels: 2 },
+    { name: "Plasma Pistol (Maximal)", shots: 1, s: 7, ap: "4", damage: 1, type: "Pistol", rules: { getshot: true, breaching: true }, defaultModels: 2 },
+    { name: "Volkite Serpenta", shots: 2, s: 5, ap: "5", damage: 1, type: "Pistol", rules: { deflagrate: true }, defaultModels: 2 },
+  ],
+  veteran_assault: [
+    { name: "Bolt Pistol", shots: 1, s: 4, ap: "5", damage: 1, type: "Pistol", rules: {} },
+    { name: "Disintegrator Pistol", shots: 1, s: 4, ap: "3", damage: 2, type: "Pistol", rules: { getshot: true }, defaultModels: 2 },
+    { name: "Plasma Pistol (Sustained)", shots: 1, s: 6, ap: "4", damage: 1, type: "Pistol", rules: { breaching6: true }, defaultModels: 2 },
+    { name: "Plasma Pistol (Maximal)", shots: 1, s: 7, ap: "4", damage: 1, type: "Pistol", rules: { getshot: true, breaching: true }, defaultModels: 2 },
+  ],
+  techmarine: [
+    { name: "Bolt Pistol", shots: 1, s: 4, ap: "5", damage: 1, type: "Pistol", rules: {} },
+    { name: "Plasma Pistol (Sustained)", shots: 1, s: 6, ap: "4", damage: 1, type: "Pistol", rules: { breaching6: true } },
+    { name: "Plasma Pistol (Maximal)", shots: 1, s: 7, ap: "4", damage: 1, type: "Pistol", rules: { getshot: true, breaching: true } },
+    { name: "Volkite Serpenta", shots: 2, s: 5, ap: "5", damage: 1, type: "Pistol", rules: { deflagrate: true } },
   ],
   // ELITES
   veteran: [
     { name: "Bolter", shots: 2, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {} },
+    { name: "Plasma Gun (Sustained)", shots: 2, s: 6, ap: "4", damage: 1, type: "Rapid Fire", rules: { breaching6: true } },
+    { name: "Plasma Gun (Maximal)", shots: 2, s: 7, ap: "4", damage: 1, type: "Rapid Fire", rules: { getshot: true, breaching: true } },
+    { name: "Melta Gun", shots: 1, s: 8, ap: "2", damage: 3, type: "Assault", rules: { melta: true } },
     { name: "Volkite Charger", shots: 2, s: 5, ap: "5", damage: 1, type: "Assault", rules: { deflagrate: true } },
-    { name: "Melta Gun", shots: 1, s: 8, ap: "1", damage: 2, type: "Assault", rules: {} },
-    { name: "Plasma Gun", shots: 1, s: 7, ap: "4", damage: 1, type: "Rapid Fire", rules: { getshot: true, breaching: true } },
-    { name: "Disintegrator Rifle", shots: 2, s: 4, ap: "3", damage: 2, type: "Rapid Fire", rules: { getshot: true } },
+    { name: "Disintegrator Rifle", shots: 1, s: 4, ap: "3", damage: 2, type: "Rapid Fire", rules: { getshot: true } },
     { name: "Disintegrator Blaster", shots: 1, s: 5, ap: "2", damage: 2, type: "Assault", rules: { getshot: true }, defaultModels: 2 },
-    { name: "Heavy Disintegrator", shots: 2, s: 6, ap: "2", damage: 2, type: "Heavy", rules: { getshot: true }, defaultModels: 2 },
-    { name: "Heavy Bolter", shots: 4, s: 5, ap: "4", damage: 1, type: "Heavy", rules: { suppressive: true }, defaultModels: 2 },
+    { name: "Heavy Disintegrator", shots: 1, s: 6, ap: "2", damage: 2, type: "Heavy", rules: { getshot: true }, defaultModels: 2 },
+    { name: "Heavy Bolter", shots: 3, s: 5, ap: "4", damage: 1, type: "Heavy", rules: {}, defaultModels: 2 },
     { name: "Volkite Caliver", shots: 2, s: 6, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true }, defaultModels: 2 },
     { name: "Missile L. (Krak)", shots: 1, s: 8, ap: "3", damage: 1, type: "Heavy", rules: {}, defaultModels: 2 },
-    { name: "Lascannon", shots: 1, s: 9, ap: "2", damage: 2, type: "Heavy", rules: {}, defaultModels: 2 },
+    { name: "Lascannon", shots: 1, s: 9, ap: "2", damage: 1, type: "Heavy", rules: { armourbane: true }, defaultModels: 2 },
+    { name: "Autocannon", shots: 2, s: 7, ap: "4", damage: 2, type: "Heavy", rules: { breaching6: true }, defaultModels: 2 },
   ],
   praetor_pa: [
     { name: "Bolt Pistol", shots: 1, s: 4, ap: "5", damage: 1, type: "Pistol", rules: {} },
-    { name: "Plasma Pistol", shots: 1, s: 7, ap: "4", damage: 1, type: "Pistol", rules: { getshot: true, breaching: true } },
+    { name: "Plasma Pistol (Sustained)", shots: 1, s: 6, ap: "4", damage: 1, type: "Pistol", rules: { breaching6: true } },
+    { name: "Plasma Pistol (Maximal)", shots: 1, s: 7, ap: "4", damage: 1, type: "Pistol", rules: { getshot: true, breaching: true } },
     { name: "Volkite Serpenta", shots: 2, s: 5, ap: "5", damage: 1, type: "Pistol", rules: { deflagrate: true } },
-    { name: "Archaeotech Pistol", shots: 1, s: 6, ap: "3", damage: 1, type: "Pistol", rules: {} },
+    { name: "Archaeotech Pistol", shots: 1, s: 6, ap: "4", damage: 2, type: "Pistol", rules: { breaching: true } },
     { name: "Disintegrator Pistol", shots: 1, s: 4, ap: "3", damage: 2, type: "Pistol", rules: { getshot: true } },
   ],
   praetor_ta: [
-    { name: "Combi-Bolter", shots: 4, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {} },
+    { name: "Combi-Bolter", shots: 2, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {} },
     { name: "Volkite Charger", shots: 2, s: 5, ap: "5", damage: 1, type: "Assault", rules: { deflagrate: true } },
-    { name: "Combi-Plasma", shots: 1, s: 7, ap: "4", damage: 1, type: "Rapid Fire", rules: { getshot: true, breaching: true } },
-    { name: "Combi-Melta", shots: 1, s: 8, ap: "1", damage: 2, type: "Assault", rules: {} },
+    { name: "Combi-Plasma (Maximal)", shots: 1, s: 7, ap: "4", damage: 1, type: "Rapid Fire", rules: { getshot: true, breaching: true } },
+    { name: "Combi-Melta", shots: 1, s: 8, ap: "2", damage: 3, type: "Assault", rules: { melta: true } },
+    { name: "Plasma Blaster (Maximal)", shots: 2, s: 7, ap: "4", damage: 1, type: "Assault", rules: { getshot: true, breaching: true } },
   ],
   praetor_sat: [
     { name: "Disintegrator Rifle", shots: 2, s: 4, ap: "3", damage: 2, type: "Rapid Fire", rules: { getshot: true } },
@@ -291,64 +512,94 @@ const WEAPON_PROFILES = {
   ],
   // TERMINATORS
   cataphractii: [
-    { name: "Combi-Bolter", shots: 4, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {} },
-    { name: "Combi-Plasma", shots: 1, s: 7, ap: "4", damage: 1, type: "Rapid Fire", rules: { getshot: true, breaching: true } },
-    { name: "Combi-Melta", shots: 1, s: 8, ap: "1", damage: 2, type: "Assault", rules: {} },
-    { name: "Reaper Autocannon", shots: 2, s: 7, ap: "4", damage: 1, type: "Heavy", rules: { twinLinked: true }, defaultModels: 1 },
+    { name: "Volkite Charger", shots: 2, s: 5, ap: "5", damage: 1, type: "Assault", rules: { deflagrate: true } },
+    { name: "Combi-Bolter", shots: 2, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {} },
+    { name: "Combi-Plasma (Maximal)", shots: 1, s: 7, ap: "4", damage: 1, type: "Rapid Fire", rules: { getshot: true, breaching: true } },
+    { name: "Combi-Melta", shots: 1, s: 8, ap: "2", damage: 3, type: "Assault", rules: { melta: true } },
+    { name: "Combi-Flamer", shots: 1, s: 4, ap: "5", damage: 1, type: "Assault", rules: { panic: true, template: true } },
+    { name: "Heavy Flamer", shots: 1, s: 5, ap: "4", damage: 1, type: "Assault", rules: { panic: true, template: true }, defaultModels: 1 },
+    { name: "Reaper Autocannon", shots: 2, s: 6, ap: "4", damage: 2, type: "Heavy", rules: { breaching6: true }, defaultModels: 1 },
+    { name: "Plasma Blaster (Sustained)", shots: 2, s: 6, ap: "4", damage: 1, type: "Assault", rules: { breaching6: true }, defaultModels: 1 },
+    { name: "Plasma Blaster (Maximal)", shots: 2, s: 7, ap: "4", damage: 1, type: "Assault", rules: { getshot: true, breaching: true }, defaultModels: 1 },
   ],
   tartaros: [
-    { name: "Combi-Bolter", shots: 4, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {} },
-    { name: "Plasma Blaster", shots: 2, s: 7, ap: "4", damage: 1, type: "Assault", rules: { getshot: true, breaching: true }, defaultModels: 1 },
+    { name: "Combi-Bolter", shots: 2, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {} },
+    { name: "Plasma Blaster (Sustained)", shots: 2, s: 6, ap: "4", damage: 1, type: "Assault", rules: { breaching6: true }, defaultModels: 1 },
+    { name: "Plasma Blaster (Maximal)", shots: 2, s: 7, ap: "4", damage: 1, type: "Assault", rules: { getshot: true, breaching: true }, defaultModels: 1 },
     { name: "Volkite Charger", shots: 2, s: 5, ap: "5", damage: 1, type: "Assault", rules: { deflagrate: true } },
+    { name: "Combi-Melta", shots: 1, s: 8, ap: "2", damage: 3, type: "Assault", rules: { melta: true } },
+    { name: "Combi-Plasma (Maximal)", shots: 1, s: 7, ap: "4", damage: 1, type: "Rapid Fire", rules: { getshot: true, breaching: true } },
   ],
   saturnine: [
-    { name: "Disintegrator Rifle", shots: 2, s: 4, ap: "3", damage: 2, type: "Rapid Fire", rules: { getshot: true } },
-    { name: "Heavy Disintegrator", shots: 2, s: 6, ap: "2", damage: 2, type: "Heavy", rules: { getshot: true }, defaultModels: 1 },
-    { name: "Plasma Bombard", shots: 1, s: 7, ap: "4", damage: 2, type: "Barrage", rules: { blast: true, getshot: true, breaching: true }, defaultModels: 1 },
+    { name: "Plasma Bombard (Sustained)", shots: 1, s: 6, ap: "4", damage: 1, type: "Barrage", rules: { blast: true, breaching6: true } },
+    { name: "Plasma Bombard (Maximal)", shots: 1, s: 7, ap: "4", damage: 1, type: "Barrage", rules: { blast: true, getshot: true, breaching: true } },
+    { name: "Twin Heavy Disintegrator", shots: 2, s: 7, ap: "2", damage: 2, type: "Heavy", rules: { getshot: true }, defaultModels: 1 },
+    { name: "Particle Shredder", shots: 1, s: 6, ap: "3", damage: 1, type: "Assault", rules: { template: true, breaching6: true }, defaultModels: 1 },
   ],
   // VEHICLES & DREADS
   contemptor: [
-    { name: "Kheres Assault Cannon", shots: 6, s: 6, ap: "4", damage: 1, type: "Heavy", rules: { rending: true } },
-    { name: "Twin Lascannon", shots: 2, s: 9, ap: "2", damage: 2, type: "Heavy", rules: { twinLinked: true } },
-    { name: "Twin Autocannon", shots: 4, s: 7, ap: "4", damage: 1, type: "Heavy", rules: { twinLinked: true } },
-    { name: "Twin Heavy Bolter", shots: 6, s: 5, ap: "4", damage: 1, type: "Heavy", rules: { twinLinked: true, suppressive: true } },
-    { name: "Volkite Dual-Culverin", shots: 8, s: 6, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true } },
+    { name: "Kheres Assault Cannon", shots: 5, s: 6, ap: "4", damage: 1, type: "Heavy", rules: { breaching6: true } },
+    { name: "Twin Lascannon", shots: 2, s: 9, ap: "2", damage: 1, type: "Heavy", rules: { armourbane: true } },
+    { name: "Autocannon (Twin)", shots: 4, s: 7, ap: "4", damage: 2, type: "Heavy", rules: { twinLinked: true, breaching6: true } },
+    { name: "Twin Heavy Bolter", shots: 6, s: 5, ap: "4", damage: 1, type: "Heavy", rules: { twinLinked: true } },
+    { name: "Volkite Dual-Culverin", shots: 6, s: 6, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true } },
+    { name: "Multi-Melta", shots: 1, s: 8, ap: "2", damage: 3, type: "Heavy", rules: { melta: true } },
+    { name: "Conversion Beam Cannon (<15\")", shots: 1, s: 6, ap: "4", damage: 1, type: "Heavy", rules: { blast: true } },
+    { name: "Conversion Beam Cannon (15-30\")", shots: 1, s: 7, ap: "3", damage: 2, type: "Heavy", rules: { blast: true } },
+    { name: "Conversion Beam Cannon (>30\")", shots: 1, s: 8, ap: "2", damage: 3, type: "Heavy", rules: { blast: true } },
   ],
   saturnine_dread: [
-    { name: "Heavy Plasma Bombard", shots: 2, s: 8, ap: "2", damage: 2, type: "Barrage", rules: { blast: true, getshot: true, breaching: true } },
-    { name: "Heavy Disintegrator Cannon", shots: 3, s: 6, ap: "2", damage: 2, type: "Heavy", rules: { getshot: true } },
-    { name: "Photonic Incinerator", shots: 1, s: 5, ap: "4", damage: 1, type: "Assault", rules: { panic: true } },
+    { name: "Heavy Plasma Bombard (Sustained)", shots: 1, s: 7, ap: "4", damage: 2, type: "Barrage", rules: { blast: true, breaching6: true } },
+    { name: "Heavy Plasma Bombard (Maximal)", shots: 1, s: 8, ap: "4", damage: 2, type: "Barrage", rules: { blast: true, getshot: true, breaching: true } },
+    { name: "Disintegrator Cannon", shots: 2, s: 9, ap: "2", damage: 3, type: "Heavy", rules: { getshot: true } },
+    { name: "Photonic Incinerator", shots: 1, s: 6, ap: "4", damage: 1, type: "Assault", rules: { panic: true, template: true } },
   ],
   leviathan: [
-    { name: "Storm Cannon", shots: 6, s: 7, ap: "3", damage: 2, type: "Heavy", rules: { sunder: true } },
-    { name: "Cyclonic Melta Lance", shots: 1, s: 9, ap: "1", damage: 4, type: "Heavy", rules: {} },
+    { name: "Leviathan Storm Cannon", shots: 4, s: 7, ap: "4", damage: 2, type: "Heavy", rules: { breaching: true } },
+    { name: "Cyclonic Melta Lance", shots: 3, s: 8, ap: "2", damage: 3, type: "Heavy", rules: { melta: true } },
+    { name: "Siege Claw (ranged)", shots: 1, s: 6, ap: "3", damage: 1, type: "Assault", rules: {} },
   ],
   deredeo: [
-    { name: "Anvilus Autocannon", shots: 4, s: 8, ap: "4", damage: 2, type: "Heavy", rules: { sunder: true } },
-    { name: "Arachnus Lascannon", shots: 2, s: 9, ap: "2", damage: 2, type: "Heavy", rules: {} },
+    { name: "Anvilus Autocannon Battery", shots: 6, s: 8, ap: "4", damage: 2, type: "Heavy", rules: { breaching: true } },
+    { name: "Arachnus Heavy Las Battery", shots: 2, s: 9, ap: "2", damage: 4, type: "Heavy", rules: { armourbane: true } },
+    { name: "Aiolos Missile Launcher", shots: 1, s: 6, ap: "4", damage: 1, type: "Heavy", rules: { blast: true, barrage: true } },
   ],
   predator: [
-    { name: "Predator Cannon", shots: 4, s: 7, ap: "4", damage: 1, type: "Heavy", rules: {} },
-    { name: "Twin Lascannon (turret)", shots: 2, s: 9, ap: "2", damage: 2, type: "Heavy", rules: { twinLinked: true } },
-    { name: "Lascannon Sponsons x2", shots: 2, s: 9, ap: "2", damage: 2, type: "Heavy", rules: {} },
+    { name: "Predator Cannon (Autocannon)", shots: 3, s: 8, ap: "4", damage: 2, type: "Heavy", rules: { breaching6: true } },
+    { name: "Lascannon Turret (Twin)", shots: 2, s: 9, ap: "2", damage: 1, type: "Heavy", rules: { armourbane: true } },
+    { name: "Lascannon Sponsons x2", shots: 2, s: 9, ap: "2", damage: 1, type: "Heavy", rules: { armourbane: true } },
+    { name: "Heavy Bolter Sponsons x2", shots: 6, s: 5, ap: "4", damage: 1, type: "Heavy", rules: {} },
   ],
   sicaran: [
-    { name: "Accelerator Autocannon", shots: 6, s: 7, ap: "4", damage: 1, type: "Heavy", rules: { rending: true } },
+    { name: "Twin Accelerator Autocannon", shots: 6, s: 7, ap: "4", damage: 2, type: "Heavy", rules: { breaching6: true } },
+    { name: "Lascannon Sponsons x2", shots: 2, s: 9, ap: "2", damage: 1, type: "Heavy", rules: { armourbane: true } },
+    { name: "Heavy Bolter Sponsons x2", shots: 6, s: 5, ap: "4", damage: 1, type: "Heavy", rules: {} },
   ],
   sicaran_venator: [
-    { name: "Neutron Beam", shots: 2, s: 10, ap: "1", damage: 3, type: "Heavy", rules: {} },
+    { name: "Neutron Laser Beam Cannon", shots: 2, s: 10, ap: "2", damage: 2, type: "Heavy", rules: { armourbane: true } },
+    { name: "Lascannon Sponsons x2", shots: 2, s: 9, ap: "2", damage: 1, type: "Heavy", rules: { armourbane: true } },
   ],
   vindicator: [
-    { name: "Demolisher Cannon", shots: 1, s: 10, ap: "2", damage: 3, type: "Ordnance", rules: { blast: true } },
+    { name: "Demolisher Cannon", shots: 1, s: 12, ap: "3", damage: 3, type: "Ordnance", rules: { blast: true, breaching: true, stun: true } },
   ],
   land_raider: [
-    { name: "Twin Lascannon x2", shots: 4, s: 9, ap: "2", damage: 2, type: "Heavy", rules: { twinLinked: true } },
+    { name: "Twin Lascannon x2 (sponsons)", shots: 4, s: 9, ap: "2", damage: 1, type: "Heavy", rules: { armourbane: true } },
+    { name: "Hull Heavy Bolter", shots: 3, s: 5, ap: "4", damage: 1, type: "Heavy", rules: {} },
   ],
   spartan: [
-    { name: "Lascannon Array x2", shots: 4, s: 9, ap: "2", damage: 3, type: "Heavy", rules: {} },
+    { name: "Lascannon Array x2", shots: 4, s: 9, ap: "2", damage: 3, type: "Heavy", rules: { armourbane: true } },
+    { name: "Hull Heavy Bolter", shots: 3, s: 5, ap: "4", damage: 1, type: "Heavy", rules: {} },
+    { name: "Havoc Launcher (opt)", shots: 1, s: 5, ap: "5", damage: 1, type: "Heavy", rules: { blast: true } },
   ],
   araknae: [
-    { name: "Quad Accelerator", shots: 8, s: 7, ap: "4", damage: 1, type: "Heavy", rules: { rending: true } },
+    { name: "Quad Accelerator Autocannon", shots: 10, s: 7, ap: "4", damage: 2, type: "Heavy", rules: { breaching6: true } },
+  ],
+  rapier_la: [
+    { name: "Gravis Heavy Bolter Battery", shots: 8, s: 5, ap: "4", damage: 1, type: "Heavy", rules: { suppressive: true } },
+    { name: "Laser Destroyer", shots: 2, s: 10, ap: "2", damage: 2, type: "Heavy", rules: { armourbane: true } },
+    { name: "Graviton Cannon", shots: 1, s: 8, ap: "3", damage: 1, type: "Heavy", rules: { blast: true, pinning: true, breaching6: true } },
+    { name: "Quad Launcher (Frag)", shots: 1, s: 5, ap: "5", damage: 1, type: "Heavy", rules: { blast: true, barrage: true } },
+    { name: "Quad Launcher (Shatter)", shots: 4, s: 7, ap: "4", damage: 1, type: "Heavy", rules: { armourbane: true } },
   ],
   // SOLAR AUXILIA
   lasrifle: [
@@ -391,7 +642,9 @@ const WEAPON_PROFILES = {
   ],
   apothecary: [
     { name: "Bolt Pistol", shots: 1, s: 4, ap: "5", damage: 1, type: "Pistol", rules: {} },
-    { name: "Bolter", shots: 2, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {} },
+    { name: "Plasma Pistol (Sustained)", shots: 1, s: 6, ap: "4", damage: 1, type: "Pistol", rules: { breaching6: true } },
+    { name: "Plasma Pistol (Maximal)", shots: 1, s: 7, ap: "4", damage: 1, type: "Pistol", rules: { getshot: true, breaching: true } },
+    { name: "Volkite Serpenta", shots: 2, s: 5, ap: "5", damage: 1, type: "Pistol", rules: { deflagrate: true } },
   ],
   ogryn: [
     { name: "Laspistol", shots: 1, s: 3, ap: "6", damage: 1, type: "Pistol", rules: {} },
@@ -475,6 +728,50 @@ const WEAPON_PROFILES = {
   daemon_greater: [
     { name: "Warp Flame", shots: 3, s: 6, ap: "3", damage: 2, type: "Assault", rules: {} },
   ],
+  // FAST ATTACK
+  xiphon: [
+    { name: "Twin Lascannon x2", shots: 4, s: 9, ap: "2", damage: 2, type: "Heavy", rules: { twinLinked: true } },
+    { name: "Rotary Missile Launcher", shots: 3, s: 8, ap: "3", damage: 1, type: "Heavy", rules: {} },
+  ],
+  storm_eagle: [
+    { name: "Twin Heavy Bolter", shots: 6, s: 5, ap: "4", damage: 1, type: "Heavy", rules: { twinLinked: true, suppressive: true } },
+    { name: "Vengeance Launcher", shots: 2, s: 5, ap: "4", damage: 1, type: "Heavy", rules: { blast: true } },
+    { name: "Tempest Rockets x4", shots: 4, s: 6, ap: "4", damage: 1, type: "Heavy", rules: {} },
+    { name: "Twin Multi-Melta (opt)", shots: 2, s: 8, ap: "1", damage: 3, type: "Heavy", rules: { twinLinked: true } },
+    { name: "Cyclone Missile L. (opt)", shots: 2, s: 8, ap: "3", damage: 1, type: "Heavy", rules: {} },
+    { name: "Hunter-Killer Missiles x4 (opt)", shots: 4, s: 8, ap: "3", damage: 1, type: "Heavy", rules: {} },
+    { name: "Twin Lascannon x2 (opt)", shots: 4, s: 9, ap: "2", damage: 2, type: "Heavy", rules: { twinLinked: true } },
+  ],
+  fire_raptor: [
+    { name: "Twin Avenger Bolt Cannon", shots: 7, s: 6, ap: "3", damage: 1, type: "Heavy", rules: { twinLinked: true } },
+    { name: "Gravis Heavy Bolter Sponsons x2", shots: 8, s: 5, ap: "4", damage: 1, type: "Heavy", rules: { suppressive: true } },
+    { name: "Tempest Rockets x4", shots: 4, s: 6, ap: "4", damage: 1, type: "Heavy", rules: {} },
+    { name: "Gravis Autocannon Sponsons (opt)", shots: 4, s: 7, ap: "4", damage: 1, type: "Heavy", rules: {} },
+    { name: "Hellstrike Missiles x4 (opt)", shots: 4, s: 8, ap: "2", damage: 2, type: "Heavy", rules: {} },
+  ],
+  scimitar_jetbike: [
+    { name: "Heavy Bolter", shots: 4, s: 5, ap: "4", damage: 1, type: "Heavy", rules: { suppressive: true } },
+    { name: "Volkite Culverin (opt)", shots: 4, s: 6, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true } },
+    { name: "Multi-Melta (opt)", shots: 1, s: 8, ap: "1", damage: 3, type: "Heavy", rules: {} },
+    { name: "Plasma Cannon (opt)", shots: 1, s: 7, ap: "4", damage: 1, type: "Heavy", rules: { getshot: true, breaching: true, blast: true } },
+  ],
+  javelin: [
+    { name: "Heavy Bolter", shots: 4, s: 5, ap: "4", damage: 1, type: "Heavy", rules: { suppressive: true } },
+    { name: "Cyclone Missile L.", shots: 2, s: 8, ap: "3", damage: 1, type: "Heavy", rules: {} },
+    { name: "Two Heavy Flamers (opt)", shots: 2, s: 5, ap: "4", damage: 1, type: "Assault", rules: { panic: true } },
+    { name: "Two Heavy Bolters (opt)", shots: 8, s: 5, ap: "4", damage: 1, type: "Heavy", rules: { suppressive: true } },
+    { name: "Two Lascannon (opt)", shots: 2, s: 9, ap: "2", damage: 2, type: "Heavy", rules: {} },
+    { name: "Two Volkite Culverin (opt)", shots: 8, s: 6, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true } },
+  ],
+  land_speeder: [
+    { name: "Heavy Bolter", shots: 4, s: 5, ap: "4", damage: 1, type: "Heavy", rules: { suppressive: true } },
+    { name: "Heavy Flamer (opt)", shots: 1, s: 5, ap: "4", damage: 1, type: "Assault", rules: { panic: true } },
+    { name: "Havoc Launcher (opt)", shots: 1, s: 5, ap: "5", damage: 1, type: "Heavy", rules: { blast: true } },
+    { name: "Multi-Melta (opt)", shots: 1, s: 8, ap: "1", damage: 3, type: "Heavy", rules: {} },
+    { name: "Volkite Culverin (opt)", shots: 4, s: 6, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true } },
+    { name: "Plasma Cannon (opt)", shots: 1, s: 7, ap: "4", damage: 1, type: "Heavy", rules: { getshot: true, breaching: true, blast: true } },
+    { name: "Graviton Gun (opt)", shots: 1, s: "-", ap: "4", damage: 1, type: "Heavy", rules: { blast: true } },
+  ],
 };
 
 // Sergeant weapon options keyed by unit category
@@ -484,22 +781,25 @@ const SERGEANT_WEAPONS = {
   astartes: [
     { name: "Bolt Pistol", shots: 1, s: 4, ap: "5", damage: 1, type: "Pistol", rules: {} },
     { name: "Bolter", shots: 2, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {} },
-    { name: "Plasma Pistol", shots: 1, s: 7, ap: "4", damage: 1, type: "Pistol", rules: { getshot: true, breaching: true } },
+    { name: "Plasma Pistol (Sustained)", shots: 1, s: 6, ap: "4", damage: 1, type: "Pistol", rules: { breaching6: true } },
+    { name: "Plasma Pistol (Maximal)", shots: 1, s: 7, ap: "4", damage: 1, type: "Pistol", rules: { getshot: true, breaching: true } },
     { name: "Volkite Serpenta", shots: 2, s: 5, ap: "5", damage: 1, type: "Pistol", rules: { deflagrate: true } },
-    { name: "Combi-Plasma", shots: 1, s: 7, ap: "4", damage: 1, type: "Rapid Fire", rules: { getshot: true, breaching: true } },
-    { name: "Combi-Melta", shots: 1, s: 8, ap: "1", damage: 2, type: "Assault", rules: {} },
+    { name: "Combi-Bolter", shots: 2, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {} },
+    { name: "Combi-Plasma (Maximal)", shots: 1, s: 7, ap: "4", damage: 1, type: "Rapid Fire", rules: { getshot: true, breaching: true } },
+    { name: "Combi-Melta", shots: 1, s: 8, ap: "2", damage: 3, type: "Assault", rules: { melta: true } },
     { name: "Combi-Volkite", shots: 2, s: 5, ap: "5", damage: 1, type: "Assault", rules: { deflagrate: true } },
-    { name: "Combi-Flamer", shots: 1, s: 4, ap: "5", damage: 1, type: "Assault", rules: { panic: true } },
-    { name: "Hand Flamer", shots: 1, s: 3, ap: "6", damage: 1, type: "Pistol", rules: {} },
+    { name: "Combi-Flamer", shots: 1, s: 4, ap: "5", damage: 1, type: "Assault", rules: { panic: true, template: true } },
+    { name: "Hand Flamer", shots: 1, s: 3, ap: "-", damage: 1, type: "Pistol", rules: { template: true } },
+    { name: "Archaeotech Pistol", shots: 1, s: 6, ap: "4", damage: 2, type: "Pistol", rules: { breaching: true } },
   ],
   // Terminator sergeants
   terminator: [
     { name: "Combi-Bolter", shots: 2, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {} },
-    { name: "Combi-Plasma", shots: 1, s: 7, ap: "4", damage: 1, type: "Rapid Fire", rules: { getshot: true, breaching: true } },
-    { name: "Combi-Melta", shots: 1, s: 8, ap: "1", damage: 2, type: "Assault", rules: {} },
+    { name: "Combi-Plasma (Maximal)", shots: 1, s: 7, ap: "4", damage: 1, type: "Rapid Fire", rules: { getshot: true, breaching: true } },
+    { name: "Combi-Melta", shots: 1, s: 8, ap: "2", damage: 3, type: "Assault", rules: { melta: true } },
     { name: "Combi-Volkite", shots: 2, s: 5, ap: "5", damage: 1, type: "Assault", rules: { deflagrate: true } },
     { name: "Volkite Charger", shots: 2, s: 5, ap: "5", damage: 1, type: "Assault", rules: { deflagrate: true } },
-    { name: "Plasma Blaster", shots: 2, s: 7, ap: "4", damage: 1, type: "Assault", rules: { getshot: true, breaching: true } },
+    { name: "Plasma Blaster (Maximal)", shots: 2, s: 7, ap: "4", damage: 1, type: "Assault", rules: { getshot: true, breaching: true } },
   ],
   // Solar Auxilia sergeants (Troop Commanders)
   auxilia: [
@@ -512,13 +812,16 @@ const SERGEANT_WEAPONS = {
   veteran: [
     { name: "Bolt Pistol", shots: 1, s: 4, ap: "5", damage: 1, type: "Pistol", rules: {} },
     { name: "Bolter", shots: 2, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {} },
-    { name: "Plasma Pistol", shots: 1, s: 7, ap: "4", damage: 1, type: "Pistol", rules: { getshot: true, breaching: true } },
+    { name: "Plasma Pistol (Sustained)", shots: 1, s: 6, ap: "4", damage: 1, type: "Pistol", rules: { breaching6: true } },
+    { name: "Plasma Pistol (Maximal)", shots: 1, s: 7, ap: "4", damage: 1, type: "Pistol", rules: { getshot: true, breaching: true } },
     { name: "Volkite Serpenta", shots: 2, s: 5, ap: "5", damage: 1, type: "Pistol", rules: { deflagrate: true } },
-    { name: "Combi-Plasma", shots: 1, s: 7, ap: "4", damage: 1, type: "Rapid Fire", rules: { getshot: true, breaching: true } },
-    { name: "Combi-Melta", shots: 1, s: 8, ap: "1", damage: 2, type: "Assault", rules: {} },
+    { name: "Combi-Bolter", shots: 2, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {} },
+    { name: "Combi-Plasma (Maximal)", shots: 1, s: 7, ap: "4", damage: 1, type: "Rapid Fire", rules: { getshot: true, breaching: true } },
+    { name: "Combi-Melta", shots: 1, s: 8, ap: "2", damage: 3, type: "Assault", rules: { melta: true } },
     { name: "Combi-Volkite", shots: 2, s: 5, ap: "5", damage: 1, type: "Assault", rules: { deflagrate: true } },
-    { name: "Hand Flamer", shots: 1, s: 3, ap: "6", damage: 1, type: "Pistol", rules: {} },
+    { name: "Hand Flamer", shots: 1, s: 3, ap: "-", damage: 1, type: "Pistol", rules: { template: true } },
     { name: "Disintegrator Pistol", shots: 1, s: 4, ap: "3", damage: 2, type: "Pistol", rules: { getshot: true } },
+    { name: "Archaeotech Pistol", shots: 1, s: 6, ap: "4", damage: 2, type: "Pistol", rules: { breaching: true } },
   ],
 };
 
@@ -528,7 +831,7 @@ function getSgtCategory(unitId) {
   if (["cataphractii","tartaros","saturnine"].includes(unitId)) return "terminator";
   if (["lasrifle","veletaris"].includes(unitId)) return "auxilia";
   if (unitId === "veteran") return "veteran";
-  if (["tactical","tactical_support","heavy_support","seeker","recon","destroyer","breacher","assault"].includes(unitId)) return "astartes";
+  if (["tactical","tactical_support","heavy_support","seeker","recon","destroyer","breacher","assault","despoiler","veteran_assault","scimitar_jetbike"].includes(unitId)) return "astartes";
   return null;
 }
 
@@ -543,7 +846,8 @@ function resolveShootingPhase(params) {
     armourSave, invulnSave, coverSave, fnp,
     specialRules, halfRange, moved, indirect, weaponType,
     leadership, targetModels,
-    sgtEnabled, sgtWeapon
+    sgtEnabled, sgtWeapon,
+    hasVexilla, hasNoxVox
   } = params;
 
   const log = [];
@@ -1036,8 +1340,11 @@ function resolveShootingPhase(params) {
   const statusEffects = [];
   const ldRolls = [];
   const effectiveLd = leadership || 8;
-  const ldMod = specialRules.shellShock ? -1 : 0;
+  const ldMod = (specialRules.shellShock ? -1 : 0) + (hasNoxVox ? 1 : 0);
   const modLd = Math.max(effectiveLd + ldMod, 2);
+  const ldModDesc = [];
+  if (specialRules.shellShock) ldModDesc.push("Shell Shock -1");
+  if (hasNoxVox) ldModDesc.push("Nox-Vox +1");
 
   // Pinning Test (from Pinning rule or Barrage)
   if ((specialRules.pinning || weaponType === "Barrage") && casualties > 0) {
@@ -1045,37 +1352,37 @@ function resolveShootingPhase(params) {
     const pinTotal = pinRoll[0] + pinRoll[1];
     const pinPassed = pinTotal <= modLd;
     ldRolls.push({ type: "Pinning", roll: pinRoll, total: pinTotal, needed: modLd, passed: pinPassed });
-    log.push({ phase: "Checks", text: `📌 Pinning Test (Ld${modLd}${ldMod ? ` [${effectiveLd}${ldMod}]` : ""}): rolled ${pinRoll.join("+")}=${pinTotal} → ${pinPassed ? "PASSED" : "FAILED — unit is Pinned!"}` });
+    log.push({ phase: "Checks", text: `📌 Pinning Test (Ld${modLd}${ldModDesc.length ? ` [${effectiveLd}${ldModDesc.join(",")}]` : ""}): rolled ${pinRoll.join("+")}=${pinTotal} → ${pinPassed ? "PASSED" : "FAILED — unit is Pinned!"}` });
     if (!pinPassed) statusEffects.push("Pinned");
   }
 
-  // Suppressive Check (from hits, not wounds)
+  // Suppressive Check (from hits, not wounds) — Cool check
   if (specialRules.suppressive && hits > 0) {
     const supRoll = rollD6s(2);
     const supTotal = supRoll[0] + supRoll[1];
     const supPassed = supTotal <= modLd;
     ldRolls.push({ type: "Suppressive", roll: supRoll, total: supTotal, needed: modLd, passed: supPassed });
-    log.push({ phase: "Checks", text: `🔻 Suppressive (Ld${modLd}): rolled ${supRoll.join("+")}=${supTotal} → ${supPassed ? "PASSED" : "FAILED — unit is Suppressed!"}` });
+    log.push({ phase: "Checks", text: `🔻 Suppressive (Ld${modLd}${hasNoxVox ? " [Nox-Vox +1]" : ""}): rolled ${supRoll.join("+")}=${supTotal} → ${supPassed ? "PASSED" : "FAILED — unit is Suppressed!"}` });
     if (!supPassed) statusEffects.push("Suppressed");
   }
 
-  // Stun Check (from hits)
+  // Stun Check (from hits) — Cool check
   if (specialRules.stun && hits > 0) {
     const stunRoll = rollD6s(2);
     const stunTotal = stunRoll[0] + stunRoll[1];
     const stunPassed = stunTotal <= modLd;
     ldRolls.push({ type: "Stun", roll: stunRoll, total: stunTotal, needed: modLd, passed: stunPassed });
-    log.push({ phase: "Checks", text: `⚡ Stun (Ld${modLd}): rolled ${stunRoll.join("+")}=${stunTotal} → ${stunPassed ? "PASSED" : "FAILED — unit is Stunned!"}` });
+    log.push({ phase: "Checks", text: `⚡ Stun (Ld${modLd}${hasNoxVox ? " [Nox-Vox +1]" : ""}): rolled ${stunRoll.join("+")}=${stunTotal} → ${stunPassed ? "PASSED" : "FAILED — unit is Stunned!"}` });
     if (!stunPassed) statusEffects.push("Stunned");
   }
 
-  // Panic Check (from wounds)
+  // Panic Check (from wounds) — Cool check
   if (specialRules.panic && casualties > 0) {
     const panicRoll = rollD6s(2);
     const panicTotal = panicRoll[0] + panicRoll[1];
     const panicPassed = panicTotal <= modLd;
     ldRolls.push({ type: "Panic", roll: panicRoll, total: panicTotal, needed: modLd, passed: panicPassed });
-    log.push({ phase: "Checks", text: `😱 Panic (Ld${modLd}): rolled ${panicRoll.join("+")}=${panicTotal} → ${panicPassed ? "PASSED" : "FAILED — unit Panics and Falls Back!"}` });
+    log.push({ phase: "Checks", text: `😱 Panic (Ld${modLd}${hasNoxVox ? " [Nox-Vox +1]" : ""}): rolled ${panicRoll.join("+")}=${panicTotal} → ${panicPassed ? "PASSED" : "FAILED — unit Panics and Falls Back!"}` });
     if (!panicPassed) statusEffects.push("Panicked");
   }
 
@@ -1085,9 +1392,22 @@ function resolveShootingPhase(params) {
     if (casualtyPercent >= 0.25) {
       const moraleRoll = rollD6s(2);
       const moraleTotal = moraleRoll[0] + moraleRoll[1];
-      const moralePassed = moraleTotal <= modLd;
-      ldRolls.push({ type: "Morale", roll: moraleRoll, total: moraleTotal, needed: modLd, passed: moralePassed });
-      log.push({ phase: "Checks", text: `🏳 Morale Check (25%+ casualties: ${casualties}/${targetModels}, Ld${modLd}): rolled ${moraleRoll.join("+")}=${moraleTotal} → ${moralePassed ? "PASSED — unit holds!" : "FAILED — unit Falls Back!"}` });
+      let moralePassed = moraleTotal <= modLd;
+      
+      // Vexilla: re-roll failed Morale checks
+      if (!moralePassed && hasVexilla) {
+        const reroll = rollD6s(2);
+        const rerollTotal = reroll[0] + reroll[1];
+        const rerollPassed = rerollTotal <= modLd;
+        log.push({ phase: "Checks", text: `🏳 Morale Check (25%+ casualties: ${casualties}/${targetModels}, Ld${modLd}): rolled ${moraleRoll.join("+")}=${moraleTotal} → FAILED` });
+        log.push({ phase: "Checks", text: `⚑ Vexilla: re-rolling Morale → rolled ${reroll.join("+")}=${rerollTotal} → ${rerollPassed ? "PASSED — unit holds!" : "FAILED — unit Falls Back!"}` });
+        ldRolls.push({ type: "Morale", roll: moraleRoll, total: moraleTotal, needed: modLd, passed: false });
+        ldRolls.push({ type: "Morale (Vexilla Re-roll)", roll: reroll, total: rerollTotal, needed: modLd, passed: rerollPassed });
+        moralePassed = rerollPassed;
+      } else {
+        ldRolls.push({ type: "Morale", roll: moraleRoll, total: moraleTotal, needed: modLd, passed: moralePassed });
+        log.push({ phase: "Checks", text: `🏳 Morale Check (25%+ casualties: ${casualties}/${targetModels}, Ld${modLd}): rolled ${moraleRoll.join("+")}=${moraleTotal} → ${moralePassed ? "PASSED — unit holds!" : "FAILED — unit Falls Back!"}` });
+      }
       if (!moralePassed) statusEffects.push("Falling Back");
     }
   }
@@ -2128,6 +2448,16 @@ const MELEE_WEAPON_PROFILES = {
   daemon_greater: [
     { name: "Daemon Weapon", ws: 6, s: 7, ap: "2", i: 6, a: 5, w: 6, t: 6, sv: "-", inv: "4", fnp: "-", rules: { m_murderous: true } },
   ],
+  // FAST ATTACK
+  scimitar_jetbike: [
+    { name: "Chainsword", ws: 4, s: 4, ap: "-", i: 4, a: 1, w: 2, t: 4, sv: "3", inv: "-", fnp: "-", rules: {} },
+  ],
+  javelin: [
+    { name: "Close Combat Attack", ws: 4, s: 4, ap: "-", i: 4, a: 2, w: 4, t: 6, sv: "3", inv: "-", fnp: "-", rules: {} },
+  ],
+  land_speeder: [
+    { name: "Close Combat Attack", ws: 4, s: 4, ap: "-", i: 4, a: 2, w: 3, t: 5, sv: "3", inv: "-", fnp: "-", rules: {} },
+  ],
 };
 
 function resolveChargePhase(params) {
@@ -2571,7 +2901,9 @@ function getUnitIconType(name) {
   if (n.includes("predator") || n.includes("sicaran") || n.includes("land raider") || n.includes("spartan") || n.includes("proteus") || n.includes("leman russ") || n.includes("malcador") || n.includes("vindicator") || n.includes("araknae")) return "tank";
   if (n.includes("whirlwind") || n.includes("basilisk") || n.includes("medusa") || n.includes("rapier") || n.includes("thanatar")) return "artillery";
   if (n.includes("caladius") || n.includes("pallas")) return "grav_tank";
-  if (n.includes("agamatus") || n.includes("jetbike")) return "jetbike";
+  if (n.includes("agamatus") || n.includes("jetbike") || n.includes("scimitar")) return "jetbike";
+  if (n.includes("xiphon") || n.includes("storm eagle") || n.includes("fire raptor")) return "flyer";
+  if (n.includes("javelin") || n.includes("land speeder")) return "grav_tank";
   if (n.includes("telemon")) return "heavy_dread";
   if (n.includes("castellax") || n.includes("vorax") || n.includes("thallax") || n.includes("krios") || n.includes("scyllax") || n.includes("automata")) return "automata";
   if (n.includes("myrmidon") || n.includes("ursarax")) return "tech_elite";
@@ -3151,6 +3483,9 @@ function ShootingResolver() {
       const ud = unit.unitData;
       // Shooting target
       applyTargetPreset(ud);
+      // Equipment flags for target
+      setTargetHasVexilla(unit.equipment?.vexilla || false);
+      setTargetHasNoxVox(unit.equipment?.noxVox || false);
       // Assault defender
       setDUnit(ud);
       setDModels(ud.models || 1);
@@ -3347,6 +3682,31 @@ function ShootingResolver() {
                   )}
                 </svg>
               )}
+
+              {/* Terrain Pieces */}
+              {terrainPieces.map(terrain => {
+                const ttype = TERRAIN_TYPES.find(t => t.id === terrain.type);
+                return (
+                  <div key={terrain.id} style={{
+                    position: "absolute",
+                    left: terrain.x * deployScale, top: terrain.y * deployScale,
+                    width: terrain.w * deployScale, height: terrain.h * deployScale,
+                    background: terrain.bg, border: `2px solid ${terrain.border}`,
+                    borderRadius: terrain.type === "fortification" ? 3 : 6,
+                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                    pointerEvents: "none", zIndex: 2,
+                  }}>
+                    <div style={{ fontSize: Math.max(terrain.w * deployScale * 0.22, 8), color: terrain.color, lineHeight: 1 }}>
+                      {ttype?.symbol}
+                    </div>
+                    {terrain.w * deployScale > 40 && (
+                      <div style={{ fontSize: 6, color: terrain.color, fontFamily: "'Cinzel', serif", fontWeight: 700, textAlign: "center", textShadow: "0 1px 2px rgba(0,0,0,0.8)" }}>
+                        {terrain.w}″×{terrain.h}″
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
 
               {/* Units */}
               {deployedUnits.map(unit => {
@@ -3560,11 +3920,12 @@ function ShootingResolver() {
     setCurrentRound(prev => prev + 1);
   };
 
-  const rollStatusRecovery = (unitName, stat, statValue) => {
+  const rollStatusRecovery = (unitName, stat, statValue, hasNox) => {
+    const effectiveValue = hasNox ? Math.min(statValue + 1, 12) : statValue;
     const dice = rollD6s(2);
     const total = dice[0] + dice[1];
-    const passed = total <= statValue;
-    setStatusRecoveries(prev => [...prev, { round: currentRound, unitName, stat, statValue, dice, total, passed }]);
+    const passed = total <= effectiveValue;
+    setStatusRecoveries(prev => [...prev, { round: currentRound, unitName, stat, statValue: effectiveValue, baseValue: statValue, hasNox, dice, total, passed }]);
   };
 
   const calcSecondaryVP = (secondaries) => {
@@ -3589,6 +3950,7 @@ function ShootingResolver() {
   const [deployBrushMeleeWeapon, setDeployBrushMeleeWeapon] = useState(null);
   const [deployBrushSgtEnabled, setDeployBrushSgtEnabled] = useState(false);
   const [deployBrushSgtWeapon, setDeployBrushSgtWeapon] = useState(null);
+  const [deployBrushEquipment, setDeployBrushEquipment] = useState({ vexilla: false, noxVox: false, metaBomb: false });
   const [deployModalOpen, setDeployModalOpen] = useState(false);
 
   const deployRangedWeapons = useMemo(() => deployBrushUnit ? (WEAPON_PROFILES[deployBrushUnit.id] || []) : [], [deployBrushUnit]);
@@ -3598,7 +3960,57 @@ function ShootingResolver() {
   const [deployShowGrid, setDeployShowGrid] = useState(true);
   const [deployShowZones, setDeployShowZones] = useState(true);
   const [deployZoneDepth, setDeployZoneDepth] = useState(12); // deployment zone depth in inches
+  const [missionType, setMissionType] = useState("search"); // "search" | "hammer" | "dawn"
   const boardRef = useRef(null);
+
+  // Mission definitions
+  const MISSIONS = {
+    search: {
+      id: "search", name: "Search and Destroy",
+      desc: "Diagonal deployment. Side A deploys in the top-left corner (36\"×24\"), Side B in the bottom-right corner (36\"×24\"). Units cannot deploy within 18\" of the board centre.",
+      renderZones: (scale) => [
+        // Side A: top-left rectangle 36" wide, 24" tall
+        { left: 0, top: 0, width: 36 * scale, height: 24 * scale,
+          color: "rgba(155,45,45,0.15)", border: "2px dashed rgba(155,45,45,0.5)",
+          label: "P1 ZONE (36\"×24\")", labelStyle: { top: 4, left: 8, color: "rgba(155,45,45,0.7)" } },
+        // Side B: bottom-right rectangle 36" wide, 24" tall
+        { left: (BOARD_W - 36) * scale, top: (BOARD_H - 24) * scale, width: 36 * scale, height: 24 * scale,
+          color: "rgba(42,111,180,0.15)", border: "2px dashed rgba(42,111,180,0.5)",
+          label: "P2 ZONE (36\"×24\")", labelStyle: { bottom: 4, right: 8, color: "rgba(42,111,180,0.7)" } },
+      ],
+      exclusionCircle: true, // 18" diameter = 9" radius from centre
+    },
+    hammer: {
+      id: "hammer", name: "Hammer and Anvil",
+      desc: "Side deployment. Each player deploys in a 24\"×48\" zone on opposite long edges.",
+      renderZones: (scale) => [
+        { left: 0, top: 0, width: 24 * scale, height: BOARD_H * scale,
+          color: "rgba(155,45,45,0.15)", border: "2px dashed rgba(155,45,45,0.5)",
+          label: "P1 ZONE (24\")", labelStyle: { top: "50%", left: 4, transform: "translateY(-50%)", color: "rgba(155,45,45,0.7)" } },
+        { left: (BOARD_W - 24) * scale, top: 0, width: 24 * scale, height: BOARD_H * scale,
+          color: "rgba(42,111,180,0.15)", border: "2px dashed rgba(42,111,180,0.5)",
+          label: "P2 ZONE (24\")", labelStyle: { top: "50%", right: 4, transform: "translateY(-50%)", color: "rgba(42,111,180,0.7)" } },
+      ],
+    },
+    dawn: {
+      id: "dawn", name: "Dawn of War",
+      desc: "Long-edge deployment. Each player deploys in a 12\"×72\" strip along opposite long edges.",
+      renderZones: (scale) => [
+        { left: 0, top: 0, width: BOARD_W * scale, height: 12 * scale,
+          color: "rgba(155,45,45,0.15)", border: "2px dashed rgba(155,45,45,0.5)",
+          label: "P1 ZONE (12\")", labelStyle: { top: 4, left: 8, color: "rgba(155,45,45,0.7)" } },
+        { left: 0, top: (BOARD_H - 12) * scale, width: BOARD_W * scale, height: 12 * scale,
+          color: "rgba(42,111,180,0.15)", border: "2px dashed rgba(42,111,180,0.5)",
+          label: "P2 ZONE (12\")", labelStyle: { bottom: 4, right: 8, color: "rgba(42,111,180,0.7)" } },
+      ],
+    },
+  };
+
+  // Objective markers state: { id, x, y, value (2 or 3), label }
+  const [objectiveMarkers, setObjectiveMarkers] = useState([]);
+  const [placingObjective, setPlacingObjective] = useState(false);
+  const [objValue, setObjValue] = useState(2); // 2 or 3 VP
+  const [objCounter, setObjCounter] = useState(1);
 
   const DEPLOY_UNIT_TYPES = [
     { id: "infantry", label: "Infantry", symbol: "╬", desc: "Tactical, Despoiler, etc." },
@@ -3633,6 +4045,29 @@ function ShootingResolver() {
   };
 
   const handleBoardClick = (e) => {
+    // Objective placement mode
+    if (placingObjective) {
+      const rect = boardRef.current.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / deployScale;
+      const y = (e.clientY - rect.top) / deployScale;
+      if (x < 0 || x > BOARD_W || y < 0 || y > BOARD_H) return;
+      const snapX = Math.round(x * 2) / 2;
+      const snapY = Math.round(y * 2) / 2;
+      setObjectiveMarkers(prev => [...prev, { id: Date.now(), x: snapX, y: snapY, value: objValue, label: `Obj ${objCounter}` }]);
+      setObjCounter(c => c + 1);
+      return;
+    }
+    // Terrain placement mode
+    if (placingTerrain) {
+      const rect = boardRef.current.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / deployScale;
+      const y = (e.clientY - rect.top) / deployScale;
+      if (x < 0 || x > BOARD_W || y < 0 || y > BOARD_H) return;
+      const snapX = Math.round(x * 2) / 2;
+      const snapY = Math.round(y * 2) / 2;
+      addTerrainPiece(snapX, snapY);
+      return;
+    }
     // Need either a roster unit or a quick-type selected
     if (!deployBrushUnit && !deploySelectedUnit) return;
     const rect = boardRef.current.getBoundingClientRect();
@@ -3655,6 +4090,7 @@ function ShootingResolver() {
         meleeWeapon: deployBrushMeleeWeapon,
         sgtEnabled: deployBrushSgtEnabled,
         sgtWeapon: deployBrushSgtWeapon,
+        equipment: canTakeEquipment(deployBrushUnit.id) ? { ...deployBrushEquipment } : null,
       }]);
     } else {
       // Quick-place generic type
@@ -3669,6 +4105,53 @@ function ShootingResolver() {
 
   const removeDeployedUnit = (id) => {
     setDeployedUnits(prev => prev.filter(u => u.id !== id));
+  };
+
+  // ━━ TERRAIN SYSTEM ━━
+  const TERRAIN_TYPES = [
+    { id: "difficult",   label: "Difficult Terrain",   symbol: "≋", color: "#5a8a3a", bg: "rgba(90,138,58,0.25)",  border: "rgba(90,138,58,0.8)",  desc: "Halves movement. Models in difficult terrain count as moving through terrain." },
+    { id: "dangerous",   label: "Dangerous Terrain",   symbol: "⚠", color: "#c07a10", bg: "rgba(192,122,16,0.25)", border: "rgba(192,122,16,0.8)", desc: "Models moving through take an Initiative test or suffer a Wound (no armour)." },
+    { id: "impassable",  label: "Impassable Terrain",  symbol: "✖", color: "#8a2020", bg: "rgba(138,32,32,0.30)",  border: "rgba(138,32,32,0.8)",  desc: "No model may move through or be placed in impassable terrain." },
+    { id: "cover",       label: "Covered Terrain",     symbol: "⛨", color: "#3a6a8a", bg: "rgba(58,106,138,0.25)", border: "rgba(58,106,138,0.8)", desc: "Models wholly or partially behind gain a 5+ Cover Save (or improve existing by 1)." },
+    { id: "fortification", label: "Fortification",     symbol: "▩", color: "#7a6a2a", bg: "rgba(122,106,42,0.35)", border: "rgba(122,106,42,0.9)", desc: "Solid structure. Models inside gain 3+ Cover Save and the Battlements benefit." },
+  ];
+
+  const [terrainPieces, setTerrainPieces]         = useState([]);
+  const [placingTerrain, setPlacingTerrain]       = useState(false);
+  const [selectedTerrainType, setSelectedTerrainType] = useState("difficult");
+  const [terrainSize, setTerrainSize]             = useState({ w: 6, h: 4 }); // in inches
+  const [terrainCounter, setTerrainCounter]       = useState(1);
+  const [terrainSizing, setTerrainSizing]         = useState(false); // toggle between small/medium/large presets
+
+  const TERRAIN_SIZES = [
+    { label: "Small (4\"×4\")",    w: 4,  h: 4  },
+    { label: "Medium (6\"×6\")",   w: 6,  h: 6  },
+    { label: "Large (8\"×6\")",    w: 8,  h: 6  },
+    { label: "Huge (12\"×8\")",    w: 12, h: 8  },
+    { label: "Tower (3\"×3\")",    w: 3,  h: 3  },
+    { label: "Wall (10\"×2\")",    w: 10, h: 2  },
+  ];
+
+  const addTerrainPiece = (x, y) => {
+    const ttype = TERRAIN_TYPES.find(t => t.id === selectedTerrainType);
+    setTerrainPieces(prev => [...prev, {
+      id: Date.now(),
+      type: selectedTerrainType,
+      x: Math.max(0, Math.min(x - terrainSize.w / 2, BOARD_W - terrainSize.w)),
+      y: Math.max(0, Math.min(y - terrainSize.h / 2, BOARD_H - terrainSize.h)),
+      w: terrainSize.w,
+      h: terrainSize.h,
+      label: `${ttype.label} ${terrainCounter}`,
+      color: ttype.color,
+      bg: ttype.bg,
+      border: ttype.border,
+      symbol: ttype.symbol,
+    }]);
+    setTerrainCounter(c => c + 1);
+  };
+
+  const removeTerrainPiece = (id) => {
+    setTerrainPieces(prev => prev.filter(t => t.id !== id));
   };
 
   // ━━ MOVEMENT PHASE STATE ━━
@@ -3791,39 +4274,61 @@ function ShootingResolver() {
               }}>{i * 12}"</div>
             ))}
 
-            {/* Deployment zones */}
-            {showZones && (<>
-              <div style={{
-                position: "absolute", left: 0, top: 0,
-                width: BOARD_W * deployScale, height: deployZoneDepth * deployScale,
-                background: "rgba(155,45,45,0.12)", borderBottom: "2px dashed rgba(155,45,45,0.4)",
-                pointerEvents: "none",
-              }}>
-                <div style={{ position: "absolute", top: 4, left: 8, fontSize: 9, color: "rgba(155,45,45,0.6)", fontFamily: "'Cinzel', serif", letterSpacing: 1 }}>
-                  P1 ZONE ({deployZoneDepth}")
-                </div>
-              </div>
-              <div style={{
-                position: "absolute", left: 0, bottom: 0,
-                width: BOARD_W * deployScale, height: deployZoneDepth * deployScale,
-                background: "rgba(42,111,180,0.12)", borderTop: "2px dashed rgba(42,111,180,0.4)",
-                pointerEvents: "none",
-              }}>
-                <div style={{ position: "absolute", bottom: 4, right: 8, fontSize: 9, color: "rgba(42,111,180,0.6)", fontFamily: "'Cinzel', serif", letterSpacing: 1 }}>
-                  P2 ZONE ({deployZoneDepth}")
-                </div>
-              </div>
-              <div style={{
-                position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
-                fontSize: 10, color: "rgba(255,255,255,0.15)", fontFamily: "'Cinzel', serif", letterSpacing: 4,
-                pointerEvents: "none", whiteSpace: "nowrap",
-              }}>NO MAN'S LAND</div>
-              <div style={{
-                position: "absolute", left: 0, top: (BOARD_H / 2) * deployScale - 0.5,
-                width: BOARD_W * deployScale, height: 1,
-                background: "rgba(255,255,255,0.08)", pointerEvents: "none",
-              }} />
-            </>)}
+            {/* Deployment zones — mission-specific */}
+            {showZones && (() => {
+              const mission = MISSIONS[missionType];
+              if (!mission) return null;
+              const zones = mission.renderZones(deployScale);
+              return (
+                <>
+                  {zones.map((z, i) => (
+                    <div key={i} style={{
+                      position: "absolute",
+                      left: z.left, top: z.top,
+                      width: z.width, height: z.height,
+                      background: z.color, border: z.border,
+                      pointerEvents: "none",
+                    }}>
+                      <div style={{ position: "absolute", fontSize: 9, fontFamily: "'Cinzel', serif", letterSpacing: 1, ...z.labelStyle }}>
+                        {z.label}
+                      </div>
+                    </div>
+                  ))}
+                  {/* Search & Destroy exclusion circle (18" diameter = 9" radius from centre) */}
+                  {mission.exclusionCircle && (
+                    <svg style={{ position: "absolute", inset: 0, width: BOARD_W * deployScale, height: BOARD_H * deployScale, pointerEvents: "none" }}>
+                      <circle
+                        cx={(BOARD_W / 2) * deployScale} cy={(BOARD_H / 2) * deployScale}
+                        r={9 * deployScale}
+                        fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth={1.5} strokeDasharray="6,4"
+                      />
+                      <text x={(BOARD_W / 2) * deployScale} y={(BOARD_H / 2) * deployScale - 2}
+                        textAnchor="middle" fontSize={8} fill="rgba(255,255,255,0.18)" fontFamily="'Cinzel', serif">
+                        18" EXCLUSION ZONE
+                      </text>
+                    </svg>
+                  )}
+                  {/* Centre line */}
+                  <div style={{
+                    position: "absolute", left: 0, top: (BOARD_H / 2) * deployScale - 0.5,
+                    width: BOARD_W * deployScale, height: 1,
+                    background: "rgba(255,255,255,0.08)", pointerEvents: "none",
+                  }} />
+                  {missionType === "hammer" && (
+                    <div style={{
+                      position: "absolute", left: (BOARD_W / 2) * deployScale - 0.5, top: 0,
+                      width: 1, height: BOARD_H * deployScale,
+                      background: "rgba(255,255,255,0.08)", pointerEvents: "none",
+                    }} />
+                  )}
+                  <div style={{
+                    position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
+                    fontSize: 10, color: "rgba(255,255,255,0.15)", fontFamily: "'Cinzel', serif", letterSpacing: 4,
+                    pointerEvents: "none", whiteSpace: "nowrap",
+                  }}>NO MAN'S LAND</div>
+                </>
+              );
+            })()}
 
             {/* Move range indicator */}
             {showMoveRange && selectedMoveUnit && (
@@ -3898,6 +4403,70 @@ function ShootingResolver() {
                 </svg>
               );
             })()}
+
+            {/* Terrain Pieces — rendered before units so units appear on top */}
+            {terrainPieces.map(terrain => {
+              const ttype = TERRAIN_TYPES.find(t => t.id === terrain.type);
+              return (
+                <div key={terrain.id}
+                  onClick={(e) => { e.stopPropagation(); removeTerrainPiece(terrain.id); }}
+                  title={`${terrain.label} — ${ttype?.desc || ""} (click to remove)`}
+                  style={{
+                    position: "absolute",
+                    left: terrain.x * deployScale,
+                    top: terrain.y * deployScale,
+                    width: terrain.w * deployScale,
+                    height: terrain.h * deployScale,
+                    background: terrain.bg,
+                    border: `2px solid ${terrain.border}`,
+                    borderRadius: terrain.type === "fortification" ? 3 : 6,
+                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                    cursor: "pointer", zIndex: 2,
+                    boxShadow: terrain.type === "fortification" ? `inset 0 0 8px rgba(0,0,0,0.3), 0 0 4px ${terrain.border}` : "none",
+                  }}>
+                  <div style={{ fontSize: Math.max(terrain.w * deployScale * 0.22, 10), color: terrain.color, lineHeight: 1 }}>
+                    {terrain.symbol}
+                  </div>
+                  <div style={{
+                    fontSize: Math.max(Math.min(terrain.w * deployScale * 0.09, 9), 6),
+                    color: terrain.color, fontFamily: "'Cinzel', serif", fontWeight: 700,
+                    letterSpacing: 0.5, textAlign: "center", lineHeight: 1.2, marginTop: 2,
+                    textShadow: "0 1px 2px rgba(255,255,255,0.8)",
+                  }}>
+                    {terrain.w * deployScale > 50 ? terrain.label : ""}
+                  </div>
+                  <div style={{ fontSize: 7, color: terrain.color, opacity: 0.7, fontFamily: "'Cinzel', serif" }}>
+                    {terrain.w * deployScale > 40 ? `${terrain.w}″×${terrain.h}″` : ""}
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Objective Markers */}
+            {objectiveMarkers.map(obj => {
+              const sz = Math.max(deployScale * 2, 18);
+              return (
+                <div key={obj.id}
+                  onClick={(e) => { e.stopPropagation(); setObjectiveMarkers(prev => prev.filter(o => o.id !== obj.id)); }}
+                  title={`${obj.label} — ${obj.value} VP (click to remove)`}
+                  style={{
+                    position: "absolute",
+                    left: obj.x * deployScale - sz / 2,
+                    top: obj.y * deployScale - sz / 2,
+                    width: sz, height: sz,
+                    display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column",
+                    borderRadius: "50%",
+                    background: "rgba(255,215,0,0.9)",
+                    border: "2.5px solid #ffd700",
+                    boxShadow: "0 0 8px rgba(255,215,0,0.6)",
+                    color: "#2a2418", fontSize: Math.max(sz * 0.4, 8), fontWeight: 900,
+                    fontFamily: "'Cinzel', serif", cursor: "pointer", zIndex: 5,
+                  }}>
+                  ⊕
+                  <div style={{ fontSize: Math.max(sz * 0.28, 6), lineHeight: 1, color: "#6b4508" }}>{obj.value}VP</div>
+                </div>
+              );
+            })}
 
             {/* Placed units */}
             {deployedUnits.map(unit => {
@@ -4053,6 +4622,10 @@ function ShootingResolver() {
   // Sergeant
   const [sgtEnabled, setSgtEnabled] = useState(false);
   const [sgtWeapon, setSgtWeapon] = useState(null);
+
+  // Target Equipment (applied from map selection or manual toggle)
+  const [targetHasVexilla, setTargetHasVexilla] = useState(false);
+  const [targetHasNoxVox, setTargetHasNoxVox] = useState(false);
 
   // Presets — unit and weapon are now separate
   const [showAttackerPresets, setShowAttackerPresets] = useState(false);
@@ -4280,8 +4853,9 @@ function ShootingResolver() {
     armourSave, invulnSave, coverSave, fnp,
     specialRules: activeRules, halfRange, moved, indirect, weaponType,
     leadership, targetModels,
-    sgtEnabled, sgtWeapon
-  }), [numModels, numShots, bs, strength, ap, toughness, armourSave, invulnSave, coverSave, fnp, activeRules, halfRange, moved, indirect, weaponType, leadership, targetModels, sgtEnabled, sgtWeapon]);
+    sgtEnabled, sgtWeapon,
+    hasVexilla: targetHasVexilla, hasNoxVox: targetHasNoxVox
+  }), [numModels, numShots, bs, strength, ap, toughness, armourSave, invulnSave, coverSave, fnp, activeRules, halfRange, moved, indirect, weaponType, leadership, targetModels, sgtEnabled, sgtWeapon, targetHasVexilla, targetHasNoxVox]);
 
   const expected = useMemo(() => calculateExpected(params), [params]);
 
@@ -4402,7 +4976,7 @@ function ShootingResolver() {
                 COMBAT PHASE RESOLVER
               </h1>
               <div style={{ fontSize: 12, color: "#8a7e6e", fontFamily: "'Cinzel', serif", letterSpacing: 3 }}>
-                THE HORUS HERESY · AGE OF DARKNESS · 3RD EDITION · v1.16
+                THE HORUS HERESY · AGE OF DARKNESS · 3RD EDITION · v1.23
               </div>
             </div>
           </div>
@@ -4459,18 +5033,189 @@ function ShootingResolver() {
             <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 8, flexWrap: "wrap" }}>
               <CheckToggle checked={deployShowGrid} label="Grid Lines" onChange={setDeployShowGrid} />
               <CheckToggle checked={deployShowZones} label="Deploy Zones" onChange={setDeployShowZones} />
-              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <span style={{ fontSize: 9, fontFamily: "'Cinzel', serif", color: "#8a7e6e" }}>Zone Depth:</span>
-                {[6, 9, 12, 15, 18, 24].map(d => (
-                  <button key={d} onClick={() => setDeployZoneDepth(d)} style={{
-                    padding: "2px 6px", borderRadius: 3, fontSize: 9, cursor: "pointer",
-                    fontFamily: "'Cinzel', serif", fontWeight: deployZoneDepth === d ? 700 : 400,
-                    background: deployZoneDepth === d ? "rgba(91,74,138,0.12)" : "#f8f4ec",
-                    border: `1px solid ${deployZoneDepth === d ? "#5b4a8a" : "#e0d8c8"}`,
-                    color: deployZoneDepth === d ? "#5b4a8a" : "#8a7e6e",
-                  }}>{d}"</button>
-                ))}
+            </div>
+
+            {/* Mission Type Selector */}
+            <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid #e8e0d0" }}>
+              <div style={{ fontSize: 9, fontFamily: "'Cinzel', serif", color: "#8a7e6e", letterSpacing: 2, marginBottom: 6 }}>MISSION TYPE</div>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {Object.values(MISSIONS).map(m => {
+                  const active = missionType === m.id;
+                  return (
+                    <button key={m.id} onClick={() => setMissionType(m.id)} style={{
+                      padding: "6px 14px", borderRadius: 6, fontSize: 10, cursor: "pointer",
+                      fontFamily: "'Cinzel', serif", fontWeight: active ? 700 : 400, letterSpacing: 1,
+                      background: active ? "rgba(91,74,138,0.15)" : "#f8f4ec",
+                      border: `1.5px solid ${active ? "#5b4a8a" : "#d0c4aa"}`,
+                      color: active ? "#5b4a8a" : "#6a5e4e",
+                    }}>
+                      {m.name}
+                    </button>
+                  );
+                })}
               </div>
+              <div style={{ marginTop: 6, fontSize: 11, color: "#6a5e4e", fontFamily: "'EB Garamond', serif", fontStyle: "italic" }}>
+                {MISSIONS[missionType]?.desc}
+              </div>
+            </div>
+
+            {/* Objective Marker Placement */}
+            <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid #e8e0d0" }}>
+              <div style={{ fontSize: 9, fontFamily: "'Cinzel', serif", color: "#8a7e6e", letterSpacing: 2, marginBottom: 6 }}>OBJECTIVE MARKERS</div>
+              <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                  <span style={{ fontSize: 9, fontFamily: "'Cinzel', serif", color: "#8a7e6e" }}>VP VALUE:</span>
+                  {[2, 3].map(v => (
+                    <button key={v} onClick={() => setObjValue(v)} style={{
+                      padding: "4px 10px", borderRadius: 4, fontSize: 11, cursor: "pointer",
+                      fontFamily: "'Cinzel', serif", fontWeight: objValue === v ? 700 : 400,
+                      background: objValue === v ? "rgba(184,134,11,0.15)" : "#f0ebe2",
+                      border: `1.5px solid ${objValue === v ? "#b8860b" : "#d0c4aa"}`,
+                      color: objValue === v ? "#b8860b" : "#6a5e4e",
+                    }}>{v} VP</button>
+                  ))}
+                </div>
+                <button onClick={() => setPlacingObjective(!placingObjective)} style={{
+                  padding: "5px 14px", borderRadius: 4, fontSize: 10, cursor: "pointer",
+                  fontFamily: "'Cinzel', serif", fontWeight: 700, letterSpacing: 1,
+                  background: placingObjective ? "rgba(184,134,11,0.2)" : "rgba(184,134,11,0.08)",
+                  border: `1.5px solid ${placingObjective ? "#b8860b" : "#d0c4aa"}`,
+                  color: placingObjective ? "#b8860b" : "#6a5e4e",
+                  animation: placingObjective ? "pulseGold 1.5s ease-in-out infinite" : "none",
+                }}>
+                  {placingObjective ? "⊕ CLICK MAP TO PLACE..." : "⊕ PLACE OBJECTIVE"}
+                </button>
+                {objectiveMarkers.length > 0 && (
+                  <>
+                    <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                      {objectiveMarkers.map(o => (
+                        <span key={o.id} style={{
+                          fontSize: 9, fontFamily: "'Cinzel', serif", padding: "3px 7px",
+                          borderRadius: 3, background: "rgba(255,215,0,0.15)", border: "1px solid rgba(184,134,11,0.3)",
+                          color: "#8b6508",
+                        }}>
+                          {o.label} ({o.value}VP)
+                          <button onClick={() => setObjectiveMarkers(prev => prev.filter(x => x.id !== o.id))} style={{
+                            marginLeft: 4, background: "none", border: "none", color: "#c74040", cursor: "pointer", fontSize: 9, padding: 0,
+                          }}>✕</button>
+                        </span>
+                      ))}
+                    </div>
+                    <button onClick={() => { setObjectiveMarkers([]); setObjCounter(1); }} style={{
+                      padding: "3px 10px", borderRadius: 4, fontSize: 9, cursor: "pointer",
+                      fontFamily: "'Cinzel', serif", background: "rgba(200,50,50,0.08)",
+                      border: "1px solid #c74040", color: "#c74040",
+                    }}>CLEAR ALL ✕</button>
+                  </>
+                )}
+              </div>
+              {placingObjective && (
+                <div style={{ marginTop: 4, fontSize: 10, fontFamily: "'EB Garamond', serif", color: "#b8860b", fontStyle: "italic" }}>
+                  Click anywhere on the map to place a {objValue}VP objective. Click on an existing marker to remove it. Press "Place Objective" again to cancel.
+                </div>
+              )}
+            </div>
+
+            {/* ── TERRAIN PLACEMENT ── */}
+            <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid #e8e0d0" }}>
+              <div style={{ fontSize: 9, fontFamily: "'Cinzel', serif", color: "#4a7a3a", letterSpacing: 2, marginBottom: 6 }}>TERRAIN</div>
+
+              {/* Terrain type selector */}
+              <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 8 }}>
+                {TERRAIN_TYPES.map(tt => {
+                  const active = selectedTerrainType === tt.id;
+                  return (
+                    <button key={tt.id}
+                      onClick={() => { setSelectedTerrainType(tt.id); }}
+                      title={tt.desc}
+                      style={{
+                        padding: "5px 10px", borderRadius: 5, fontSize: 9, cursor: "pointer",
+                        fontFamily: "'Cinzel', serif", fontWeight: active ? 700 : 400, letterSpacing: 0.5,
+                        background: active ? tt.bg : "#f4f0e8",
+                        border: `2px solid ${active ? tt.border : "#d0c4aa"}`,
+                        color: active ? tt.color : "#6a5e4e",
+                        display: "flex", alignItems: "center", gap: 4,
+                        boxShadow: active ? `0 0 6px ${tt.bg}` : "none",
+                      }}>
+                      <span style={{ fontSize: 12 }}>{tt.symbol}</span>
+                      {tt.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Size selector */}
+              <div style={{ display: "flex", gap: 5, flexWrap: "wrap", alignItems: "center", marginBottom: 8 }}>
+                <span style={{ fontSize: 9, fontFamily: "'Cinzel', serif", color: "#6a5e4e" }}>SIZE:</span>
+                {TERRAIN_SIZES.map(sz => {
+                  const isActive = terrainSize.w === sz.w && terrainSize.h === sz.h;
+                  return (
+                    <button key={sz.label} onClick={() => setTerrainSize({ w: sz.w, h: sz.h })} style={{
+                      padding: "3px 8px", borderRadius: 4, fontSize: 9, cursor: "pointer",
+                      fontFamily: "'Cinzel', serif", fontWeight: isActive ? 700 : 400,
+                      background: isActive ? "rgba(74,122,58,0.15)" : "#f0ebe2",
+                      border: `1.5px solid ${isActive ? "#4a7a3a" : "#d0c4aa"}`,
+                      color: isActive ? "#4a7a3a" : "#6a5e4e",
+                    }}>{sz.label}</button>
+                  );
+                })}
+              </div>
+
+              {/* Place terrain button + placed list */}
+              <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                <button
+                  onClick={() => { setPlacingTerrain(!placingTerrain); setPlacingObjective(false); }}
+                  style={{
+                    padding: "5px 14px", borderRadius: 4, fontSize: 10, cursor: "pointer",
+                    fontFamily: "'Cinzel', serif", fontWeight: 700, letterSpacing: 1,
+                    background: placingTerrain ? "rgba(74,122,58,0.2)" : "rgba(74,122,58,0.08)",
+                    border: `1.5px solid ${placingTerrain ? "#4a7a3a" : "#d0c4aa"}`,
+                    color: placingTerrain ? "#4a7a3a" : "#6a5e4e",
+                    animation: placingTerrain ? "pulseGold 1.5s ease-in-out infinite" : "none",
+                  }}>
+                  {placingTerrain
+                    ? `${TERRAIN_TYPES.find(t=>t.id===selectedTerrainType)?.symbol} CLICK MAP TO PLACE...`
+                    : `${TERRAIN_TYPES.find(t=>t.id===selectedTerrainType)?.symbol} PLACE TERRAIN`}
+                </button>
+
+                {terrainPieces.length > 0 && (
+                  <>
+                    <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                      {terrainPieces.map(tp => {
+                        const ttype = TERRAIN_TYPES.find(t => t.id === tp.type);
+                        return (
+                          <span key={tp.id} style={{
+                            fontSize: 9, fontFamily: "'Cinzel', serif", padding: "3px 7px",
+                            borderRadius: 3, background: tp.bg, border: `1px solid ${tp.border}`,
+                            color: tp.color, display: "flex", alignItems: "center", gap: 3,
+                          }}>
+                            {ttype?.symbol} {tp.label} ({tp.w}″×{tp.h}″)
+                            <button onClick={() => removeTerrainPiece(tp.id)} style={{
+                              background: "none", border: "none", color: "#c74040", cursor: "pointer", fontSize: 9, padding: 0,
+                            }}>✕</button>
+                          </span>
+                        );
+                      })}
+                    </div>
+                    <button onClick={() => { setTerrainPieces([]); setTerrainCounter(1); }} style={{
+                      padding: "3px 10px", borderRadius: 4, fontSize: 9, cursor: "pointer",
+                      fontFamily: "'Cinzel', serif", background: "rgba(200,50,50,0.08)",
+                      border: "1px solid #c74040", color: "#c74040",
+                    }}>CLEAR ALL ✕</button>
+                  </>
+                )}
+              </div>
+
+              {placingTerrain && (
+                <div style={{ marginTop: 4, fontSize: 10, fontFamily: "'EB Garamond', serif", color: "#4a7a3a", fontStyle: "italic" }}>
+                  Placing: <strong>{TERRAIN_TYPES.find(t=>t.id===selectedTerrainType)?.label}</strong> ({terrainSize.w}″×{terrainSize.h}″) — click on the map. Click a placed terrain piece to remove it. Press the button again to cancel.
+                </div>
+              )}
+              {!placingTerrain && (
+                <div style={{ marginTop: 4, fontSize: 10, fontFamily: "'EB Garamond', serif", color: "#8a7e6e", fontStyle: "italic" }}>
+                  {TERRAIN_TYPES.find(t=>t.id===selectedTerrainType)?.desc}
+                </div>
+              )}
             </div>
           </div>
 
@@ -4661,6 +5406,31 @@ function ShootingResolver() {
                     )}
                   </div>
                 )}
+
+                {/* Equipment Options (Troops & Elites only) */}
+                {deployBrushUnit && canTakeEquipment(deployBrushUnit.id) && (
+                  <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid rgba(91,74,138,0.08)" }}>
+                    <div style={{ fontSize: 9, fontFamily: "'Cinzel', serif", color: "#2e5e3e", letterSpacing: 1, marginBottom: 5 }}>⚑ EQUIPMENT</div>
+                    <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                      {Object.entries(EQUIPMENT_OPTIONS).map(([key, eq]) => {
+                        const active = deployBrushEquipment[key];
+                        return (
+                          <button key={key} onClick={() => setDeployBrushEquipment(prev => ({ ...prev, [key]: !prev[key] }))} title={`${eq.desc} (+${eq.cost}pts)`} style={{
+                            padding: "4px 9px", borderRadius: 4, cursor: "pointer", fontSize: 9,
+                            fontFamily: "'Cinzel', serif", fontWeight: active ? 700 : 400,
+                            background: active ? "rgba(46,94,62,0.12)" : "#f8f4ec",
+                            border: `1.5px solid ${active ? "#2e5e3e" : "#e0d8c8"}`,
+                            color: active ? "#2e5e3e" : "#6a5e4e",
+                            transition: "all 0.12s ease",
+                          }}>
+                            {eq.icon} {eq.label}
+                            <span style={{ fontSize: 7, color: active ? "#2e5e3e" : "#a09888", marginLeft: 3 }}>+{eq.cost}pts</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -4711,6 +5481,8 @@ function ShootingResolver() {
                 setDeployBrushSgtEnabled(!!hasSgt);
                 const sgtW = sgtCat ? (SERGEANT_WEAPONS[sgtCat] || []) : [];
                 setDeployBrushSgtWeapon(sgtW.length > 0 ? sgtW[0] : null);
+                // Reset equipment
+                setDeployBrushEquipment({ vexilla: false, noxVox: false, metaBomb: false });
               }}
               onClose={() => setDeployModalOpen(false)}
               accentColor="#5b4a8a"
@@ -4751,11 +5523,45 @@ function ShootingResolver() {
                 <span style={{ color: "#5b4a8a", fontSize: 16 }}>📋</span>
                 <span style={{ color: "#5b4a8a" }}>DEPLOYED UNITS ({deployedUnits.length})</span>
               </div>
-              <div style={{ display: "flex", gap: 8 }}>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 <MiniStat label="P1" value={deployedUnits.filter(u => u.player === "p1").length} color="#9b2d2d" />
                 <MiniStat label="P2" value={deployedUnits.filter(u => u.player === "p2").length} color="#2a6fb4" />
               </div>
             </div>
+
+            {/* Points totals bar */}
+            {(() => {
+              const p1pts = deployedUnits.filter(u => u.player === "p1").reduce((sum, u) => sum + (calcUnitPoints(u) ?? 0), 0);
+              const p2pts = deployedUnits.filter(u => u.player === "p2").reduce((sum, u) => sum + (calcUnitPoints(u) ?? 0), 0);
+              const hasAny = deployedUnits.some(u => calcUnitPoints(u) !== null);
+              if (!hasAny) return null;
+              return (
+                <div style={{ display: "flex", gap: 8, marginBottom: 8, padding: "6px 10px", borderRadius: 4, background: "#f4f0e8", border: "1px solid #e0d8c8" }}>
+                  <div style={{ flex: 1, textAlign: "center" }}>
+                    <div style={{ fontSize: 9, fontFamily: "'Cinzel', serif", color: "#9b2d2d", letterSpacing: 1 }}>PLAYER 1</div>
+                    <div style={{ fontSize: 16, fontFamily: "'Cinzel', serif", fontWeight: 700, color: "#9b2d2d" }}>{p1pts} <span style={{ fontSize: 10 }}>pts</span></div>
+                  </div>
+                  <div style={{ width: 1, background: "#d0c4aa" }} />
+                  <div style={{ flex: 1, textAlign: "center" }}>
+                    <div style={{ fontSize: 9, fontFamily: "'Cinzel', serif", color: "#2a6fb4", letterSpacing: 1 }}>PLAYER 2</div>
+                    <div style={{ fontSize: 16, fontFamily: "'Cinzel', serif", fontWeight: 700, color: "#2a6fb4" }}>{p2pts} <span style={{ fontSize: 10 }}>pts</span></div>
+                  </div>
+                  {p1pts > 0 && p2pts > 0 && (
+                    <>
+                      <div style={{ width: 1, background: "#d0c4aa" }} />
+                      <div style={{ flex: 1, textAlign: "center" }}>
+                        <div style={{ fontSize: 9, fontFamily: "'Cinzel', serif", color: "#6a5e4e", letterSpacing: 1 }}>DIFFERENCE</div>
+                        <div style={{ fontSize: 16, fontFamily: "'Cinzel', serif", fontWeight: 700, color: Math.abs(p1pts - p2pts) > 50 ? "#c74040" : "#5a7a3a" }}>
+                          {Math.abs(p1pts - p2pts) === 0 ? "—" : `${Math.abs(p1pts - p2pts)}`}
+                          <span style={{ fontSize: 10 }}>{Math.abs(p1pts - p2pts) > 0 ? ` (${p1pts > p2pts ? "P1" : "P2"} +)` : ""}</span>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })()}
+
             {deployedUnits.length === 0 ? (
               <div style={{ textAlign: "center", padding: "12px 0", fontSize: 11, color: "#a09888", fontFamily: "'EB Garamond', serif", fontStyle: "italic" }}>
                 No units deployed. Select a unit from the roster or quick-place palette above and click on the map.
@@ -4766,20 +5572,48 @@ function ShootingResolver() {
                   const isP1 = unit.player === "p1";
                   const col = isP1 ? "#9b2d2d" : "#2a6fb4";
                   const ud = unit.unitData;
+                  const pts = calcUnitPoints(unit);
+                  const pd = ud ? POINTS_DATA[ud.id] : null;
+
+                  // Build points breakdown tooltip
+                  let ptsBreakdown = "";
+                  if (pd && ud) {
+                    const extraModels = Math.max(0, ud.models - pd.minModels);
+                    const parts = [`${pd.base}pts base (${pd.minModels} model${pd.minModels !== 1 ? "s" : ""})`];
+                    if (extraModels > 0) parts.push(`+${extraModels}×${pd.perModel}pts models`);
+                    if (unit.rangedWeapon) {
+                      const wc = WEAPON_UPGRADE_COSTS[unit.rangedWeapon.name] ?? 0;
+                      const nm = ud.models - (unit.sgtEnabled ? 1 : 0);
+                      if (wc > 0) parts.push(`+${nm}×${wc}pts ${unit.rangedWeapon.name}`);
+                    }
+                    if (unit.sgtEnabled && unit.sgtWeapon) {
+                      const sc = WEAPON_UPGRADE_COSTS[unit.sgtWeapon.name] ?? 0;
+                      if (sc > 0) parts.push(`+${sc}pts Sgt: ${unit.sgtWeapon.name}`);
+                    }
+                    if (unit.equipment) {
+                      if (unit.equipment.vexilla) parts.push(`+${EQUIPMENT_OPTIONS.vexilla.cost}pts Vexilla`);
+                      if (unit.equipment.noxVox) parts.push(`+${EQUIPMENT_OPTIONS.noxVox.cost}pts Nox-Vox`);
+                      if (unit.equipment.metaBomb) parts.push(`+${EQUIPMENT_OPTIONS.metaBomb.cost}pts Melta Bombs`);
+                    }
+                    ptsBreakdown = parts.join(" | ");
+                  }
+
                   return (
                     <div key={unit.id} style={{
-                      display: "flex", alignItems: "center", gap: 8, padding: "4px 10px",
+                      display: "flex", alignItems: "center", gap: 8, padding: "5px 10px",
                       borderRadius: 4, background: isP1 ? "rgba(155,45,45,0.04)" : "rgba(42,111,180,0.04)",
                       border: `1px solid ${isP1 ? "rgba(155,45,45,0.1)" : "rgba(42,111,180,0.1)"}`,
                     }}>
                       <span style={{ fontSize: 14, color: col }}>{unit.symbol}</span>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <span style={{ fontSize: 11, fontFamily: "'Cinzel', serif", fontWeight: 600, color: col }}>{unit.label}</span>
-                        {ud && (
-                          <span style={{ fontSize: 9, color: "#8a7e6e", fontFamily: "'EB Garamond', serif", marginLeft: 6 }}>
-                            {ud.models}× · T{ud.t} W{ud.w} Sv{ud.sv}{ud.inv && ud.inv !== "-" ? ` Inv${ud.inv}` : ""}
-                          </span>
-                        )}
+                        <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                          <span style={{ fontSize: 11, fontFamily: "'Cinzel', serif", fontWeight: 600, color: col }}>{unit.label}</span>
+                          {ud && (
+                            <span style={{ fontSize: 9, color: "#8a7e6e", fontFamily: "'EB Garamond', serif" }}>
+                              {ud.models}× · T{ud.t} W{ud.w} Sv{ud.sv}{ud.inv && ud.inv !== "-" ? ` Inv${ud.inv}` : ""}
+                            </span>
+                          )}
+                        </div>
                         {(unit.rangedWeapon || unit.meleeWeapon || unit.sgtEnabled) && (
                           <div style={{ fontSize: 8, color: "#8a7e6e", fontFamily: "'EB Garamond', serif", marginTop: 1 }}>
                             {unit.rangedWeapon && <span style={{ color: "#b8860b" }}>🔫 {unit.rangedWeapon.name}</span>}
@@ -4788,8 +5622,32 @@ function ShootingResolver() {
                             {unit.sgtEnabled && unit.sgtWeapon && <span style={{ color: "#5b4a8a" }}> · ★ {unit.sgtWeapon.name}</span>}
                           </div>
                         )}
+                        {unit.equipment && (unit.equipment.vexilla || unit.equipment.noxVox || unit.equipment.metaBomb) && (
+                          <div style={{ fontSize: 8, color: "#2e5e3e", fontFamily: "'EB Garamond', serif", marginTop: 1 }}>
+                            {unit.equipment.vexilla && <span title="Re-roll failed Morale (Shooting & Assault)">⚑ Vexilla</span>}
+                            {unit.equipment.vexilla && (unit.equipment.noxVox || unit.equipment.metaBomb) && <span style={{ color: "#8a7e6e" }}> · </span>}
+                            {unit.equipment.noxVox && <span title="+1 Ld to Leadership & Cooldown checks">📡 Nox-Vox</span>}
+                            {unit.equipment.noxVox && unit.equipment.metaBomb && <span style={{ color: "#8a7e6e" }}> · </span>}
+                            {unit.equipment.metaBomb && <span title="S8 AP1 Armourbane vs vehicles in assault">💣 Melta Bombs</span>}
+                          </div>
+                        )}
                       </div>
                       <span style={{ fontSize: 9, fontFamily: "'Cinzel', serif", color: "#8a7e6e" }}>{unit.x}" , {unit.y}"</span>
+                      {/* Points badge */}
+                      {pts !== null ? (
+                        <div title={ptsBreakdown} style={{
+                          display: "flex", flexDirection: "column", alignItems: "center",
+                          padding: "2px 7px", borderRadius: 4, minWidth: 38,
+                          background: isP1 ? "rgba(155,45,45,0.1)" : "rgba(42,111,180,0.1)",
+                          border: `1px solid ${isP1 ? "rgba(155,45,45,0.25)" : "rgba(42,111,180,0.25)"}`,
+                          cursor: "help",
+                        }}>
+                          <span style={{ fontSize: 13, fontFamily: "'Cinzel', serif", fontWeight: 700, color: col, lineHeight: 1 }}>{pts}</span>
+                          <span style={{ fontSize: 7, fontFamily: "'Cinzel', serif", color: col, opacity: 0.7, letterSpacing: 0.5 }}>pts</span>
+                        </div>
+                      ) : (
+                        <div style={{ width: 38, textAlign: "center", fontSize: 8, color: "#c0b498", fontFamily: "'Cinzel', serif" }}>—</div>
+                      )}
                       <span style={{ fontSize: 8, fontFamily: "'Cinzel', serif", color: col, letterSpacing: 0.5 }}>{unit.player.toUpperCase()}</span>
                       <button onClick={() => removeDeployedUnit(unit.id)} style={{
                         background: "none", border: "none", color: "#c74040", cursor: "pointer", fontSize: 12, padding: "0 4px",
@@ -5259,6 +6117,34 @@ function ShootingResolver() {
               <SelectInput label="Cover Save" value={coverSave} onChange={setCoverSave} options={saveOptions} />
               <SelectInput label="FNP" value={fnp} onChange={setFnp} options={saveOptions} />
               <NumberInput label="Unit Size" value={targetModels} onChange={setTargetModels} min={1} max={40} />
+            </div>
+            {/* Target Equipment */}
+            <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
+              <button onClick={() => setTargetHasVexilla(v => !v)} title={EQUIPMENT_OPTIONS.vexilla.desc} style={{
+                padding: "4px 10px", borderRadius: 4, cursor: "pointer", fontSize: 9,
+                fontFamily: "'Cinzel', serif", fontWeight: targetHasVexilla ? 700 : 400,
+                background: targetHasVexilla ? "rgba(46,94,62,0.12)" : "#f8f4ec",
+                border: `1.5px solid ${targetHasVexilla ? "#2e5e3e" : "#e0d8c8"}`,
+                color: targetHasVexilla ? "#2e5e3e" : "#8a7e6e",
+                transition: "all 0.12s ease",
+              }}>
+                ⚑ Vexilla {targetHasVexilla ? "✓" : ""}
+              </button>
+              <button onClick={() => setTargetHasNoxVox(v => !v)} title={EQUIPMENT_OPTIONS.noxVox.desc} style={{
+                padding: "4px 10px", borderRadius: 4, cursor: "pointer", fontSize: 9,
+                fontFamily: "'Cinzel', serif", fontWeight: targetHasNoxVox ? 700 : 400,
+                background: targetHasNoxVox ? "rgba(46,94,62,0.12)" : "#f8f4ec",
+                border: `1.5px solid ${targetHasNoxVox ? "#2e5e3e" : "#e0d8c8"}`,
+                color: targetHasNoxVox ? "#2e5e3e" : "#8a7e6e",
+                transition: "all 0.12s ease",
+              }}>
+                📡 Nox-Vox {targetHasNoxVox ? "✓" : ""}
+              </button>
+              {(targetHasVexilla || targetHasNoxVox) && (
+                <span style={{ fontSize: 8, color: "#2e5e3e", fontFamily: "'EB Garamond', serif", alignSelf: "center", fontStyle: "italic" }}>
+                  {targetHasVexilla ? "Re-roll Morale" : ""}{targetHasVexilla && targetHasNoxVox ? " · " : ""}{targetHasNoxVox ? "+1 Ld checks" : ""}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -6555,8 +7441,25 @@ function ShootingResolver() {
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ color: "#2e5e3e", fontSize: 16 }}>🎯</span>
                 <span style={{ color: "#2e5e3e" }}>PRIMARY OBJECTIVES</span>
+                <span style={{ fontSize: 9, fontFamily: "'Cinzel', serif", color: "#5b4a8a", letterSpacing: 1,
+                  padding: "2px 8px", borderRadius: 3, background: "rgba(91,74,138,0.1)", border: "1px solid rgba(91,74,138,0.25)" }}>
+                  {MISSIONS[missionType]?.name}
+                </span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                {objectiveMarkers.length > 0 && (
+                  <button onClick={() => {
+                    // Sync objectives from placed markers
+                    const sorted = [...objectiveMarkers].sort((a, b) => a.id - b.id);
+                    setObjectives(sorted.map((m, i) => ({ id: i + 1, value: m.value, controller: "none", line: 0 })));
+                  }} style={{
+                    padding: "3px 10px", borderRadius: 4, fontSize: 9, cursor: "pointer",
+                    fontFamily: "'Cinzel', serif", fontWeight: 600, letterSpacing: 1,
+                    background: "rgba(91,74,138,0.10)", border: "1.5px solid #5b4a8a", color: "#5b4a8a",
+                  }} title="Sync objective count and VP values from markers placed on the map">
+                    ↓ SYNC FROM MAP ({objectiveMarkers.length})
+                  </button>
+                )}
                 <span style={{ fontSize: 10, color: "#8a7e6e", fontFamily: "'Cinzel', serif" }}>Objectives:</span>
                 {[2, 3, 4, 5, 6].map(n => (
                   <button key={n} onClick={() => handleNumObjectivesChange(n)} style={{
@@ -6581,14 +7484,14 @@ function ShootingResolver() {
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                   <span style={{ fontSize: 9, fontFamily: "'Cinzel', serif", color: "#8a7e6e" }}>Value:</span>
-                  {[1, 2, 3].map(v => (
+                  {[2, 3].map(v => (
                     <button key={v} onClick={() => updateObjective(idx, "value", v)} style={{
                       padding: "2px 8px", borderRadius: 3, fontSize: 10, cursor: "pointer",
                       fontFamily: "'Cinzel', serif", fontWeight: obj.value === v ? 700 : 400,
                       background: obj.value === v ? "rgba(46,94,62,0.15)" : "#f8f4ec",
                       border: `1px solid ${obj.value === v ? "#2e5e3e" : "#e0d8c8"}`,
                       color: obj.value === v ? "#2e5e3e" : "#8a7e6e",
-                    }}>{v}</button>
+                    }}>{v}VP</button>
                   ))}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
@@ -6703,7 +7606,7 @@ function ShootingResolver() {
             <div style={{ fontSize: 10, color: "#6a5e4e", fontFamily: "'EB Garamond', serif", marginBottom: 10, fontStyle: "italic" }}>
               Units with Tactical Statuses roll 2D6 ≤ Cool/Leadership to recover before scoring.
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto auto", gap: 8, alignItems: "end", marginBottom: 10 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto auto auto", gap: 8, alignItems: "end", marginBottom: 10 }}>
               <div>
                 <label style={{ fontSize: 9, fontFamily: "'Cinzel', serif", color: "#8a7e6e", letterSpacing: 1 }}>UNIT NAME</label>
                 <input id="statusUnitName" type="text" placeholder="e.g. Tactical Squad" style={{
@@ -6725,11 +7628,16 @@ function ShootingResolver() {
                   fontSize: 12, fontFamily: "'Cinzel', serif", background: "#f9f6f0"
                 }} />
               </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 4, paddingBottom: 2 }}>
+                <input id="statusNoxVox" type="checkbox" style={{ accentColor: "#2e5e3e" }} />
+                <label htmlFor="statusNoxVox" style={{ fontSize: 8, fontFamily: "'Cinzel', serif", color: "#2e5e3e", letterSpacing: 0.5, cursor: "pointer" }}>📡 Nox-Vox</label>
+              </div>
               <button onClick={() => {
                 const name = document.getElementById("statusUnitName")?.value || "Unit";
                 const stat = document.getElementById("statusStat")?.value || "Cool";
                 const val = parseInt(document.getElementById("statusStatValue")?.value) || 8;
-                rollStatusRecovery(name, stat, val);
+                const hasNox = document.getElementById("statusNoxVox")?.checked || false;
+                rollStatusRecovery(name, stat, val, hasNox);
               }} style={{
                 padding: "6px 14px", borderRadius: 4, fontSize: 10, cursor: "pointer",
                 fontFamily: "'Cinzel', serif", fontWeight: 700, letterSpacing: 1,
@@ -6751,7 +7659,7 @@ function ShootingResolver() {
                   {r.dice.map((d, j) => <DieIcon key={j} value={d} success={r.passed} small />)}
                 </div>
                 <span style={{ fontSize: 11, fontFamily: "'EB Garamond', serif", color: r.passed ? "#2e5e3e" : "#c74040" }}>
-                  {r.unitName} — {r.stat} {r.statValue}: rolled {r.total} → {r.passed ? "RECOVERED ✓" : "STILL AFFLICTED ✗"}
+                  {r.unitName} — {r.stat} {r.statValue}{r.hasNox ? " [Nox-Vox +1]" : ""}: rolled {r.total} → {r.passed ? "RECOVERED ✓" : "STILL AFFLICTED ✗"}
                 </span>
               </div>
             ))}
@@ -6806,7 +7714,7 @@ function ShootingResolver() {
         <div style={{ textAlign: "center", marginTop: 24, padding: 16, color: "#a09888", fontSize: 11, fontFamily: "'Cinzel', serif" }}>
           Rules Reference: Warhammer — The Horus Heresy: Age of Darkness Rulebook (3rd Edition)
           <br />All dice rolls are simulated. Use for quick resolution and statistical analysis.
-          <br />Version 1.16
+          <br />Version 1.22 — Equipment: Vexilla, Nox-Vox, Melta Bombs
         </div>
       </div>
     </div>
