@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tactical Cogitator — Horus Heresy Shooting Resolver v1.42</title>
+  <title>Tactical Cogitator — Horus Heresy Shooting Resolver v1.43</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1252,7 +1252,7 @@ const APEX_DETACHMENTS = {
 // Prime Advantages (p.283) — bonus for filling Prime slots
 const PRIME_ADVANTAGES = [
   { id: "master_sergeant", name: "Master Sergeant", desc: "Sergeant gains +1 A, WS & Ld, and Champion Sub-Type. Once per Detachment.", oncePerDet: true, requiresSgt: true },
-  { id: "combat_veterans", name: "Combat Veterans", desc: "All models gain +1 Ld, Cool, Int & WP (max 10). May replace unit with Elite Veteran.", allowsVeteranSwap: true },
+  { id: "combat_veterans", name: "Combat Veterans", desc: "All models gain +1 Ld, Cool, Int & WP (max 10)." },
   { id: "paragon_of_battle", name: "Paragon of Battle", desc: "One Command Sub-Type model gains +1 A, WS & BS.", requiresCommand: true },
   { id: "special_assignment", name: "Special Assignment", desc: "Command Slot may be filled by High Command unit. No additional Detachments from this Slot.", commandOnly: true },
   { id: "logistical_benefit", name: "Logistical Benefit", desc: "Add one extra FOC Slot (any role except High Command, Command, Warlord, Lord of War). Once per Detachment.", oncePerDet: true, addsSlot: true },
@@ -5269,6 +5269,7 @@ function ShootingResolver() {
       setASv(ud.sv || "3");
       setAInv(ud.inv || "-");
       setAFnp(ud.fnp || "-");
+      setALd(ud.ld || 8);
       if (unit.meleeWeapon) {
         setAWS(unit.meleeWeapon.ws);
         setAS(unit.meleeWeapon.s);
@@ -5297,6 +5298,7 @@ function ShootingResolver() {
       setDSv(ud.sv || "3");
       setDInv(ud.inv || "-");
       setDFnp(ud.fnp || "-");
+      setDLd(ud.ld || 8);
       if (unit.meleeWeapon) {
         setDWS(unit.meleeWeapon.ws);
         setDS(unit.meleeWeapon.s);
@@ -5516,7 +5518,7 @@ function ShootingResolver() {
                 const isP1 = unit.player === "p1";
                 const col = isP1 ? "#e05555" : "#5599dd";
                 const bgCol = isP1 ? "rgba(200,60,60,0.85)" : "rgba(50,120,200,0.85)";
-                const sz = Math.max(deployScale * 1.6, 16);
+                const sz = getUnitMapSize(unit);
                 const isAtk = unit.id === mapAttackerId;
                 const isDef = unit.id === mapTargetId;
                 const isRouted = routedUnits.has(unit.id);
@@ -5613,6 +5615,7 @@ function ShootingResolver() {
   const [aInv, setAInv] = useState("-");
   const [aFnp, setAFnp] = useState("-");
   const [aRules, setARules] = useState({});
+  const [aLd, setALd] = useState(8);
   // Defender
   const [dUnit, setDUnit] = useState(null);
   const [dShowPresets, setDShowPresets] = useState(false);
@@ -5629,6 +5632,7 @@ function ShootingResolver() {
   const [dInv, setDInv] = useState("-");
   const [dFnp, setDFnp] = useState("-");
   const [dRules, setDRules] = useState({});
+  const [dLd, setDLd] = useState(8);
   // Options
   const [assaultCharging, setAssaultCharging] = useState(true);
   const [assaultDisordered, setAssaultDisordered] = useState(false);
@@ -5922,6 +5926,90 @@ function ShootingResolver() {
 
   const getSymbolForType = (typeId) => {
     return DEPLOY_UNIT_TYPES.find(t => t.id === typeId)?.symbol || "╬";
+  };
+
+  // ━━ BASE SIZE DATA (from official Warhammer 30K Base Size Chart) ━━
+  // Base sizes in mm. For oval bases, use the long dimension.
+  const UNIT_BASE_SIZE_MM = {
+    // HQ / Primarchs — 40mm
+    praetor: 40, praetor_ta: 40, centurion: 32, centurion_ta: 40,
+    delegatus: 32, herald: 32, vigilator: 32, siege_breaker: 32,
+    champion: 32, moritat: 32, praevian: 32, primus_medicae: 32,
+    chaplain: 32, librarian: 32, esoterist: 32, master_of_signal: 32,
+    warsmith: 40, forge_lord: 32, armistos: 32, optae: 32,
+    // Troops — 32mm
+    tactical: 32, tactical_support: 32, assault: 32, breacher: 32, despoiler: 32,
+    heavy_support: 32, recon: 32, seeker: 32, destroyer: 32, veteran: 32,
+    // Terminators — 40mm
+    cataphractii: 40, tartaros: 40, cataphractii_cmd: 40, tartaros_cmd: 40,
+    firedrake: 40, deathshroud: 40, justaerin: 40, phoenix_term: 40,
+    // Jump Pack Infantry — 32mm
+    assault_jump: 32, dark_fury: 32, rampager: 32, night_raptor: 32,
+    // Dreadnoughts — 60mm
+    contemptor: 60, castraferrum: 60,
+    // Heavy Dreadnoughts — 80mm / 100mm
+    leviathan: 80, deredeo: 80, saturnine: 100,
+    // Bikes — 75mm (oval long dimension)
+    outrider: 75,
+    // Jetbikes — 60mm (oval)
+    jetbike: 60, scimitar: 60,
+    // Vehicles / Tanks — 1 model, large footprint (use hull length ~130mm equivalent)
+    predator: 130, sicaran: 130, sicaran_venator: 130, vindicator: 130, kratos: 140,
+    scorpius: 130, arquitor: 100,
+    // Transports
+    rhino: 120, land_raider: 160, spartan: 180, termite: 100,
+    // War Engines
+    cerberus: 200, typhon: 200, falchion: 200, glaive: 200, fellblade: 200,
+    // Flyers
+    xiphon: 120, storm_eagle: 160, fire_raptor: 160,
+    // Speeders
+    javelin: 75, land_speeder: 60, sabre: 75,
+    // Solar Auxilia — 25mm
+    solar_aux_lasrifle: 25, solar_aux_veletaris: 25, solar_aux_ogryns: 40,
+    // Mechanicum
+    castellax: 60, vorax: 60, thanatar: 80, thallax: 32, myrmidon: 40, ursarax: 40,
+    tech_thrall: 25,
+    // Custodes — 40mm
+    custodian_guard: 40, sentinel_guard: 40, hetaeron_guard: 40,
+    sagittarum: 40, aquilon: 50, agamatus: 75,
+    // Lords of War / Knights — 170mm (oval long dimension)
+    questoris_knight: 170, cerastus_knight: 170,
+    // Rapier Battery — 60mm
+    rapier: 60,
+    // Drop Pod — 120mm
+    drop_pod: 120,
+  };
+
+  // Default base sizes by unit type (icon type) for units not in the lookup
+  const TYPE_BASE_SIZE_MM = {
+    infantry: 32, assault: 32, breacher: 32, heavy_support: 32, recon: 32, seeker: 32, destroyer: 32,
+    terminator: 40, commander: 40, primarch: 40,
+    dreadnought: 60, heavy_dread: 80,
+    tank: 130, transport: 120, artillery: 60, flyer: 140, grav_tank: 100,
+    custodes: 40, automata: 60, thrall: 25, tech_elite: 40,
+    jetbike: 60, ogryn: 40, daemon: 32, objective: 40,
+  };
+
+  // Calculate map pixel size for a unit based on base size, model count, and scale
+  // Models are arranged in a roughly square block. E.g. 10 models → 4×3 or 5×2 grid
+  const getUnitMapSize = (unit) => {
+    const models = unit.unitData?.models || 1;
+    const unitId = unit.unitData?.id;
+    const baseMM = (unitId && UNIT_BASE_SIZE_MM[unitId]) || TYPE_BASE_SIZE_MM[unit.type] || 32;
+    const baseInches = baseMM / 25.4;
+
+    if (models <= 1) {
+      // Single model: full base size
+      return Math.max(baseInches * deployScale, 14);
+    }
+
+    // Multi-model: arrange in block then halve
+    const cols = Math.ceil(Math.sqrt(models));
+    const rows = Math.ceil(models / cols);
+    const widthInches = cols * baseInches;
+    const heightInches = rows * baseInches;
+    const sizeInches = Math.max(widthInches, heightInches);
+    return Math.max((sizeInches * deployScale) / 2, 14);
   };
 
   const handleBoardClick = (e) => {
@@ -6361,7 +6449,7 @@ function ShootingResolver() {
               const isP1 = unit.player === "p1";
               const col = isP1 ? "#e05555" : "#5599dd";
               const bgCol = isP1 ? "rgba(200,60,60,0.85)" : "rgba(50,120,200,0.85)";
-              const sz = Math.max(deployScale * 1.6, 16);
+              const sz = getUnitMapSize(unit);
               const isSelected = unit.id === moveRangeUnit;
               const isAttacker = unit.id === highlightAttacker;
               const isTarget = unit.id === highlightTarget;
@@ -6453,7 +6541,7 @@ function ShootingResolver() {
       setASecondaryMelee([]); setASecondaryRanged([]);
       setAAssaultSgtEnabled(false); setAAssaultSgtMelee(null);
       setAVolleyModels(unit.models);
-      if (w0) { setASelectedMelee(w0); setAWS(w0.ws); setAS(w0.s); setAAP(w0.ap); setAI(w0.i); setAA(w0.a); setAW(w0.w); setAT(w0.t); setASv(w0.sv); setAInv(w0.inv); setAFnp(w0.fnp); setARules(w0.rules || {}); }
+      if (w0) { setASelectedMelee(w0); setAWS(w0.ws); setAS(w0.s); setAAP(w0.ap); setAI(w0.i); setAA(w0.a); setAW(w0.w); setAT(w0.t); setASv(w0.sv); setAInv(w0.inv); setAFnp(w0.fnp); setARules(w0.rules || {}); setALd(w0.ld || 8); }
       setASelectedRanged(r0);
       // Wire to volley fire
       if (r0) { setVolleyFireShots(r0.shots); setVolleyFireS(r0.s); setVolleyFireAP(r0.ap); }
@@ -6463,7 +6551,7 @@ function ShootingResolver() {
       setDAssaultSgtEnabled(false); setDAssaultSgtMelee(null);
       setDVolleyModels(unit.models); setDOverwatchModels(unit.models);
       setDOverwatchWeapon(rangedWeapons[0] || null); setDOverwatchSecondary([]);
-      if (w0) { setDSelectedMelee(w0); setDWS(w0.ws); setDS(w0.s); setDAP(w0.ap); setDI(w0.i); setDA(w0.a); setDW(w0.w); setDT(w0.t); setDSv(w0.sv); setDInv(w0.inv); setDFnp(w0.fnp); setDRules(w0.rules || {}); }
+      if (w0) { setDSelectedMelee(w0); setDWS(w0.ws); setDS(w0.s); setDAP(w0.ap); setDI(w0.i); setDA(w0.a); setDW(w0.w); setDT(w0.t); setDSv(w0.sv); setDInv(w0.inv); setDFnp(w0.fnp); setDRules(w0.rules || {}); setDLd(w0.ld || 8); }
       setDSelectedRanged(r0);
       // Wire to defender volley fire + overwatch
       if (r0) { setDefVolleyFireShots(r0.shots); setDefVolleyFireS(r0.s); setDefVolleyFireAP(r0.ap); setOverwatchShots(r0.shots); setOverwatchS(r0.s); setOverwatchAP(r0.ap); }
@@ -6619,6 +6707,45 @@ function ShootingResolver() {
         diff: Math.abs(atkScore - defScore),
         winner: atkScore > defScore ? "Attacker" : defScore > atkScore ? "Defender" : "Draw",
       };
+    }
+
+    // ━━ LEADERSHIP / ROUT CHECK ━━
+    // Only triggers if the losing unit lost 25%+ of its starting models
+    const cr = combined.combatResult;
+    if (cr && cr.winner !== "Draw") {
+      const loserIsAtk = cr.winner === "Defender";
+      const loserStartModels = loserIsAtk
+        ? (aModels + aSecondaryMelee.reduce((s, sw) => s + sw.models, 0))
+        : (dModels + dSecondaryMelee.reduce((s, sw) => s + sw.models, 0));
+      const loserCasualties = loserIsAtk ? combined.attackerCasualties : combined.defenderCasualties;
+      const casualtyPercent = loserStartModels > 0 ? (loserCasualties / loserStartModels) : 0;
+
+      if (casualtyPercent >= 0.25) {
+        const loserLd = loserIsAtk ? aLd : dLd;
+        const modifiedLd = Math.max(0, loserLd - cr.diff);
+        const d1 = Math.floor(Math.random() * 6) + 1;
+        const d2 = Math.floor(Math.random() * 6) + 1;
+        const ldRoll = d1 + d2;
+        const passed = ldRoll <= modifiedLd;
+        combined.routCheck = {
+          loser: loserIsAtk ? "Attacker" : "Defender",
+          loserName: loserIsAtk ? (aUnit?.name || "Attacker") : (dUnit?.name || "Defender"),
+          baseLd: loserLd,
+          modifier: cr.diff,
+          modifiedLd,
+          roll: [d1, d2],
+          total: ldRoll,
+          passed,
+          routed: !passed,
+          casualties: loserCasualties,
+          startModels: loserStartModels,
+          casualtyPercent: Math.round(casualtyPercent * 100),
+        };
+        const loserLabel = combined.routCheck.loserName;
+        combined.log.push({ phase: "Rout Check", text: `🏳 ${loserLabel} lost ${loserCasualties}/${loserStartModels} models (${combined.routCheck.casualtyPercent}% ≥ 25%) — Leadership Check: Ld ${loserLd} - ${cr.diff} = ${modifiedLd}, rolled ${d1}+${d2}=${ldRoll} → ${passed ? "PASSED — unit holds!" : "FAILED — UNIT ROUTED!"}` });
+      } else {
+        combined.log.push({ phase: "Rout Check", text: `✓ ${loserIsAtk ? (aUnit?.name || "Attacker") : (dUnit?.name || "Defender")} lost ${loserCasualties}/${loserStartModels} models (${Math.round(casualtyPercent * 100)}% < 25%) — no Leadership check required.` });
+      }
     }
 
     setAssaultResult(combined);
@@ -7590,7 +7717,7 @@ function ShootingResolver() {
                 COMBAT PHASE RESOLVER
               </h1>
               <div style={{ fontSize: 12, color: "#8a7e6e", fontFamily: "'Cinzel', serif", letterSpacing: 3 }}>
-                THE HORUS HERESY · AGE OF DARKNESS · 3RD EDITION · v1.42
+                THE HORUS HERESY · AGE OF DARKNESS · 3RD EDITION · v1.43
               </div>
             </div>
           </div>
@@ -8365,32 +8492,6 @@ function ShootingResolver() {
                                   <div style={{ marginTop: 6, padding: "5px 8px", borderRadius: 4, background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.2)" }}>
                                     <div style={{ fontFamily: "'Cinzel', serif", fontWeight: 700, fontSize: 10, color: "#b8860b" }}>⭐ {pa.name}</div>
                                     <div style={{ fontSize: 8, color: "#6a5e4e", fontStyle: "italic", lineHeight: 1.4 }}>{pa.desc}</div>
-                                    {/* Combat Veterans: option to swap to Veteran unit */}
-                                    {pa.allowsVeteranSwap && (
-                                      <div style={{ marginTop: 4 }}>
-                                        <div style={{ fontSize: 8, color: "#5b4a8a", fontWeight: 600, marginBottom: 2 }}>◆ Combat Veterans allows replacing this unit with an Elite Veteran unit.</div>
-                                        <button onClick={() => {
-                                          const vetUnit = UNIT_PRESETS.flatMap(c => c.units).find(u => u.id === "veteran");
-                                          if (vetUnit) {
-                                            const weapons = WEAPON_PROFILES["veteran"] || [];
-                                            setAbEditEntry(p => ({
-                                              ...p,
-                                              unitId: "veteran",
-                                              unitName: vetUnit.name,
-                                              models: POINTS_DATA["veteran"]?.minModels || 5,
-                                              weaponName: weapons[0]?.name || null,
-                                              sgtWeaponName: null,
-                                              secondaryWeapons: [],
-                                              wargearOptions: {},
-                                            }));
-                                          }
-                                        }} style={{
-                                          padding: "3px 10px", borderRadius: 3, cursor: "pointer", fontSize: 8,
-                                          fontFamily: "'Cinzel', serif", fontWeight: 600,
-                                          background: "rgba(91,74,138,0.1)", border: "1px solid #5b4a8a", color: "#5b4a8a",
-                                        }}>↑ SWAP TO VETERAN TACTICAL SQUAD</button>
-                                      </div>
-                                    )}
                                     {/* Logistical Benefit: pick role for extra slot */}
                                     {pa.addsSlot && (
                                       <div style={{ marginTop: 4 }}>
@@ -10575,6 +10676,7 @@ function ShootingResolver() {
               const svV = isAtk ? aSv : dSv; const setSvF = isAtk ? setASv : setDSv;
               const invV = isAtk ? aInv : dInv; const setInvF = isAtk ? setAInv : setDInv;
               const fnpV = isAtk ? aFnp : dFnp; const setFnpF = isAtk ? setAFnp : setDFnp;
+              const ldV = isAtk ? aLd : dLd; const setLdF = isAtk ? setALd : setDLd;
               const rules = isAtk ? aRules : dRules; const setRulesF = isAtk ? setARules : setDRules;
               const rgbAccent = isAtk ? "155,45,45" : "42,111,180";
 
@@ -10863,6 +10965,9 @@ function ShootingResolver() {
                     <SelectInput label="Sv" value={svV} onChange={setSvF} options={saveOptions} />
                     <SelectInput label="Inv" value={invV} onChange={setInvF} options={saveOptions} />
                     <SelectInput label="FNP" value={fnpV} onChange={setFnpF} options={saveOptions} />
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12, marginBottom: 12, maxWidth: "33%" }}>
+                    <NumberInput label="Ld" value={ldV} onChange={setLdF} min={1} max={10} />
                   </div>
 
                   {/* Special Rules — same toggle style */}
@@ -11768,6 +11873,35 @@ function ShootingResolver() {
                 <MiniStat label="Atk Survive" value={assaultResult.remainingAttackers} color="#2a5e2a" />
                 <MiniStat label="Def Survive" value={assaultResult.remainingDefenders} color="#2a5e2a" />
               </div>
+
+              {/* Leadership / Rout Check */}
+              {assaultResult.routCheck && (
+                <div style={{
+                  padding: "10px 14px", borderRadius: 8, marginBottom: 14,
+                  background: assaultResult.routCheck.routed ? "rgba(255,102,0,0.08)" : "rgba(42,160,42,0.06)",
+                  border: `2px solid ${assaultResult.routCheck.routed ? "#ff6600" : "#2a8a2a"}`,
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                    <span style={{ fontSize: 20 }}>{assaultResult.routCheck.routed ? "💨" : "🛡"}</span>
+                    <div>
+                      <div style={{
+                        fontFamily: "'Cinzel', serif", fontWeight: 900, fontSize: 14, letterSpacing: 1,
+                        color: assaultResult.routCheck.routed ? "#ff6600" : "#2a8a2a",
+                      }}>
+                        {assaultResult.routCheck.loserName} {assaultResult.routCheck.routed ? "ROUTED!" : "HOLDS!"}
+                      </div>
+                      <div style={{ fontSize: 10, color: "#6a5e4e", fontFamily: "'EB Garamond', serif" }}>
+                        Casualties: {assaultResult.routCheck.casualties}/{assaultResult.routCheck.startModels} ({assaultResult.routCheck.casualtyPercent}% ≥ 25%) · Ld {assaultResult.routCheck.baseLd} − {assaultResult.routCheck.modifier} = {assaultResult.routCheck.modifiedLd} · Rolled {assaultResult.routCheck.roll[0]}+{assaultResult.routCheck.roll[1]} = {assaultResult.routCheck.total}
+                      </div>
+                    </div>
+                  </div>
+                  {assaultResult.routCheck.routed && (
+                    <div style={{ fontSize: 9, color: "#ff6600", fontFamily: "'Cinzel', serif", fontWeight: 600, marginTop: 2 }}>
+                      The {assaultResult.routCheck.loser.toLowerCase()} unit breaks and flees! The winner may make a Sweeping Advance.
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Multi-Weapon Melee Breakdown */}
               {assaultResult.meleeBreakdown && assaultResult.meleeBreakdown.length > 1 && (
