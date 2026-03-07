@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tactical Cogitator — Horus Heresy Shooting Resolver v1.43</title>
+  <title>Tactical Cogitator — Horus Heresy Shooting Resolver v1.45</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1226,13 +1226,13 @@ const ALLIED_FACTION_CATEGORIES = ["SOLAR AUXILIA", "MECHANICUM", "CUSTODES"];
 
 // Auxiliary Detachments — each Command slot filled unlocks 1 (p.284)
 const AUXILIARY_DETACHMENTS = {
-  armoured_fist:    { name: "Armoured Fist",    slots: [{ role: "armour", count: 3 }, { role: "troops", count: 1 }] },
-  tactical_support: { name: "Tactical Support",  slots: [{ role: "support", count: 3 }, { role: "troops", count: 1 }] },
-  armoured_support: { name: "Armoured Support",  slots: [{ role: "armour", count: 2 }, { role: "support", count: 2 }] },
-  heavy_support:    { name: "Heavy Support",     slots: [{ role: "war_engine", count: 2 }] },
-  combat_pioneer:   { name: "Combat Pioneer",    slots: [{ role: "support", count: 2 }, { role: "war_engine", count: 1 }] },
-  shock_assault:    { name: "Shock Assault",     slots: [{ role: "heavy_assault", count: 2 }, { role: "heavy_transport", count: 1 }] },
-  first_strike:     { name: "First Strike",      slots: [{ role: "fast_attack", count: 2 }, { role: "recon", count: 1 }] },
+  armoured_fist:    { name: "Armoured Fist",    slots: [{ role: "transport", count: 4 }, { role: "heavy_transport", count: 4 }] },
+  tactical_support: { name: "Tactical Support",  slots: [{ role: "troops", count: 2 }, { role: "support", count: 2 }] },
+  armoured_support: { name: "Armoured Support",  slots: [{ role: "armour", count: 4 }] },
+  heavy_support:    { name: "Heavy Support",     slots: [{ role: "war_engine", count: 1 }] },
+  combat_pioneer:   { name: "Combat Pioneer",    slots: [{ role: "recon", count: 2 }] },
+  shock_assault:    { name: "Shock Assault",     slots: [{ role: "heavy_assault", count: 2 }] },
+  first_strike:     { name: "First Strike",      slots: [{ role: "fast_attack", count: 2 }] },
   // Legion-specific Auxiliary Detachments (from p.16-17)
   daemonic_manifest:{ name: "Daemonic Manifestation", desc: "Traitor Esoterist in Command → unlock", slots: [{ role: "heavy_assault", count: 3 }] },
   veteran_cadre:    { name: "Veteran Cadre",     desc: "Legion Champion in Command → unlock", slots: [{ role: "elites", count: 3 }] },
@@ -1244,9 +1244,9 @@ const AUXILIARY_DETACHMENTS = {
 
 // Apex Detachments — each High Command slot filled unlocks 1 (p.284)
 const APEX_DETACHMENTS = {
-  combat_retinue: { name: "Combat Retinue",  slots: [{ role: "retinue", count: 2, primeCount: 1 }] },
-  officer_cadre:  { name: "Officer Cadre",   slots: [{ role: "command", count: 2, primeCount: 1 }, { role: "retinue", count: 2 }] },
-  army_vanguard:  { name: "Army Vanguard",   slots: [{ role: "elites", count: 2, primeCount: 1 }, { role: "recon", count: 1 }] },
+  combat_retinue: { name: "Combat Retinue",  slots: [{ role: "retinue", count: 3, primeCount: 1 }] },
+  officer_cadre:  { name: "Officer Cadre",   slots: [{ role: "command", count: 2, primeCount: 1 }] },
+  army_vanguard:  { name: "Army Vanguard",   slots: [{ role: "elites", count: 3, primeCount: 1 }] },
 };
 
 // Prime Advantages (p.283) — bonus for filling Prime slots
@@ -3374,216 +3374,262 @@ function resolveChallenge(params) {
   };
 }
 
-// ━━━ ASSAULT PHASE RESOLVER (Standalone melee combat) ━━━━━━━━━━━━━━━━━━━━━━━━
+// ━━━ ASSAULT PHASE RESOLVER (Initiative-step based, per-group roll tracking) ━━
+// resolveWeaponGroup: resolves one weapon group's attacks, returns casualties + per-group roll arrays.
+function resolveWeaponGroup(group, remainTarget, log) {
+  const { label, models, attacks, ws, s, ap, w: modelW, rules, rollKey,
+          targetWS, targetT, targetSv, targetInv, targetFnp, targetW } = group;
+  const groupRolls = { hit: [], wound: [], save: [], fnp: [] };
+
+  if (remainTarget <= 0) {
+    log.push({ phase: "Initiative", text: label + ": no targets remaining — skipped." });
+    return { casualties: 0, unsavedWounds: 0, groupRolls };
+  }
+  const numAttacks = models * attacks;
+  if (numAttacks <= 0) return { casualties: 0, unsavedWounds: 0, groupRolls };
+
+  const sideLog = [];
+  const toHitNeeded = getMeleeToHit(ws, targetWS);
+  sideLog.push(label + ": " + models + " model(s) x " + attacks + " att = " + numAttacks + " attacks, hits on " + toHitNeeded + "+ (WS" + ws + " vs WS" + targetWS + ")");
+
+  const hitRolls = rollD6s(numAttacks);
+  groupRolls.hit.push(...hitRolls.map(r => ({ value: r, success: r >= toHitNeeded })));
+  let hits = hitRolls.filter(r => r >= toHitNeeded).length;
+  sideLog.push("To Hit: [" + hitRolls.join(", ") + "] -> " + hits + " hit(s)");
+  if (hits === 0) { sideLog.forEach(t => log.push({ phase: "Initiative", text: t })); return { casualties: 0, unsavedWounds: 0, groupRolls }; }
+
+  const toWoundNeeded = getWoundRoll(s, targetT);
+  if (toWoundNeeded === null) {
+    sideLog.push("S" + s + " vs T" + targetT + ": Cannot wound!");
+    sideLog.forEach(t => log.push({ phase: "Initiative", text: t }));
+    return { casualties: 0, unsavedWounds: 0, groupRolls };
+  }
+  sideLog.push("To Wound: S" + s + " vs T" + targetT + " -> needs " + toWoundNeeded + "+");
+
+  const woundRolls = rollD6s(hits);
+  let wounds = 0, rendingW = 0, murderousW = 0, normalW = 0;
+  woundRolls.forEach(r => {
+    const success = r >= toWoundNeeded;
+    if (success) {
+      wounds++;
+      if (rules && rules.m_rending && r === 6) rendingW++;
+      else if (rules && rules.m_murderous && r === 6) murderousW++;
+      else normalW++;
+    }
+    groupRolls.wound.push({ value: r, success });
+  });
+
+  if (rules && rules.m_shred) {
+    const misses = woundRolls.filter(r => r < toWoundNeeded);
+    if (misses.length > 0) {
+      const rerolls = rollD6s(misses.length);
+      rerolls.forEach(r => {
+        if (r >= toWoundNeeded) { wounds++; if (rules.m_rending && r === 6) rendingW++; else normalW++; }
+        groupRolls.wound.push({ value: r, success: r >= toWoundNeeded, reroll: true });
+      });
+      sideLog.push("Shred: re-rolled " + misses.length + " -> " + rerolls.filter(r => r >= toWoundNeeded).length + " extra wound(s)");
+    }
+  }
+
+  if (rendingW > 0) sideLog.push("Rending: " + rendingW + " wound(s) at AP2");
+  if (murderousW > 0) sideLog.push("Murderous Strike: " + murderousW + " wound(s) cause Instant Death");
+  normalW = wounds - rendingW - murderousW;
+  sideLog.push("Wounds: [" + woundRolls.join(", ") + "] -> " + wounds + " wound(s)");
+  if (wounds === 0) { sideLog.forEach(t => log.push({ phase: "Initiative", text: t })); return { casualties: 0, unsavedWounds: 0, groupRolls }; }
+
+  let unsaved = 0;
+  function doSaves(count, effAP, saveLabel) {
+    if (count === 0) return 0;
+    let best = null;
+    const armNeg = effAP !== "-" && parseInt(effAP) <= parseInt(targetSv);
+    if (!armNeg && targetSv && targetSv !== "-" && targetSv !== "0") best = parseInt(targetSv);
+    if (targetInv && targetInv !== "-" && targetInv !== "0") { const iv = parseInt(targetInv); if (best === null || iv < best) best = iv; }
+    if (best === null) { sideLog.push(saveLabel + ": no save - " + count + " unsaved"); return count; }
+    const saveRolls = rollD6s(count);
+    groupRolls.save.push(...saveRolls.map(r => ({ value: r, success: r >= best })));
+    const saved = saveRolls.filter(r => r >= best).length;
+    sideLog.push(saveLabel + " saves (" + best + "+, AP" + effAP + "): [" + saveRolls.join(", ") + "] -> " + saved + " saved, " + (count - saved) + " unsaved");
+    return count - saved;
+  }
+  unsaved += doSaves(normalW, ap, "Normal");
+  if (rendingW > 0) unsaved += doSaves(rendingW, "2", "Rending AP2");
+  if (murderousW > 0) unsaved += doSaves(murderousW, ap, "Murderous Strike");
+
+  let casualties = unsaved;
+  if (targetFnp && targetFnp !== "-" && targetFnp !== "0" && unsaved > 0) {
+    const fnpN = parseInt(targetFnp);
+    const instantDeath = s >= targetT * 2 || murderousW > 0;
+    if (!instantDeath) {
+      const fnpRolls = rollD6s(unsaved);
+      const fnpSaved = fnpRolls.filter(r => r >= fnpN).length;
+      casualties = unsaved - fnpSaved;
+      groupRolls.fnp.push(...fnpRolls.map(r => ({ value: r, success: r >= fnpN })));
+      sideLog.push("FNP (" + fnpN + "+): [" + fnpRolls.join(", ") + "] -> " + fnpSaved + " saved, " + casualties + " unsaved");
+    } else { sideLog.push("Instant Death - FNP cannot be used!"); }
+  }
+
+  const modelCas = targetW > 1 ? Math.floor(casualties / targetW) : casualties;
+  if (targetW > 1 && casualties > 0) {
+    const rem = casualties % targetW;
+    sideLog.push(casualties + " unsaved vs " + targetW + "W models -> " + modelCas + " slain" + (rem > 0 ? ", " + rem + "W carry" : ""));
+  }
+
+  sideLog.forEach(t => log.push({ phase: "Initiative", text: t }));
+  return { casualties: modelCas, unsavedWounds: casualties, groupRolls };
+}
+
+// resolveAssaultPhase: builds initiative steps from pre-supplied weapon group lists,
+// resolves highest→lowest with casualty carry-through. Returns per-group roll data.
 function resolveAssaultPhase(params) {
   const {
-    // Attacker
-    attackerModels, attackerWS, attackerS, attackerAP, attackerI, attackerA, attackerW,
-    attackerSv, attackerInv, attackerFnp, attackerT,
-    attackerRules,
-    // Defender
-    defenderModels, defenderWS, defenderS, defenderAP, defenderI, defenderA, defenderW,
-    defenderSv, defenderInv, defenderFnp, defenderT,
-    defenderRules,
-    // Charge
+    attackerModels, attackerWS, attackerI, attackerA, attackerW,
+    attackerSv, attackerInv, attackerFnp, attackerT, attackerS, attackerAP, attackerRules,
+    defenderModels, defenderWS, defenderI, defenderA, defenderW,
+    defenderSv, defenderInv, defenderFnp, defenderT, defenderS, defenderAP, defenderRules,
     isCharging, disordered,
+    atkWeaponGroups: preAtkGroups, defWeaponGroups: preDefGroups,
   } = params;
 
   const log = [];
-  const rolls = {
-    attacker: { hit: [], wound: [], save: [], fnp: [] },
-    defender: { hit: [], wound: [], save: [], fnp: [] },
-  };
+  // Legacy combined rolls accumulator (for fallback display)
+  const rolls = { attacker: { hit: [], wound: [], save: [], fnp: [] }, defender: { hit: [], wound: [], save: [], fnp: [] } };
 
-  // ━━ STEP 1: Calculate Attacks ━━
-  let atkAttacks = attackerA;
-  if (isCharging && !disordered) {
-    atkAttacks += 1;
-    log.push({ phase: "Setup", text: `Attacker gets +1 Attack for charging (${attackerA} + 1 = ${atkAttacks})` });
-  } else if (isCharging && disordered) {
-    log.push({ phase: "Setup", text: `Disordered Charge: no +1 Attack bonus (${atkAttacks} attacks)` });
-  }
+  let atkGroups = preAtkGroups;
+  let defGroups = preDefGroups;
 
-  // Rampage
-  if (attackerRules?.m_rampage && defenderModels > attackerModels) {
-    const rampageBonus = Math.ceil(Math.random() * 3);
-    atkAttacks += rampageBonus;
-    log.push({ phase: "Setup", text: `Rampage: Outnumbered! +${rampageBonus} attacks (now ${atkAttacks})` });
-  }
-
-  const totalAtkAttacks = attackerModels * atkAttacks;
-  const totalDefAttacks = defenderModels * defenderA;
-
-  // ━━ STEP 2: Initiative Order ━━
-  const atkEffI = attackerRules?.m_unwieldy ? 1 : attackerI;
-  const defEffI = defenderRules?.m_unwieldy ? 1 : defenderI;
-  const attackerFirst = isCharging ? atkEffI >= defEffI : atkEffI > defEffI;
-
-  log.push({ phase: "Melee", text: `Initiative: Attacker I${atkEffI} vs Defender I${defEffI} → ${attackerFirst ? "Attacker strikes first" : "Defender strikes first"}` });
-  log.push({ phase: "Melee", text: `Attacker: ${attackerModels} model(s) × ${atkAttacks} attack(s) = ${totalAtkAttacks}` });
-  log.push({ phase: "Melee", text: `Defender: ${defenderModels} model(s) × ${defenderA} attack(s) = ${totalDefAttacks}` });
-
-  // ━━ Helper: resolve one side's attacks ━━
-  function resolveSide(label, numAttacks, aWS, dWS, aS, dT, aAP, dSv, dInv, dFnp, dW, rules, rollKey) {
-    if (numAttacks <= 0) return { casualties: 0, unsavedWounds: 0 };
-    const sideLog = [];
-    const toHitNeeded = getMeleeToHit(aWS, dWS);
-    sideLog.push(`${label}: ${numAttacks} attacks, needs ${toHitNeeded}+ to hit (WS${aWS} vs WS${dWS})`);
-
-    // Hit
-    const hitRolls = rollD6s(numAttacks);
-    rolls[rollKey].hit.push(...hitRolls.map(r => ({ value: r, success: r >= toHitNeeded })));
-    let hits = hitRolls.filter(r => r >= toHitNeeded).length;
-    sideLog.push(`To Hit: ${hits} hit(s) from ${numAttacks} attacks`);
-    if (hits === 0) { sideLog.forEach(t => log.push({ phase: "Melee", text: t })); return { casualties: 0, unsavedWounds: 0 }; }
-
-    // Wound
-    const toWoundNeeded = getWoundRoll(aS, dT);
-    if (toWoundNeeded === null) {
-      sideLog.push(`S${aS} vs T${dT}: Cannot wound!`);
-      sideLog.forEach(t => log.push({ phase: "Melee", text: t }));
-      return { casualties: 0, unsavedWounds: 0 };
+  if (!atkGroups) {
+    let atkA = attackerA;
+    if (isCharging && !disordered) { atkA += 1; log.push({ phase: "Setup", text: "Attacker +1A for charging (" + attackerA + " + 1 = " + atkA + ")" }); }
+    if (attackerRules && attackerRules.m_rampage && defenderModels > attackerModels) {
+      const rb = Math.ceil(Math.random() * 3); atkA += rb;
+      log.push({ phase: "Setup", text: "Rampage: +" + rb + " attacks (now " + atkA + ")" });
     }
-    sideLog.push(`To Wound: S${aS} vs T${dT} → needs ${toWoundNeeded}+`);
+    const ei = attackerRules && attackerRules.m_unwieldy ? 1 : attackerI;
+    atkGroups = [{ weaponName: "Primary", models: attackerModels, attacks: atkA, i: ei, ws: attackerWS, s: attackerS, ap: attackerAP, w: attackerW, rules: attackerRules }];
+  }
+  if (!defGroups) {
+    const ei = defenderRules && defenderRules.m_unwieldy ? 1 : defenderI;
+    defGroups = [{ weaponName: "Primary", models: defenderModels, attacks: defenderA, i: ei, ws: defenderWS, s: defenderS, ap: defenderAP, w: defenderW, rules: defenderRules }];
+  }
 
-    const woundRolls = rollD6s(hits);
-    let wounds = 0, rendingW = 0, normalW = 0, murderousW = 0;
-    woundRolls.forEach(r => {
-      const success = r >= toWoundNeeded;
-      if (success) {
-        wounds++;
-        if (rules?.m_rending && r === 6) rendingW++;
-        else if (rules?.m_murderous && r === 6) murderousW++;
-        else normalW++;
+  const allSteps = [];
+  for (const g of atkGroups) allSteps.push({ iValue: g.i, side: "attacker", group: g });
+  for (const g of defGroups) allSteps.push({ iValue: g.i, side: "defender", group: g });
+  const iValues = [...new Set(allSteps.map(s => s.iValue))].sort((a, b) => b - a);
+  log.push({ phase: "Setup", text: "Initiative Steps: " + iValues.join(" -> ") });
+
+  // Per-group roll storage keyed by "side:weaponName"
+  const groupRollsMap = {};
+
+  let totalAtkCas = 0, totalDefCas = 0;
+  let remainAtk = atkGroups.reduce((s, g) => s + g.models, 0);
+  let remainDef = defGroups.reduce((s, g) => s + g.models, 0);
+
+  for (const iVal of iValues) {
+    const atkAtI = allSteps.filter(s => s.side === "attacker" && s.iValue === iVal);
+    const defAtI = allSteps.filter(s => s.side === "defender" && s.iValue === iVal);
+    const hasAtk = atkAtI.length > 0, hasDef = defAtI.length > 0;
+    log.push({ phase: "Initiative", text: "=== Initiative Step " + iVal + " ===" });
+
+    if (hasAtk && hasDef) {
+      log.push({ phase: "Initiative", text: "I" + iVal + ": Simultaneous" });
+      let stepDefCas = 0, stepAtkCas = 0;
+      for (const s of atkAtI) {
+        const g = s.group;
+        const res = resolveWeaponGroup({
+          label: "Attacker " + g.weaponName + " (I" + iVal + ")", models: Math.min(g.models, remainAtk), attacks: g.attacks,
+          ws: g.ws, s: g.s, ap: g.ap, w: g.w, rules: g.rules,
+          targetWS: defenderWS, targetT: defenderT, targetSv: defenderSv, targetInv: defenderInv, targetFnp: defenderFnp, targetW: defenderW,
+        }, remainDef, log);
+        stepDefCas += res.casualties;
+        const key = "atk:" + g.weaponName;
+        if (!groupRollsMap[key]) groupRollsMap[key] = { side: "Attacker", name: g.weaponName, models: g.models, i: iVal, rolls: { hit: [], wound: [], save: [], fnp: [] } };
+        const gr = groupRollsMap[key].rolls;
+        gr.hit.push(...res.groupRolls.hit); gr.wound.push(...res.groupRolls.wound); gr.save.push(...res.groupRolls.save); gr.fnp.push(...res.groupRolls.fnp);
+        rolls.attacker.hit.push(...res.groupRolls.hit); rolls.attacker.wound.push(...res.groupRolls.wound); rolls.attacker.save.push(...res.groupRolls.save); rolls.attacker.fnp.push(...res.groupRolls.fnp);
       }
-      rolls[rollKey].wound.push({ value: r, success });
-    });
-
-    // Shred re-rolls
-    if (rules?.m_shred) {
-      const misses = woundRolls.filter(r => r < toWoundNeeded);
-      const rerolls = rollD6s(misses.length);
-      rerolls.forEach(r => {
-        if (r >= toWoundNeeded) {
-          wounds++;
-          if (rules?.m_rending && r === 6) rendingW++;
-          else normalW++;
-        }
-        rolls[rollKey].wound.push({ value: r, success: r >= toWoundNeeded, reroll: true });
-      });
-      sideLog.push(`Shred: re-rolled ${misses.length} → ${rerolls.filter(r => r >= toWoundNeeded).length} extra wound(s)`);
-    }
-
-    if (rendingW > 0) sideLog.push(`🗡 Rending: ${rendingW} wound(s) at AP2`);
-    if (murderousW > 0) sideLog.push(`💀 Murderous Strike: ${murderousW} wound(s) cause Instant Death`);
-    normalW = wounds - rendingW - murderousW;
-    sideLog.push(`Wounds: ${wounds} wound(s) from ${hits} hit(s)`);
-    if (wounds === 0) { sideLog.forEach(t => log.push({ phase: "Melee", text: t })); return { casualties: 0, unsavedWounds: 0 }; }
-
-    // Saves
-    let unsaved = 0;
-    function doSaves(count, effAP, saveLabel) {
-      if (count === 0) return 0;
-      let best = null;
-      const armNeg = effAP !== "-" && parseInt(effAP) <= parseInt(dSv);
-      if (!armNeg && dSv && dSv !== "-" && dSv !== "0") best = parseInt(dSv);
-      if (dInv && dInv !== "-" && dInv !== "0") {
-        const iv = parseInt(dInv);
-        if (best === null || iv < best) best = iv;
+      for (const s of defAtI) {
+        const g = s.group;
+        const res = resolveWeaponGroup({
+          label: "Defender " + g.weaponName + " (I" + iVal + ")", models: Math.min(g.models, remainDef), attacks: g.attacks,
+          ws: g.ws, s: g.s, ap: g.ap, w: g.w, rules: g.rules,
+          targetWS: attackerWS, targetT: attackerT, targetSv: attackerSv, targetInv: attackerInv, targetFnp: attackerFnp, targetW: attackerW,
+        }, remainAtk, log);
+        stepAtkCas += res.casualties;
+        const key = "def:" + g.weaponName;
+        if (!groupRollsMap[key]) groupRollsMap[key] = { side: "Defender", name: g.weaponName, models: g.models, i: iVal, rolls: { hit: [], wound: [], save: [], fnp: [] } };
+        const gr = groupRollsMap[key].rolls;
+        gr.hit.push(...res.groupRolls.hit); gr.wound.push(...res.groupRolls.wound); gr.save.push(...res.groupRolls.save); gr.fnp.push(...res.groupRolls.fnp);
+        rolls.defender.hit.push(...res.groupRolls.hit); rolls.defender.wound.push(...res.groupRolls.wound); rolls.defender.save.push(...res.groupRolls.save); rolls.defender.fnp.push(...res.groupRolls.fnp);
       }
-      if (best === null) return count;
-      const saveRolls = rollD6s(count);
-      rolls[rollKey].save.push(...saveRolls.map(r => ({ value: r, success: r >= best })));
-      const saved = saveRolls.filter(r => r >= best).length;
-      sideLog.push(`${saveLabel} saves (${best}+, AP${effAP}): ${saved} saved, ${count - saved} unsaved`);
-      return count - saved;
-    }
-
-    unsaved += doSaves(normalW, aAP, "Normal");
-    if (rendingW > 0) unsaved += doSaves(rendingW, "2", "Rending (AP2)");
-    if (murderousW > 0) unsaved += doSaves(murderousW, aAP, "Murderous Strike");
-
-    // FNP
-    let casualties = unsaved;
-    if (dFnp && dFnp !== "-" && dFnp !== "0" && unsaved > 0) {
-      const fnpN = parseInt(dFnp);
-      const instantDeath = aS >= dT * 2 || murderousW > 0;
-      if (!instantDeath) {
-        const fnpRolls = rollD6s(unsaved);
-        const fnpSaved = fnpRolls.filter(r => r >= fnpN).length;
-        casualties = unsaved - fnpSaved;
-        rolls[rollKey].fnp.push(...fnpRolls.map(r => ({ value: r, success: r >= fnpN })));
-        sideLog.push(`FNP (${fnpN}+): ${fnpSaved} saved → ${casualties} unsaved`);
-      } else {
-        sideLog.push(`Instant Death — FNP cannot be used!`);
+      remainDef = Math.max(0, remainDef - stepDefCas);
+      remainAtk = Math.max(0, remainAtk - stepAtkCas);
+      totalDefCas += stepDefCas; totalAtkCas += stepAtkCas;
+      log.push({ phase: "Initiative", text: "I" + iVal + ": " + stepDefCas + " def slain, " + stepAtkCas + " atk slain -> " + remainAtk + " atk / " + remainDef + " def remain" });
+    } else if (hasAtk) {
+      log.push({ phase: "Initiative", text: "I" + iVal + ": Attacker strikes" });
+      let stepDefCas = 0;
+      for (const s of atkAtI) {
+        const g = s.group;
+        const res = resolveWeaponGroup({
+          label: "Attacker " + g.weaponName + " (I" + iVal + ")", models: Math.min(g.models, remainAtk), attacks: g.attacks,
+          ws: g.ws, s: g.s, ap: g.ap, w: g.w, rules: g.rules,
+          targetWS: defenderWS, targetT: defenderT, targetSv: defenderSv, targetInv: defenderInv, targetFnp: defenderFnp, targetW: defenderW,
+        }, remainDef, log);
+        stepDefCas += res.casualties;
+        const key = "atk:" + g.weaponName;
+        if (!groupRollsMap[key]) groupRollsMap[key] = { side: "Attacker", name: g.weaponName, models: g.models, i: iVal, rolls: { hit: [], wound: [], save: [], fnp: [] } };
+        const gr = groupRollsMap[key].rolls;
+        gr.hit.push(...res.groupRolls.hit); gr.wound.push(...res.groupRolls.wound); gr.save.push(...res.groupRolls.save); gr.fnp.push(...res.groupRolls.fnp);
+        rolls.attacker.hit.push(...res.groupRolls.hit); rolls.attacker.wound.push(...res.groupRolls.wound); rolls.attacker.save.push(...res.groupRolls.save); rolls.attacker.fnp.push(...res.groupRolls.fnp);
       }
-    }
-
-    // Multi-wound
-    const modelCas = dW > 1 ? Math.floor(casualties / dW) : casualties;
-    if (dW > 1 && casualties > 0) {
-      const rem = casualties % dW;
-      sideLog.push(`${casualties} unsaved vs ${dW}W models → ${modelCas} model(s) slain${rem > 0 ? `, ${rem} wound(s) remaining` : ""}`);
-    }
-
-    sideLog.forEach(t => log.push({ phase: "Melee", text: t }));
-    return { casualties: modelCas, unsavedWounds: casualties };
-  }
-
-  // ━━ STEP 3: Resolve in Initiative Order ━━
-  let atkCasualties = 0, defCasualties = 0;
-  let remainAtk = attackerModels, remainDef = defenderModels;
-
-  if (attackerFirst) {
-    const atkRes = resolveSide(`⚔ Attacker (I${atkEffI})`, totalAtkAttacks, attackerWS, defenderWS, attackerS, defenderT, attackerAP, defenderSv, defenderInv, defenderFnp, defenderW, attackerRules, "attacker");
-    defCasualties = atkRes.casualties;
-    remainDef = Math.max(defenderModels - defCasualties, 0);
-
-    if (remainDef > 0) {
-      const defTotal = remainDef * defenderA;
-      const defRes = resolveSide(`🛡 Defender strikes back (I${defEffI}, ${remainDef} remaining)`, defTotal, defenderWS, attackerWS, defenderS, attackerT, defenderAP, attackerSv, attackerInv, attackerFnp, attackerW, defenderRules, "defender");
-      atkCasualties = defRes.casualties;
-      remainAtk = Math.max(attackerModels - atkCasualties, 0);
-    }
-  } else {
-    const defRes = resolveSide(`🛡 Defender (I${defEffI}) strikes first`, totalDefAttacks, defenderWS, attackerWS, defenderS, attackerT, defenderAP, attackerSv, attackerInv, attackerFnp, attackerW, defenderRules, "defender");
-    atkCasualties = defRes.casualties;
-    remainAtk = Math.max(attackerModels - atkCasualties, 0);
-
-    if (remainAtk > 0) {
-      const atkTotal = remainAtk * atkAttacks;
-      const atkRes = resolveSide(`⚔ Attacker strikes back (I${atkEffI}, ${remainAtk} remaining)`, atkTotal, attackerWS, defenderWS, attackerS, defenderT, attackerAP, defenderSv, defenderInv, defenderFnp, defenderW, attackerRules, "attacker");
-      defCasualties = atkRes.casualties;
-      remainDef = Math.max(defenderModels - defCasualties, 0);
+      remainDef = Math.max(0, remainDef - stepDefCas); totalDefCas += stepDefCas;
+      if (stepDefCas > 0) log.push({ phase: "Initiative", text: "I" + iVal + ": " + stepDefCas + " def slain -> " + remainDef + " remain" });
+    } else if (hasDef) {
+      log.push({ phase: "Initiative", text: "I" + iVal + ": Defender strikes" });
+      let stepAtkCas = 0;
+      for (const s of defAtI) {
+        const g = s.group;
+        const res = resolveWeaponGroup({
+          label: "Defender " + g.weaponName + " (I" + iVal + ")", models: Math.min(g.models, remainDef), attacks: g.attacks,
+          ws: g.ws, s: g.s, ap: g.ap, w: g.w, rules: g.rules,
+          targetWS: attackerWS, targetT: attackerT, targetSv: attackerSv, targetInv: attackerInv, targetFnp: attackerFnp, targetW: attackerW,
+        }, remainAtk, log);
+        stepAtkCas += res.casualties;
+        const key = "def:" + g.weaponName;
+        if (!groupRollsMap[key]) groupRollsMap[key] = { side: "Defender", name: g.weaponName, models: g.models, i: iVal, rolls: { hit: [], wound: [], save: [], fnp: [] } };
+        const gr = groupRollsMap[key].rolls;
+        gr.hit.push(...res.groupRolls.hit); gr.wound.push(...res.groupRolls.wound); gr.save.push(...res.groupRolls.save); gr.fnp.push(...res.groupRolls.fnp);
+        rolls.defender.hit.push(...res.groupRolls.hit); rolls.defender.wound.push(...res.groupRolls.wound); rolls.defender.save.push(...res.groupRolls.save); rolls.defender.fnp.push(...res.groupRolls.fnp);
+      }
+      remainAtk = Math.max(0, remainAtk - stepAtkCas); totalAtkCas += stepAtkCas;
+      if (stepAtkCas > 0) log.push({ phase: "Initiative", text: "I" + iVal + ": " + stepAtkCas + " atk slain -> " + remainAtk + " remain" });
     }
   }
 
-  // ━━ STEP 4: Combat Resolution ━━
-  const atkWoundsInflicted = defCasualties;
-  const defWoundsInflicted = atkCasualties;
-  const diff = atkWoundsInflicted - defWoundsInflicted;
-
+  const chargingBonus = isCharging ? 1 : 0;
+  const atkScore = totalDefCas + chargingBonus;
+  const defScore = totalAtkCas;
+  const diff = atkScore - defScore;
   let combatResult;
   if (diff > 0) {
-    combatResult = { winner: "Attacker", diff };
-    log.push({ phase: "Combat Res", text: `⚔ Attacker wins by ${diff} (${atkWoundsInflicted} vs ${defWoundsInflicted})` });
-    log.push({ phase: "Combat Res", text: `Defender must take Morale check at Ld -${diff}` });
+    combatResult = { winner: "Attacker", diff, attackerScore: atkScore, defenderScore: defScore };
+    log.push({ phase: "Combat Res", text: "Attacker wins combat resolution " + atkScore + " vs " + defScore + " (margin: " + diff + ")" });
+    log.push({ phase: "Combat Res", text: "Defender must take Morale check at Ld -" + diff });
   } else if (diff < 0) {
-    combatResult = { winner: "Defender", diff: Math.abs(diff) };
-    log.push({ phase: "Combat Res", text: `🛡 Defender wins by ${Math.abs(diff)} (${defWoundsInflicted} vs ${atkWoundsInflicted})` });
-    log.push({ phase: "Combat Res", text: `Attacker must take Morale check at Ld -${Math.abs(diff)}` });
+    combatResult = { winner: "Defender", diff: Math.abs(diff), attackerScore: atkScore, defenderScore: defScore };
+    log.push({ phase: "Combat Res", text: "Defender wins combat resolution " + defScore + " vs " + atkScore + " (margin: " + Math.abs(diff) + ")" });
+    log.push({ phase: "Combat Res", text: "Attacker must take Morale check at Ld -" + Math.abs(diff) });
   } else {
-    combatResult = { winner: "Draw", diff: 0 };
-    log.push({ phase: "Combat Res", text: `⚖ Draw! (${atkWoundsInflicted} vs ${defWoundsInflicted}) — combat continues.` });
+    combatResult = { winner: "Draw", diff: 0, attackerScore: atkScore, defenderScore: defScore };
+    log.push({ phase: "Combat Res", text: "Draw! (" + atkScore + " vs " + defScore + ") — combat continues." });
   }
-
-  log.push({ phase: "Combat Res", text: `Survivors: ${remainAtk} attacker(s), ${remainDef} defender(s)` });
+  log.push({ phase: "Combat Res", text: "Survivors: " + remainAtk + " attacker(s), " + remainDef + " defender(s)" });
 
   return {
-    log, rolls, combatResult,
-    attackerCasualties: atkCasualties, defenderCasualties: defCasualties,
-    remainingAttackers: remainAtk, remainingDefenders: remainDef,
-    isCharging,
+    log, rolls, combatResult, groupRollsMap,
+    attackerCasualties: totalAtkCas, defenderCasualties: totalDefCas,
+    remainingAttackers: remainAtk, remainingDefenders: remainDef, isCharging,
   };
 }
 
@@ -5599,6 +5645,8 @@ function ShootingResolver() {
 
   // ━━ ASSAULT PHASE STATE ━━
   const [assaultResult, setAssaultResult] = useState(null);
+  const [atkCombatChoice, setAtkCombatChoice] = useState(null);
+  const [defCombatChoice, setDefCombatChoice] = useState(null);
   // Attacker
   const [aUnit, setAUnit] = useState(null);
   const [aShowPresets, setAShowPresets] = useState(false);
@@ -5634,7 +5682,7 @@ function ShootingResolver() {
   const [dRules, setDRules] = useState({});
   const [dLd, setDLd] = useState(8);
   // Options
-  const [assaultCharging, setAssaultCharging] = useState(true);
+  const [assaultCharging, setAssaultCharging] = useState(false);
   const [assaultDisordered, setAssaultDisordered] = useState(false);
 
   // Secondary Melee Weapons (multi-weapon assault for mixed-loadout units)
@@ -6599,180 +6647,127 @@ function ShootingResolver() {
   }, []);
 
   const handleAssaultResolve = () => {
-    // ━━ PRIMARY WEAPON GROUP ━━
-    const primaryRes = resolveAssaultPhase({
-      attackerModels: aModels, attackerWS: aWS, attackerS: aS, attackerAP: aAP,
-      attackerI: aI, attackerA: aA, attackerW: aW, attackerSv: aSv, attackerInv: aInv,
-      attackerFnp: aFnp, attackerT: aT, attackerRules: aRules,
-      defenderModels: dModels, defenderWS: dWS, defenderS: dS, defenderAP: dAP,
-      defenderI: dI, defenderA: dA, defenderW: dW, defenderSv: dSv, defenderInv: dInv,
-      defenderFnp: dFnp, defenderT: dT, defenderRules: dRules,
-      isCharging: assaultCharging, disordered: assaultDisordered,
-    });
-
-    // ━━ SECONDARY MELEE WEAPONS — resolve each additional weapon group ━━
-    const atkSecResults = aSecondaryMelee.map(sw => {
-      const w = sw.weapon;
-      return {
-        name: w.name, models: sw.models,
-        result: resolveAssaultPhase({
-          attackerModels: sw.models, attackerWS: w.ws, attackerS: w.s, attackerAP: w.ap,
-          attackerI: w.i, attackerA: w.a, attackerW: w.w, attackerSv: w.sv || aSv, attackerInv: w.inv || aInv,
-          attackerFnp: w.fnp || aFnp, attackerT: w.t || aT, attackerRules: w.rules || {},
-          defenderModels: dModels, defenderWS: dWS, defenderS: dS, defenderAP: dAP,
-          defenderI: dI, defenderA: dA, defenderW: dW, defenderSv: dSv, defenderInv: dInv,
-          defenderFnp: dFnp, defenderT: dT, defenderRules: dRules,
-          isCharging: assaultCharging, disordered: assaultDisordered,
-        })
-      };
-    });
-
-    const defSecResults = dSecondaryMelee.map(sw => {
-      const w = sw.weapon;
-      return {
-        name: w.name, models: sw.models,
-        result: resolveAssaultPhase({
-          attackerModels: aModels, attackerWS: aWS, attackerS: aS, attackerAP: aAP,
-          attackerI: aI, attackerA: aA, attackerW: aW, attackerSv: aSv, attackerInv: aInv,
-          attackerFnp: aFnp, attackerT: aT, attackerRules: aRules,
-          defenderModels: sw.models, defenderWS: w.ws, defenderS: w.s, defenderAP: w.ap,
-          defenderI: w.i, defenderA: w.a, defenderW: w.w, defenderSv: w.sv || dSv, defenderInv: w.inv || dInv,
-          defenderFnp: w.fnp || dFnp, defenderT: w.t || dT, defenderRules: w.rules || {},
-          isCharging: assaultCharging, disordered: assaultDisordered,
-        })
-      };
-    });
-
-    // ━━ COMBINE ━━
-    let combined;
-    if (atkSecResults.length === 0 && defSecResults.length === 0) {
-      combined = primaryRes;
-      // Build rollsByMelee for single weapon pair
-      combined.rollsByMelee = [
-        { side: "Attacker", name: aSelectedMelee?.name || "Primary", models: aModels, rolls: primaryRes.rolls?.attacker || { hit: [], wound: [], save: [], fnp: [] } },
-        { side: "Defender", name: dSelectedMelee?.name || "Primary", models: dModels, rolls: primaryRes.rolls?.defender || { hit: [], wound: [], save: [], fnp: [] } },
-      ];
-    } else {
-      combined = { ...primaryRes };
-      combined.log = [...primaryRes.log];
-      combined.meleeBreakdown = [{
-        side: "Attacker", name: aSelectedMelee?.name || "Primary",
-        models: aModels, defKills: primaryRes.defenderCasualties, atkKills: primaryRes.attackerCasualties,
-      }];
-      // Build rollsByMelee for multi-weapon
-      combined.rollsByMelee = [
-        { side: "Attacker", name: aSelectedMelee?.name || "Primary", models: aModels, rolls: primaryRes.rolls?.attacker || { hit: [], wound: [], save: [], fnp: [] } },
-        { side: "Defender", name: dSelectedMelee?.name || "Primary", models: dModels, rolls: primaryRes.rolls?.defender || { hit: [], wound: [], save: [], fnp: [] } },
-      ];
-
-      for (const sec of atkSecResults) {
-        const sr = sec.result;
-        combined.log.push({ phase: "Secondary", text: `━━━ Attacker ${sec.name} (${sec.models} models) ━━━` });
-        combined.log = combined.log.concat(sr.log);
-        combined.defenderCasualties += sr.defenderCasualties;
-        combined.attackerCasualties += sr.attackerCasualties;
-        combined.meleeBreakdown.push({
-          side: "Attacker", name: sec.name, models: sec.models,
-          defKills: sr.defenderCasualties, atkKills: sr.attackerCasualties,
-        });
-        combined.rollsByMelee.push({
-          side: "Attacker", name: sec.name, models: sec.models,
-          rolls: sr.rolls?.attacker || { hit: [], wound: [], save: [], fnp: [] },
-        });
-      }
-
-      for (const sec of defSecResults) {
-        const sr = sec.result;
-        combined.log.push({ phase: "Secondary", text: `━━━ Defender ${sec.name} (${sec.models} models) ━━━` });
-        combined.log = combined.log.concat(sr.log);
-        combined.defenderCasualties += sr.defenderCasualties;
-        combined.attackerCasualties += sr.attackerCasualties;
-        combined.meleeBreakdown.push({
-          side: "Defender", name: sec.name, models: sec.models,
-          defKills: sr.defenderCasualties, atkKills: sr.attackerCasualties,
-        });
-        combined.rollsByMelee.push({
-          side: "Defender", name: sec.name, models: sec.models,
-          rolls: sr.rolls?.defender || { hit: [], wound: [], save: [], fnp: [] },
-        });
-      }
-
-      // Recalc survivors and combat res
-      combined.remainingAttackers = Math.max(0, aModels + aSecondaryMelee.reduce((s, sw) => s + sw.models, 0) - combined.attackerCasualties);
-      combined.remainingDefenders = Math.max(0, dModels + dSecondaryMelee.reduce((s, sw) => s + sw.models, 0) - combined.defenderCasualties);
-      const atkScore = combined.defenderCasualties + (assaultCharging ? 1 : 0);
-      const defScore = combined.attackerCasualties;
-      combined.combatResult = {
-        attackerScore: atkScore, defenderScore: defScore,
-        diff: Math.abs(atkScore - defScore),
-        winner: atkScore > defScore ? "Attacker" : defScore > atkScore ? "Defender" : "Draw",
-      };
+    // ━━ BUILD ATTACKER WEAPON GROUPS ━━
+    let atkBaseAttacks = aA;
+    const setupLog = [];
+    if (assaultCharging && !assaultDisordered) {
+      atkBaseAttacks += 1;
+      setupLog.push({ phase: "Setup", text: `Attacker +1A for charging (${aA} + 1 = ${atkBaseAttacks})` });
+    } else if (assaultCharging && assaultDisordered) {
+      setupLog.push({ phase: "Setup", text: `Disordered Charge: no +1A bonus` });
+    }
+    if (aRules?.m_rampage && dModels > aModels) {
+      const rb = Math.ceil(Math.random() * 3);
+      atkBaseAttacks += rb;
+      setupLog.push({ phase: "Setup", text: `Rampage: +${rb} attacks (now ${atkBaseAttacks})` });
     }
 
+    const atkSgtActive = aAssaultSgtEnabled && aAssaultSgtMelee;
+    const atkSquadModels = atkSgtActive ? Math.max(1, aModels - 1) : aModels;
+    const atkPrimaryI = aRules?.m_unwieldy ? 1 : aI;
+    const atkWeaponGroups = [{
+      weaponName: aSelectedMelee?.name || "Primary", models: atkSquadModels,
+      attacks: atkBaseAttacks, i: atkPrimaryI,
+      ws: aWS, s: aS, ap: aAP, w: aW, rules: aRules,
+    }];
+    if (atkSgtActive) {
+      const sw = aAssaultSgtMelee;
+      const sgtI = sw.rules?.m_unwieldy ? 1 : (sw.i || aI);
+      atkWeaponGroups.push({ weaponName: `★ Sgt: ${sw.name}`, models: 1, attacks: sw.a || 1, i: sgtI, ws: sw.ws || aWS, s: sw.s, ap: sw.ap, w: aW, rules: sw.rules || {} });
+      setupLog.push({ phase: "Setup", text: `Attacker Sergeant: ${sw.name} (WS${sw.ws || aWS} S${sw.s} AP${sw.ap} I${sgtI} A${sw.a || 1})` });
+    }
+    for (const sec of aSecondaryMelee) {
+      const w = sec.weapon;
+      const effI = w.rules?.m_unwieldy ? 1 : (w.i || aI);
+      atkWeaponGroups.push({ weaponName: w.name, models: sec.models, attacks: w.a || 1, i: effI, ws: w.ws || aWS, s: w.s, ap: w.ap, w: w.w || aW, rules: w.rules || {} });
+    }
+
+    // ━━ BUILD DEFENDER WEAPON GROUPS ━━
+    const defSgtActive = dAssaultSgtEnabled && dAssaultSgtMelee;
+    const defSquadModels = defSgtActive ? Math.max(1, dModels - 1) : dModels;
+    const defPrimaryI = dRules?.m_unwieldy ? 1 : dI;
+    const defWeaponGroups = [{
+      weaponName: dSelectedMelee?.name || "Primary", models: defSquadModels,
+      attacks: dA, i: defPrimaryI,
+      ws: dWS, s: dS, ap: dAP, w: dW, rules: dRules,
+    }];
+    if (defSgtActive) {
+      const sw = dAssaultSgtMelee;
+      const sgtI = sw.rules?.m_unwieldy ? 1 : (sw.i || dI);
+      defWeaponGroups.push({ weaponName: `★ Sgt: ${sw.name}`, models: 1, attacks: sw.a || 1, i: sgtI, ws: sw.ws || dWS, s: sw.s, ap: sw.ap, w: dW, rules: sw.rules || {} });
+      setupLog.push({ phase: "Setup", text: `Defender Sergeant: ${sw.name} (WS${sw.ws || dWS} S${sw.s} AP${sw.ap} I${sgtI} A${sw.a || 1})` });
+    }
+    for (const sec of dSecondaryMelee) {
+      const w = sec.weapon;
+      const effI = w.rules?.m_unwieldy ? 1 : (w.i || dI);
+      defWeaponGroups.push({ weaponName: w.name, models: sec.models, attacks: w.a || 1, i: effI, ws: w.ws || dWS, s: w.s, ap: w.ap, w: w.w || dW, rules: w.rules || {} });
+    }
+
+    const allI = [...new Set([...atkWeaponGroups.map(g => g.i), ...defWeaponGroups.map(g => g.i)])].sort((a, b) => b - a);
+    setupLog.push({ phase: "Setup", text: `Attacker: ${atkWeaponGroups.map(g => `${g.weaponName} I${g.i} (${g.models}x${g.attacks}A)`).join(", ")}` });
+    setupLog.push({ phase: "Setup", text: `Defender: ${defWeaponGroups.map(g => `${g.weaponName} I${g.i} (${g.models}x${g.attacks}A)`).join(", ")}` });
+    setupLog.push({ phase: "Setup", text: `Initiative order: ${allI.join(" -> ")}` });
+
+    const combined = resolveAssaultPhase({
+      attackerModels: aModels, attackerWS: aWS, attackerI: aI, attackerA: aA, attackerW: aW,
+      attackerSv: aSv, attackerInv: aInv, attackerFnp: aFnp, attackerT: aT, attackerS: aS, attackerAP: aAP, attackerRules: aRules,
+      defenderModels: dModels, defenderWS: dWS, defenderI: dI, defenderA: dA, defenderW: dW,
+      defenderSv: dSv, defenderInv: dInv, defenderFnp: dFnp, defenderT: dT, defenderS: dS, defenderAP: dAP, defenderRules: dRules,
+      isCharging: assaultCharging, disordered: assaultDisordered,
+      atkWeaponGroups, defWeaponGroups,
+    });
+    combined.log = [...setupLog, ...combined.log];
+
+    // Per-group dice display (ordered: attacker groups first, then defender)
+    combined.rollsByGroup = [
+      ...atkWeaponGroups.map(g => combined.groupRollsMap["atk:" + g.weaponName] || { side: "Attacker", name: g.weaponName, models: g.models, i: g.i, rolls: { hit: [], wound: [], save: [], fnp: [] } }),
+      ...defWeaponGroups.map(g => combined.groupRollsMap["def:" + g.weaponName] || { side: "Defender", name: g.weaponName, models: g.models, i: g.i, rolls: { hit: [], wound: [], save: [], fnp: [] } }),
+    ];
+
+    // meleeBreakdown for weapon summary
+    combined.meleeBreakdown = [
+      ...atkWeaponGroups.map(g => ({ side: "Attacker", name: g.weaponName, models: g.models, i: g.i })),
+      ...defWeaponGroups.map(g => ({ side: "Defender", name: g.weaponName, models: g.models, i: g.i })),
+    ];
+
     // ━━ LEADERSHIP / ROUT CHECK ━━
-    // Only triggers if the losing unit lost 25%+ of its starting models
     const cr = combined.combatResult;
     if (cr && cr.winner !== "Draw") {
       const loserIsAtk = cr.winner === "Defender";
-      const loserStartModels = loserIsAtk
-        ? (aModels + aSecondaryMelee.reduce((s, sw) => s + sw.models, 0))
-        : (dModels + dSecondaryMelee.reduce((s, sw) => s + sw.models, 0));
-      const loserCasualties = loserIsAtk ? combined.attackerCasualties : combined.defenderCasualties;
-      const casualtyPercent = loserStartModels > 0 ? (loserCasualties / loserStartModels) : 0;
-
-      if (casualtyPercent >= 0.25) {
-        const loserLd = loserIsAtk ? aLd : dLd;
-        const modifiedLd = Math.max(0, loserLd - cr.diff);
-        const d1 = Math.floor(Math.random() * 6) + 1;
-        const d2 = Math.floor(Math.random() * 6) + 1;
-        const ldRoll = d1 + d2;
-        const passed = ldRoll <= modifiedLd;
-        combined.routCheck = {
-          loser: loserIsAtk ? "Attacker" : "Defender",
-          loserName: loserIsAtk ? (aUnit?.name || "Attacker") : (dUnit?.name || "Defender"),
-          baseLd: loserLd,
-          modifier: cr.diff,
-          modifiedLd,
-          roll: [d1, d2],
-          total: ldRoll,
-          passed,
-          routed: !passed,
-          casualties: loserCasualties,
-          startModels: loserStartModels,
-          casualtyPercent: Math.round(casualtyPercent * 100),
-        };
-        const loserLabel = combined.routCheck.loserName;
-        combined.log.push({ phase: "Rout Check", text: `🏳 ${loserLabel} lost ${loserCasualties}/${loserStartModels} models (${combined.routCheck.casualtyPercent}% ≥ 25%) — Leadership Check: Ld ${loserLd} - ${cr.diff} = ${modifiedLd}, rolled ${d1}+${d2}=${ldRoll} → ${passed ? "PASSED — unit holds!" : "FAILED — UNIT ROUTED!"}` });
-      } else {
-        combined.log.push({ phase: "Rout Check", text: `✓ ${loserIsAtk ? (aUnit?.name || "Attacker") : (dUnit?.name || "Defender")} lost ${loserCasualties}/${loserStartModels} models (${Math.round(casualtyPercent * 100)}% < 25%) — no Leadership check required.` });
-      }
+      const loserLd = loserIsAtk ? aLd : dLd;
+      const loserName = loserIsAtk ? (aUnit?.name || "Attacker") : (dUnit?.name || "Defender");
+      const loserSide = loserIsAtk ? "Attacker" : "Defender";
+      const winnerScore = cr.winner === "Attacker" ? cr.attackerScore : cr.defenderScore;
+      const loserScore = cr.winner === "Attacker" ? cr.defenderScore : cr.attackerScore;
+      const modifiedLd = Math.max(0, loserLd - cr.diff);
+      const d1 = Math.floor(Math.random() * 6) + 1;
+      const d2 = Math.floor(Math.random() * 6) + 1;
+      const ldRoll = d1 + d2;
+      const passed = ldRoll <= modifiedLd;
+      combined.routCheck = {
+        loser: loserSide, loserName, baseLd: loserLd, modifier: cr.diff, modifiedLd,
+        roll: [d1, d2], total: ldRoll, passed, routed: !passed, winnerScore, loserScore,
+      };
+      combined.log.push({ phase: "Rout Check", text: `🏳 ${loserSide} (${loserName}) lost combat resolution (${loserScore} vs ${winnerScore}) — Ld ${loserLd} - ${cr.diff} = ${modifiedLd}, rolled ${d1}+${d2}=${ldRoll} -> ${passed ? "PASSED — holds!" : "FAILED — ROUTED!"}` });
     }
 
     setAssaultResult(combined);
+    setAtkCombatChoice(null);
+    setDefCombatChoice(null);
     // Track kills
     const atkName = aUnit?.name || "Attacker";
     const defName = dUnit?.name || "Defender";
     const kills = [];
-    if (combined.defenderCasualties > 0) {
-      kills.push({ phase: "Assault", attacker: atkName, target: defName, casualties: combined.defenderCasualties, detail: `${atkName} → ${defName}: ${combined.defenderCasualties} killed` });
-    }
-    if (combined.attackerCasualties > 0) {
-      kills.push({ phase: "Assault", attacker: defName, target: atkName, casualties: combined.attackerCasualties, detail: `${defName} → ${atkName}: ${combined.attackerCasualties} killed` });
-    }
+    if (combined.defenderCasualties > 0) kills.push({ phase: "Assault", attacker: atkName, target: defName, casualties: combined.defenderCasualties, detail: `${atkName} -> ${defName}: ${combined.defenderCasualties} killed` });
+    if (combined.attackerCasualties > 0) kills.push({ phase: "Assault", attacker: defName, target: atkName, casualties: combined.attackerCasualties, detail: `${defName} -> ${atkName}: ${combined.attackerCasualties} killed` });
     if (kills.length > 0) setRoundKills(prev => [...prev, ...kills]);
-    // Log to Results Tracker
+    const hasMulti = aSecondaryMelee.length > 0 || dSecondaryMelee.length > 0 || atkSgtActive || defSgtActive;
     addCombatLogEntry({
-      type: "assault",
-      attacker: atkName,
-      target: defName,
-      defKills: combined.defenderCasualties || 0,
-      atkKills: combined.attackerCasualties || 0,
-      remainAtk: combined.remainingAttackers || 0,
-      remainDef: combined.remainingDefenders || 0,
-      combatWinner: combined.combatResult?.winner || "Draw",
-      combatDiff: combined.combatResult?.diff || 0,
-      icon: "🗡",
-      label: (atkSecResults.length > 0 || defSecResults.length > 0) ? "ASSAULT (MULTI)" : "ASSAULT",
+      type: "assault", attacker: atkName, target: defName,
+      defKills: combined.defenderCasualties || 0, atkKills: combined.attackerCasualties || 0,
+      remainAtk: combined.remainingAttackers || 0, remainDef: combined.remainingDefenders || 0,
+      combatWinner: combined.combatResult?.winner || "Draw", combatDiff: combined.combatResult?.diff || 0,
+      icon: "🗡", label: hasMulti ? "ASSAULT (MULTI)" : "ASSAULT",
     });
   };
 
@@ -7717,7 +7712,7 @@ function ShootingResolver() {
                 COMBAT PHASE RESOLVER
               </h1>
               <div style={{ fontSize: 12, color: "#8a7e6e", fontFamily: "'Cinzel', serif", letterSpacing: 3 }}>
-                THE HORUS HERESY · AGE OF DARKNESS · 3RD EDITION · v1.43
+                THE HORUS HERESY · AGE OF DARKNESS · 3RD EDITION · v1.45
               </div>
             </div>
           </div>
@@ -11854,13 +11849,13 @@ function ShootingResolver() {
                   {assaultResult.combatResult.winner === "Attacker" ? "⚔" : assaultResult.combatResult.winner === "Defender" ? "🛡" : "⚖"}
                 </span>
                 <div style={{ textAlign: "center" }}>
-                  <div style={{
-                    fontFamily: "'Cinzel', serif", fontWeight: 900, fontSize: 18, letterSpacing: 2,
-                    color: assaultResult.combatResult.winner === "Attacker" ? "#9b2d2d" : assaultResult.combatResult.winner === "Defender" ? "#2a6fb4" : "#6a5e4e"
-                  }}>
+                  <div style={{ fontFamily: "'Cinzel', serif", fontWeight: 900, fontSize: 18, letterSpacing: 2, color: assaultResult.combatResult.winner === "Attacker" ? "#9b2d2d" : assaultResult.combatResult.winner === "Defender" ? "#2a6fb4" : "#6a5e4e" }}>
                     {assaultResult.combatResult.winner === "Draw" ? "COMBAT DRAW" : `${assaultResult.combatResult.winner.toUpperCase()} WINS BY ${assaultResult.combatResult.diff}`}
                   </div>
                   <div style={{ fontSize: 12, color: "#8a7e6e", fontFamily: "'EB Garamond', serif" }}>
+                    CR: Attacker {assaultResult.combatResult.attackerScore} — Defender {assaultResult.combatResult.defenderScore}
+                  </div>
+                  <div style={{ fontSize: 11, color: "#8a7e6e", fontFamily: "'EB Garamond', serif" }}>
                     {assaultResult.remainingAttackers} attacker(s) / {assaultResult.remainingDefenders} defender(s) survive
                   </div>
                 </div>
@@ -11874,162 +11869,177 @@ function ShootingResolver() {
                 <MiniStat label="Def Survive" value={assaultResult.remainingDefenders} color="#2a5e2a" />
               </div>
 
-              {/* Leadership / Rout Check */}
+              {/* Rout Check */}
               {assaultResult.routCheck && (
                 <div style={{
                   padding: "10px 14px", borderRadius: 8, marginBottom: 14,
                   background: assaultResult.routCheck.routed ? "rgba(255,102,0,0.08)" : "rgba(42,160,42,0.06)",
                   border: `2px solid ${assaultResult.routCheck.routed ? "#ff6600" : "#2a8a2a"}`,
                 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                     <span style={{ fontSize: 20 }}>{assaultResult.routCheck.routed ? "💨" : "🛡"}</span>
                     <div>
-                      <div style={{
-                        fontFamily: "'Cinzel', serif", fontWeight: 900, fontSize: 14, letterSpacing: 1,
-                        color: assaultResult.routCheck.routed ? "#ff6600" : "#2a8a2a",
-                      }}>
-                        {assaultResult.routCheck.loserName} {assaultResult.routCheck.routed ? "ROUTED!" : "HOLDS!"}
+                      <div style={{ fontFamily: "'Cinzel', serif", fontWeight: 900, fontSize: 13, letterSpacing: 1, color: assaultResult.routCheck.routed ? "#ff6600" : "#2a8a2a" }}>
+                        {assaultResult.routCheck.loser.toUpperCase()} ({assaultResult.routCheck.loserName}) — {assaultResult.routCheck.routed ? "ROUTED!" : "HOLDS!"}
                       </div>
                       <div style={{ fontSize: 10, color: "#6a5e4e", fontFamily: "'EB Garamond', serif" }}>
-                        Casualties: {assaultResult.routCheck.casualties}/{assaultResult.routCheck.startModels} ({assaultResult.routCheck.casualtyPercent}% ≥ 25%) · Ld {assaultResult.routCheck.baseLd} − {assaultResult.routCheck.modifier} = {assaultResult.routCheck.modifiedLd} · Rolled {assaultResult.routCheck.roll[0]}+{assaultResult.routCheck.roll[1]} = {assaultResult.routCheck.total}
+                        Lost CR {assaultResult.routCheck.loserScore} vs {assaultResult.routCheck.winnerScore} · Ld {assaultResult.routCheck.baseLd} − {assaultResult.routCheck.modifier} = {assaultResult.routCheck.modifiedLd} · Rolled {assaultResult.routCheck.roll[0]}+{assaultResult.routCheck.roll[1]} = {assaultResult.routCheck.total}
                       </div>
                     </div>
                   </div>
                   {assaultResult.routCheck.routed && (
                     <div style={{ fontSize: 9, color: "#ff6600", fontFamily: "'Cinzel', serif", fontWeight: 600, marginTop: 2 }}>
-                      The {assaultResult.routCheck.loser.toLowerCase()} unit breaks and flees! The winner may make a Sweeping Advance.
+                      The {assaultResult.routCheck.loser.toLowerCase()} unit is Routed — must Fall Back next Movement Phase.
                     </div>
                   )}
                 </div>
               )}
 
-              {/* Multi-Weapon Melee Breakdown */}
-              {assaultResult.meleeBreakdown && assaultResult.meleeBreakdown.length > 1 && (
-                <div style={{ marginBottom: 14, borderRadius: 6, overflow: "hidden", border: "1px solid rgba(155,45,45,0.2)" }}>
-                  <div style={{ padding: "6px 12px", background: "rgba(155,45,45,0.06)", fontSize: 9, fontFamily: "'Cinzel', serif", color: "#9b2d2d", letterSpacing: 1, fontWeight: 700 }}>
-                    🗡 WEAPON BREAKDOWN
-                  </div>
-                  {assaultResult.meleeBreakdown.map((wb, i) => (
-                    <div key={i} style={{
-                      display: "flex", gap: 10, padding: "5px 12px", fontSize: 10,
-                      fontFamily: "'EB Garamond', serif",
-                      background: i % 2 === 0 ? "rgba(155,45,45,0.02)" : "transparent",
-                      borderTop: i > 0 ? "1px solid rgba(155,45,45,0.06)" : "none",
-                      alignItems: "center", flexWrap: "wrap"
-                    }}>
-                      <span style={{
-                        fontFamily: "'Cinzel', serif", fontWeight: 600, fontSize: 9, minWidth: 60,
-                        color: wb.side === "Attacker" ? "#9b2d2d" : "#2a6fb4",
-                      }}>
-                        {wb.side}
-                      </span>
-                      <span style={{ fontFamily: "'Cinzel', serif", fontWeight: 600, fontSize: 9, color: "#4a4030", minWidth: 100 }}>{wb.name}</span>
-                      <span style={{ color: "#6a5e4e" }}>{wb.models}× models</span>
-                      <span style={{ fontWeight: 600, color: wb.defKills > 0 ? "#9b2d2d" : "#8a7e6e" }}>{wb.defKills} def ☠</span>
-                      <span style={{ fontWeight: 600, color: wb.atkKills > 0 ? "#2a6fb4" : "#8a7e6e" }}>{wb.atkKills} atk ☠</span>
-                    </div>
-                  ))}
-                </div>
-              )}
+              {/* ━━ POST-COMBAT CHOICES ━━ */}
+              {(() => {
+                const cr = assaultResult.combatResult;
+                const atkRouted = assaultResult.routCheck?.loser === "Attacker" && assaultResult.routCheck?.routed;
+                const defRouted = assaultResult.routCheck?.loser === "Defender" && assaultResult.routCheck?.routed;
+                const atkWon = cr.winner === "Attacker";
+                const defWon = cr.winner === "Defender";
+                const isDraw = cr.winner === "Draw";
 
-              {/* Dice Displays — Grouped by Weapon */}
-              {assaultResult.rollsByMelee && assaultResult.rollsByMelee.length > 0 ? (
-                assaultResult.rollsByMelee.map((wg, wi) => {
-                  const r = wg.rolls || { hit: [], wound: [], save: [], fnp: [] };
-                  const hasAny = r.hit.length > 0 || r.wound.length > 0 || r.save.length > 0 || r.fnp.length > 0;
-                  if (!hasAny) return null;
-                  const col = wg.side === "Attacker" ? "#9b2d2d" : "#2a6fb4";
-                  const rgb = wg.side === "Attacker" ? "155,45,45" : "42,111,180";
-                  return (
-                    <div key={wi} style={{
-                      marginBottom: 8, padding: "8px 10px", borderRadius: 6,
-                      background: `rgba(${rgb},0.03)`,
-                      border: `1px solid rgba(${rgb},0.15)`,
-                    }}>
-                      <div style={{
-                        fontSize: 10, fontFamily: "'Cinzel', serif", fontWeight: 700, letterSpacing: 1, marginBottom: 6,
-                        color: col, display: "flex", alignItems: "center", gap: 6,
-                      }}>
-                        <span>{wg.side === "Attacker" ? "⚔" : "🛡"} {wg.side}: {wg.name}</span>
-                        <span style={{ fontSize: 8, fontWeight: 400, color: "#8a7e6e" }}>({wg.models} model{wg.models !== 1 ? "s" : ""})</span>
+                // Available choices per side
+                const atkChoices = atkRouted
+                  ? [{ id: "fallback", label: "Fall Back", icon: "💨", desc: "Unit is Routed — must Fall Back" }]
+                  : [
+                      { id: "hold", label: "Hold", icon: "🛡", desc: "Remain in place, locked in combat" },
+                      { id: "disengage", label: "Disengage", icon: "↩", desc: "Only available if this unit lost combat", disabled: atkWon || isDraw },
+                      { id: "fallback", label: "Fall Back", icon: "💨", desc: "Voluntarily withdraw" },
+                    ];
+                const defChoices = defRouted
+                  ? [{ id: "fallback", label: "Fall Back", icon: "💨", desc: "Unit is Routed — must Fall Back" }]
+                  : [
+                      { id: "hold", label: "Hold", icon: "🛡", desc: "Remain in place, locked in combat" },
+                      { id: "disengage", label: "Disengage", icon: "↩", desc: "Only available if this unit lost combat", disabled: defWon || isDraw },
+                      { id: "fallback", label: "Fall Back", icon: "💨", desc: "Voluntarily withdraw" },
+                    ];
+
+                // Winner always gets pursuit options; loser gets hold/disengage/fallback
+                const pursuitChoices = [
+                  { id: "pursue", label: "Pursue", icon: "⚔", desc: "Chase the fleeing enemy" },
+                  { id: "gundown", label: "Gun Down", icon: "🎯", desc: "Fire on the fleeing unit" },
+                  { id: "consolidate", label: "Consolidate", icon: "📍", desc: "Hold position and regroup" },
+                ];
+                const atkFinalChoices = atkRouted ? atkChoices : atkWon ? pursuitChoices : atkChoices;
+                const defFinalChoices = defRouted ? defChoices : defWon ? pursuitChoices : defChoices;
+
+                return (
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{ fontSize: 10, fontFamily: "'Cinzel', serif", color: "#6a5e4e", letterSpacing: 1, marginBottom: 8, fontWeight: 700 }}>
+                      ⚔ POST-COMBAT CHOICES
+                    </div>
+                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                      {/* Attacker choices */}
+                      <div style={{ flex: 1, minWidth: 160, padding: "10px 12px", borderRadius: 6, background: "rgba(155,45,45,0.04)", border: "1px solid rgba(155,45,45,0.15)" }}>
+                        <div style={{ fontSize: 10, fontFamily: "'Cinzel', serif", color: "#9b2d2d", fontWeight: 700, marginBottom: 6 }}>
+                          ⚔ ATTACKER — {aUnit?.name || "Attacker"}
+                          {atkWon && !atkRouted && <span style={{ fontSize: 9, fontWeight: 400, color: "#8a7e6e", marginLeft: 6 }}>(WINNER)</span>}
+                        </div>
+                        {atkFinalChoices.map(c => (
+                          <button key={c.id} disabled={c.disabled} onClick={() => setAtkCombatChoice(c.disabled ? null : c.id)} style={{
+                            display: "block", width: "100%", marginBottom: 4, padding: "6px 10px",
+                            borderRadius: 5, border: `1.5px solid ${atkCombatChoice === c.id ? "#9b2d2d" : c.disabled ? "#ddd" : "#d0c4aa"}`,
+                            background: atkCombatChoice === c.id ? "rgba(155,45,45,0.12)" : c.disabled ? "#f5f5f5" : "#faf8f4",
+                            color: c.disabled ? "#bbb" : atkCombatChoice === c.id ? "#9b2d2d" : "#4a4030",
+                            fontFamily: "'Cinzel', serif", fontSize: 11, fontWeight: atkCombatChoice === c.id ? 700 : 400,
+                            cursor: c.disabled ? "not-allowed" : "pointer", textAlign: "left",
+                          }}>
+                            {c.icon} {c.label}
+                            {c.disabled && <span style={{ fontSize: 9, marginLeft: 6, color: "#bbb" }}>(n/a)</span>}
+                          </button>
+                        ))}
                       </div>
-                      {r.hit.length > 0 && (
-                        <div style={{ marginBottom: 5 }}>
-                          <div style={{ fontSize: 9, color: col, marginBottom: 2, fontFamily: "'Cinzel', serif" }}>TO HIT</div>
-                          <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-                            {r.hit.map((d, i) => <DieIcon key={`${wi}h${i}`} value={d.value} success={d.success} small />)}
-                          </div>
+                      {/* Defender choices */}
+                      <div style={{ flex: 1, minWidth: 160, padding: "10px 12px", borderRadius: 6, background: "rgba(42,111,180,0.04)", border: "1px solid rgba(42,111,180,0.15)" }}>
+                        <div style={{ fontSize: 10, fontFamily: "'Cinzel', serif", color: "#2a6fb4", fontWeight: 700, marginBottom: 6 }}>
+                          🛡 DEFENDER — {dUnit?.name || "Defender"}
+                          {defWon && !defRouted && <span style={{ fontSize: 9, fontWeight: 400, color: "#8a7e6e", marginLeft: 6 }}>(WINNER)</span>}
                         </div>
-                      )}
-                      {r.wound.length > 0 && (
-                        <div style={{ marginBottom: 5 }}>
-                          <div style={{ fontSize: 9, color: col, marginBottom: 2, fontFamily: "'Cinzel', serif" }}>TO WOUND</div>
-                          <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-                            {r.wound.map((d, i) => <DieIcon key={`${wi}w${i}`} value={d.value} success={d.success} small />)}
-                          </div>
-                        </div>
-                      )}
-                      {r.save.length > 0 && (
-                        <div style={{ marginBottom: 5 }}>
-                          <div style={{ fontSize: 9, color: col, marginBottom: 2, fontFamily: "'Cinzel', serif" }}>SAVES</div>
-                          <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-                            {r.save.map((d, i) => <DieIcon key={`${wi}s${i}`} value={d.value} success={d.success} small />)}
-                          </div>
-                        </div>
-                      )}
-                      {r.fnp.length > 0 && (
-                        <div style={{ marginBottom: 2 }}>
-                          <div style={{ fontSize: 9, color: col, marginBottom: 2, fontFamily: "'Cinzel', serif" }}>FNP</div>
-                          <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-                            {r.fnp.map((d, i) => <DieIcon key={`${wi}f${i}`} value={d.value} success={d.success} small />)}
-                          </div>
-                        </div>
-                      )}
+                        {defFinalChoices.map(c => (
+                          <button key={c.id} disabled={c.disabled} onClick={() => setDefCombatChoice(c.disabled ? null : c.id)} style={{
+                            display: "block", width: "100%", marginBottom: 4, padding: "6px 10px",
+                            borderRadius: 5, border: `1.5px solid ${defCombatChoice === c.id ? "#2a6fb4" : c.disabled ? "#ddd" : "#d0c4aa"}`,
+                            background: defCombatChoice === c.id ? "rgba(42,111,180,0.12)" : c.disabled ? "#f5f5f5" : "#faf8f4",
+                            color: c.disabled ? "#bbb" : defCombatChoice === c.id ? "#2a6fb4" : "#4a4030",
+                            fontFamily: "'Cinzel', serif", fontSize: 11, fontWeight: defCombatChoice === c.id ? 700 : 400,
+                            cursor: c.disabled ? "not-allowed" : "pointer", textAlign: "left",
+                          }}>
+                            {c.icon} {c.label}
+                            {c.disabled && <span style={{ fontSize: 9, marginLeft: 6, color: "#bbb" }}>(n/a)</span>}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  );
-                })
-              ) : (
-                ["attacker", "defender"].map(rollKey => {
-                  const r = assaultResult.rolls[rollKey];
-                  const label = rollKey === "attacker" ? "ATTACKER" : "DEFENDER";
-                  const col = rollKey === "attacker" ? "#9b2d2d" : "#2a6fb4";
-                  return (
-                    <div key={rollKey} style={{ marginBottom: 10 }}>
-                      {r.hit.length > 0 && (
-                        <div style={{ marginBottom: 6 }}>
-                          <div style={{ fontSize: 10, color: col, marginBottom: 3, fontFamily: "'Cinzel', serif", letterSpacing: 1 }}>{label} — TO HIT</div>
-                          <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-                            {r.hit.map((d, i) => <DieIcon key={`${rollKey}h${i}`} value={d.value} success={d.success} small />)}
-                          </div>
+                    {/* Outcome summary */}
+                    {(atkCombatChoice || defCombatChoice) && (
+                      <div style={{ marginTop: 8, padding: "8px 12px", borderRadius: 6, background: "rgba(184,134,11,0.06)", border: "1px solid rgba(184,134,11,0.2)", fontSize: 11, fontFamily: "'EB Garamond', serif", color: "#6a5030" }}>
+                        {atkCombatChoice && <div>⚔ Attacker — {atkCombatChoice.replace("gundown","Gun Down").replace("pursue","Pursue").replace("consolidate","Consolidate").replace("hold","Hold").replace("disengage","Disengage").replace("fallback","Fall Back")}</div>}
+                        {defCombatChoice && <div>🛡 Defender — {defCombatChoice.replace("gundown","Gun Down").replace("pursue","Pursue").replace("consolidate","Consolidate").replace("hold","Hold").replace("disengage","Disengage").replace("fallback","Fall Back")}</div>}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* Per-Group Dice Rolls */}
+              {assaultResult.rollsByGroup && assaultResult.rollsByGroup.length > 0 && (
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ fontSize: 10, fontFamily: "'Cinzel', serif", color: "#6a5e4e", letterSpacing: 1, marginBottom: 6, fontWeight: 700 }}>DICE ROLLS BY GROUP</div>
+                  {assaultResult.rollsByGroup.map((wg, wi) => {
+                    const r = wg.rolls || { hit: [], wound: [], save: [], fnp: [] };
+                    const hasAny = r.hit.length > 0 || r.wound.length > 0 || r.save.length > 0 || r.fnp.length > 0;
+                    if (!hasAny) return null;
+                    const isAtk = wg.side === "Attacker";
+                    const col = isAtk ? "#9b2d2d" : "#2a6fb4";
+                    const rgb = isAtk ? "155,45,45" : "42,111,180";
+                    return (
+                      <div key={wi} style={{ marginBottom: 8, padding: "8px 10px", borderRadius: 6, background: `rgba(${rgb},0.03)`, border: `1px solid rgba(${rgb},0.15)` }}>
+                        <div style={{ fontSize: 10, fontFamily: "'Cinzel', serif", fontWeight: 700, letterSpacing: 1, marginBottom: 6, color: col, display: "flex", alignItems: "center", gap: 6 }}>
+                          <span>{isAtk ? "⚔" : "🛡"} {wg.side}: {wg.name}</span>
+                          <span style={{ fontSize: 9, fontWeight: 400, color: "#8a7e6e" }}>I{wg.i} · {wg.models} model{wg.models !== 1 ? "s" : ""}</span>
                         </div>
-                      )}
-                      {r.wound.length > 0 && (
-                        <div style={{ marginBottom: 6 }}>
-                          <div style={{ fontSize: 10, color: col, marginBottom: 3, fontFamily: "'Cinzel', serif", letterSpacing: 1 }}>{label} — TO WOUND</div>
-                          <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-                            {r.wound.map((d, i) => <DieIcon key={`${rollKey}w${i}`} value={d.value} success={d.success} small />)}
+                        {r.hit.length > 0 && (
+                          <div style={{ marginBottom: 5 }}>
+                            <div style={{ fontSize: 9, color: col, marginBottom: 2, fontFamily: "'Cinzel', serif" }}>TO HIT</div>
+                            <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                              {r.hit.map((d, i) => <DieIcon key={`${wi}h${i}`} value={d.value} success={d.success} small />)}
+                            </div>
                           </div>
-                        </div>
-                      )}
-                      {r.save.length > 0 && (
-                        <div style={{ marginBottom: 6 }}>
-                          <div style={{ fontSize: 10, color: col, marginBottom: 3, fontFamily: "'Cinzel', serif", letterSpacing: 1 }}>{label} — SAVES</div>
-                          <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-                            {r.save.map((d, i) => <DieIcon key={`${rollKey}s${i}`} value={d.value} success={d.success} small />)}
+                        )}
+                        {r.wound.length > 0 && (
+                          <div style={{ marginBottom: 5 }}>
+                            <div style={{ fontSize: 9, color: col, marginBottom: 2, fontFamily: "'Cinzel', serif" }}>TO WOUND</div>
+                            <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                              {r.wound.map((d, i) => <DieIcon key={`${wi}w${i}`} value={d.value} success={d.success} small />)}
+                            </div>
                           </div>
-                        </div>
-                      )}
-                      {r.fnp.length > 0 && (
-                        <div style={{ marginBottom: 6 }}>
-                          <div style={{ fontSize: 10, color: col, marginBottom: 3, fontFamily: "'Cinzel', serif", letterSpacing: 1 }}>{label} — FNP</div>
-                          <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-                            {r.fnp.map((d, i) => <DieIcon key={`${rollKey}f${i}`} value={d.value} success={d.success} small />)}
+                        )}
+                        {r.save.length > 0 && (
+                          <div style={{ marginBottom: 5 }}>
+                            <div style={{ fontSize: 9, color: col, marginBottom: 2, fontFamily: "'Cinzel', serif" }}>SAVES</div>
+                            <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                              {r.save.map((d, i) => <DieIcon key={`${wi}s${i}`} value={d.value} success={d.success} small />)}
+                            </div>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
+                        )}
+                        {r.fnp.length > 0 && (
+                          <div>
+                            <div style={{ fontSize: 9, color: col, marginBottom: 2, fontFamily: "'Cinzel', serif" }}>FNP</div>
+                            <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                              {r.fnp.map((d, i) => <DieIcon key={`${wi}f${i}`} value={d.value} success={d.success} small />)}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               )}
 
               {/* Combat Log */}
@@ -12039,17 +12049,17 @@ function ShootingResolver() {
                   <div key={i} style={{
                     fontSize: 11, padding: "3px 8px", borderRadius: 4, marginBottom: 2,
                     display: "flex", alignItems: "center", gap: 6,
-                    background: entry.phase === "Melee" ? "rgba(155,45,45,0.04)" : entry.phase === "Combat Res" ? "rgba(184,134,11,0.06)" : "rgba(0,0,0,0.02)"
+                    background: entry.phase === "Initiative" ? "rgba(155,45,45,0.04)" : entry.phase === "Combat Res" ? "rgba(184,134,11,0.06)" : entry.phase === "Rout Check" ? "rgba(255,102,0,0.04)" : "rgba(0,0,0,0.02)"
                   }}>
-                    <span style={{ fontSize: 10 }}>{entry.phase === "Melee" ? "🗡" : entry.phase === "Combat Res" ? "⚖" : "•"}</span>
-                    <span style={{ color: entry.phase === "Combat Res" ? "#8b6508" : "#6a5e4e", fontFamily: "'EB Garamond', serif" }}>{entry.text}</span>
+                    <span style={{ fontSize: 10 }}>{entry.phase === "Initiative" ? "🗡" : entry.phase === "Combat Res" ? "⚖" : entry.phase === "Rout Check" ? "🏳" : "•"}</span>
+                    <span style={{ color: entry.phase === "Combat Res" ? "#8b6508" : entry.phase === "Rout Check" ? "#cc5500" : "#6a5e4e", fontFamily: "'EB Garamond', serif" }}>{entry.text}</span>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* RESULTS TRACKER (Assault Phase) */}
+          {/* RESULTS TRACKER (Assault Phase) */}          {/* RESULTS TRACKER (Assault Phase) */}
           {renderResultsTracker(["charge", "assault"])}
         </>)}
 
