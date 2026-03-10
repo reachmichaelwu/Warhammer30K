@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tactical Cogitator — Horus Heresy Shooting Resolver v1.45</title>
+  <title>Tactical Cogitator — Horus Heresy Shooting Resolver v1.53</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -269,6 +269,139 @@ const UNIT_FOC_SLOT = {
 };
 
 // Equipment available to Troops and Elites
+// ── Legion-specific wargear options per faction ──
+// Returns additional wargear options for a unit based on army faction
+function getLegionWargearOptions(unitId, faction) {
+  const isCmd    = ["praetor_pa","praetor_ta","praetor_sat","centurion"].includes(unitId);
+  const isCmdChp = [...["praetor_pa","praetor_ta","praetor_sat","centurion"], "champion"].includes(unitId);
+  const isCmdChpSgt = [...["praetor_pa","praetor_ta","praetor_sat","centurion","champion"], "herald"].includes(unitId);
+  const map = {
+    dark_angels: [
+      ...(isCmdChpSgt ? [
+        { label: "Calibanite Warblade (+5pts) [DA]", cost: 5, perModel: false, legion: true },
+      ] : []),
+      ...(isCmdChp ? [
+        { label: "Terranic Greatsword (free) [DA]", cost: 0, perModel: false, legion: true },
+        { label: "Plasma Burner - Sustained (free) [DA]", cost: 0, perModel: false, legion: true },
+        { label: "Plasma Burner - Maximal (free) [DA]", cost: 0, perModel: false, legion: true },
+        { label: "Plasma Incinerator - Sustained (free) [DA]", cost: 0, perModel: false, legion: true },
+        { label: "Plasma Incinerator - Maximal (free) [DA]", cost: 0, perModel: false, legion: true },
+      ] : []),
+    ],
+    white_scars: [
+      ...(isCmd ? [
+        { label: "Power Glaive (+10pts) [WS]", cost: 10, perModel: false, legion: true },
+      ] : []),
+    ],
+    space_wolves: [
+      ...(["praetor_pa","praetor_ta","centurion","champion","herald","veteran","assault","tactical"].includes(unitId) ? [
+        { label: "Fenrisian Axe (+2pts) [SW]", cost: 2, perModel: false, legion: true },
+      ] : []),
+      ...(isCmdChp ? [
+        { label: "Frost Sword (+5pts) [SW]", cost: 5, perModel: false, legion: true },
+        { label: "Frost Axe (+5pts) [SW]", cost: 5, perModel: false, legion: true },
+        { label: "Frost Claw (+5pts) [SW]", cost: 5, perModel: false, legion: true },
+        { label: "Great Frost Blade (+10pts) [SW]", cost: 10, perModel: false, legion: true },
+      ] : []),
+    ],
+    imperial_fists: [
+      ...(isCmdChpSgt ? [
+        { label: "Solarite Power Gauntlet (+5pts) [IF]", cost: 5, perModel: false, legion: true },
+      ] : []),
+    ],
+    blood_angels: [
+      ...(isCmdChpSgt ? [
+        { label: "Blade of Perdition (+5pts) [BA]", cost: 5, perModel: false, legion: true },
+        { label: "Axe of Perdition (+5pts) [BA]", cost: 5, perModel: false, legion: true },
+        { label: "Maul of Perdition (+5pts) [BA]", cost: 5, perModel: false, legion: true },
+        { label: "Spear of Perdition (+5pts) [BA]", cost: 5, perModel: false, legion: true },
+        { label: "Inferno Pistol (+5pts) [BA]", cost: 5, perModel: false, legion: true },
+      ] : []),
+      ...(["assault"].includes(unitId) ? [
+        { label: "Inferno Pistol (+5pts) [BA]", cost: 5, perModel: true, legion: true },
+      ] : []),
+    ],
+    ultramarines: [
+      ...(isCmdChpSgt ? [
+        { label: "Legatine Axe (+5pts) [UM]", cost: 5, perModel: false, legion: true },
+      ] : []),
+    ],
+    raven_guard: [
+      ...(isCmdChp ? [
+        { label: "Raven's Talon (free) [RG]", cost: 0, perModel: false, legion: true },
+        { label: "Pair of Raven's Talons (free) [RG]", cost: 0, perModel: false, legion: true },
+      ] : []),
+    ],
+    emperors_children: [
+      ...(isCmdChpSgt ? [
+        { label: "Phoenix Power Spear (+10pts) [EC]", cost: 10, perModel: false, legion: true },
+        { label: "Sonic Lance (+10pts) [EC]", cost: 10, perModel: false, legion: true },
+      ] : []),
+    ],
+    iron_warriors: [
+      ...(isCmdChp ? [
+        { label: "Graviton Crusher (free) [IW]", cost: 0, perModel: false, legion: true },
+      ] : []),
+    ],
+    night_lords: [
+      ...(isCmdChpSgt ? [
+        { label: "Chainglaive (+5pts) [NL]", cost: 5, perModel: false, legion: true },
+      ] : []),
+      ...(isCmd ? [
+        { label: "Headsman's Axe (+10pts) [NL]", cost: 10, perModel: false, legion: true },
+      ] : []),
+    ],
+    world_eaters: [
+      ...(isCmdChpSgt ? [
+        { label: "Meteor Hammer (+5pts) [WE]", cost: 5, perModel: false, legion: true },
+        { label: "Excoriator Chainaxe (free) [WE]", cost: 0, perModel: false, legion: true },
+        { label: "Paired Falax Blades (free) [WE]", cost: 0, perModel: false, legion: true },
+        { label: "Barb-Hook Lash (free) [WE]", cost: 0, perModel: false, legion: true },
+      ] : []),
+    ],
+    death_guard: [
+      ...(isCmdChpSgt ? [
+        { label: "Power Scythe (+10pts) [DG]", cost: 10, perModel: false, legion: true },
+      ] : []),
+    ],
+    thousand_sons: [
+      ...(isCmdChp ? [
+        { label: "Achea Pattern Force Sword (+5pts) [TS]", cost: 5, perModel: false, legion: true },
+      ] : []),
+    ],
+    sons_of_horus: [
+      ...(isCmdChpSgt ? [
+        { label: "Carsoran Power Axe (+5pts) [SoH]", cost: 5, perModel: false, legion: true },
+        { label: "Carsoran Power Tabar (+10pts) [SoH]", cost: 10, perModel: false, legion: true },
+        { label: "Banestrike Bolter (+5pts) [SoH]", cost: 5, perModel: false, legion: true },
+        { label: "Banestrike Combi-Bolter (+5pts) [SoH]", cost: 5, perModel: false, legion: true },
+      ] : []),
+      ...(["veteran","assault"].includes(unitId) ? [
+        { label: "Carsoran Power Axe (+5pts/mdl) [SoH]", cost: 5, perModel: true, legion: true },
+        { label: "Carsoran Power Tabar (+10pts/mdl) [SoH]", cost: 10, perModel: true, legion: true },
+        { label: "Banestrike Bolter (+5pts/mdl) [SoH]", cost: 5, perModel: true, legion: true },
+      ] : []),
+      ...(unitId === "seeker" ? [
+        { label: "Banestrike Bolter (free) [SoH]", cost: 0, perModel: true, legion: true },
+      ] : []),
+    ],
+    alpha_legion: [
+      ...(isCmdChpSgt ? [
+        { label: "Power Dagger (free) [AL]", cost: 0, perModel: false, legion: true },
+        { label: "Venom Spheres (+5pts) [AL]", cost: 5, perModel: false, legion: true },
+      ] : []),
+    ],
+  };
+  return (map[faction] || []);
+}
+
+// Combined wargear options: base unit options + legion-specific options
+function getWargearOptions(unitId, faction) {
+  const base = UNIT_WARGEAR_OPTIONS[unitId] || [];
+  const legion = faction && faction !== "legiones_astartes" ? getLegionWargearOptions(unitId, faction) : [];
+  return [...base, ...legion];
+}
+
 const EQUIPMENT_OPTIONS = {
   vexilla:      { label: "Vexilla",        cost: 10, perModel: false, desc: "Re-roll failed Morale checks (Shooting & Assault)", icon: "⚑" },
   noxVox:       { label: "Nox-Vox",        cost: 10, perModel: false, desc: "+1 Ld to Leadership & Cooldown checks", icon: "📡" },
@@ -533,6 +666,28 @@ const WEAPON_UPGRADE_COSTS = {
   "Concussive Resonator": 10, "Heavy Particle Shredder": 10,
   // Phosphex
   "Phosphex Discharger": 20,
+  // ── Legion-specific weapons (Liber Loyalist / Hereticus) ──
+  "Calibanite Warblade": 5, "Terranic Greatsword": 0,
+  "Power Glaive": 10,
+  "Fenrisian Axe": 2, "Frost Sword": 5, "Frost Axe": 5, "Frost Claw": 5, "Great Frost Blade": 10,
+  "Solarite Power Gauntlet": 5,
+  "Blade of Perdition": 5, "Axe of Perdition": 5, "Maul of Perdition": 5, "Spear of Perdition": 5,
+  "Inferno Pistol": 5,
+  "Legatine Axe": 5,
+  "Raven's Talon": 0, "Pair of Raven's Talons": 0,
+  "Phoenix Power Spear": 10,
+  "Sonic Lance": 10,
+  "Graviton Crusher": 0,
+  "Chainglaive": 5, "Headsman's Axe": 10,
+  "Meteor Hammer": 5, "Excoriator Chainaxe": 0, "Paired Falax Blades": 0, "Barb-Hook Lash": 0,
+  "Power Scythe": 10,
+  "Achea Pattern Force Sword": 5,
+  "Carsoran Power Axe": 5, "Carsoran Power Tabar": 10,
+  "Power Dagger": 0,
+  "Banestrike Bolter": 5, "Banestrike Combi-Bolter": 5,
+  "Venom Spheres": 5,
+  "Plasma Burner (Sustained)": 0, "Plasma Burner (Maximal)": 0,
+  "Plasma Incinerator (Sustained)": 0, "Plasma Incinerator (Maximal)": 0,
 };
 
 // ━━━ UNIT WARGEAR OPTIONS (from Liber Astartes 3rd Edition PDF) ━━━━━━━━━━━━
@@ -1458,9 +1613,9 @@ const MAX_UNIT_SIZE = {
 };
 
 // Helper: format wargear options for display
-function formatWargear(entry) {
+function formatWargear(entry, faction) {
   if (!entry.wargearOptions) return "";
-  const opts = UNIT_WARGEAR_OPTIONS[entry.unitId] || [];
+  const opts = faction ? getWargearOptions(entry.unitId, faction) : (UNIT_WARGEAR_OPTIONS[entry.unitId] || []);
   const active = Object.entries(entry.wargearOptions).filter(([, v]) => v).map(([idx]) => {
     const o = opts[idx];
     return o ? o.label.replace(/\s*\([^)]*\)\s*$/, "").replace(/\s*\+\d+pts.*$/, "").trim() : null;
@@ -1489,9 +1644,9 @@ function calcArmyEntryPoints(entry) {
       if (entry.equipment[key]) total += eq.perModel ? eq.cost * (entry.models || pd.minModels) : eq.cost;
     });
   }
-  // Wargear options (from UNIT_WARGEAR_OPTIONS)
+  // Wargear options (base + legion)
   if (entry.wargearOptions) {
-    const opts = UNIT_WARGEAR_OPTIONS[entry.unitId] || [];
+    const opts = entry.faction ? getWargearOptions(entry.unitId, entry.faction) : (UNIT_WARGEAR_OPTIONS[entry.unitId] || []);
     Object.entries(entry.wargearOptions).forEach(([idx, checked]) => {
       if (checked && opts[idx]) {
         total += opts[idx].perModel ? opts[idx].cost * (entry.models || pd.minModels) : opts[idx].cost;
@@ -4028,6 +4183,211 @@ const MELEE_WEAPON_PROFILES = {
   ],
 };
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// LEGION-SPECIFIC MELEE WEAPONS (from Liber Loyalist / Liber Hereticus Armoury)
+// Keys match LEGION_FACTIONS ids. Each entry lists units that can take the weapon
+// and the weapon profile. Units: command/champion/sergeant/centurion eligible per rules.
+// Stats: ws/s/ap/i/a/w/t/sv/inv/fnp/rules/traits — base stats filled from unit profile.
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const LEGION_MELEE_WEAPONS = {
+  dark_angels: [
+    // Calibanite warblade: Command/Champion/Sergeant, IM+0, AM:A, SM:+1, AP:3, D:1, Breaching(5+), Sword of the Order
+    { name: "Calibanite Warblade", sm: 1, ap: "3", d: 1, rules: { m_breaching5: true }, traits: "Power, Sword of the Order",
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion","herald","moritat","vigilator"],
+      note: "Command/Champion/Sergeant Sub-Type. Replaces power sword. +5pts." },
+    // Terranic greatsword: Command/Champion, IM:-1, AM:A, SM:+2, AP:3, D:2, Breaching(5+), Sword of the Order
+    { name: "Terranic Greatsword", im: -1, sm: 2, ap: "3", d: 2, rules: { m_breaching5: true }, traits: "Power, Sword of the Order",
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion"],
+      note: "Command/Champion Sub-Type only. Replaces power fist. Free." },
+  ],
+  white_scars: [
+    // Power glaive: Command, IM:+1, AM:A, SM:+1, AP:3, D:1, Impact(AP), Breaching(5+)
+    { name: "Power Glaive", im: 1, sm: 1, ap: "3", d: 1, rules: { m_breaching5: true, m_impact: true }, traits: "Power",
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion"],
+      note: "Command Sub-Type only. Replaces power weapon. +10pts." },
+  ],
+  space_wolves: [
+    // Fenrisian axe: Any model with chainsword, IM:+1, AM:A, SM:+1, AP:-, D:1, Reaping Blow(1)
+    { name: "Fenrisian Axe", im: 1, sm: 1, ap: "-", d: 1, rules: { m_reapingBlow: true }, traits: "None",
+      eligibleUnits: ["tactical","assault","veteran","praetor_pa","praetor_ta","centurion","champion","herald"],
+      note: "Any model with Space Wolves Trait. Replaces chainsword. +2pts." },
+    // Frost sword: Command/Champion, IM:+0, AM:A, SM:S, AP:3, D:1, Breaching(5+), Reaping Blow(1)
+    { name: "Frost Sword", im: 0, sm: 0, ap: "3", d: 1, rules: { m_breaching5: true, m_reapingBlow: true }, traits: "Power",
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion"],
+      note: "Command/Champion. Replaces power weapon. +5pts." },
+    // Frost axe: Command/Champion, IM:-1, AM:A, SM:+1, AP:3, D:1, Breaching(4+), Reaping Blow(1)
+    { name: "Frost Axe", im: -1, sm: 1, ap: "3", d: 1, rules: { m_breaching4: true, m_reapingBlow: true }, traits: "Power",
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion"],
+      note: "Command/Champion. Replaces power weapon. +5pts." },
+    // Frost claw: Command/Champion, IM:+0, AM:A, SM:S, AP:3, D:1, Breaching(4+), Reaping Blow(1), Shred(6+)
+    { name: "Frost Claw", im: 0, sm: 0, ap: "3", d: 1, rules: { m_breaching4: true, m_reapingBlow: true, m_shred: true }, traits: "Power",
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion"],
+      note: "Command/Champion. Replaces lightning claw. +5pts." },
+    // Great frost blade: Command/Champion, IM:-2, AM:A, SM:+3, AP:2, D:2, Reaping Blow(1)
+    { name: "Great Frost Blade", im: -2, sm: 3, ap: "2", d: 2, rules: { m_reapingBlow: true }, traits: "Power",
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion"],
+      note: "Command/Champion Sub-Type only. Replaces power weapon. +10pts." },
+  ],
+  imperial_fists: [
+    // Solarite power gauntlet: Command/Champion/Sergeant, IM:-3, AM:A, SM:+4, AP:2, D:2, Critical Hit(6+)
+    { name: "Solarite Power Gauntlet", im: -3, sm: 4, ap: "2", d: 2, rules: { m_criticalHit: true }, traits: "Power",
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion","herald"],
+      note: "Command/Champion/Sergeant. Replaces power fist. +5pts." },
+  ],
+  blood_angels: [
+    // Blade of Perdition: Command/Champion/Sergeant, IM:+1, AM:A, SM:S, AP:3, D:1, Breaching(6+), Aflame(1)
+    { name: "Blade of Perdition", im: 1, sm: 0, ap: "3", d: 1, rules: { m_breaching6: true, m_aflame: true }, traits: "Power, Flame",
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion","herald"],
+      note: "Command/Champion/Sergeant. Replaces power sword/axe/spear/maul. +5pts." },
+    // Axe of Perdition: IM:-1, AM:A, SM:+1, AP:3, D:1, Breaching(5+), Aflame(1)
+    { name: "Axe of Perdition", im: -1, sm: 1, ap: "3", d: 1, rules: { m_breaching5: true, m_aflame: true }, traits: "Power, Flame",
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion","herald"],
+      note: "Command/Champion/Sergeant. Replaces power sword/axe/spear/maul. +5pts." },
+    // Maul of Perdition: IM:-1, AM:A, SM:+2, AP:3, D:1, Breaching(6+), Aflame(1)
+    { name: "Maul of Perdition", im: -1, sm: 2, ap: "3", d: 1, rules: { m_breaching6: true, m_aflame: true }, traits: "Power, Flame",
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion","herald"],
+      note: "Command/Champion/Sergeant. Replaces power sword/axe/spear/maul. +5pts." },
+    // Spear of Perdition: IM:+1, AM:A, SM:S, AP:3, D:1, Precision(6+), Aflame(1)
+    { name: "Spear of Perdition", im: 1, sm: 0, ap: "3", d: 1, rules: { m_precision: true, m_aflame: true }, traits: "Power, Flame",
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion","herald"],
+      note: "Command/Champion/Sergeant. Replaces power sword/axe/spear/maul. +5pts." },
+  ],
+  ultramarines: [
+    // Legatine axe: Command/Champion/Sergeant, IM:+1, AM:A, SM:+1, AP:3, D:1, Breaching(4+)
+    { name: "Legatine Axe", im: 1, sm: 1, ap: "3", d: 1, rules: { m_breaching4: true }, traits: "Power",
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion","herald"],
+      note: "Command/Champion/Sergeant. Replaces power axe. +5pts." },
+  ],
+  raven_guard: [
+    // Raven's Talon: Command, IM:+1, AM:A, SM:S, AP:3, D:1, Impact(IM), Rending(6+), Breaching(6+)
+    { name: "Raven's Talon", im: 1, sm: 0, ap: "3", d: 1, rules: { m_impact: true, m_rending: true, m_breaching6: true }, traits: "Power",
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion"],
+      note: "Command. Replaces lightning claw. Free." },
+    // Pair of Raven's Talons: Command, IM:+1, AM:+2, SM:S, AP:3, D:1, Impact(IM), Rending(6+), Breaching(6+)
+    { name: "Pair of Raven's Talons", im: 1, amBonus: 2, sm: 0, ap: "3", d: 1, rules: { m_impact: true, m_rending: true, m_breaching6: true }, traits: "Power",
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion"],
+      note: "Command (pair of lightning claws). Free." },
+  ],
+  emperors_children: [
+    // Phoenix power spear: Command/Champion/Sergeant, IM:+1, AM:A, SM:+1, AP:3, D:1, Impact(D), Breaching(6+)
+    { name: "Phoenix Power Spear", im: 1, sm: 1, ap: "3", d: 1, rules: { m_impact: true, m_breaching6: true }, traits: "Power",
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion","herald"],
+      note: "Command/Champion/Sergeant. Replaces power weapon. +10pts." },
+  ],
+  iron_warriors: [
+    // Graviton crusher: Command/Champion, IM:-2, AM:A, SM:+4, AP:2, D:2, Armourbane, Shock(Pinned)
+    { name: "Graviton Crusher", im: -2, sm: 4, ap: "2", d: 2, rules: { m_armourbane: true, m_shock: true }, traits: "Graviton",
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion"],
+      note: "Command/Champion. Replaces thunder hammer. Free." },
+  ],
+  night_lords: [
+    // Chainglaive: Command/Champion/Sergeant, IM:+1, AM:A, SM:+1, AP:3, D:1, Breaching(6+), Shred(6+)
+    { name: "Chainglaive", im: 1, sm: 1, ap: "3", d: 1, rules: { m_breaching6: true, m_shred: true }, traits: "Chain",
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion","herald"],
+      note: "Command/Champion/Sergeant. Replaces power weapon. +5pts." },
+    // Headsman's axe: Command only, IM:-2, AM:A, SM:+2, AP:2, D:2, Critical Hit(6+)
+    { name: "Headsman's Axe", im: -2, sm: 2, ap: "2", d: 2, rules: { m_criticalHit: true }, traits: "Chain",
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion"],
+      note: "Command Sub-Type only. Replaces power weapon. +10pts." },
+  ],
+  world_eaters: [
+    // Meteor hammer: IM:+1, AM:-1, SM:+2, AP:3, D:2, Impact(IM)
+    { name: "Meteor Hammer", im: 1, amPenalty: -1, sm: 2, ap: "3", d: 2, rules: { m_impact: true }, traits: "Power",
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion","herald"],
+      note: "Caedere weapon. +5pts (if model has Caedere weapon option)." },
+    // Excoriator chainaxe: IM:-2, AM:A, SM:+2, AP:3, D:1, Breaching(6+), Shred(6+)
+    { name: "Excoriator Chainaxe", im: -2, sm: 2, ap: "3", d: 1, rules: { m_breaching6: true, m_shred: true }, traits: "Chain",
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion","herald"],
+      note: "Caedere weapon." },
+    // Paired falax blades: IM:+1, AM:+2, SM:S, AP:3, D:1, —
+    { name: "Paired Falax Blades", im: 1, amBonus: 2, sm: 0, ap: "3", d: 1, rules: {}, traits: "Power",
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion","herald"],
+      note: "Caedere weapon." },
+    // Barb-hook lash: IM:+1, AM:A, SM:S, AP:3, D:1, Critical Hit(6+), Phage(S)
+    { name: "Barb-Hook Lash", im: 1, sm: 0, ap: "3", d: 1, rules: { m_criticalHit: true }, traits: "Power",
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion","herald"],
+      note: "Caedere weapon. Phage(S) special rule." },
+  ],
+  death_guard: [
+    // Power scythe: Command/Champion/Specialist/Sergeant, IM:-1, AM:A, SM:+1, AP:3, D:1, Reaping Blow(2), Breaching(5+)
+    { name: "Power Scythe", im: -1, sm: 1, ap: "3", d: 1, rules: { m_reapingBlow: true, m_breaching5: true }, traits: "Power",
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion","herald"],
+      note: "Command/Champion/Specialist/Sergeant. Replaces power weapon (+10pts) or power fist (+5pts)." },
+  ],
+  thousand_sons: [
+    // Achea pattern force sword: Command/Champion, IM:+1, AM:A, SM:+1, AP:3, D:1, Breaching(5+)
+    { name: "Achea Pattern Force Sword", im: 1, sm: 1, ap: "3", d: 1, rules: { m_breaching5: true }, traits: "Psychic",
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion"],
+      note: "Command/Champion. Replaces power weapon. +5pts." },
+  ],
+  sons_of_horus: [
+    // Carsoran power axe: Any model, IM:-1, AM:A, SM:+1, AP:3, D:1, Breaching(5+), Shred(6+)
+    { name: "Carsoran Power Axe", im: -1, sm: 1, ap: "3", d: 1, rules: { m_breaching5: true, m_shred: true }, traits: "Power",
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion","veteran","assault","herald"],
+      note: "Any model with SoH Trait. Replaces power axe. +5pts." },
+    // Carsoran power tabar: Any model, IM:-2, AM:A, SM:+2, AP:3, D:1, Breaching(5+), Shred(5+)
+    { name: "Carsoran Power Tabar", im: -2, sm: 2, ap: "3", d: 1, rules: { m_breaching5: true, m_shred: true }, traits: "Power",
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion","veteran","assault","herald"],
+      note: "Any model with SoH Trait. Replaces power axe. +10pts." },
+  ],
+  alpha_legion: [
+    // Power dagger: Command/Champion/Sergeant, IM:+2, AM:A, SM:-1, AP:3, D:1, Breaching(5+)
+    { name: "Power Dagger", im: 2, sm: -1, ap: "3", d: 1, rules: { m_breaching5: true }, traits: "Power",
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion","herald"],
+      note: "Command/Champion/Sergeant. Replaces power weapon. Free." },
+  ],
+};
+
+// Legion-specific RANGED weapons (field format matches WEAPON_PROFILES: shots/s/ap/damage/type/traits/rules)
+const LEGION_RANGED_WEAPONS = {
+  dark_angels: [
+    { name: "Plasma Burner (Sustained)", shots: 1, s: 5, ap: "4", damage: 1, type: "Assault", traits: "Plasma",
+      rules: { template: true, breaching6: true }, isLegion: true,
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion"],
+      note: "DA Trait. Template weapon." },
+    { name: "Plasma Burner (Maximal)", shots: 1, s: 6, ap: "4", damage: 1, type: "Assault", traits: "Plasma",
+      rules: { template: true, breaching5: true, overload: true }, isLegion: true,
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion"],
+      note: "DA Trait. Template weapon." },
+    { name: "Plasma Incinerator (Sustained)", shots: 1, s: 5, ap: "4", damage: 2, type: "Assault", traits: "Plasma",
+      rules: { template: true, breaching6: true }, isLegion: true,
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion"],
+      note: "DA Trait. Template weapon." },
+    { name: "Plasma Incinerator (Maximal)", shots: 1, s: 6, ap: "4", damage: 2, type: "Assault", traits: "Plasma",
+      rules: { template: true, breaching5: true, overload: true }, isLegion: true,
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion"],
+      note: "DA Trait. Template weapon." },
+  ],
+  blood_angels: [
+    { name: "Inferno Pistol", shots: 1, s: 8, ap: "2", damage: 1, type: "Pistol", traits: "Assault, Melta",
+      rules: { melta: true }, isLegion: true,
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion","assault","herald"],
+      note: "BA Trait. Replaces plasma pistol. +5pts." },
+  ],
+  emperors_children: [
+    { name: "Sonic Lance", shots: 1, s: 2, ap: "5", damage: 1, type: "Assault", traits: "Sonic, Assault",
+      rules: { template: true, breaching6: true }, isLegion: true,
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion"],
+      note: "EC Trait Command/Champion. Sonic lance wargear. +10pts." },
+  ],
+  sons_of_horus: [
+    { name: "Banestrike Bolter", shots: 2, s: 4, ap: "4", damage: 1, type: "Rapid Fire", traits: "Bolt",
+      rules: { breaching6: true }, isLegion: true,
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion","veteran","seeker"],
+      note: "SoH Trait. Command/Champion (+5pts), Veterans (+5pts/mdl), Seekers (free)." },
+    { name: "Banestrike Combi-Bolter", shots: 4, s: 4, ap: "4", damage: 1, type: "Rapid Fire", traits: "Bolt",
+      rules: { breaching6: true }, isLegion: true,
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion"],
+      note: "SoH Trait Command/Champion. Replaces combi-bolter. +5pts." },
+  ],
+  alpha_legion: [
+    { name: "Venom Spheres", shots: 1, s: 1, ap: "-", damage: 1, type: "Assault", traits: "Assault",
+      rules: { blast: true, poisoned4: true }, isLegion: true,
+      eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion"],
+      note: "AL Trait Command/Champion. Blast (3in). +5pts." },
+  ],
+};
+
 function resolveChargePhase(params) {
   const {
     chargeDistance, chargingModels,
@@ -4655,30 +5015,44 @@ function UnitSelectorModal({ presets, onSelect, selectedId, onClose, accentColor
 
 function WeaponSelector({ weapons, selectedWeaponName, onSelect }) {
   if (!weapons || weapons.length === 0) return null;
+  const baseWeapons = weapons.filter(w => !w.isLegion);
+  const legionWeapons = weapons.filter(w => w.isLegion);
+  const renderBtn = (w) => {
+    const active = selectedWeaponName === w.name;
+    return (
+      <button key={w.name} onClick={() => onSelect(w)} style={{
+        padding: "7px 14px", borderRadius: 6, fontSize: 12, cursor: "pointer",
+        fontFamily: "'Cinzel', serif", fontWeight: active ? 700 : 400,
+        background: active ? (w.isLegion ? "rgba(120,90,154,0.18)" : "rgba(184,134,11,0.18)") : "#f0ebe2",
+        border: `1.5px solid ${active ? (w.isLegion ? "#7a5a9a" : "#b8860b") : "#d0c4aa"}`,
+        color: active ? (w.isLegion ? "#7a5a9a" : "#b8860b") : "#6a5e4e",
+        transition: "all 0.15s ease", textAlign: "left",
+        display: "flex", flexDirection: "column", gap: 2, minWidth: 120,
+      }}>
+        <div style={{ fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
+          {w.name}
+          {w.isLegion && <span style={{ fontSize: 7, padding: "1px 4px", borderRadius: 3, background: "rgba(120,90,154,0.15)", color: "#7a5a9a", fontFamily: "'Cinzel',serif", letterSpacing: 0.5, fontWeight: 700 }}>LEGION</span>}
+        </div>
+        <div style={{ fontSize: 9, color: active ? (w.isLegion ? "#6a4a8a" : "#8b6508") : "#8a7e6e", letterSpacing: 0.5 }}>
+          {w.type} {w.shots} · S{w.s} AP{w.ap} D{w.damage}
+        </div>
+      </button>
+    );
+  };
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
       <label style={{ fontSize: 11, color: "#6a5e4e", textTransform: "uppercase", letterSpacing: 1, fontFamily: "'Cinzel', serif" }}>Weapon Loadout</label>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-        {weapons.map(w => {
-          const active = selectedWeaponName === w.name;
-          return (
-            <button key={w.name} onClick={() => onSelect(w)} style={{
-              padding: "7px 14px", borderRadius: 6, fontSize: 12, cursor: "pointer",
-              fontFamily: "'Cinzel', serif", fontWeight: active ? 700 : 400,
-              background: active ? "rgba(184,134,11,0.18)" : "#f0ebe2",
-              border: `1.5px solid ${active ? "#b8860b" : "#d0c4aa"}`,
-              color: active ? "#b8860b" : "#6a5e4e",
-              transition: "all 0.15s ease", textAlign: "left",
-              display: "flex", flexDirection: "column", gap: 2, minWidth: 120,
-            }}>
-              <div style={{ fontWeight: 600 }}>{w.name}</div>
-              <div style={{ fontSize: 9, color: active ? "#8b6508" : "#8a7e6e", letterSpacing: 0.5 }}>
-                {w.type} {w.shots} · S{w.s} AP{w.ap} D{w.damage}
-              </div>
-            </button>
-          );
-        })}
+        {baseWeapons.map(renderBtn)}
       </div>
+      {legionWeapons.length > 0 && (
+        <>
+          <div style={{ fontSize: 9, color: "#7a5a9a", fontFamily: "'Cinzel',serif", letterSpacing: 1, marginTop: 4, paddingTop: 4, borderTop: "1px solid rgba(120,90,154,0.2)" }}>⚜ LEGION WEAPONS</div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {legionWeapons.map(renderBtn)}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -4958,7 +5332,7 @@ function ShootingResolver() {
       secondaryWeapons: [],
       equipment: { vexilla: false, noxVox: false, metaBomb: false, bayonet: false, chainBayonet: false },
       wargearOptions: {},
-      isWarlord: false,
+      faction: getArmy().faction,
       isPrime: false,
       primeAdvantage: null, // id of the selected prime advantage
       detachmentId: detachmentId || "primary",
@@ -5650,6 +6024,8 @@ function ShootingResolver() {
   // Attacker
   const [aUnit, setAUnit] = useState(null);
   const [aShowPresets, setAShowPresets] = useState(false);
+  const [aFaction, setAFaction] = useState("legiones_astartes");
+  const [dFaction, setDFaction] = useState("legiones_astartes");
   const [aSelectedMelee, setASelectedMelee] = useState(null);
   const [aModels, setAModels] = useState(10);
   const [aWS, setAWS] = useState(4);
@@ -5878,6 +6254,7 @@ function ShootingResolver() {
   const [deployBrushModels, setDeployBrushModels] = useState(1); // adjustable squad size
   const [deployBrushRangedWeapon, setDeployBrushRangedWeapon] = useState(null);
   const [deployBrushMeleeWeapon, setDeployBrushMeleeWeapon] = useState(null);
+  const [deployFaction, setDeployFaction] = useState("legiones_astartes");
   const [deployBrushSecondaryWeapons, setDeployBrushSecondaryWeapons] = useState([]); // [{weapon, models}]
   const [deployBrushSgtEnabled, setDeployBrushSgtEnabled] = useState(false);
   const [deployBrushSgtWeapon, setDeployBrushSgtWeapon] = useState(null);
@@ -5885,14 +6262,29 @@ function ShootingResolver() {
   const [deployBrushArmyEntryId, setDeployBrushArmyEntryId] = useState(null); // tracks which army builder entry is being placed
   const [deployModalOpen, setDeployModalOpen] = useState(false);
 
-  const deployRangedWeapons = useMemo(() => deployBrushUnit ? (WEAPON_PROFILES[deployBrushUnit.id] || []) : [], [deployBrushUnit]);
-  const deployMeleeWeapons = useMemo(() => deployBrushUnit ? (MELEE_WEAPON_PROFILES[deployBrushUnit.id] || []) : [], [deployBrushUnit]);
+  const deployRangedWeapons = useMemo(() => {
+    const base = deployBrushUnit ? (WEAPON_PROFILES[deployBrushUnit.id] || []) : [];
+    const legion = deployFaction && deployFaction !== "legiones_astartes" ? (LEGION_RANGED_WEAPONS[deployFaction] || []) : [];
+    return [...base, ...legion];
+  }, [deployBrushUnit, deployFaction]);
+  const deployMeleeWeapons = useMemo(() => {
+    const base = deployBrushUnit ? (MELEE_WEAPON_PROFILES[deployBrushUnit.id] || []) : [];
+    const legion = deployFaction && deployFaction !== "legiones_astartes" ? (LEGION_MELEE_WEAPONS[deployFaction] || []) : [];
+    return [...base, ...legion];
+  }, [deployBrushUnit, deployFaction]);
   const deploySgtCategory = useMemo(() => deployBrushUnit ? getSgtCategory(deployBrushUnit.id) : null, [deployBrushUnit]);
   const deploySgtWeapons = useMemo(() => deploySgtCategory ? (SERGEANT_WEAPONS[deploySgtCategory] || []) : [], [deploySgtCategory]);
   const [deployShowGrid, setDeployShowGrid] = useState(true);
   const [deployShowZones, setDeployShowZones] = useState(true);
   const [deployZoneDepth, setDeployZoneDepth] = useState(12); // deployment zone depth in inches
-  const [missionType, setMissionType] = useState("search"); // "search" | "hammer" | "dawn"
+  const [missionType, setMissionType] = useState("search"); // "search" | "hammer" | "dawn" | "zm"
+  const [zmMission, setZmMission] = useState("sector_sweep"); // "sector_sweep" | "terminal_control" | "signal_influx"
+  const [zmSections, setZmSections] = useState(() => {
+    // 16 sections (4×4 grid), each 12"×12" on a 48"×48" ZM board
+    // type: "alpha" | "beta" | "deployA" | "deployB" | "normal"
+    return Array.from({length:16}, (_,i) => ({ id: i, status: "normal", abyssal: false, confinedX: null }));
+  });
+  const [zmRollLog, setZmRollLog] = useState(null); // { type, rolls: [{sec, roll, result}] }
   const boardRef = useRef(null);
 
   // Mission definitions
@@ -5935,6 +6327,101 @@ function ShootingResolver() {
           color: "rgba(42,111,180,0.15)", border: "2px dashed rgba(42,111,180,0.5)",
           label: "P2 ZONE (12\")", labelStyle: { bottom: 4, right: 8, color: "rgba(42,111,180,0.7)" } },
       ],
+    },
+    zm: {
+      id: "zm", name: "Zone Mortalis",
+      desc: "4'×4' enclosed battlefield divided into 16 sections (12\"×12\" each). Select a Zone Mortalis mission below.",
+      renderZones: () => [], // ZM zones rendered separately
+    },
+  };
+
+  // ── Zone Mortalis helpers ──
+  const ZM_BOARD = 48; // ZM board is 48"×48"
+  const ZM_SECTION = 12; // each section is 12"×12"
+  const ZM_COLS = 4;
+  const ZM_ROWS = 4;
+
+  // Section layout per mission
+  // Sections indexed row-major: [row][col] = row*4+col
+  // Primus (Sector Sweep): diagonal deployment zones, alpha/beta sections
+  // Row 0 (top)=deployA, Row 3 (bottom)=deployB, columns 0,3=alpha, 1,2=beta middle rows
+  const ZM_SECTION_TYPES = {
+    sector_sweep: [
+      // row0: all alpha, deployA
+      {type:"alpha",zone:"A"},{type:"alpha",zone:"A"},{type:"alpha",zone:"A"},{type:"alpha",zone:"A"},
+      // row1: alpha, beta, beta, alpha
+      {type:"alpha",zone:null},{type:"beta",zone:null},{type:"beta",zone:null},{type:"alpha",zone:null},
+      // row2: alpha, beta, beta, alpha
+      {type:"alpha",zone:null},{type:"beta",zone:null},{type:"beta",zone:null},{type:"alpha",zone:null},
+      // row3: all alpha, deployB
+      {type:"alpha",zone:"B"},{type:"alpha",zone:"B"},{type:"alpha",zone:"B"},{type:"alpha",zone:"B"},
+    ],
+    terminal_control: [
+      // Config Secundus: top row 12" deep = deployA, bottom row = deployB, outer=alpha, inner=beta
+      {type:"alpha",zone:"A"},{type:"alpha",zone:"A"},{type:"alpha",zone:"A"},{type:"alpha",zone:"A"},
+      {type:"alpha",zone:null},{type:"beta",zone:null},{type:"beta",zone:null},{type:"alpha",zone:null},
+      {type:"alpha",zone:null},{type:"beta",zone:null},{type:"beta",zone:null},{type:"alpha",zone:null},
+      {type:"alpha",zone:"B"},{type:"alpha",zone:"B"},{type:"alpha",zone:"B"},{type:"alpha",zone:"B"},
+    ],
+    signal_influx: [
+      // Config Tertius: corner deployment zones 18" deep diagonal corners
+      {type:"normal",zone:"A"},{type:"normal",zone:null},{type:"normal",zone:null},{type:"normal",zone:"A"},
+      {type:"normal",zone:null},{type:"normal",zone:null},{type:"normal",zone:null},{type:"normal",zone:null},
+      {type:"normal",zone:null},{type:"normal",zone:null},{type:"normal",zone:null},{type:"normal",zone:null},
+      {type:"normal",zone:"B"},{type:"normal",zone:null},{type:"normal",zone:null},{type:"normal",zone:"B"},
+    ],
+  };
+
+  // Fixed objective positions (in ZM 48"×48" coordinate space, measured in inches from top-left)
+  // objectives are at section centres or section intersections
+  const ZM_OBJECTIVES = {
+    sector_sweep: [
+      // 4 objectives at section centres of rows 1-2, col 0 and col 3
+      { x: 6,  y: 18, value: 2, label: "Obj A" },
+      { x: 42, y: 18, value: 2, label: "Obj B" },
+      { x: 18, y: 42, value: 2, label: "Obj C" },
+      { x: 42, y: 42, value: 2, label: "Obj D" },
+    ],
+    terminal_control: [
+      // 5 objectives at section intersections (grid intersections)
+      { x: 24, y: 12, value: 0, label: "Term 1", interfaced: false },
+      { x: 12, y: 24, value: 0, label: "Term 2", interfaced: false },
+      { x: 24, y: 24, value: 0, label: "Term 3", interfaced: false },
+      { x: 36, y: 24, value: 0, label: "Term 4", interfaced: false },
+      { x: 24, y: 36, value: 0, label: "Term 5", interfaced: false },
+    ],
+    signal_influx: [
+      // 3 objectives placed randomly each turn; shown as grid intersections (3×3 inner grid)
+      { x: 12, y: 18, value: 2, label: "Beacon 1" },
+      { x: 24, y: 30, value: 2, label: "Beacon 2" },
+      { x: 36, y: 18, value: 2, label: "Beacon 3" },
+    ],
+  };
+
+  const ZM_MISSIONS_INFO = {
+    sector_sweep: {
+      name: "Sector Sweep",
+      config: "Configuration Primus",
+      desc: "Capture as many Objective Markers as possible. 4 fixed objectives worth 2VP each. Diagonal 24\" deployment zones.",
+      special: ["Failing Power Conduits (roll per section each turn; on 1 = Abyssal Darkness)", "Impenetrable Area (no Deep Strike)", "Reserves", "Seize the Initiative"],
+      secondary: ["Slay the Warlord (2VP)", "First Strike (2VP)", "Last Man Standing (1VP)"],
+      turns: 5,
+    },
+    terminal_control: {
+      name: "Terminal Control",
+      config: "Configuration Secundus",
+      desc: "Interface cogitator terminals to retrieve data. 5 objectives with variable values (0–3VP). 12\" opposite-edge deployment.",
+      special: ["Impenetrable Area (no Deep Strike)", "Reserves", "Seize the Initiative", "Interface mechanic: Int check within 3\", pass by X = VP value (max 3)"],
+      secondary: ["Slay the Warlord (2VP)", "First Strike (2VP)", "Last Man Standing (1VP)"],
+      turns: 5,
+    },
+    signal_influx: {
+      name: "Signal Influx",
+      config: "Configuration Tertius",
+      desc: "Investigate distress beacons that appear at random positions each turn. 3 objectives (2VP each), positions reset each Battle Turn.",
+      special: ["Crumbling Superstructure (roll per empty section: 2+ = Confined Space X, 1 = Abyssal Darkness)", "Impenetrable Area (no Deep Strike)", "Reserves", "Seize the Initiative"],
+      secondary: ["Slay the Warlord (2VP)", "First Strike (2VP)", "Last Man Standing (1VP)"],
+      turns: 5,
     },
   };
 
@@ -6353,6 +6840,121 @@ function ShootingResolver() {
               );
             })()}
 
+            {/* ── Zone Mortalis 4×4 Section Grid ── */}
+            {missionType === "zm" && showZones && (() => {
+              const zm = ZM_SECTION_TYPES[zmMission] || ZM_SECTION_TYPES.sector_sweep;
+              const zmObjs = ZM_OBJECTIVES[zmMission] || [];
+              // ZM board is 48"×48", offset within the 72"×48" board (centre it horizontally)
+              const zmOffX = (BOARD_W - ZM_BOARD) / 2; // 12" offset on each side
+              const zmOffY = 0;
+              const S = ZM_SECTION * deployScale;
+              const OX = zmOffX * deployScale;
+              const OY = zmOffY * deployScale;
+
+              const sectionColors = {
+                alpha: { bg: "rgba(120,80,200,0.12)", border: "rgba(150,100,220,0.5)", label: "α CS(8)" },
+                beta:  { bg: "rgba(60,140,200,0.12)", border: "rgba(80,160,220,0.5)",  label: "β CS(6)" },
+                normal:{ bg: "rgba(80,180,80,0.1)",   border: "rgba(100,200,100,0.4)", label: "" },
+              };
+              const deployZoneColors = {
+                A: "rgba(155,45,45,0.2)",
+                B: "rgba(42,111,180,0.2)",
+              };
+
+              return (
+                <svg style={{ position: "absolute", inset: 0, width: BOARD_W * deployScale, height: BOARD_H * deployScale, pointerEvents: "none" }}>
+                  {/* Outer border */}
+                  <rect x={OX} y={OY} width={ZM_BOARD*deployScale} height={ZM_BOARD*deployScale}
+                    fill="none" stroke="rgba(180,140,255,0.7)" strokeWidth={2} />
+                  {/* Board label */}
+                  <text x={OX + ZM_BOARD*deployScale/2} y={OY - 6} textAnchor="middle"
+                    fontSize={9} fill="rgba(180,140,255,0.8)" fontFamily="'Cinzel', serif" letterSpacing={2}>
+                    ZONE MORTALIS — {(ZM_MISSIONS_INFO[zmMission]||{}).config||""}
+                  </text>
+
+                  {/* Section tiles */}
+                  {zm.map((sec, idx) => {
+                    const col = idx % ZM_COLS;
+                    const row = Math.floor(idx / ZM_COLS);
+                    const sx = OX + col * S;
+                    const sy = OY + row * S;
+                    const colors = sectionColors[sec.type] || sectionColors.normal;
+                    const deployFill = sec.zone ? deployZoneColors[sec.zone] : null;
+                    const secStatus = zmSections[idx];
+                    const isAbyssal = secStatus && secStatus.abyssal;
+                    const dynConf = secStatus && secStatus.confinedX;
+                    return (
+                      <g key={idx}>
+                        {deployFill && <rect x={sx} y={sy} width={S} height={S} fill={deployFill} />}
+                        <rect x={sx} y={sy} width={S} height={S}
+                          fill={isAbyssal ? "rgba(20,10,40,0.55)" : colors.bg}
+                          stroke={colors.border} strokeWidth={1.2} />
+                        {/* Section type label */}
+                        {sec.type !== "normal" && (
+                          <text x={sx+S/2} y={sy+S/2-4} textAnchor="middle"
+                            fontSize={10} fill={isAbyssal?"rgba(180,80,255,0.9)":"rgba(200,180,255,0.7)"} fontFamily="'Cinzel', serif">
+                            {isAbyssal ? "DARK" : colors.label}
+                          </text>
+                        )}
+                        {/* Confined X overlay */}
+                        {dynConf && (
+                          <text x={sx+S/2} y={sy+S/2+8} textAnchor="middle"
+                            fontSize={8} fill="rgba(255,200,80,0.8)" fontFamily="'Cinzel', serif">
+                            CS({dynConf})
+                          </text>
+                        )}
+                        {/* Deploy zone label */}
+                        {sec.zone && (
+                          <text x={sx+4} y={sy+10} fontSize={8}
+                            fill={sec.zone==="A"?"rgba(255,140,140,0.9)":"rgba(120,180,255,0.9)"} fontFamily="'Cinzel', serif">
+                            ZONE {sec.zone}
+                          </text>
+                        )}
+                        {/* Section number */}
+                        <text x={sx+S-4} y={sy+S-3} textAnchor="end"
+                          fontSize={7} fill="rgba(255,255,255,0.2)" fontFamily="'Cinzel', serif">
+                          {idx+1}
+                        </text>
+                      </g>
+                    );
+                  })}
+
+                  {/* Fixed ZM objective markers */}
+                  {zmObjs.map((obj, i) => {
+                    const ox = OX + obj.x * deployScale;
+                    const oy = OY + obj.y * deployScale;
+                    return (
+                      <g key={i}>
+                        <circle cx={ox} cy={oy} r={7} fill="rgba(255,215,0,0.25)" stroke="rgba(255,215,0,0.8)" strokeWidth={1.5} />
+                        <text x={ox} y={oy+1} textAnchor="middle" dominantBaseline="middle"
+                          fontSize={8} fill="rgba(255,215,0,1)" fontFamily="'Cinzel', serif" fontWeight="bold">⊕</text>
+                        <text x={ox} y={oy+13} textAnchor="middle"
+                          fontSize={7} fill="rgba(255,215,0,0.85)" fontFamily="'Cinzel', serif">
+                          {obj.label}{obj.value > 0 ? " "+obj.value+"VP" : " ?VP"}
+                        </text>
+                      </g>
+                    );
+                  })}
+
+                  {/* ZM section grid lines */}
+                  {Array.from({length:ZM_COLS+1},(_,i)=>(
+                    <line key={"v"+i} x1={OX+i*S} y1={OY} x2={OX+i*S} y2={OY+ZM_BOARD*deployScale}
+                      stroke="rgba(180,140,255,0.3)" strokeWidth={0.5} />
+                  ))}
+                  {Array.from({length:ZM_ROWS+1},(_,i)=>(
+                    <line key={"h"+i} x1={OX} y1={OY+i*S} x2={OX+ZM_BOARD*deployScale} y2={OY+i*S}
+                      stroke="rgba(180,140,255,0.3)" strokeWidth={0.5} />
+                  ))}
+
+                  {/* Ruler labels on ZM board */}
+                  {Array.from({length:ZM_COLS+1},(_,i)=>(
+                    <text key={"rl"+i} x={OX+i*S} y={OY+ZM_BOARD*deployScale+10} textAnchor="middle"
+                      fontSize={7} fill="rgba(180,140,255,0.5)" fontFamily="'Cinzel', serif">{i*12}"</text>
+                  ))}
+                </svg>
+              );
+            })()}
+
             {/* Move range indicator */}
             {showMoveRange && selectedMoveUnit && (
               <div style={{
@@ -6566,11 +7168,27 @@ function ShootingResolver() {
   };
 
   // Melee weapons for assault phase
-  const aMeleeWeapons = useMemo(() => aUnit ? (MELEE_WEAPON_PROFILES[aUnit.id] || []) : [], [aUnit]);
-  const dMeleeWeapons = useMemo(() => dUnit ? (MELEE_WEAPON_PROFILES[dUnit.id] || []) : [], [dUnit]);
+  const aMeleeWeapons = useMemo(() => {
+    const base = aUnit ? (MELEE_WEAPON_PROFILES[aUnit.id] || []) : [];
+    const legion = aFaction && aFaction !== "legiones_astartes" ? (LEGION_MELEE_WEAPONS[aFaction] || []) : [];
+    return [...base, ...legion.map(w => ({ ...w, isLegion: true }))];
+  }, [aUnit, aFaction]);
+  const dMeleeWeapons = useMemo(() => {
+    const base = dUnit ? (MELEE_WEAPON_PROFILES[dUnit.id] || []) : [];
+    const legion = dFaction && dFaction !== "legiones_astartes" ? (LEGION_MELEE_WEAPONS[dFaction] || []) : [];
+    return [...base, ...legion.map(w => ({ ...w, isLegion: true }))];
+  }, [dUnit, dFaction]);
   // Ranged weapons for assault units (for volley fire / overwatch)
-  const aRangedWeapons = useMemo(() => aUnit ? (WEAPON_PROFILES[aUnit.id] || []) : [], [aUnit]);
-  const dRangedWeapons = useMemo(() => dUnit ? (WEAPON_PROFILES[dUnit.id] || []) : [], [dUnit]);
+  const aRangedWeapons = useMemo(() => {
+    const base = aUnit ? (WEAPON_PROFILES[aUnit.id] || []) : [];
+    const legion = aFaction && aFaction !== "legiones_astartes" ? (LEGION_RANGED_WEAPONS[aFaction] || []) : [];
+    return [...base, ...legion];
+  }, [aUnit, aFaction]);
+  const dRangedWeapons = useMemo(() => {
+    const base = dUnit ? (WEAPON_PROFILES[dUnit.id] || []) : [];
+    const legion = dFaction && dFaction !== "legiones_astartes" ? (LEGION_RANGED_WEAPONS[dFaction] || []) : [];
+    return [...base, ...legion];
+  }, [dUnit, dFaction]);
 
   const meleeUnitRoster = useMemo(() => {
     return UNIT_PRESETS.map(cat => ({
@@ -6805,9 +7423,8 @@ function ShootingResolver() {
 
   const addSecondaryWeapon = () => {
     if (!selectedUnit) return;
-    const weapons = WEAPON_PROFILES[selectedUnit.id] || [];
+    const weapons = availableWeapons;
     if (weapons.length === 0) return;
-    // Default to first weapon that isn't the primary
     const alt = weapons.find(w => w.name !== selectedWeapon?.name) || weapons[0];
     setSecondaryWeapons(prev => [...prev, { weapon: alt, models: alt.defaultModels || 1 }]);
   };
@@ -6843,6 +7460,8 @@ function ShootingResolver() {
 
   // Presets — unit and weapon are now separate
   const [showAttackerPresets, setShowAttackerPresets] = useState(false);
+  const [shootFaction, setShootFaction] = useState("legiones_astartes");
+  const [targetFaction, setTargetFaction] = useState("legiones_astartes");
   const [showTargetPresets, setShowTargetPresets] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState(null); // { id, name, models, bs }
   const [selectedWeapon, setSelectedWeapon] = useState(null); // weapon profile object
@@ -6852,11 +7471,12 @@ function ShootingResolver() {
   const [targetSgtWeapon, setTargetSgtWeapon] = useState(null);
   const [targetBS, setTargetBS] = useState(4);
 
-  // Derived: available weapons for selected unit
+  // Derived: available weapons for selected unit (base + all legion ranged for faction)
   const availableWeapons = useMemo(() => {
-    if (!selectedUnit) return [];
-    return WEAPON_PROFILES[selectedUnit.id] || [];
-  }, [selectedUnit]);
+    const base = selectedUnit ? (WEAPON_PROFILES[selectedUnit.id] || []) : [];
+    const legion = shootFaction && shootFaction !== "legiones_astartes" ? (LEGION_RANGED_WEAPONS[shootFaction] || []) : [];
+    return [...base, ...legion];
+  }, [selectedUnit, shootFaction]);
 
   // Derived: available sergeant weapons
   const availableSgtWeapons = useMemo(() => {
@@ -6865,15 +7485,18 @@ function ShootingResolver() {
     return cat ? (SERGEANT_WEAPONS[cat] || []) : [];
   }, [selectedUnit]);
 
-  // Derived: target unit's available ranged weapons
+  // Derived: target unit's available ranged weapons (base + all legion ranged for faction)
   const targetAvailableWeapons = useMemo(() => {
-    if (!targetPresetName) return [];
-    for (const cat of UNIT_PRESETS) {
-      const found = cat.units.find(u => u.name === targetPresetName);
-      if (found && found.id) return WEAPON_PROFILES[found.id] || [];
+    let base = [];
+    if (targetPresetName) {
+      for (const cat of UNIT_PRESETS) {
+        const found = cat.units.find(u => u.name === targetPresetName);
+        if (found && found.id) { base = WEAPON_PROFILES[found.id] || []; break; }
+      }
     }
-    return [];
-  }, [targetPresetName]);
+    const legion = targetFaction && targetFaction !== "legiones_astartes" ? (LEGION_RANGED_WEAPONS[targetFaction] || []) : [];
+    return [...base, ...legion];
+  }, [targetPresetName, targetFaction]);
 
   // Derived: target unit object (for hasSgt, id, bs)
   const targetUnit = useMemo(() => {
@@ -7712,7 +8335,7 @@ function ShootingResolver() {
                 COMBAT PHASE RESOLVER
               </h1>
               <div style={{ fontSize: 12, color: "#8a7e6e", fontFamily: "'Cinzel', serif", letterSpacing: 3 }}>
-                THE HORUS HERESY · AGE OF DARKNESS · 3RD EDITION · v1.45
+                THE HORUS HERESY · AGE OF DARKNESS · 3RD EDITION · v1.53
               </div>
             </div>
           </div>
@@ -7890,7 +8513,7 @@ function ShootingResolver() {
                             fontFamily: "'Cinzel', serif", fontWeight: 600,
                           }}>+AUX</button>
                         )}
-                        <button onClick={() => { setAbEditIdx(getArmy().entries.indexOf(entry)); setAbEditEntry({ ...entry }); setAbAddModalOpen(true); }}
+                        <button onClick={() => { setAbEditIdx(getArmy().entries.indexOf(entry)); setAbEditEntry({ ...entry, faction: getArmy().faction }); setAbAddModalOpen(true); }}
                           style={{ padding: "2px 6px", borderRadius: 3, fontSize: 9, cursor: "pointer", background: "#f0ebe2", border: "1px solid #d0c4aa", color: "#6a5e4e" }}>✎</button>
                         <button onClick={() => setArmy(prev => ({ ...prev, entries: prev.entries.filter(e => e.id !== entry.id) }))}
                           style={{ padding: "2px 6px", borderRadius: 3, fontSize: 9, cursor: "pointer", background: "rgba(155,45,45,0.08)", border: "1px solid rgba(155,45,45,0.3)", color: "#9b2d2d" }}>✕</button>
@@ -7936,7 +8559,7 @@ function ShootingResolver() {
                             <div style={{ fontSize: 8, color: "#8a7e6e" }}>{be.models}mdl{be.weaponName ? ` · ${be.weaponName}` : ""}</div>
                           </div>
                           <span style={{ fontFamily: "'Cinzel', serif", fontWeight: 700, fontSize: 10, color: "#4a6741" }}>{pts}pts</span>
-                          <button onClick={() => { setAbEditIdx(getArmy().entries.indexOf(be)); setAbEditEntry({ ...be }); setAbAddModalOpen(true); }}
+                          <button onClick={() => { setAbEditIdx(getArmy().entries.indexOf(be)); setAbEditEntry({ ...be, faction: getArmy().faction }); setAbAddModalOpen(true); }}
                             style={{ padding: "2px 5px", borderRadius: 3, fontSize: 8, cursor: "pointer", background: "#f0ebe2", border: "1px solid #d0c4aa", color: "#6a5e4e" }}>✎</button>
                           <button onClick={() => setArmy(prev => ({ ...prev, entries: prev.entries.filter(e => e.id !== be.id) }))}
                             style={{ padding: "2px 5px", borderRadius: 3, fontSize: 8, cursor: "pointer", background: "rgba(155,45,45,0.08)", border: "1px solid rgba(155,45,45,0.3)", color: "#9b2d2d" }}>✕</button>
@@ -8019,7 +8642,7 @@ function ShootingResolver() {
                               })()}
                             </div>
                             <span style={{ fontFamily: "'Cinzel', serif", fontWeight: 700, fontSize: 10, color: "#4a6741" }}>{pts}pts</span>
-                            <button onClick={() => { setAbEditIdx(getArmy().entries.indexOf(entry)); setAbEditEntry({ ...entry }); setAbAddModalOpen(true); }}
+                            <button onClick={() => { setAbEditIdx(getArmy().entries.indexOf(entry)); setAbEditEntry({ ...entry, faction: getArmy().faction }); setAbAddModalOpen(true); }}
                               style={{ padding: "2px 5px", borderRadius: 3, fontSize: 8, cursor: "pointer", background: "#f0ebe2", border: "1px solid #d0c4aa", color: "#6a5e4e" }}>✎</button>
                             <button onClick={() => setArmy(prev => ({ ...prev, entries: prev.entries.filter(e => e.id !== entry.id) }))}
                               style={{ padding: "2px 5px", borderRadius: 3, fontSize: 8, cursor: "pointer", background: "rgba(155,45,45,0.08)", border: "1px solid rgba(155,45,45,0.3)", color: "#9b2d2d" }}>✕</button>
@@ -8387,7 +9010,8 @@ function ShootingResolver() {
                     )}
                     {/* Unit Wargear Options (from Liber Astartes PDF) */}
                     {(() => {
-                      const opts = UNIT_WARGEAR_OPTIONS[abEditEntry.unitId] || [];
+                      const armyFaction = getArmy().faction;
+                      const opts = getWargearOptions(abEditEntry.unitId, armyFaction);
                       if (opts.length === 0) return null;
                       const wo = abEditEntry.wargearOptions || {};
                       return (
@@ -8411,14 +9035,24 @@ function ShootingResolver() {
                               };
                               const costStr = opt.cost === 0 ? "free" : opt.perModel ? `+${opt.cost}pts/mdl` : `+${opt.cost}pts`;
                               const totalCost = opt.perModel ? opt.cost * (abEditEntry.models || 1) : opt.cost;
+                              const isFirstLegion = opt.legion && (idx === 0 || !opts[idx-1]?.legion);
                               return (
-                                <label key={idx} style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px 6px", borderRadius: 3, fontSize: 9, cursor: "pointer",
-                                  background: checked ? "rgba(139,101,8,0.08)" : "#f8f4ec", border: `1px solid ${checked ? "#8b6508" : "#e0d8c8"}`, color: checked ? "#8b6508" : "#6a5e4e",
-                                }}>
-                                  <input type="checkbox" checked={checked} onChange={handleToggle} style={{ marginRight: 1 }} />
-                                  <span style={{ flex: 1 }}>{opt.label}</span>
-                                  <span style={{ fontSize: 8, opacity: 0.7, whiteSpace: "nowrap" }}>{costStr}{opt.perModel && checked ? ` = ${totalCost}pts` : ""}</span>
-                                </label>
+                                <React.Fragment key={idx}>
+                                  {isFirstLegion && (
+                                    <div style={{ fontSize: 8, fontFamily: "'Cinzel', serif", color: "#7a5a9a", letterSpacing: 1, marginTop: 4, marginBottom: 2, borderTop: "1px solid rgba(120,90,154,0.25)", paddingTop: 4 }}>
+                                      ⚜ LEGION WARGEAR
+                                    </div>
+                                  )}
+                                  <label style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px 6px", borderRadius: 3, fontSize: 9, cursor: "pointer",
+                                    background: checked ? (opt.legion ? "rgba(120,90,154,0.10)" : "rgba(139,101,8,0.08)") : "#f8f4ec",
+                                    border: `1px solid ${checked ? (opt.legion ? "#7a5a9a" : "#8b6508") : "#e0d8c8"}`,
+                                    color: checked ? (opt.legion ? "#7a5a9a" : "#8b6508") : "#6a5e4e",
+                                  }}>
+                                    <input type="checkbox" checked={checked} onChange={handleToggle} style={{ marginRight: 1 }} />
+                                    <span style={{ flex: 1 }}>{opt.label}</span>
+                                    <span style={{ fontSize: 8, opacity: 0.7, whiteSpace: "nowrap" }}>{costStr}{opt.perModel && checked ? ` = ${totalCost}pts` : ""}</span>
+                                  </label>
+                                </React.Fragment>
                               );
                             })}
                           </div>
@@ -8611,6 +9245,189 @@ function ShootingResolver() {
                 {MISSIONS[missionType]?.desc}
               </div>
             </div>
+
+            {/* ── Zone Mortalis Mission Selector (shown only when ZM mode active) ── */}
+            {missionType === "zm" && (() => {
+              const zmInfo = ZM_MISSIONS_INFO[zmMission];
+              return (
+                <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid #e8e0d0" }}>
+                  <div style={{ fontSize: 9, fontFamily: "'Cinzel', serif", color: "#7a5a9a", letterSpacing: 2, marginBottom: 6 }}>⬡ ZONE MORTALIS MISSION</div>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+                    {Object.entries(ZM_MISSIONS_INFO).map(([k, m]) => {
+                      const active = zmMission === k;
+                      return (
+                        <button key={k} onClick={() => setZmMission(k)} style={{
+                          padding: "6px 14px", borderRadius: 6, fontSize: 10, cursor: "pointer",
+                          fontFamily: "'Cinzel', serif", fontWeight: active ? 700 : 400, letterSpacing: 1,
+                          background: active ? "rgba(120,80,200,0.2)" : "#f8f4ec",
+                          border: "1.5px solid " + (active ? "#7a5a9a" : "#d0c4aa"),
+                          color: active ? "#5b3a8a" : "#6a5e4e",
+                        }}>{m.name}</button>
+                      );
+                    })}
+                  </div>
+                  {zmInfo && (
+                    <div style={{ background: "rgba(120,80,200,0.06)", border: "1px solid rgba(120,80,200,0.2)", borderRadius: 6, padding: "10px 12px" }}>
+                      <div style={{ fontFamily: "'Cinzel', serif", fontWeight: 700, fontSize: 11, color: "#5b3a8a", marginBottom: 3 }}>
+                        {zmInfo.name} — <span style={{ fontWeight: 400, fontSize: 10, color: "#8a7060" }}>{zmInfo.config}</span>
+                      </div>
+                      <div style={{ fontSize: 11, fontFamily: "'EB Garamond', serif", fontStyle: "italic", color: "#5a4e3e", marginBottom: 6 }}>{zmInfo.desc}</div>
+                      <div style={{ fontSize: 9, fontFamily: "'Cinzel', serif", color: "#8a7e6e", letterSpacing: 1, marginBottom: 3 }}>MISSION SPECIAL RULES</div>
+                      {zmInfo.special.map((r, i) => (
+                        <div key={i} style={{ fontSize: 10, fontFamily: "'EB Garamond', serif", color: "#5a4e3e", marginBottom: 2 }}>• {r}</div>
+                      ))}
+                      <div style={{ fontSize: 9, fontFamily: "'Cinzel', serif", color: "#8a7e6e", letterSpacing: 1, marginTop: 6, marginBottom: 3 }}>SECONDARY OBJECTIVES</div>
+                      {zmInfo.secondary.map((r, i) => (
+                        <div key={i} style={{ fontSize: 10, fontFamily: "'EB Garamond', serif", color: "#5a4e3e", marginBottom: 2 }}>• {r}</div>
+                      ))}
+                      <div style={{ marginTop: 8, paddingTop: 6, borderTop: "1px solid rgba(120,80,200,0.2)", fontSize: 9, fontFamily: "'Cinzel', serif", color: "#7a5a9a", letterSpacing: 1 }}>
+                        SECTION RULES — <span style={{ color: "#6a5e4e", fontWeight: 400 }}>α = Confined Space (8) · β = Confined Space (6)</span>
+                      </div>
+                      <div style={{ marginTop: 6, fontSize: 9, fontFamily: "'Cinzel', serif", color: "#7a5a9a", letterSpacing: 1, marginBottom: 4 }}>SECTION STATUS CONTROLS</div>
+                      <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                        {zmSections.map((sec, idx) => {
+                          const col = idx % 4;
+                          const row = Math.floor(idx / 4);
+                          const secTypes = ZM_SECTION_TYPES[zmMission] || [];
+                          const baseType = secTypes[idx]?.type || "normal";
+                          return (
+                            <div key={idx} style={{
+                              display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+                              padding: "4px 6px", borderRadius: 4, minWidth: 44,
+                              background: sec.abyssal ? "rgba(40,10,80,0.15)" : (baseType === "alpha" ? "rgba(120,80,200,0.08)" : baseType === "beta" ? "rgba(60,140,200,0.08)" : "rgba(80,180,80,0.06)"),
+                              border: "1px solid " + (sec.abyssal ? "rgba(150,80,220,0.4)" : "rgba(180,160,220,0.3)"),
+                            }}>
+                              <span style={{ fontSize: 8, fontFamily: "'Cinzel', serif", color: "#8a7e6e" }}>
+                                S{idx+1} R{row+1}C{col+1}
+                              </span>
+                              <span style={{ fontSize: 9, color: baseType==="alpha"?"#7a5a9a":baseType==="beta"?"#4a7aaa":"#5a8a5a", fontFamily:"'Cinzel',serif" }}>
+                                {baseType==="alpha"?"α":baseType==="beta"?"β":"○"}
+                              </span>
+                              <button onClick={() => setZmSections(prev => prev.map((s,i)=>i===idx?{...s,abyssal:!s.abyssal}:s))} style={{
+                                padding:"1px 4px", fontSize:7, borderRadius:2, cursor:"pointer",
+                                background:sec.abyssal?"rgba(150,80,220,0.2)":"rgba(200,200,200,0.2)",
+                                border:"1px solid "+(sec.abyssal?"#9a50cc":"#c0b4a0"),
+                                color:sec.abyssal?"#9a50cc":"#8a7e6e", fontFamily:"'Cinzel',serif",
+                              }}>{sec.abyssal?"DARK":"lit"}</button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+                        <button onClick={() => setZmSections(prev => prev.map(s=>({...s,abyssal:false,confinedX:null})))} style={{
+                          padding:"4px 10px", fontSize:9, borderRadius:4, cursor:"pointer",
+                          fontFamily:"'Cinzel',serif", background:"rgba(200,50,50,0.08)", border:"1px solid #c74040", color:"#c74040",
+                        }}>RESET ALL SECTIONS</button>
+                        {zmMission === "sector_sweep" && (
+                          <button onClick={() => {
+                            const rolls = Array.from({length:16}, (_,i) => {
+                              const roll = Math.ceil(Math.random()*6);
+                              return { sec: i, roll, result: roll === 1 ? "DARK" : "lit" };
+                            });
+                            setZmSections(prev => prev.map((s,i) => ({...s, abyssal: rolls[i].roll === 1})));
+                            setZmRollLog({ type: "conduits", rolls });
+                          }} style={{
+                            padding:"4px 10px", fontSize:9, borderRadius:4, cursor:"pointer",
+                            fontFamily:"'Cinzel',serif", background:"rgba(120,80,200,0.1)", border:"1px solid #7a5a9a", color:"#7a5a9a",
+                          }}>🎲 ROLL FAILING CONDUITS</button>
+                        )}
+                        {zmMission === "signal_influx" && (
+                          <button onClick={() => {
+                            const positions = [];
+                            while(positions.length < 3) {
+                              const h = Math.ceil(Math.random()*3);
+                              const v = Math.ceil(Math.random()*3);
+                              const key = h+","+v;
+                              if(!positions.find(p=>p.key===key)) positions.push({key,h,v});
+                            }
+                            const beaconRolls = positions.map((p,i) => ({ sec: i, roll: p.h+"/"+ p.v, result: "H"+p.h+" V"+p.v+" → ("+p.h*12+"\", "+p.v*12+"\")" }));
+                            setZmRollLog({ type: "beacons", rolls: beaconRolls });
+                          }} style={{
+                            padding:"4px 10px", fontSize:9, borderRadius:4, cursor:"pointer",
+                            fontFamily:"'Cinzel',serif", background:"rgba(60,140,200,0.1)", border:"1px solid #4a7aaa", color:"#4a7aaa",
+                          }}>🎲 ROLL BEACON POSITIONS</button>
+                        )}
+                        {zmMission === "signal_influx" && (
+                          <button onClick={() => {
+                            const rolls = Array.from({length:16}, (_,i) => {
+                              const roll = Math.ceil(Math.random()*6);
+                              let result;
+                              if (roll === 1) result = "DARK";
+                              else result = "CS("+roll+")";
+                              return { sec: i, roll, result };
+                            });
+                            setZmSections(prev => prev.map((s,i) => ({
+                              ...s,
+                              abyssal: rolls[i].roll === 1,
+                              confinedX: rolls[i].roll >= 2 ? rolls[i].roll : null,
+                            })));
+                            setZmRollLog({ type: "crumbling", rolls });
+                          }} style={{
+                            padding:"4px 10px", fontSize:9, borderRadius:4, cursor:"pointer",
+                            fontFamily:"'Cinzel',serif", background:"rgba(100,160,80,0.1)", border:"1px solid #5a8a40", color:"#5a8a40",
+                          }}>🎲 ROLL CRUMBLING SUPERSTRUCTURE</button>
+                        )}
+                      </div>
+
+                      {/* ── Dice Roll Results Panel ── */}
+                      {zmRollLog && (() => {
+                        const isConduits = zmRollLog.type === "conduits";
+                        const isCrumbling = zmRollLog.type === "crumbling";
+                        const isBeacons = zmRollLog.type === "beacons";
+                        const titles = { conduits: "⚡ FAILING POWER CONDUITS — ROLL RESULTS", crumbling: "🏚 CRUMBLING SUPERSTRUCTURE — ROLL RESULTS", beacons: "📡 BEACON POSITIONS — D3 ROLLS" };
+                        return (
+                          <div style={{ marginTop:10, padding:"8px 10px", background:"rgba(10,5,25,0.7)", border:"1px solid rgba(150,120,220,0.4)", borderRadius:6 }}>
+                            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:6 }}>
+                              <span style={{ fontSize:9, fontFamily:"'Cinzel',serif", color:"rgba(180,150,255,0.9)", letterSpacing:2 }}>{titles[zmRollLog.type]}</span>
+                              <button onClick={() => setZmRollLog(null)} style={{ background:"none", border:"none", color:"rgba(180,150,255,0.5)", cursor:"pointer", fontSize:10, padding:0 }}>✕</button>
+                            </div>
+                            {(isConduits || isCrumbling) && (
+                              <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:3 }}>
+                                {zmRollLog.rolls.map((r,i) => {
+                                  const col = i % 4;
+                                  const row = Math.floor(i / 4);
+                                  const isDark = r.result === "DARK";
+                                  const isCS = r.result && r.result.startsWith("CS");
+                                  return (
+                                    <div key={i} style={{
+                                      padding:"4px 5px", borderRadius:4, textAlign:"center",
+                                      background: isDark ? "rgba(100,20,180,0.35)" : isCS ? "rgba(80,180,80,0.15)" : "rgba(60,60,60,0.3)",
+                                      border:"1px solid "+(isDark?"rgba(150,80,220,0.6)":isCS?"rgba(80,180,80,0.4)":"rgba(100,100,100,0.3)"),
+                                    }}>
+                                      <div style={{ fontSize:7, fontFamily:"'Cinzel',serif", color:"rgba(200,200,200,0.5)", marginBottom:1 }}>S{i+1} R{row+1}C{col+1}</div>
+                                      <div style={{ fontSize:14, fontFamily:"'Cinzel',serif", fontWeight:700, lineHeight:1, color: isDark?"rgba(200,100,255,1)":isCS?"rgba(120,220,120,1)":"rgba(160,200,160,0.8)" }}>{r.roll}</div>
+                                      <div style={{ fontSize:8, fontFamily:"'Cinzel',serif", marginTop:1, color: isDark?"rgba(200,100,255,0.9)":isCS?"rgba(120,220,120,0.8)":"rgba(160,200,160,0.6)" }}>{r.result}</div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                            {isBeacons && (
+                              <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+                                {zmRollLog.rolls.map((r,i) => (
+                                  <div key={i} style={{ display:"flex", gap:8, alignItems:"center", padding:"4px 8px", background:"rgba(60,140,200,0.15)", borderRadius:4, border:"1px solid rgba(80,160,220,0.3)" }}>
+                                    <span style={{ fontSize:11, fontFamily:"'Cinzel',serif", fontWeight:700, color:"rgba(100,200,255,1)", minWidth:28 }}>D3: {r.roll}</span>
+                                    <span style={{ fontSize:10, fontFamily:"'Cinzel',serif", color:"rgba(180,220,255,0.9)" }}>{r.result}</span>
+                                  </div>
+                                ))}
+                                <div style={{ fontSize:9, fontFamily:"'EB Garamond',serif", fontStyle:"italic", color:"rgba(150,200,255,0.7)", marginTop:2 }}>
+                                  Place one 2VP beacon at each intersection. Remove all at end of turn.
+                                </div>
+                              </div>
+                            )}
+                            {(isConduits || isCrumbling) && (
+                              <div style={{ marginTop:5, fontSize:9, fontFamily:"'EB Garamond',serif", fontStyle:"italic", color:"rgba(180,150,255,0.6)" }}>
+                                {isConduits ? "Roll 1 = Abyssal Darkness until end of next Player Turn." : "Roll 1 = Abyssal Darkness · Roll 2–6 = Confined Space (X) for battle duration."}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Objective Marker Placement */}
             <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid #e8e0d0" }}>
@@ -9018,6 +9835,17 @@ function ShootingResolver() {
                 padding: 10, borderRadius: 6, marginBottom: 8,
                 background: "rgba(91,74,138,0.03)", border: "1px solid rgba(91,74,138,0.12)"
               }}>
+                {/* Legion selector */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                  <label style={{ fontSize: 9, color: "#7a5a9a", textTransform: "uppercase", letterSpacing: 1, fontFamily: "'Cinzel', serif", whiteSpace: "nowrap" }}>⚜ Legion</label>
+                  <select value={deployFaction} onChange={e => setDeployFaction(e.target.value)} style={{
+                    flex: 1, padding: "4px 7px", borderRadius: 5, fontSize: 10,
+                    fontFamily: "'Cinzel', serif", border: "1px solid rgba(120,90,154,0.5)",
+                    background: "#faf8f4", color: "#2a2418", cursor: "pointer",
+                  }}>
+                    {LEGION_FACTIONS.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                  </select>
+                </div>
                 {/* Ranged Weapons */}
                 {deployRangedWeapons.length > 0 && (
                   <div style={{ marginBottom: deployMeleeWeapons.length > 0 || deploySgtCategory ? 8 : 0 }}>
@@ -9029,11 +9857,12 @@ function ShootingResolver() {
                           <button key={i} onClick={() => setDeployBrushRangedWeapon(active ? null : w)} style={{
                             padding: "4px 8px", borderRadius: 4, cursor: "pointer", fontSize: 9,
                             fontFamily: "'Cinzel', serif", fontWeight: active ? 700 : 400,
-                            background: active ? "rgba(184,134,11,0.12)" : "#f8f4ec",
-                            border: `1.5px solid ${active ? "#b8860b" : "#e0d8c8"}`,
-                            color: active ? "#b8860b" : "#6a5e4e",
+                            background: active ? (w.isLegion ? "rgba(120,90,154,0.15)" : "rgba(184,134,11,0.12)") : "#f8f4ec",
+                            border: `1.5px solid ${active ? (w.isLegion ? "#7a5a9a" : "#b8860b") : "#e0d8c8"}`,
+                            color: active ? (w.isLegion ? "#7a5a9a" : "#b8860b") : "#6a5e4e",
                           }}>
                             {w.name}
+                            {w.isLegion && <span style={{ fontSize: 7, marginLeft: 3, color: "#7a5a9a" }}>⚜</span>}
                             <span style={{ fontSize: 8, color: "#8a7e6e", marginLeft: 3 }}>S{w.s} AP{w.ap}</span>
                           </button>
                         );
@@ -9060,12 +9889,13 @@ function ShootingResolver() {
                           <button key={i} onClick={() => setDeployBrushMeleeWeapon(w)} style={{
                             padding: "4px 8px", borderRadius: 4, cursor: "pointer", fontSize: 9,
                             fontFamily: "'Cinzel', serif", fontWeight: active ? 700 : 400,
-                            background: active ? "rgba(155,45,45,0.12)" : "#f8f4ec",
-                            border: `1.5px solid ${active ? "#9b2d2d" : "#e0d8c8"}`,
-                            color: active ? "#9b2d2d" : "#6a5e4e",
+                            background: active ? (w.isLegion ? "rgba(120,90,154,0.15)" : "rgba(155,45,45,0.12)") : "#f8f4ec",
+                            border: `1.5px solid ${active ? (w.isLegion ? "#7a5a9a" : "#9b2d2d") : "#e0d8c8"}`,
+                            color: active ? (w.isLegion ? "#7a5a9a" : "#9b2d2d") : "#6a5e4e",
                           }}>
                             {w.name}
-                            <span style={{ fontSize: 8, color: "#8a7e6e", marginLeft: 3 }}>WS{w.ws} S{w.s} AP{w.ap}</span>
+                            {w.isLegion && <span style={{ fontSize: 7, marginLeft: 3, color: "#7a5a9a" }}>⚜</span>}
+                            <span style={{ fontSize: 8, color: "#8a7e6e", marginLeft: 3 }}>S{w.s} AP{w.ap}</span>
                           </button>
                         );
                       })}
@@ -9721,6 +10551,19 @@ function ShootingResolver() {
                 onSelect={applyUnitPreset}
               />
             )}
+            {/* Legion selector for attacker */}
+            {selectedUnit && (
+              <div style={{ marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}>
+                <label style={{ fontSize: 10, color: "#6a5e4e", textTransform: "uppercase", letterSpacing: 1, fontFamily: "'Cinzel', serif", whiteSpace: "nowrap" }}>Legion</label>
+                <select value={shootFaction} onChange={e => setShootFaction(e.target.value)} style={{
+                  flex: 1, padding: "5px 8px", borderRadius: 6, fontSize: 11,
+                  fontFamily: "'Cinzel', serif", border: "1px solid #b8860b",
+                  background: "#faf8f4", color: "#2a2418", cursor: "pointer",
+                }}>
+                  {LEGION_FACTIONS.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                </select>
+              </div>
+            )}
             {/* Weapon Loadout Selector */}
             {selectedUnit && availableWeapons.length > 0 && (
               <div style={{ marginBottom: 14 }}>
@@ -9976,6 +10819,19 @@ function ShootingResolver() {
                 onSelect={applyTargetPreset}
                 isTarget={true}
               />
+            )}
+            {/* Legion selector for target */}
+            {targetPresetName && (
+              <div style={{ marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}>
+                <label style={{ fontSize: 10, color: "#6a5e4e", textTransform: "uppercase", letterSpacing: 1, fontFamily: "'Cinzel', serif", whiteSpace: "nowrap" }}>Legion</label>
+                <select value={targetFaction} onChange={e => setTargetFaction(e.target.value)} style={{
+                  flex: 1, padding: "5px 8px", borderRadius: 6, fontSize: 11,
+                  fontFamily: "'Cinzel', serif", border: "1px solid #2a6fb4",
+                  background: "#faf8f4", color: "#2a2418", cursor: "pointer",
+                }}>
+                  {LEGION_FACTIONS.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                </select>
+              </div>
             )}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 12 }}>
               <NumberInput label="Toughness" value={toughness} onChange={setToughness} min={1} max={20} />
@@ -10674,6 +11530,8 @@ function ShootingResolver() {
               const ldV = isAtk ? aLd : dLd; const setLdF = isAtk ? setALd : setDLd;
               const rules = isAtk ? aRules : dRules; const setRulesF = isAtk ? setARules : setDRules;
               const rgbAccent = isAtk ? "155,45,45" : "42,111,180";
+              const factionV = isAtk ? aFaction : dFaction;
+              const setFactionF = isAtk ? setAFaction : setDFaction;
 
               return (
                 <div key={side} style={panelStyle}>
@@ -10727,6 +11585,22 @@ function ShootingResolver() {
                     />
                   )}
 
+                  {/* ── Legion / Faction selector ── */}
+                  {unit && (
+                    <div style={{ marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}>
+                      <label style={{ fontSize: 10, color: "#6a5e4e", textTransform: "uppercase", letterSpacing: 1, fontFamily: "'Cinzel', serif", whiteSpace: "nowrap" }}>Legion</label>
+                      <select value={factionV} onChange={e => setFactionF(e.target.value)} style={{
+                        flex: 1, padding: "5px 8px", borderRadius: 6, fontSize: 11,
+                        fontFamily: "'Cinzel', serif", border: `1px solid ${sColor}`,
+                        background: "#faf8f4", color: "#2a2418", cursor: "pointer",
+                      }}>
+                        {LEGION_FACTIONS.map(f => (
+                          <option key={f.id} value={f.id}>{f.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
                   {/* Melee Weapon Selector — styled like shooting WeaponSelector */}
                   {unit && meleeWeapons.length > 0 && (
                     <div style={{ marginBottom: 14 }}>
@@ -10755,7 +11629,10 @@ function ShootingResolver() {
                                 boxShadow: active ? `0 2px 8px rgba(${rgbAccent},0.12)` : "none"
                               }}>
                                 <div style={{ textAlign: "left" }}>
-                                  <div style={{ fontSize: 12, fontFamily: "'Cinzel', serif", fontWeight: 600, color: active ? sColor : "#4a4030" }}>{w.name}</div>
+                                  <div style={{ fontSize: 12, fontFamily: "'Cinzel', serif", fontWeight: 600, color: active ? sColor : "#4a4030", display: "flex", alignItems: "center", gap: 4 }}>
+                                    {w.name}
+                                    {w.isLegion && <span style={{ fontSize: 8, padding: "1px 4px", borderRadius: 3, background: `rgba(${rgbAccent},0.15)`, color: sColor, fontFamily: "'Cinzel', serif", letterSpacing: 0.5, fontWeight: 700 }}>LEGION</span>}
+                                  </div>
                                   <div style={{ fontSize: 9, color: "#8a7e6e", fontFamily: "'Cinzel', serif", marginTop: 1 }}>
                                     WS{w.ws} S{w.s} AP{w.ap} I{w.i} A{w.a}
                                     {Object.keys(w.rules || {}).filter(r => w.rules[r]).length > 0 && (
@@ -11071,7 +11948,10 @@ function ShootingResolver() {
                                     transition: "all 0.15s ease", textAlign: "left",
                                     display: "flex", flexDirection: "column", gap: 2, minWidth: 120,
                                   }}>
-                                    <div style={{ fontWeight: 600 }}>{w.name}</div>
+                                    <div style={{ fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
+                                      {w.name}
+                                      {w.isLegion && <span style={{ fontSize: 8, padding: "1px 4px", borderRadius: 3, background: "rgba(107,142,35,0.2)", color: "#4a6b14", fontFamily: "'Cinzel', serif", letterSpacing: 0.5, fontWeight: 700 }}>LEGION</span>}
+                                    </div>
                                     <div style={{ fontSize: 9, color: active ? "#4a6b14" : "#8a7e6e", letterSpacing: 0.5 }}>
                                       {w.type} {w.shots} · S{w.s} AP{w.ap} D{w.damage}{w.traits ? ` · ${w.traits}` : ""}
                                     </div>
@@ -11215,7 +12095,10 @@ function ShootingResolver() {
                                     transition: "all 0.15s ease", textAlign: "left",
                                     display: "flex", flexDirection: "column", gap: 2, minWidth: 120,
                                   }}>
-                                    <div style={{ fontWeight: 600 }}>{w.name}</div>
+                                    <div style={{ fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
+                                      {w.name}
+                                      {w.isLegion && <span style={{ fontSize: 8, padding: "1px 4px", borderRadius: 3, background: "rgba(42,111,180,0.2)", color: "#1a5090", fontFamily: "'Cinzel', serif", letterSpacing: 0.5, fontWeight: 700 }}>LEGION</span>}
+                                    </div>
                                     <div style={{ fontSize: 9, color: active ? "#1a5090" : "#8a7e6e", letterSpacing: 0.5 }}>
                                       {w.type} {w.shots} · S{w.s} AP{w.ap} D{w.damage}{w.traits ? ` · ${w.traits}` : ""}
                                     </div>
