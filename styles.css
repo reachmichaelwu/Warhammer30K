@@ -84,3 +84,63 @@
              color: #00cc33 !important; border-bottom: 1px solid #0d3010 !important; padding: 4px 8px !important; }
         tr:hover td { background: #0a140a !important; }
         input[type=checkbox] { accent-color: #00ff41; width: 13px; height: 13px; }
+
+        /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+           GRAPHICS & ANIMATION  (16-graphics.js)
+           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+        /* Dice shake during roll */
+        @keyframes dieRollShake {
+          0%   { transform: rotate(-22deg) scale(1.15); }
+          25%  { transform: rotate(16deg)  scale(0.92); }
+          50%  { transform: rotate(-10deg) scale(1.08); }
+          75%  { transform: rotate(6deg)   scale(0.97); }
+          100% { transform: rotate(0deg)   scale(1.0);  }
+        }
+
+        /* Bounce + brightness flash when die settles on its value */
+        @keyframes dieSettleBounce {
+          0%   { transform: scale(1.30); filter: brightness(2.0); }
+          50%  { transform: scale(0.94); filter: brightness(1.4); }
+          75%  { transform: scale(1.06); filter: brightness(1.15); }
+          100% { transform: scale(1.0);  filter: brightness(1.0); }
+        }
+
+        /* Combat result row entrance */
+        @keyframes combatResultIn {
+          from { opacity: 0; transform: translateY(-5px); }
+          to   { opacity: 1; transform: translateY(0);    }
+        }
+
+        /* Pop-in for hit/wound text badges */
+        @keyframes hitBurst {
+          0%   { opacity: 0; transform: scale(0.4) rotate(-15deg); }
+          45%  { opacity: 1; transform: scale(1.35) rotate(4deg);  }
+          75%  { opacity: 0.9; transform: scale(0.98) rotate(-1deg); }
+          100% { opacity: 1; transform: scale(1.0)  rotate(0deg);  }
+        }
+
+        /* Infinite glow pulses for wound / save count badges */
+        @keyframes woundPulseRed {
+          0%,100% { text-shadow: 0 0 4px #cc2222; }
+          50%     { text-shadow: 0 0 16px #ff4444, 0 0 30px rgba(200,30,30,0.5); }
+        }
+        @keyframes saveGlowBlue {
+          0%,100% { text-shadow: 0 0 4px #2a6fb4; }
+          50%     { text-shadow: 0 0 16px #4499ff, 0 0 30px rgba(40,100,200,0.5); }
+        }
+
+        /* Screen-flash overlay */
+        @keyframes combatFlashFade {
+          0%   { opacity: 0; }
+          20%  { opacity: 1; }
+          100% { opacity: 0; }
+        }
+
+        /* Utility animation classes */
+        .die-rolling       { animation: dieRollShake    0.11s ease-in-out; }
+        .die-settle        { animation: dieSettleBounce 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275) both; }
+        .combat-result-row { animation: combatResultIn  0.18s ease both; }
+        .hit-burst-text    { animation: hitBurst        0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) both; }
+        .wound-glow        { animation: woundPulseRed   1.2s ease infinite; }
+        .save-glow         { animation: saveGlowBlue    1.2s ease infinite; }
