@@ -71,7 +71,7 @@
 
   <!-- Global error handler to catch script load/exec failures -->
   <script>
-    var _ld = 0, _ldTotal = 16;
+    var _ld = 0, _ldTotal = 18;
     var _ldMsg = [
       'Loading machine spirit...', 'Parsing unit manifests...',
       'Calibrating bolter trajectories...', 'Compiling FOC slot data...',
@@ -80,7 +80,8 @@
       'Arming shooting resolver...', 'Calibrating return fire...',
       'Preparing challenge protocols...', 'Loading assault phase...',
       'Charging melee engine...', 'Rendering unit icons...',
-      'Assembling UI components...', 'Compiling main cogitator...'
+      'Assembling UI components...', 'Compiling main cogitator...',
+      'Initializing visual effects...', 'Loading unit artwork...'
     ];
     function _ldUp() {
       _ld++;
@@ -117,6 +118,8 @@
   <script src="13-icons.js"              onerror="_ldErr('Failed to load 13-icons.js')"              onload="_ldUp()"></script>
   <script src="14-ui-components.js"      onerror="_ldErr('Failed to load 14-ui-components.js')"      onload="_ldUp()"></script>
   <script src="15-main-app.js"           onerror="_ldErr('Failed to load 15-main-app.js')"           onload="_ldUp()"></script>
+  <script src="16-graphics.js"           onerror="_ldErr('Failed to load 16-graphics.js')"           onload="_ldUp()"></script>
+  <script src="17-artwork.js"            onerror="_ldErr('Failed to load 17-artwork.js')"            onload="_ldUp()"></script>
 
   <!-- Mount with diagnostics -->
   <script>
