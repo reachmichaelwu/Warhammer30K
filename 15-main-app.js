@@ -821,6 +821,9 @@ var ShootingResolver = function() {
   // ━━ ASSAULT PHASE STATE ━━
   const [assaultResult, setAssaultResult] = useState(null);
   const [atkCombatChoice, setAtkCombatChoice] = useState(null);
+  // ━━ TARGET UNIT ID (for artwork) ━━
+  const [targetPresetId, setTargetPresetId] = useState(null);
+  const [showFiringVideo, setShowFiringVideo] = useState(false);
   const [defCombatChoice, setDefCombatChoice] = useState(null);
   // Attacker
   const [aUnit, setAUnit] = useState(null);
@@ -1892,6 +1895,7 @@ var ShootingResolver = function() {
   }, []);
 
   const handleAssaultResolve = () => {
+    setShowFiringVideo(true);
     // ━━ BUILD ATTACKER WEAPON GROUPS ━━
     let atkBaseAttacks = aA;
     const setupLog = [];
@@ -2198,6 +2202,7 @@ var ShootingResolver = function() {
     setLeadership(preset.ld || 8);
     setTargetModels(preset.models || preset.unitSize || 10);
     setTargetPresetName(preset.name);
+    setTargetPresetId(preset.id || null);
     setTargetBS(preset.bs || 4);
     setShowTargetPresets(false);
     setTargetSecondaryWeapons([]); // Clear secondary weapons on unit change
@@ -2404,6 +2409,7 @@ var ShootingResolver = function() {
   const expected = useMemo(() => calculateExpected(params), [params]);
 
   const handleResolve = () => {
+    setShowFiringVideo(true);
     // ━━ PRIMARY WEAPON ━━
     // Secondary weapons replace primary for those models
     const secModelCount = secondaryWeapons.reduce((s, sw) => s + (sw.models || 0), 0);
@@ -2829,7 +2835,7 @@ var ShootingResolver = function() {
     }}, React.createElement("div", {"style": {
         borderBottom: "1px solid #d0c4aa", padding: "20px 24px",
         background: "linear-gradient(180deg, rgba(184,134,11,0.08) 0%, transparent 100%)"
-      }}, React.createElement("div", {"style": { maxWidth: 960, margin: "0 auto" }}, React.createElement("div", {"style": { display: "flex", alignItems: "center", gap: 12 }}, React.createElement("div", {"style": { fontSize: 28, color: "#b8860b" }}, "⚔"), React.createElement("div", null, React.createElement("h1", {"style": { margin: 0, fontSize: 26, fontFamily: "'Share Tech Mono', serif", fontWeight: 700, color: "#7a5800", letterSpacing: 2 }}, "COMBAT PHASE RESOLVER"), React.createElement("div", {"style": { fontSize: 13, color: "#7a6e5e", fontFamily: "'Share Tech Mono', serif", letterSpacing: 3 }}, "THE HORUS HERESY · AGE OF DARKNESS · 3RD EDITION · v1.65"))), React.createElement("div", {"style": { display: "flex", gap: 0, marginTop: 14 }}, [
+      }}, React.createElement("div", {"style": { maxWidth: 960, margin: "0 auto" }}, React.createElement("div", {"style": { display: "flex", alignItems: "center", gap: 12 }}, React.createElement("div", {"style": { fontSize: 28, color: "#b8860b" }}, "⚔"), React.createElement("div", null, React.createElement("h1", {"style": { margin: 0, fontSize: 26, fontFamily: "'Share Tech Mono', serif", fontWeight: 700, color: "#7a5800", letterSpacing: 2 }}, "COMBAT PHASE RESOLVER"), React.createElement("div", {"style": { fontSize: 13, color: "#7a6e5e", fontFamily: "'Share Tech Mono', serif", letterSpacing: 3 }}, "THE HORUS HERESY · AGE OF DARKNESS · 3RD EDITION · v1.70"))), React.createElement("div", {"style": { display: "flex", gap: 0, marginTop: 14 }}, [
               { id: "army_builder", label: "📋 ARMY", color: "#4a6741" },
               { id: "deployment", label: "📍 DEPLOY", color: "#5b4a8a" },
               { id: "movement", label: "🚶 MOVE", color: "#6b5b2e" },
@@ -2934,7 +2940,7 @@ var ShootingResolver = function() {
                   React.createElement("div", {"key": `log_${entry.id}`, "style": { marginBottom: 8, padding: 6, borderRadius: 5, background: "rgba(74,103,65,0.04)", border: "1px dashed rgba(74,103,65,0.3)" }}, React.createElement("div", {"style": { display: "flex", alignItems: "center", gap: 5, marginBottom: 3 }}, React.createElement("span", {"style": { fontSize: 13, color: role?.color }}, role?.icon), React.createElement("span", {"style": { fontFamily: "'Share Tech Mono', serif", fontWeight: 700, fontSize: 11, color: "#4a6741", letterSpacing: 1 }}, "LOGISTICAL BENEFIT:", role?.label?.toUpperCase(), "× 1"), React.createElement("span", {"style": { fontSize: 7, color: "#b8860b", fontWeight: 600, border: "1px solid #b8860b", borderRadius: 2, padding: "0 3px" }}, "BONUS")), filledEntries.map(be => {
                       const pts = calcArmyEntryPoints(be);
                       return (
-                        React.createElement("div", {"key": be.id, "style": { display: "flex", alignItems: "center", gap: 6, padding: "4px 8px", borderRadius: 4, background: "#faf8f4", border: "1px solid #050705", marginBottom: 2 }}, React.createElement("div", {"style": { flex: 1 }}, React.createElement("div", {"style": { fontFamily: "'Share Tech Mono', serif", fontWeight: 600, fontSize: 12, color: "#2a2418" }}, be.unitName), React.createElement("div", {"style": { fontSize: 8, color: "#8a7e6e" }}, be.models, "mdl", be.weaponName ? ` · ${be.weaponName}` : "")), React.createElement("span", {"style": { fontFamily: "'Share Tech Mono', serif", fontWeight: 700, fontSize: 12, color: "#4a6741" }}, pts, "pts"), React.createElement("button", {"onClick": () => { setAbEditIdx(getArmy().entries.indexOf(be)); setAbEditEntry({ ...be, faction: getArmy().faction }); setAbAddModalOpen(true); }, "style": { padding: "2px 5px", borderRadius: 3, fontSize: 8, cursor: "pointer", background: "#f0ebe2", border: "1px solid #d0c4aa", color: "#6a5e4e" }}, "✎"), React.createElement("button", {"onClick": () => setArmy(prev => ({ ...prev, entries: prev.entries.filter(e => e.id !== be.id) })), "style": { padding: "2px 5px", borderRadius: 3, fontSize: 8, cursor: "pointer", background: "rgba(155,45,45,0.08)", border: "1px solid rgba(155,45,45,0.3)", color: "#9b2d2d" }}, "✕"))
+                        React.createElement("div", {"key": be.id, "style": { display: "flex", alignItems: "center", gap: 6, padding: "4px 8px", borderRadius: 4, background: "#faf8f4", border: "1px solid #050705", marginBottom: 2 }}, typeof getUnitArtwork === "function" && getUnitArtwork(be.unitId, getArmy().faction) ? React.createElement("img", { src: getUnitArtwork(be.unitId, getArmy().faction), alt: "", style: { width: 76, height: 76, objectFit: "cover", borderRadius: 4, flexShrink: 0, border: "1px solid rgba(184,134,11,0.2)" }, onError: function(e) { e.currentTarget.style.display = "none"; } }) : null, React.createElement("div", {"style": { flex: 1 }}, React.createElement("div", {"style": { fontFamily: "'Share Tech Mono', serif", fontWeight: 600, fontSize: 12, color: "#2a2418" }}, be.unitName), React.createElement("div", {"style": { fontSize: 8, color: "#8a7e6e" }}, be.models, "mdl", be.weaponName ? ` · ${be.weaponName}` : "")), React.createElement("span", {"style": { fontFamily: "'Share Tech Mono', serif", fontWeight: 700, fontSize: 12, color: "#4a6741" }}, pts, "pts"), React.createElement("button", {"onClick": () => { setAbEditIdx(getArmy().entries.indexOf(be)); setAbEditEntry({ ...be, faction: getArmy().faction }); setAbAddModalOpen(true); }, "style": { padding: "2px 5px", borderRadius: 3, fontSize: 8, cursor: "pointer", background: "#f0ebe2", border: "1px solid #d0c4aa", color: "#6a5e4e" }}, "✎"), React.createElement("button", {"onClick": () => setArmy(prev => ({ ...prev, entries: prev.entries.filter(e => e.id !== be.id) })), "style": { padding: "2px 5px", borderRadius: 3, fontSize: 8, cursor: "pointer", background: "rgba(155,45,45,0.08)", border: "1px solid rgba(155,45,45,0.3)", color: "#9b2d2d" }}, "✕"))
                       );
                     }), remaining > 0 && (
                       React.createElement("button", {"onClick": () => { setAbAddSlotRole(entry.logisticalRole); setAbAddDetId(`logistical_${entry.id}`); setAbEditIdx(null); setAbEditEntry(null); setAbAddModalOpen(true); }, "style": {
@@ -2973,7 +2979,7 @@ var ShootingResolver = function() {
                     React.createElement("div", {"key": si, "style": { marginBottom: 8 }}, React.createElement("div", {"style": { display: "flex", alignItems: "center", gap: 5, marginBottom: 3 }}, React.createElement("span", {"style": { fontSize: 13, color: role?.color }}, role?.icon), React.createElement("span", {"style": { fontFamily: "'Share Tech Mono', serif", fontWeight: 700, fontSize: 12, color: role?.color, letterSpacing: 1 }}, role?.label?.toUpperCase(), "×", slot.count), (slot.prime || slot.primeCount) && React.createElement("span", {"style": { fontSize: 7, color: "#d4af37", fontWeight: 600, border: "1px solid #d4af37", borderRadius: 3, padding: "0px 3px" }}, "PRIME", slot.primeCount ? ` (${slot.primeCount}/${slot.count})` : ""), React.createElement("span", {"style": { fontSize: 8, color: "#8a7e6e" }}, "(", filledEntries.length, "/", slot.count, ")")), filledEntries.map((entry) => {
                         const pts = calcArmyEntryPoints(entry);
                         return (
-                          React.createElement("div", {"key": entry.id, "style": { display: "flex", alignItems: "center", gap: 6, padding: "5px 8px", marginBottom: 2, borderRadius: 4, background: entry.isPrime ? "rgba(212,175,55,0.06)" : "#faf8f4", border: entry.isPrime ? "1px solid rgba(212,175,55,0.3)" : "1px solid #050705" }}, React.createElement("div", {"style": { flex: 1 }}, React.createElement("div", {"style": { fontFamily: "'Share Tech Mono', serif", fontWeight: 600, fontSize: 12, color: "#2a2418" }}, entry.unitName, entry.isPrime && React.createElement("span", {"style": { fontSize: 7, color: "#d4af37", marginLeft: 4, fontWeight: 700, border: "1px solid #d4af37", borderRadius: 2, padding: "0 2px" }}, "★PRIME")), React.createElement("div", {"style": { fontSize: 8, color: "#8a7e6e" }}, entry.models, "mdl", entry.weaponName ? ` · ${entry.weaponName}` : "", entry.secondaryWeapons && entry.secondaryWeapons.length > 0 ? entry.secondaryWeapons.map(sw => ` · +${sw.models}× ${sw.weaponName}`).join("") : "", formatWargear(entry)), entry.primeAdvantage && (() => {
+                          React.createElement("div", {"key": entry.id, "style": { display: "flex", alignItems: "center", gap: 6, padding: "5px 8px", marginBottom: 2, borderRadius: 4, background: entry.isPrime ? "rgba(212,175,55,0.06)" : "#faf8f4", border: entry.isPrime ? "1px solid rgba(212,175,55,0.3)" : "1px solid #050705" }}, typeof getUnitArtwork === "function" && getUnitArtwork(entry.unitId, getArmy().faction) ? React.createElement("img", { src: getUnitArtwork(entry.unitId, getArmy().faction), alt: "", style: { width: 76, height: 76, objectFit: "cover", borderRadius: 4, flexShrink: 0, border: "1px solid rgba(184,134,11,0.2)" }, onError: function(e) { e.currentTarget.style.display = "none"; } }) : null, React.createElement("div", {"style": { flex: 1 }}, React.createElement("div", {"style": { fontFamily: "'Share Tech Mono', serif", fontWeight: 600, fontSize: 12, color: "#2a2418" }}, entry.unitName, entry.isPrime && React.createElement("span", {"style": { fontSize: 7, color: "#d4af37", marginLeft: 4, fontWeight: 700, border: "1px solid #d4af37", borderRadius: 2, padding: "0 2px" }}, "★PRIME")), React.createElement("div", {"style": { fontSize: 8, color: "#8a7e6e" }}, entry.models, "mdl", entry.weaponName ? ` · ${entry.weaponName}` : "", entry.secondaryWeapons && entry.secondaryWeapons.length > 0 ? entry.secondaryWeapons.map(sw => ` · +${sw.models}× ${sw.weaponName}`).join("") : "", formatWargear(entry)), entry.primeAdvantage && (() => {
                                 const allPAs = [...PRIME_ADVANTAGES, ...ALLEGIANCE_PRIME_ADVANTAGES, ...(LEGION_PRIME_ADVANTAGES[getArmy().faction] || [])];
                                 const pa = allPAs.find(p => p.id === entry.primeAdvantage);
                                 return pa ? React.createElement("div", {"style": { fontSize: 7, color: "#b8860b", fontStyle: "italic", marginTop: 1 }}, "⭐", pa.name, ":", pa.desc) : null;
@@ -3009,6 +3015,15 @@ var ShootingResolver = function() {
                     background: "rgba(74,103,65,0.1)", border: "1.5px solid #4a6741", color: "#4a6741",
                   }}, "⚔ Deploy Both")
                 )))
+          ), typeof FACTION_ARTWORK_MAP !== "undefined" && FACTION_ARTWORK_MAP[getArmy().faction] && (
+            React.createElement("div", {"style": { borderRadius: 10, overflow: "hidden", marginBottom: 12, border: "2px solid rgba(184,134,11,0.3)", boxShadow: "0 4px 18px rgba(0,0,0,0.18)" }},
+              React.createElement("img", {
+                src: "artwork/" + FACTION_ARTWORK_MAP[getArmy().faction],
+                alt: "",
+                style: { width: "100%", height: "auto", display: "block" },
+                onError: function(e) { e.currentTarget.style.display = "none"; }
+              })
+            )
           ), abShowAuxPicker && (
             React.createElement("div", {"style": { position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center" }, "onClick": e => { if (e.target === e.currentTarget) setAbShowAuxPicker(null); }}, React.createElement("div", {"style": { background: "#faf8f4", borderRadius: 12, padding: 20, width: "90%", maxWidth: 520, maxHeight: "85vh", overflowY: "auto", border: "2px solid #4a6741" }}, React.createElement("div", {"style": { fontFamily: "'Share Tech Mono', serif", fontWeight: 700, fontSize: 14, color: "#4a6741", letterSpacing: 2, marginBottom: 6 }}, "COMMAND SLOT UNLOCKED"), React.createElement("div", {"style": { fontSize: 12, color: "#6a5e4e", fontFamily: "'Share Tech Mono', serif", marginBottom: 14, lineHeight: 1.5 }}, "Each Command slot filled allows you to add", React.createElement("strong", null, "one Auxiliary Detachment"), "to your Army. You may also skip this selection."), (() => {
                   const legionDets = getLegionDetachments();
@@ -3064,7 +3079,7 @@ var ShootingResolver = function() {
                             display: "flex", alignItems: "center", gap: 8, width: "100%",
                             padding: "7px 10px", marginBottom: 2, borderRadius: 4, cursor: "pointer",
                             background: "#fff", border: "1px solid #050705", textAlign: "left",
-                          }, "onMouseEnter": e => e.currentTarget.style.background = "rgba(74,103,65,0.06)", "onMouseLeave": e => e.currentTarget.style.background = "#fff"}, React.createElement("span", {"style": { fontSize: 12, color: BATTLEFIELD_ROLES[abAddSlotRole]?.color, width: 20, textAlign: "center" }}, BATTLEFIELD_ROLES[abAddSlotRole]?.icon), React.createElement("div", {"style": { flex: 1 }}, React.createElement("div", {"style": { fontFamily: "'Share Tech Mono', serif", fontWeight: 600, fontSize: 13, color: "#2a2418" }}, unit.name), React.createElement("div", {"style": { fontSize: 8, color: "#8a7e6e" }}, unit.models, "model", unit.models !== 1 ? "s" : "", "· BS", unit.bs, "T", unit.t, "Sv", unit.sv, "+")), React.createElement("span", {"style": { fontSize: 13, fontFamily: "'Share Tech Mono', serif", fontWeight: 600, color: "#4a6741" }}, pd?.base || "?", "pts"))
+                          }, "onMouseEnter": e => e.currentTarget.style.background = "rgba(74,103,65,0.06)", "onMouseLeave": e => e.currentTarget.style.background = "#fff"}, typeof getUnitArtwork === "function" && getUnitArtwork(unit.id, getArmy().faction) ? React.createElement("img", { src: getUnitArtwork(unit.id, getArmy().faction), alt: "", style: { width: 76, height: 76, objectFit: "cover", borderRadius: 5, flexShrink: 0, border: "1px solid rgba(184,134,11,0.25)" }, onError: function(e) { e.currentTarget.style.display = "none"; } }) : null, React.createElement("span", {"style": { fontSize: 12, color: BATTLEFIELD_ROLES[abAddSlotRole]?.color, width: 20, textAlign: "center" }}, BATTLEFIELD_ROLES[abAddSlotRole]?.icon), React.createElement("div", {"style": { flex: 1 }}, React.createElement("div", {"style": { fontFamily: "'Share Tech Mono', serif", fontWeight: 600, fontSize: 13, color: "#2a2418" }}, unit.name), React.createElement("div", {"style": { fontSize: 8, color: "#8a7e6e" }}, unit.models, "model", unit.models !== 1 ? "s" : "", "· BS", unit.bs, "T", unit.t, "Sv", unit.sv, "+")), React.createElement("span", {"style": { fontSize: 13, fontFamily: "'Share Tech Mono', serif", fontWeight: 600, color: "#4a6741" }}, pd?.base || "?", "pts"))
                         );
                       }), getAvailableUnitsForRole(abAddSlotRole, abAddDetId).length === 0 && (
                         React.createElement("div", {"style": { padding: 20, textAlign: "center", color: "#b0a898", fontSize: 13, fontFamily: "'Share Tech Mono', serif" }}, "No units available for this role.")
@@ -3551,7 +3566,7 @@ var ShootingResolver = function() {
                             background: isDeployed ? "rgba(0,0,0,0.03)" : (deployBrushArmyEntryId === entry.id ? "rgba(74,103,65,0.1)" : "#fff"),
                             border: deployBrushArmyEntryId === entry.id ? "1.5px solid #4a6741" : "1px solid #050705",
                             opacity: isDeployed ? 0.45 : 1,
-                          }}, React.createElement("span", {"style": { fontSize: 12, color: role?.color, width: 16, textAlign: "center" }}, role?.icon), React.createElement("div", {"style": { flex: 1, minWidth: 0 }}, React.createElement("div", {"style": { fontFamily: "'Share Tech Mono', serif", fontWeight: 600, fontSize: 12, color: "#2a2418", display: "flex", gap: 4, alignItems: "center" }}, entry.unitName, entry.isWarlord && React.createElement("span", {"style": { fontSize: 8 }}, "👑"), isDeployed && React.createElement("span", {"style": { fontSize: 7, color: "#4a6741", background: "rgba(74,103,65,0.1)", padding: "1px 4px", borderRadius: 2 }}, "DEPLOYED")), React.createElement("div", {"style": { fontSize: 8, color: "#8a7e6e" }}, entry.models, "mdl", entry.weaponName ? ` · ${entry.weaponName}` : "", entry.secondaryWeapons && entry.secondaryWeapons.length > 0 ? entry.secondaryWeapons.map(sw => ` · +${sw.models}× ${sw.weaponName}`).join("") : "", entry.sgtWeaponName ? ` · Sgt:${entry.sgtWeaponName}` : "", formatWargear(entry))), React.createElement("span", {"style": { fontFamily: "'Share Tech Mono', serif", fontWeight: 700, fontSize: 11, color: "#4a6741" }}, pts, "pts"))
+                          }}, typeof getUnitArtwork === "function" && getUnitArtwork(entry.unitId, sideArmy.faction) ? React.createElement("img", { src: getUnitArtwork(entry.unitId, sideArmy.faction), alt: "", style: { width: 76, height: 76, objectFit: "cover", borderRadius: 4, flexShrink: 0, border: "1px solid rgba(184,134,11,0.2)" }, onError: function(e) { e.currentTarget.style.display = "none"; } }) : null, React.createElement("span", {"style": { fontSize: 12, color: role?.color, width: 16, textAlign: "center" }}, role?.icon), React.createElement("div", {"style": { flex: 1, minWidth: 0 }}, React.createElement("div", {"style": { fontFamily: "'Share Tech Mono', serif", fontWeight: 600, fontSize: 12, color: "#2a2418", display: "flex", gap: 4, alignItems: "center" }}, entry.unitName, entry.isWarlord && React.createElement("span", {"style": { fontSize: 8 }}, "👑"), isDeployed && React.createElement("span", {"style": { fontSize: 7, color: "#4a6741", background: "rgba(74,103,65,0.1)", padding: "1px 4px", borderRadius: 2 }}, "DEPLOYED")), React.createElement("div", {"style": { fontSize: 8, color: "#8a7e6e" }}, entry.models, "mdl", entry.weaponName ? ` · ${entry.weaponName}` : "", entry.secondaryWeapons && entry.secondaryWeapons.length > 0 ? entry.secondaryWeapons.map(sw => ` · +${sw.models}× ${sw.weaponName}`).join("") : "", entry.sgtWeaponName ? ` · Sgt:${entry.sgtWeaponName}` : "", formatWargear(entry))), React.createElement("span", {"style": { fontFamily: "'Share Tech Mono', serif", fontWeight: 700, fontSize: 11, color: "#4a6741" }}, pts, "pts"))
                         );
                       }))), sideArmy.detachments && sideArmy.detachments.map(det => {
                     const detDef = AUXILIARY_DETACHMENTS[det.type] || APEX_DETACHMENTS[det.type];
@@ -3597,7 +3612,7 @@ var ShootingResolver = function() {
                                 background: isDeployed ? "rgba(0,0,0,0.03)" : (deployBrushArmyEntryId === entry.id ? `rgba(${isApex ? "212,175,55" : "74,103,65"},0.1)` : "#fff"),
                                 border: deployBrushArmyEntryId === entry.id ? `1.5px solid ${borderColor}` : "1px solid #050705",
                                 opacity: isDeployed ? 0.45 : 1,
-                              }}, React.createElement("span", {"style": { fontSize: 12, color: role?.color, width: 16, textAlign: "center" }}, role?.icon), React.createElement("div", {"style": { flex: 1, minWidth: 0 }}, React.createElement("div", {"style": { fontFamily: "'Share Tech Mono', serif", fontWeight: 600, fontSize: 12, color: "#2a2418", display: "flex", gap: 4, alignItems: "center" }}, entry.unitName, isDeployed && React.createElement("span", {"style": { fontSize: 7, color: "#4a6741", background: "rgba(74,103,65,0.1)", padding: "1px 4px", borderRadius: 2 }}, "DEPLOYED")), React.createElement("div", {"style": { fontSize: 8, color: "#8a7e6e" }}, entry.models, "mdl", entry.weaponName ? ` · ${entry.weaponName}` : "", entry.secondaryWeapons && entry.secondaryWeapons.length > 0 ? entry.secondaryWeapons.map(sw => ` · +${sw.models}× ${sw.weaponName}`).join("") : "", entry.sgtWeaponName ? ` · Sgt:${entry.sgtWeaponName}` : "", formatWargear(entry))), React.createElement("span", {"style": { fontFamily: "'Share Tech Mono', serif", fontWeight: 700, fontSize: 11, color: "#4a6741" }}, pts, "pts"))
+                              }}, typeof getUnitArtwork === "function" && getUnitArtwork(entry.unitId, sideArmy.faction) ? React.createElement("img", { src: getUnitArtwork(entry.unitId, sideArmy.faction), alt: "", style: { width: 76, height: 76, objectFit: "cover", borderRadius: 4, flexShrink: 0, border: "1px solid rgba(184,134,11,0.2)" }, onError: function(e) { e.currentTarget.style.display = "none"; } }) : null, React.createElement("span", {"style": { fontSize: 12, color: role?.color, width: 16, textAlign: "center" }}, role?.icon), React.createElement("div", {"style": { flex: 1, minWidth: 0 }}, React.createElement("div", {"style": { fontFamily: "'Share Tech Mono', serif", fontWeight: 600, fontSize: 12, color: "#2a2418", display: "flex", gap: 4, alignItems: "center" }}, entry.unitName, isDeployed && React.createElement("span", {"style": { fontSize: 7, color: "#4a6741", background: "rgba(74,103,65,0.1)", padding: "1px 4px", borderRadius: 2 }}, "DEPLOYED")), React.createElement("div", {"style": { fontSize: 8, color: "#8a7e6e" }}, entry.models, "mdl", entry.weaponName ? ` · ${entry.weaponName}` : "", entry.secondaryWeapons && entry.secondaryWeapons.length > 0 ? entry.secondaryWeapons.map(sw => ` · +${sw.models}× ${sw.weaponName}`).join("") : "", entry.sgtWeaponName ? ` · Sgt:${entry.sgtWeaponName}` : "", formatWargear(entry))), React.createElement("span", {"style": { fontFamily: "'Share Tech Mono', serif", fontWeight: 700, fontSize: 11, color: "#4a6741" }}, pts, "pts"))
                             );
                           })))
                     );
@@ -3793,9 +3808,15 @@ var ShootingResolver = function() {
             unitOnClick: (unit, e) => removeDeployedUnit(unit.id),
           }), deployBrushUnit && (
             React.createElement("div", {"style": {
-              padding: "8px 14px", borderRadius: 6, marginBottom: 12,
+              padding: 0, borderRadius: 6, marginBottom: 12,
               background: "rgba(91,74,138,0.06)", border: "1.5px solid rgba(91,74,138,0.18)",
-            }}, React.createElement("div", {"style": { fontSize: 11, fontFamily: "'Share Tech Mono', serif", color: "#5b4a8a", fontStyle: "italic" }}, "✦ Click on the map to place:", React.createElement("strong", null, deployBrushUnit.name), "(", deployBrushModels, "model", deployBrushModels !== 1 ? "s" : "", ")", deployBrushRangedWeapon && React.createElement("span", null, "· 🔫", deployBrushRangedWeapon.name), deployBrushMeleeWeapon && React.createElement("span", null, "· 🗡", deployBrushMeleeWeapon.name), deployBrushSgtEnabled && deployBrushSgtWeapon && React.createElement("span", null, "· ★ Sgt:", deployBrushSgtWeapon.name), deployBrushSecondaryWeapons.length > 0 && deployBrushSecondaryWeapons.map((sw, i) => (
+              overflow: "hidden",
+            }}, React.createElement("img", {
+              src: typeof getUnitArtwork === "function" ? (getUnitArtwork(deployBrushUnit.id, deployFaction) || "") : "",
+              alt: "",
+              style: { width: "50%", height: "auto", display: "block", background: "#0c0a10" },
+              onError: function(e) { e.currentTarget.style.display = "none"; }
+            }), React.createElement("div", {"style": { padding: "8px 14px", fontSize: 11, fontFamily: "'Share Tech Mono', serif", color: "#5b4a8a", fontStyle: "italic" }}, "✦ Click on the map to place:", React.createElement("strong", null, deployBrushUnit.name), "(", deployBrushModels, "model", deployBrushModels !== 1 ? "s" : "", ")", deployBrushRangedWeapon && React.createElement("span", null, "· 🔫", deployBrushRangedWeapon.name), deployBrushMeleeWeapon && React.createElement("span", null, "· 🗡", deployBrushMeleeWeapon.name), deployBrushSgtEnabled && deployBrushSgtWeapon && React.createElement("span", null, "· ★ Sgt:", deployBrushSgtWeapon.name), deployBrushSecondaryWeapons.length > 0 && deployBrushSecondaryWeapons.map((sw, i) => (
                   React.createElement("span", {"key": i, "style": { color: "#c46a1b" }}, "· +", sw.models, "×", sw.weapon.name)
                 ))))
           ), React.createElement("div", {"style": { ...panelStyle, marginBottom: 16 }}, React.createElement("div", {"style": { ...panelHeaderStyle, justifyContent: "space-between" }}, React.createElement("div", {"style": { display: "flex", alignItems: "center", gap: 8 }}, React.createElement("span", {"style": { color: "#5b4a8a", fontSize: 16 }}, "📋"), React.createElement("span", {"style": { color: "#5b4a8a" }}, "DEPLOYED UNITS (", deployedUnits.length, ")")), React.createElement("div", {"style": { display: "flex", gap: 8, alignItems: "center" }}, React.createElement(MiniStat, {"label": "LOY", "value": deployedUnits.filter(u => u.player === "p1").length, "color": "#9b2d2d"}), React.createElement(MiniStat, {"label": "TRA", "value": deployedUnits.filter(u => u.player === "p2").length, "color": "#2a6fb4"}))), (() => {
@@ -3915,7 +3936,7 @@ var ShootingResolver = function() {
               const isP1 = su.player === "p1";
               const pCol = isP1 ? "#9b2d2d" : "#2a6fb4";
               return (
-                React.createElement("div", {"style": { display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}, React.createElement("div", {"style": {
+                React.createElement("div", {"style": { display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", padding: "8px 10px", borderRadius: 8, border: `1.5px solid ${pCol}`, background: "rgba(255,255,255,0.4)" }}, React.createElement("div", {"style": {
                     width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center",
                     borderRadius: 6, fontSize: 20,
                     background: isP1 ? "rgba(200,60,60,0.85)" : "rgba(50,120,200,0.85)",
@@ -3937,7 +3958,21 @@ var ShootingResolver = function() {
               if (moveSelectedId) return; // already moving, let map click handle
               setMoveSelectedId(unit.id);
             },
-          }), React.createElement("div", {"style": { ...panelStyle, marginBottom: 12 }}, React.createElement("div", {"style": { ...panelHeaderStyle }}, React.createElement("span", {"style": { color: "#6b5b2e", fontSize: 16 }}, "📏"), React.createElement("span", {"style": { color: "#6b5b2e" }}, "MOVEMENT VALUES")), React.createElement("div", {"style": { display: "flex", flexWrap: "wrap", gap: 4 }}, DEPLOY_UNIT_TYPES.filter(u => u.id !== "objective").map(ut => (
+          }), moveSelectedId && (() => {
+            const su = deployedUnits.find(u => u.id === moveSelectedId);
+            if (!su) return null;
+            const isP1 = su.player === "p1";
+            const pCol = isP1 ? "#9b2d2d" : "#2a6fb4";
+            const artSrc = typeof getUnitArtwork === "function" ? (getUnitArtwork(su.unitData && su.unitData.id, null, isP1 ? "loyalist" : "traitor") || "") : "";
+            if (!artSrc) return null;
+            return React.createElement("div", {"style": { marginTop: 8, borderRadius: 8, overflow: "hidden", border: `1.5px solid ${pCol}` }},
+              React.createElement("img", {
+                src: artSrc, alt: "",
+                style: { width: "50%", height: "auto", display: "block", background: "#100c08" },
+                onError: function(e) { e.currentTarget.style.display = "none"; }
+              })
+            );
+          })(), React.createElement("div", {"style": { ...panelStyle, marginBottom: 12 }}, React.createElement("div", {"style": { ...panelHeaderStyle }}, React.createElement("span", {"style": { color: "#6b5b2e", fontSize: 16 }}, "📏"), React.createElement("span", {"style": { color: "#6b5b2e" }}, "MOVEMENT VALUES")), React.createElement("div", {"style": { display: "flex", flexWrap: "wrap", gap: 4 }}, DEPLOY_UNIT_TYPES.filter(u => u.id !== "objective").map(ut => (
                 React.createElement("div", {"key": ut.id, "style": {
                   display: "flex", alignItems: "center", gap: 4, padding: "3px 8px",
                   borderRadius: 4, background: "rgba(107,91,46,0.04)", border: "1px solid rgba(107,91,46,0.1)",
@@ -4005,11 +4040,16 @@ var ShootingResolver = function() {
             }}, "💨 ROUTE TARGET"), React.createElement("div", {"style": { flex: 1 }}), React.createElement("span", {"style": { fontSize: 11, fontFamily: "'Share Tech Mono', serif", color: "#8a7e6e", fontStyle: "italic" }}, "Map selection auto-fills attacker & target stats below"))
         ), React.createElement("div", {"style": { display: "grid", gridTemplateColumns: "1fr", gap: 16, marginBottom: 16 }}, React.createElement("div", {"style": panelStyle}, React.createElement("div", {"style": { ...panelHeaderStyle, justifyContent: "space-between" }}, React.createElement("div", {"style": { display: "flex", alignItems: "center", gap: 8 }}, React.createElement("span", {"style": { color: "#b8860b", fontSize: 16 }}, "⚔"), React.createElement("span", null, "ATTACKING UNIT"))), React.createElement("div", {"style": { marginBottom: 14 }}, selectedUnit ? (
                 React.createElement("button", {"onClick": () => setShowAttackerPresets(true), "style": {
-                  display: "flex", alignItems: "center", gap: 12, width: "100%",
-                  padding: "10px 14px", borderRadius: 8, cursor: "pointer",
+                  display: "flex", flexDirection: "column", alignItems: "stretch", width: "100%",
+                  padding: 0, borderRadius: 8, cursor: "pointer",
                   background: "rgba(184,134,11,0.06)", border: "1.5px solid #b8860b",
-                  transition: "all 0.15s ease", textAlign: "left"
-                }}, React.createElement(UnitIcon, {"type": getUnitIconType(selectedUnit.name), "size": 40, "color": "#b8860b"}), React.createElement("div", {"style": { flex: 1 }}, React.createElement("div", {"style": { fontFamily: "'Share Tech Mono', serif", fontWeight: 700, fontSize: 14, color: "#1e1a12" }}, selectedUnit.name), React.createElement("div", {"style": { fontSize: 12, color: "#8a7e6e", fontFamily: "'Share Tech Mono', serif" }}, selectedUnit.models, "model", selectedUnit.models > 1 ? "s" : "", "· BS", selectedUnit.bs)), React.createElement("span", {"style": { fontSize: 13, color: "#b8860b", fontFamily: "'Share Tech Mono', serif" }}, "CHANGE ▸"))
+                  transition: "all 0.15s ease", overflow: "hidden", textAlign: "left"
+                }}, React.createElement("img", {
+                  src: typeof getUnitArtwork === "function" ? (getUnitArtwork(selectedUnit.id, shootFaction) || "") : "",
+                  alt: "",
+                  style: { width: "50%", height: "auto", display: "block", background: "#120d08" },
+                  onError: function(e) { e.currentTarget.style.display = "none"; }
+                }), React.createElement("div", {"style": { display: "flex", alignItems: "center", gap: 10, padding: "10px 14px" }}, React.createElement(UnitIcon, {"type": getUnitIconType(selectedUnit.name), "size": 36, "color": "#b8860b"}), React.createElement("div", {"style": { flex: 1 }}, React.createElement("div", {"style": { fontFamily: "'Share Tech Mono', serif", fontWeight: 700, fontSize: 14, color: "#1e1a12" }}, selectedUnit.name), React.createElement("div", {"style": { fontSize: 12, color: "#8a7e6e", fontFamily: "'Share Tech Mono', serif" }}, selectedUnit.models, "model", selectedUnit.models > 1 ? "s" : "", "· BS", selectedUnit.bs)), React.createElement("span", {"style": { fontSize: 13, color: "#b8860b", fontFamily: "'Share Tech Mono', serif" }}, "CHANGE ▸")))
               ) : (
                 React.createElement("button", {"onClick": () => setShowAttackerPresets(true), "style": {
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
@@ -4123,11 +4163,16 @@ var ShootingResolver = function() {
                 React.createElement(CheckToggle, {"checked": indirect, "label": "Indirect Fire (no LoS)", "onChange": setIndirect})
               ), React.createElement(CheckToggle, {"checked": snapShots, "label": "Snap Shots", "onChange": setSnapShots}))), React.createElement("div", {"style": panelStyle}, React.createElement("div", {"style": { ...panelHeaderStyle, justifyContent: "space-between" }}, React.createElement("div", {"style": { display: "flex", alignItems: "center", gap: 8 }}, React.createElement("span", {"style": { color: "#2a6fb4", fontSize: 16 }}, "🛡"), React.createElement("span", null, "TARGET UNIT"))), React.createElement("div", {"style": { marginBottom: 14 }}, targetPresetName ? (
                 React.createElement("button", {"onClick": () => setShowTargetPresets(true), "style": {
-                  display: "flex", alignItems: "center", gap: 12, width: "100%",
-                  padding: "10px 14px", borderRadius: 8, cursor: "pointer",
+                  display: "flex", flexDirection: "column", alignItems: "stretch", width: "100%",
+                  padding: 0, borderRadius: 8, cursor: "pointer",
                   background: "rgba(42,111,180,0.06)", border: "1.5px solid #2a6fb4",
-                  transition: "all 0.15s ease", textAlign: "left"
-                }}, React.createElement(UnitIcon, {"type": getUnitIconType(targetPresetName), "size": 40, "color": "#2a6fb4"}), React.createElement("div", {"style": { flex: 1 }}, React.createElement("div", {"style": { fontFamily: "'Share Tech Mono', serif", fontWeight: 700, fontSize: 14, color: "#1e1a12" }}, targetPresetName), React.createElement("div", {"style": { fontSize: 12, color: "#8a7e6e", fontFamily: "'Share Tech Mono', serif" }}, "T", toughness, "Sv", armourSave, "+", invulnSave !== "-" ? `Inv${invulnSave}+` : "", coverSave !== "-" ? `Cov${coverSave}+` : "", fnp !== "-" ? `FNP${fnp}+` : "", "Ld", leadership)), React.createElement("span", {"style": { fontSize: 13, color: "#2a6fb4", fontFamily: "'Share Tech Mono', serif" }}, "CHANGE ▸"))
+                  transition: "all 0.15s ease", overflow: "hidden", textAlign: "left"
+                }}, React.createElement("img", {
+                  src: typeof getUnitArtwork === "function" ? (getUnitArtwork(targetPresetId, targetFaction) || "") : "",
+                  alt: "",
+                  style: { width: "50%", height: "auto", display: "block", background: "#080d14" },
+                  onError: function(e) { e.currentTarget.style.display = "none"; }
+                }), React.createElement("div", {"style": { display: "flex", alignItems: "center", gap: 10, padding: "10px 14px" }}, React.createElement(UnitIcon, {"type": getUnitIconType(targetPresetName), "size": 36, "color": "#2a6fb4"}), React.createElement("div", {"style": { flex: 1 }}, React.createElement("div", {"style": { fontFamily: "'Share Tech Mono', serif", fontWeight: 700, fontSize: 14, color: "#1e1a12" }}, targetPresetName), React.createElement("div", {"style": { fontSize: 12, color: "#8a7e6e", fontFamily: "'Share Tech Mono', serif" }}, "T", toughness, "Sv", armourSave, "+", invulnSave !== "-" ? `Inv${invulnSave}+` : "", coverSave !== "-" ? `Cov${coverSave}+` : "", fnp !== "-" ? `FNP${fnp}+` : "", "Ld", leadership)), React.createElement("span", {"style": { fontSize: 13, color: "#2a6fb4", fontFamily: "'Share Tech Mono', serif" }}, "CHANGE ▸")))
               ) : (
                 React.createElement("button", {"onClick": () => setShowTargetPresets(true), "style": {
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
@@ -4237,7 +4282,20 @@ var ShootingResolver = function() {
             border: "none", borderRadius: 6, color: "#fff", cursor: "pointer",
             textTransform: "uppercase", whiteSpace: "nowrap",
             boxShadow: "0 2px 12px rgba(184,134,11,0.25)"
-          }}, "⚔ RESOLVE")), result && (
+          }}, "⚔ RESOLVE")), showFiringVideo && React.createElement("div", {"style": {
+          marginBottom: 16, borderRadius: 10, overflow: "hidden",
+          background: "#050505", border: "2px solid rgba(184,134,11,0.45)",
+          boxShadow: "0 0 28px rgba(255,100,0,0.25), 0 0 8px rgba(184,134,11,0.2)",
+          animation: "fadeIn 0.3s ease",
+        }}, React.createElement("video", {
+          src: "artwork/Firing.mp4",
+          autoPlay: true,
+          muted: true,
+          playsInline: true,
+          style: { width: "100%", display: "block", maxHeight: 360 },
+          onEnded: () => setShowFiringVideo(false),
+          onError: () => setShowFiringVideo(false),
+        })), result && (
           React.createElement("div", {"style": { ...panelStyle, animation: "fadeIn 0.3s ease", marginBottom: 16 }}, React.createElement("div", {"style": { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}, React.createElement("div", {"style": panelHeaderStyle}, React.createElement("span", {"style": { color: "#2e7d32", fontSize: 16 }}, "☠"), React.createElement("span", null, "RESOLUTION LOG")), React.createElement("div", {"style": {
                 background: result.casualties > 0 ? "rgba(199,48,48,0.1)" : "rgba(46,125,50,0.1)",
                 border: `1px solid ${result.casualties > 0 ? "#c74040" : "#2e7d32"}`,
@@ -4450,11 +4508,16 @@ var ShootingResolver = function() {
               return (
                 React.createElement("div", {"key": side, "style": panelStyle}, React.createElement("div", {"style": { ...panelHeaderStyle, justifyContent: "space-between" }}, React.createElement("div", {"style": { display: "flex", alignItems: "center", gap: 8 }}, React.createElement("span", {"style": { color: sColor, fontSize: 16 }}, sIcon), React.createElement("span", {"style": { color: sColor }}, sLabel))), React.createElement("div", {"style": { marginBottom: 14 }}, unit ? (
                       React.createElement("button", {"onClick": () => setShowPresets(true), "style": {
-                        display: "flex", alignItems: "center", gap: 12, width: "100%",
-                        padding: "10px 14px", borderRadius: 8, cursor: "pointer",
+                        display: "flex", flexDirection: "column", alignItems: "stretch", width: "100%",
+                        padding: 0, borderRadius: 8, cursor: "pointer",
                         background: `rgba(${rgbAccent},0.06)`, border: `1.5px solid ${sColor}`,
-                        transition: "all 0.15s ease", textAlign: "left"
-                      }}, React.createElement(UnitIcon, {"type": getUnitIconType(unit.name), "size": 40, "color": sColor}), React.createElement("div", {"style": { flex: 1 }}, React.createElement("div", {"style": { fontFamily: "'Share Tech Mono', serif", fontWeight: 700, fontSize: 14, color: "#1e1a12" }}, unit.name), React.createElement("div", {"style": { fontSize: 12, color: "#6a5e4e", fontFamily: "'Share Tech Mono', serif" }}, models, "model", models > 1 ? "s" : "", "· WS", ws, "· I", iV, "· A", aV)), React.createElement("span", {"style": { fontSize: 12, color: sColor, fontFamily: "'Share Tech Mono', serif" }}, "CHANGE ▸"))
+                        transition: "all 0.15s ease", overflow: "hidden", textAlign: "left"
+                      }}, React.createElement("img", {
+                        src: typeof getUnitArtwork === "function" ? (getUnitArtwork(unit.id, factionV) || "") : "",
+                        alt: "",
+                        style: { width: "50%", height: "auto", display: "block", background: "#0d0808" },
+                        onError: function(e) { e.currentTarget.style.display = "none"; }
+                      }), React.createElement("div", {"style": { display: "flex", alignItems: "center", gap: 10, padding: "10px 14px" }}, React.createElement(UnitIcon, {"type": getUnitIconType(unit.name), "size": 36, "color": sColor}), React.createElement("div", {"style": { flex: 1 }}, React.createElement("div", {"style": { fontFamily: "'Share Tech Mono', serif", fontWeight: 700, fontSize: 14, color: "#1e1a12" }}, unit.name), React.createElement("div", {"style": { fontSize: 12, color: "#6a5e4e", fontFamily: "'Share Tech Mono', serif" }}, models, "model", models > 1 ? "s" : "", "· WS", ws, "· I", iV, "· A", aV)), React.createElement("span", {"style": { fontSize: 12, color: sColor, fontFamily: "'Share Tech Mono', serif" }}, "CHANGE ▸")))
                     ) : (
                       React.createElement("button", {"onClick": () => setShowPresets(true), "style": {
                         display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
@@ -4969,7 +5032,20 @@ var ShootingResolver = function() {
             letterSpacing: 3, background: "linear-gradient(180deg, #a02020 0%, #7a1515 100%)",
             border: "none", borderRadius: 8, color: "#fff", cursor: "pointer",
             textTransform: "uppercase", boxShadow: "0 2px 16px rgba(155,45,45,0.3)", marginBottom: 16,
-          }}, "🗡 RESOLVE ASSAULT PHASE 🗡"), assaultResult && (
+          }}, "🗡 RESOLVE ASSAULT PHASE 🗡"), showFiringVideo && React.createElement("div", {"style": {
+          marginBottom: 16, borderRadius: 10, overflow: "hidden",
+          background: "#050505", border: "2px solid rgba(155,45,45,0.55)",
+          boxShadow: "0 0 28px rgba(200,30,30,0.25), 0 0 8px rgba(155,45,45,0.2)",
+          animation: "fadeIn 0.3s ease",
+        }}, React.createElement("video", {
+          src: "artwork/Firing.mp4",
+          autoPlay: true,
+          muted: true,
+          playsInline: true,
+          style: { width: "100%", display: "block", maxHeight: 360 },
+          onEnded: () => setShowFiringVideo(false),
+          onError: () => setShowFiringVideo(false),
+        })), assaultResult && (
             React.createElement("div", {"style": { ...panelStyle, animation: "fadeIn 0.3s ease" }}, React.createElement("div", {"style": {
                 display: "flex", gap: 16, alignItems: "center", justifyContent: "center",
                 padding: "14px 20px", borderRadius: 8, marginBottom: 14,
