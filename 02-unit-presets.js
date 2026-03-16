@@ -4,32 +4,34 @@
 // ━━━ UNIT & WEAPON PRESETS (Separated) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 var UNIT_PRESETS = [
-  { category: "WARLORD", units: [
-    { id: "lion", name: "Lion El'Jonson (I)", models: 1, bs: 6, t: 6, w: 8, sv: "2", inv: "4", fnp: "-", ld: 12 },
-    { id: "khan", name: "Jaghatai Khan (V)", models: 1, bs: 5, t: 6, w: 7, sv: "2", inv: "4", fnp: "-", ld: 12 },
-    { id: "russ", name: "Leman Russ (VI)", models: 1, bs: 5, t: 7, w: 8, sv: "2", inv: "4", fnp: "-", ld: 12 },
-    { id: "dorn", name: "Rogal Dorn (VII)", models: 1, bs: 5, t: 7, w: 8, sv: "2", inv: "4", fnp: "-", ld: 12 },
-    { id: "sanguinius", name: "Sanguinius (IX)", models: 1, bs: 6, t: 6, w: 8, sv: "2", inv: "4", fnp: "-", ld: 12 },
-    { id: "ferrus", name: "Ferrus Manus (X)", models: 1, bs: 5, t: 7, w: 8, sv: "2", inv: "3", fnp: "-", ld: 12 },
-    { id: "guilliman", name: "Roboute Guilliman (XIII)", models: 1, bs: 6, t: 6, w: 7, sv: "2", inv: "4", fnp: "-", ld: 12 },
-    { id: "vulkan", name: "Vulkan (XVIII)", models: 1, bs: 5, t: 7, w: 9, sv: "2", inv: "3", fnp: "-", ld: 12 },
-    { id: "corax", name: "Corvus Corax (XIX)", models: 1, bs: 6, t: 6, w: 7, sv: "2", inv: "4", fnp: "-", ld: 12 },
-    { id: "fulgrim", name: "Fulgrim (III)", models: 1, bs: 6, t: 6, w: 7, sv: "2", inv: "4", fnp: "-", ld: 12 },
-    { id: "perturabo", name: "Perturabo (IV)", models: 1, bs: 6, t: 7, w: 8, sv: "2", inv: "3", fnp: "-", ld: 12 },
-    { id: "curze", name: "Konrad Curze (VIII)", models: 1, bs: 5, t: 6, w: 7, sv: "2", inv: "4", fnp: "-", ld: 12 },
-    { id: "angron", name: "Angron (XII)", models: 1, bs: 5, t: 7, w: 8, sv: "2", inv: "4", fnp: "-", ld: 12 },
-    { id: "lorgar", name: "Lorgar Aurelian (XVII)", models: 1, bs: 5, t: 6, w: 7, sv: "2", inv: "4", fnp: "-", ld: 12 },
-    { id: "mortarion", name: "Mortarion (XIV)", models: 1, bs: 5, t: 7, w: 9, sv: "2", inv: "4", fnp: "5", ld: 12 },
-    { id: "magnus", name: "Magnus the Red (XV)", models: 1, bs: 6, t: 6, w: 7, sv: "2", inv: "3", fnp: "-", ld: 12 },
-    { id: "horus", name: "Horus Lupercal (XVI)", models: 1, bs: 6, t: 7, w: 8, sv: "2", inv: "4", fnp: "-", ld: 12 },
-    { id: "alpharius", name: "Alpharius (XX)", models: 1, bs: 6, t: 6, w: 7, sv: "2", inv: "4", fnp: "-", ld: 12 },
+  { category: "WARLORD (L)", units: [
+    { id: "lion",       name: "Lion El'Jonson (I)",        models: 1, bs: 6, t: 6, w: 8, sv: "2", inv: "4", fnp: "-", ld: 12 },
+    { id: "khan",       name: "Jaghatai Khan (V)",          models: 1, bs: 5, t: 6, w: 7, sv: "2", inv: "4", fnp: "-", ld: 12 },
+    { id: "russ",       name: "Leman Russ (VI)",            models: 1, bs: 5, t: 7, w: 8, sv: "2", inv: "4", fnp: "-", ld: 12 },
+    { id: "dorn",       name: "Rogal Dorn (VII)",           models: 1, bs: 5, t: 7, w: 8, sv: "2", inv: "4", fnp: "-", ld: 12 },
+    { id: "sanguinius", name: "Sanguinius (IX)",            models: 1, bs: 6, t: 6, w: 8, sv: "2", inv: "4", fnp: "-", ld: 12 },
+    { id: "ferrus",     name: "Ferrus Manus (X)",           models: 1, bs: 5, t: 7, w: 8, sv: "2", inv: "3", fnp: "-", ld: 12 },
+    { id: "guilliman",  name: "Roboute Guilliman (XIII)",   models: 1, bs: 6, t: 6, w: 7, sv: "2", inv: "4", fnp: "-", ld: 12 },
+    { id: "vulkan",     name: "Vulkan (XVIII)",             models: 1, bs: 5, t: 7, w: 9, sv: "2", inv: "3", fnp: "-", ld: 12 },
+    { id: "corax",      name: "Corvus Corax (XIX)",         models: 1, bs: 6, t: 6, w: 7, sv: "2", inv: "4", fnp: "-", ld: 12 },
+  ]},
+  { category: "WARLORD (T)", units: [
+    { id: "fulgrim",    name: "Fulgrim (III)",              models: 1, bs: 6, t: 6, w: 7, sv: "2", inv: "4", fnp: "-", ld: 12 },
+    { id: "perturabo",  name: "Perturabo (IV)",             models: 1, bs: 6, t: 7, w: 8, sv: "2", inv: "3", fnp: "-", ld: 12 },
+    { id: "curze",      name: "Konrad Curze (VIII)",        models: 1, bs: 5, t: 6, w: 7, sv: "2", inv: "4", fnp: "-", ld: 12 },
+    { id: "angron",     name: "Angron (XII)",               models: 1, bs: 5, t: 7, w: 8, sv: "2", inv: "4", fnp: "-", ld: 12 },
+    { id: "mortarion",  name: "Mortarion (XIV)",            models: 1, bs: 5, t: 7, w: 9, sv: "2", inv: "4", fnp: "5", ld: 12 },
+    { id: "magnus",     name: "Magnus the Red (XV)",        models: 1, bs: 6, t: 6, w: 7, sv: "2", inv: "3", fnp: "-", ld: 12 },
+    { id: "horus",      name: "Horus Lupercal (XVI)",       models: 1, bs: 6, t: 7, w: 8, sv: "2", inv: "4", fnp: "-", ld: 12 },
+    { id: "lorgar",     name: "Lorgar Aurelian (XVII)",     models: 1, bs: 5, t: 6, w: 7, sv: "2", inv: "4", fnp: "-", ld: 12 },
+    { id: "alpharius",  name: "Alpharius (XX)",             models: 1, bs: 6, t: 6, w: 7, sv: "2", inv: "4", fnp: "-", ld: 12 },
   ]},
   { category: "HIGH COMMAND", units: [
     { id: "praetor_pa",     name: "Praetor (Power Armour)",   models: 1,  bs: 5, t: 4, w: 3, sv: "2", inv: "4", fnp: "-", ld: 10 },
     { id: "praetor_ta",     name: "Praetor (Terminator)",     models: 1,  bs: 5, t: 4, w: 3, sv: "2", inv: "4", fnp: "-", ld: 10 },
     { id: "praetor_sat",    name: "Praetor (Saturnine)",      models: 1,  bs: 5, t: 5, w: 4, sv: "2", inv: "4", fnp: "-", ld: 10 },
   ]},
-  { category: "COMMAND", units: [
+  { category: "COMMAND 1", units: [
     { id: "centurion",      name: "Centurion",                models: 1,  bs: 5, t: 4, w: 3, sv: "2", inv: "-", fnp: "-", ld: 9 },
     { id: "centurion_ta",   name: "Centurion (Terminator)",   models: 1,  bs: 5, t: 4, w: 3, sv: "2", inv: "4", fnp: "-", ld: 9 },
     { id: "champion",       name: "Legion Champion",          models: 1,  bs: 5, t: 4, w: 2, sv: "2", inv: "4", fnp: "-", ld: 9 },
@@ -38,6 +40,8 @@ var UNIT_PRESETS = [
     { id: "chaplain",       name: "Legion Chaplain",          models: 1,  bs: 5, t: 4, w: 2, sv: "2", inv: "4", fnp: "-", ld: 10 },
     { id: "librarian",      name: "Legion Librarian",         models: 1,  bs: 4, t: 4, w: 2, sv: "2", inv: "4", fnp: "-", ld: 9 },
     { id: "herald",         name: "Legion Herald",            models: 1,  bs: 5, t: 4, w: 2, sv: "2", inv: "-", fnp: "-", ld: 9 },
+  ]},
+  { category: "COMMAND 2", units: [
     { id: "moritat",        name: "Moritat",                  models: 1,  bs: 5, t: 4, w: 2, sv: "2", inv: "-", fnp: "-", ld: 9 },
     { id: "siege_breaker",  name: "Siege Breaker",            models: 1,  bs: 5, t: 4, w: 2, sv: "2", inv: "-", fnp: "-", ld: 9 },
     { id: "forge_lord",     name: "Forge Lord",               models: 1,  bs: 5, t: 4, w: 2, sv: "2", inv: "-", fnp: "-", ld: 9 },
