@@ -61,12 +61,12 @@ function UnitSelectorModal({ presets, onSelect, selectedId, onClose, accentColor
             return (
               React.createElement("button", {"key": uid, "onClick": () => onSelect(u), "style": {
                 display: "flex", flexDirection: "column", alignItems: "center",
-                padding: "8px 8px 8px", borderRadius: 8, cursor: "pointer",
+                padding: "8px 8px 8px", borderRadius: 8, cursor: "pointer", width: "100%",
                 background: isSelected ? `rgba(${accentColor === "#b8860b" ? "184,134,11" : "42,111,180"},0.12)` : "#f9f6f0",
                 border: `1.5px solid ${isSelected ? accentColor : "#e0dbd0"}`,
                 transition: "all 0.15s ease", textAlign: "center", overflow: "hidden",
                 boxShadow: isSelected ? `0 2px 8px rgba(${accentColor === "#b8860b" ? "184,134,11" : "42,111,180"},0.15)` : "none"
-              }}, typeof getUnitArtwork === "function" && getUnitArtwork(u.id) ? React.createElement("img", { src: getUnitArtwork(u.id), alt: "", style: { width: 120, height: 120, objectFit: "cover", borderRadius: 5, marginBottom: 4, border: `1px solid ${isSelected ? accentColor : "#e0dbd0"}` }, onError: function(e) { e.currentTarget.style.display = "none"; } }) : React.createElement(UnitIcon, {"type": iconType, "size": 32, "color": isSelected ? accentColor : "#8a7e6e"}), React.createElement("div", {"style": {
+              }}, typeof getUnitArtwork === "function" && getUnitArtwork(u.id) ? React.createElement("img", { src: getUnitArtwork(u.id), alt: "", style: { width: "100%", height: 120, objectFit: "cover", borderRadius: 5, marginBottom: 4, border: `1px solid ${isSelected ? accentColor : "#e0dbd0"}` }, onError: function(e) { e.currentTarget.style.display = "none"; } }) : React.createElement(UnitIcon, {"type": iconType, "size": 32, "color": isSelected ? accentColor : "#8a7e6e"}), React.createElement("div", {"style": {
                   fontSize: 15, fontFamily: "'Share Tech Mono', serif", fontWeight: 600,
                   color: isSelected ? "#2a2418" : "#4a4030", marginTop: 4, lineHeight: 1.2,
                   minHeight: 26, display: "flex", alignItems: "center"

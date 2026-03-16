@@ -43,6 +43,59 @@ var UNIT_ARTWORK_MAP = {
   "vigilator":        "Centurion.jpg",
   "siege_breaker":    "Centurion.jpg",
   "forge_lord":       "Centurion.jpg",
+  // ── Primarchs ─────────────────────────────────────────────────
+  "lion":             "artwork_omnibus/40k_the_lion_by_iscaneus_de13wcg-fullview.jpg",
+  "sanguinius":       "artwork_omnibus/30k-blood-angels-the-red-angel.png",
+  "horus":            "artwork_omnibus/duo-luna-wolves-sons-of-horus.png",
+  "alpharius":        "artwork_omnibus/30k-alpha-legion-pech.png",
+  "fulgrim":          "artwork_omnibus/duo-emperors-children-eidolon-lucius.png",
+  "perturabo":        "artwork_omnibus/duo-iron-warriors-forrix-kroeger.png",
+  "curze":            "artwork_omnibus/30k-night-lords-talos.png",
+  "angron":           "artwork_omnibus/duo-world-eaters-captain-sarrin.png",
+  "lorgar":           "artwork_omnibus/30k-word-bearers-erebus.png",
+  "mortarion":        "artwork_omnibus/duo-death-guard-elite.png",
+  "magnus":           "artwork_omnibus/duo-thousand-sons-amon-sanakht.png",
+  "ferrus":           "artwork_omnibus/30k-iron-hands-santar.png",
+  "vulkan":           "artwork_omnibus/duo-salamanders-tkell-atok.png",
+  "corax":            "artwork_omnibus/30k-raven-guard-hef.png",
+  "guilliman":        "artwork_omnibus/duo-ultramarines-gage-thiel.png",
+  "dorn":             "artwork_omnibus/duo-imperial-fists-rann-archamus-thane.png",
+  "russ":             "artwork_omnibus/duo-space-wolves.png",
+  "khan":             "artwork_omnibus/duo-white-scars-elite.png",
+  // ── Sons of Horus named characters ────────────────────────────
+  "garviel_loken":    "artwork_omnibus/30k-luna-wolves-loken.png",
+  "maloghurst":       "artwork_omnibus/duo-sons-of-horus-argonis-maloghurst.png",
+  "ezekyle_abaddon":  "artwork_omnibus/duo-mournival.png",
+  "little_horus":     "artwork_omnibus/30k-sons-of-horus-aximand.png",
+  "tybalt_marr":      "artwork_omnibus/duo-meduson-vs-tybalt-marr.png",
+  // ── Word Bearers named characters ─────────────────────────────
+  "erebus":           "artwork_omnibus/30k-word-bearers-erebus.png",
+  "argel_tal":        "artwork_omnibus/duo-first-heretic-aquillon-argel_tal.png",
+  "kor_phaeron":      "artwork_omnibus/30k-duo-marius-gage-vs-kor-phaeron.png",
+  // ── Iron Hands named characters ───────────────────────────────
+  "shadrak_meduson":  "artwork_omnibus/30k-iron-hands-meduson.png",
+  "iron_father":      "artwork_omnibus/30k-iron-hands-santar.png",
+  // ── Alpha Legion named characters ─────────────────────────────
+  "armillus_dynat":   "artwork_omnibus/duo-alpha-legion-exodus-dynat.png",
+  "exodus_al":        "artwork_omnibus/duo-alpha-legion-exodus-dynat.png",
+  // ── World Eaters named characters ─────────────────────────────
+  "kharn":            "artwork_omnibus/duo-sigismund-vs-kharn.png",
+  // ── Night Lords named characters ──────────────────────────────
+  "sevatar":          "artwork_omnibus/duo-night-lords-sevatar-shang.png",
+  // ── Thousand Sons named characters ────────────────────────────
+  "ahriman":          "artwork_omnibus/duo-thousand-sons-amon-sanakht.png",
+  "magistus_amon":    "artwork_omnibus/duo-thousand-sons-amon-sanakht.png",
+  // ── Blood Angels named characters ─────────────────────────────
+  "raldoron":         "artwork_omnibus/duo-blood-angels.png",
+  "dom_zephon":       "artwork_omnibus/duo-blood-angels.png",
+  // ── Ultramarines named characters ─────────────────────────────
+  "remus_ventanus":   "artwork_omnibus/duo-ultramarines-gage-thiel.png",
+  // ── Death Guard named characters ──────────────────────────────
+  "calas_typhon":     "artwork_omnibus/duo-death-guard-elite.png",
+  // ── Dark Angels named characters ──────────────────────────────
+  "inner_circle":     "artwork_omnibus/duo-dark-angels-corswain-alajos.png",
+  // ── Knights Errant ────────────────────────────────────────────
+  "garro":            "artwork_omnibus/duo-knights-errant-garro-qruze.png",
   // ── Vehicles ──────────────────────────────────────────────────
   "kratos":           "Kratos.jpg",
   "leviathan":        "Leviathan.jpg",
@@ -62,18 +115,38 @@ var UNIT_ARTWORK_MAP = {
 
 // ━━━ FACTION → ARTWORK FILE MAP ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 var FACTION_ARTWORK_MAP = {
-  "dark_angels":  "Darkangels.jpg",
-  "blood_angels": "bloodangels.jpg",
-  "sons_of_horus":"lunawolves.jpg",
+  "dark_angels":       "Darkangels.jpg",
+  "blood_angels":      "bloodangels.jpg",
+  "sons_of_horus":     "lunawolves.jpg",
+  // ── Extended faction art from artwork_omnibus ──────────────────────────────
+  "emperors_children": "artwork_omnibus/duo-emperors-children-saul-lucius.png",
+  "iron_warriors":     "artwork_omnibus/duo-iron-warriors-dantioch-krendel.png",
+  "white_scars":       "artwork_omnibus/duo-white-scars-elite.png",
+  "space_wolves":      "artwork_omnibus/duo-space-wolves.png",
+  "imperial_fists":    "artwork_omnibus/duo-imperial-fists-rann-archamus-thane.png",
+  "night_lords":       "artwork_omnibus/duo-night-lords-sevatar-shang.png",
+  "iron_hands":        "artwork_omnibus/30k-iron-hands-meduson.png",
+  "world_eaters":      "artwork_omnibus/duo-world-eaters.png",
+  "ultramarines":      "artwork_omnibus/30k-ultramarines-1-.png",
+  "death_guard":       "artwork_omnibus/duo-death-guard.png",
+  "thousand_sons":     "artwork_omnibus/duo-thousand-sons-amon-sanakht.png",
+  "word_bearers":      "artwork_omnibus/30k-word-bearers-erebus.png",
+  "salamanders":       "artwork_omnibus/duo-salamanders.png",
+  "raven_guard":       "artwork_omnibus/30k-raven-guard-hef.png",
+  "alpha_legion":      "artwork_omnibus/duo-alpha-legion.png",
 };
 
 // ━━━ HELPER: resolve artwork path ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function _artworkPath(val) {
+  // If the value already contains a path separator it's a full relative path
+  return val.indexOf("/") !== -1 ? val : "artwork/" + val;
+}
 function getUnitArtwork(unitId, factionId, allegiance) {
   if (unitId && UNIT_ARTWORK_MAP[unitId]) {
-    return "artwork/" + UNIT_ARTWORK_MAP[unitId];
+    return _artworkPath(UNIT_ARTWORK_MAP[unitId]);
   }
   if (factionId && FACTION_ARTWORK_MAP[factionId]) {
-    return "artwork/" + FACTION_ARTWORK_MAP[factionId];
+    return _artworkPath(FACTION_ARTWORK_MAP[factionId]);
   }
   if (allegiance === "traitor")  return "artwork/Traitor.jpg";
   if (allegiance === "loyalist") return "artwork/Loyalist.jpg";
