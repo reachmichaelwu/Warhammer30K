@@ -27,6 +27,19 @@ var MELEE_SPECIAL_RULES = [
   { id: "m_reaping", label: "Reaping Blow", desc: "Each model makes 1 extra attack against all models in base contact" },
   { id: "m_duelist", label: "Duelist's Edge", desc: "+1 Initiative in challenges" },
   { id: "m_rampage", label: "Rampage", desc: "+D3 attacks when outnumbered" },
+  // ── Additional rules from rulebook ──
+  { id: "m_aflame", label: "Aflame", desc: "Unsaved wounds force a Leadership check; model is 'Aflame' until End Phase, -X to Ld" },
+  { id: "m_armourbane", label: "Armourbane", desc: "Glancing hits are treated as Penetrating hits against Vehicles" },
+  { id: "m_breaching", label: "Breaching (4+)", desc: "To Wound of 4+ — if a wound is inflicted it becomes a Breaching Wound (AP 2, ignores saves)" },
+  { id: "m_criticalHit", label: "Critical Hit (6+)", desc: "To Hit roll of 6 = auto-wound (no Wound roll) and inflicts +1 Damage" },
+  { id: "m_deflagrate", label: "Deflagrate", desc: "Unsaved wounds generate additional hits equal to the number of unsaved wounds (S equal to Deflagrate X, AP '-', D1)" },
+  { id: "m_eternalWarrior", label: "Eternal Warrior (X)", desc: "Reduces the Damage of each Unsaved Wound allocated to this model by X (minimum 1)" },
+  { id: "m_fear", label: "Fear (X)", desc: "Enemy units within 12\" reduce Ld, Willpower, Cool, and Intelligence by X" },
+  { id: "m_force", label: "Force", desc: "Willpower check before attacking — success doubles listed Characteristic; failure causes Perils of the Warp" },
+  { id: "m_hatred", label: "Hatred (X)", desc: "+1 to all Wound Tests against the specified Faction, Type or Trait" },
+  { id: "m_impact", label: "Impact (X)", desc: "On a successful Charge, +X to a Characteristic for all Melee Attacks that Assault Phase" },
+  { id: "m_poisoned", label: "Poisoned (4+)", desc: "Wounds automatically on a 4+ regardless of Toughness (re-roll if S ≥ T)" },
+  { id: "m_precision", label: "Precision Strikes", desc: "To Wound of 6 — attacker chooses which model in the target unit takes the wound" },
 ];
 
 // Melee weapons keyed by unit id
