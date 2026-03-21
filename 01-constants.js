@@ -62,5 +62,17 @@ var SPECIAL_RULES = [
   { id: "suppressive", label: "Suppressive", desc: "Hits cause Suppressed status (Cool check)" },
   { id: "stun", label: "Stun", desc: "Hits cause Stunned status (Cool check)" },
   { id: "panic", label: "Panic", desc: "Wounds cause Panic status (Cool check)" },
+  // ── Additional rules from rulebook ──
+  { id: "aflame", label: "Aflame", desc: "Unsaved wounds force a Leadership check; target is 'Aflame' until End Phase, -X to Ld on that check" },
+  { id: "criticalHit", label: "Critical Hit (6+)", desc: "To Hit roll of 6 = auto-wound (bypasses Wound roll) and inflicts +1 Damage" },
+  { id: "heavy", label: "Heavy (X)", desc: "Weapon gains +1 to a Characteristic (or AP improves one step) if the unit was Stationary last turn" },
+  { id: "melta", label: "Melta (X)", desc: "Within half range, Penetrating Hits have their Damage doubled" },
+  { id: "ordnance", label: "Ordnance (X)", desc: "Doubles the value of a Characteristic when the unit was Stationary last turn" },
+  { id: "shock", label: "Shock (X)", desc: "To Hit rolls of 5 or 6 apply a Status to Vehicle/Walker models in the target unit" },
+  { id: "skyfire", label: "Skyfire", desc: "Ignores all penalties for targeting Flyer sub-type units; makes normal Hit Tests instead of Snap Shots" },
+  { id: "template", label: "Template", desc: "Uses Flame Template — no To Hit roll; every model fully or partially under the template is hit automatically" },
+  { id: "barrage", label: "Barrage (X)", desc: "Can fire without Line of Sight (Indirect Fire); uses Blast marker + Scatter dice. Roll 2D6 for scatter distance if no HIT result" },
+  { id: "firingProtocols", label: "Firing Protocols (X)", desc: "Model may make attacks with X Ranged Weapons in one Shooting Attack (each weapon can only be used once)" },
+  { id: "force", label: "Force", desc: "Make a Willpower check before attacking — success doubles the listed Characteristic; failure causes Perils of the Warp" },
 ];
 

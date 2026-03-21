@@ -35,7 +35,7 @@ var UNIT_BATTLEFIELD_ROLE = {
   praetor_pa: "high_command", praetor_ta: "high_command", praetor_sat: "high_command",
   // COMMAND
   centurion: "command", centurion_ta: "command", optae: "command", champion: "command", master_signals: "command",
-  vigilator: "command", forge_lord: "command", chaplain: "command",
+  vigilator: "command", chaplain: "command",
   librarian: "command", herald: "command", moritat: "command", siege_breaker: "command",
   esoterist: "command", praevian: "command", overseer: "command",
   damocles_rhino: "command",
@@ -103,7 +103,7 @@ var UNIT_BATTLEFIELD_ROLE = {
   sevatar: "high_command", contekar: "heavy_assault",
   executioner_nl: "troops", night_raptor: "fast_attack",
   // ── BLOOD ANGELS (IX) ──
-  raldoron: "high_command", dom_zephon: "high_command", aster_crohne: "command",
+  raldoron: "high_command", dom_zephon: "command", aster_crohne: "command",
   crimson_paladin: "elites", dawnbreaker: "fast_attack",
   erelim: "troops", contemp_incaendius: "war_engine",
   // ── IRON HANDS (X) ──
@@ -176,7 +176,7 @@ var ADDITIONAL_DETACHMENTS = {
   },
   allied_det: {
     name: "Allied Detachment",
-    desc: "Units cannot be from the Legion — must be Solar Auxilia, Mechanicum, or Custodes. May include an Auxiliary Detachment.",
+    desc: "Command slots may be filled by any Legion Command unit and each unlocks one Auxiliary Detachment. Troop slots must be Solar Auxilia, Mechanicum, or Custodes.",
     icon: "🤝",
     color: "#5b7a9d",
     isAllied: true,
