@@ -658,6 +658,31 @@ var LEGION_FACTIONS = [
   { id: "custodes",           name: "Legio Custodes",              allegiance: "loyalist", numeral: "-" },
 ];
 
+// Maps unit IDs that are restricted to a specific faction (e.g. Primarchs).
+// Units NOT listed here are considered generic and available to any faction.
+var UNIT_SPECIFIC_FACTION = {
+  // Loyalist Primarchs — WARLORD (L)
+  "lion":       "dark_angels",
+  "khan":       "white_scars",
+  "russ":       "space_wolves",
+  "dorn":       "imperial_fists",
+  "sanguinius": "blood_angels",
+  "ferrus":     "iron_hands",
+  "guilliman":  "ultramarines",
+  "vulkan":     "salamanders",
+  "corax":      "raven_guard",
+  // Traitor Primarchs — WARLORD (T)
+  "fulgrim":    "emperors_children",
+  "perturabo":  "iron_warriors",
+  "curze":      "night_lords",
+  "angron":     "world_eaters",
+  "mortarion":  "death_guard",
+  "magnus":     "thousand_sons",
+  "horus":      "sons_of_horus",
+  "lorgar":     "word_bearers",
+  "alpharius":  "alpha_legion",
+};
+
 var MAX_UNIT_SIZE = {
   tactical: 20, despoiler: 20, breacher: 20, assault: 20,
   tactical_support: 10, heavy_support: 10,
