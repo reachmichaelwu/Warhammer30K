@@ -4,24 +4,67 @@
 // ━━━ UNIT SELECTOR MODAL ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 function UnitSelectorModal({ presets, onSelect, selectedId, onClose, accentColor = "#b8860b", title, isTarget = false, faction }) {
-  // Faction category prefix helpers
-  const isSACat       = (cat) => cat && cat.startsWith("SA: ");
-  const isMechCat     = (cat) => cat && cat.startsWith("MECH:");
-  const isCustodesCat = (cat) => cat && cat.startsWith("CUSTODES:");
+  // Faction category prefix helpers (also match legacy unprefixed category names)
+  const isSACat            = (cat) => cat && (cat.startsWith("SA: ") || cat === "SOLAR AUXILIA");
+  const isMechCat          = (cat) => cat && cat.startsWith("MECH:");
+  const isCustodesCat      = (cat) => cat && (cat.startsWith("CUSTODES:") || cat === "CUSTODES");
+  // Legion-specific categories follow the pattern "NUMERAL: NAME" (e.g. "I: DARK ANGELS")
+  const isLegionSpecificCat = (cat) => cat && /^[IVX]+: /.test(cat);
+
+  // For a specific legion faction (not legiones_astartes/SA/MECH/CUSTODES), look up
+  // the Roman numeral so we can match its own category (e.g. "I: " for dark_angels).
+  const factionNumeral = (typeof LEGION_FACTIONS !== "undefined")
+    ? ((LEGION_FACTIONS.find(f => f.id === faction) || {}).numeral || null)
+    : null;
+  // A "specific legion" means a named legion (not the generic catch-all).
+  const isSpecificLegion = faction
+    && faction !== "legiones_astartes"
+    && faction !== "sol_auxilia"
+    && faction !== "mechanicum"
+    && faction !== "custodes";
 
   // Filter preset categories based on selected faction:
-  //   sol_auxilia  → only "SA: *" categories
-  //   mechanicum   → only "MECH: *" categories
-  //   custodes     → only "CUSTODES: *" categories
-  //   any legion   → exclude "SA: *", "MECH: *", and "CUSTODES: *"
-  //                  (keeps legacy "SOLAR AUXILIA" for Allied ogryn)
+  //   sol_auxilia        → only "SA: *" categories
+  //   mechanicum         → only "MECH: *" categories
+  //   custodes           → only "CUSTODES: *" categories
+  //   specific legion    → generic categories + own legion category (e.g. "I: DARK ANGELS"),
+  //                        then also strip faction-specific units from generic categories
+  //   legiones_astartes  → all legion categories (exclude SA, MECH, CUSTODES)
   const visiblePresets = useMemo(() => {
     if (!faction) return presets;
     if (faction === "sol_auxilia") return presets.filter(c => isSACat(c.category));
     if (faction === "mechanicum")  return presets.filter(c => isMechCat(c.category));
     if (faction === "custodes")    return presets.filter(c => isCustodesCat(c.category));
-    // Legion factions: exclude SA, MECH, and CUSTODES sub-categories
-    return presets.filter(c => !isSACat(c.category) && !isMechCat(c.category) && !isCustodesCat(c.category));
+
+    // Build the category list for any legion faction
+    let categories = presets.filter(c => {
+      if (isSACat(c.category) || isMechCat(c.category) || isCustodesCat(c.category)) return false;
+      if (isLegionSpecificCat(c.category)) {
+        // For a specific legion show only its own category; for legiones_astartes show all
+        if (isSpecificLegion && factionNumeral && factionNumeral !== "-") {
+          return c.category.startsWith(factionNumeral + ": ");
+        }
+        return true;
+      }
+      return true; // Generic category — always include
+    });
+
+    // For a specific legion, remove units that belong to a different faction
+    // (e.g. hide non-matching Primarchs from the WARLORD categories)
+    if (isSpecificLegion && typeof UNIT_SPECIFIC_FACTION !== "undefined") {
+      categories = categories
+        .map(c => ({
+          ...c,
+          units: c.units.filter(u => {
+            const unitFaction = UNIT_SPECIFIC_FACTION[u.id];
+            // If the unit is tied to a specific faction it must match; generic units always pass
+            return !unitFaction || unitFaction === faction;
+          }),
+        }))
+        .filter(c => c.units.length > 0); // Drop now-empty categories
+    }
+
+    return categories;
   }, [presets, faction]);
 
   const [activeCategory, setActiveCategory] = useState(visiblePresets[0]?.category || "");
