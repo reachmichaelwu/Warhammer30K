@@ -189,6 +189,14 @@ var MELEE_WEAPON_PROFILES = {
     { name: "Chainfist", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 3, t: 5, sv: "2", inv: "5", fnp: "-", rules: { m_armourbane: true, m_shred: true }, traits: "Chain" },
     { name: "Thunder Hammer", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 3, t: 5, sv: "2", inv: "5", fnp: "-", rules: {  }, traits: "Power" },
   ],
+  // Saturnine Terminator Command Squad: WS5 S4 T6 W3 I3 A3 INV4+
+  // Paired disruption fists: SM+2, AM+1, IM-2, AP2. War axe: S7, no IM. Hammer: S10, IM-2.
+  saturnine_cmd: [
+    { name: "Paired Saturnine Disruption Fists", ws: 5, s: 6, ap: "2", i: 1, a: 4, w: 3, t: 6, sv: "2", inv: "4", fnp: "-", rules: {}, traits: "Power" },
+    { name: "Saturnine War Axe + Disruption Fist", ws: 5, s: 7, ap: "2", i: 3, a: 3, w: 3, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_reapingBlow: true }, traits: "Power" },
+    { name: "Saturnine Concussion Hammer + Disruption Fist", ws: 5, s: 10, ap: "2", i: 1, a: 3, w: 3, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_criticalHit: true }, traits: "Power" },
+    { name: "Plasma Bombard + Disruption Fist", ws: 5, s: 6, ap: "2", i: 1, a: 3, w: 3, t: 6, sv: "2", inv: "4", fnp: "-", rules: {}, traits: "Power" },
+  ],
   // VEHICLES & DREADS
   contemptor: [
     { name: "Dreadnought Close Combat Weapon", ws: 5, s: 7, ap: "2", i: 4, a: 4, w: 7, t: 7, sv: "2", inv: "5", fnp: "-", rules: {} },
@@ -233,6 +241,95 @@ var MELEE_WEAPON_PROFILES = {
   ],
   vorax: [
     { name: "Vorax Power Blades", ws: 4, s: 5, ap: "3", i: 4, a: 4, w: 4, t: 6, sv: "3", inv: "-", fnp: "-", rules: { m_rending: true } },
+  ],
+  // ── MECHANICUM TAGHMATA ──
+  archmagos_tm: [
+    { name: "Mechadendrite Harness", ws: 5, s: 4, ap: "5", i: 4, a: 3, w: 4, t: 6, sv: "2", inv: "4", fnp: "5", rules: {} },
+    { name: "Power Weapon", ws: 5, s: 4, ap: "3", i: 4, a: 3, w: 4, t: 6, sv: "2", inv: "4", fnp: "5", rules: { m_breaching6: true }, traits: "Power" },
+    { name: "Power Fist", ws: 5, s: 8, ap: "2", i: 1, a: 3, w: 4, t: 6, sv: "2", inv: "4", fnp: "5", rules: {}, traits: "Power" },
+  ],
+  archmagos_abeyant_tm: [
+    { name: "Mechadendrite Harness", ws: 5, s: 4, ap: "5", i: 4, a: 3, w: 4, t: 7, sv: "2", inv: "4", fnp: "5", rules: {} },
+    { name: "Power Weapon", ws: 5, s: 4, ap: "3", i: 4, a: 3, w: 4, t: 7, sv: "2", inv: "4", fnp: "5", rules: { m_breaching6: true }, traits: "Power" },
+    { name: "Power Fist", ws: 5, s: 8, ap: "2", i: 1, a: 3, w: 4, t: 7, sv: "2", inv: "4", fnp: "5", rules: {}, traits: "Power" },
+  ],
+  magos_tm: [
+    { name: "Mechadendrite Harness", ws: 4, s: 4, ap: "5", i: 3, a: 2, w: 4, t: 5, sv: "2", inv: "3", fnp: "5", rules: {} },
+    { name: "Power Weapon", ws: 4, s: 4, ap: "3", i: 3, a: 2, w: 4, t: 5, sv: "2", inv: "3", fnp: "5", rules: { m_breaching6: true }, traits: "Power" },
+    { name: "Power Fist", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 4, t: 5, sv: "2", inv: "3", fnp: "5", rules: {}, traits: "Power" },
+  ],
+  magos_abeyant_tm: [
+    { name: "Mechadendrite Harness", ws: 4, s: 4, ap: "5", i: 3, a: 2, w: 4, t: 6, sv: "2", inv: "5", fnp: "5", rules: {} },
+    { name: "Power Weapon", ws: 4, s: 4, ap: "3", i: 3, a: 2, w: 4, t: 6, sv: "2", inv: "5", fnp: "5", rules: { m_breaching6: true }, traits: "Power" },
+    { name: "Power Fist", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 4, t: 6, sv: "2", inv: "5", fnp: "5", rules: {}, traits: "Power" },
+  ],
+  arcuitor_tm: [
+    { name: "Arc Maul", ws: 5, s: 6, ap: "4", i: 4, a: 2, w: 4, t: 5, sv: "2", inv: "5", fnp: "5", rules: { m_breaching5: true }, traits: "Power" },
+    { name: "Power Weapon", ws: 5, s: 4, ap: "3", i: 4, a: 2, w: 4, t: 5, sv: "2", inv: "5", fnp: "5", rules: { m_breaching6: true }, traits: "Power" },
+  ],
+  tech_priest_tm: [
+    { name: "Mechadendrite Harness", ws: 3, s: 3, ap: "5", i: 3, a: 1, w: 2, t: 5, sv: "3", inv: "6", fnp: "6", rules: {} },
+  ],
+  scyllax_tm: [
+    { name: "Scyllax Combat Array", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 2, t: 5, sv: "3", inv: "6", fnp: "-", rules: { m_armourbane: true } },
+  ],
+  secutor_tm: [
+    { name: "Power Maul", ws: 5, s: 6, ap: "4", i: 4, a: 3, w: 4, t: 5, sv: "3", inv: "5", fnp: "-", rules: { m_breaching5: true }, traits: "Power" },
+    { name: "Power Weapon", ws: 5, s: 4, ap: "3", i: 4, a: 3, w: 4, t: 5, sv: "3", inv: "5", fnp: "-", rules: { m_breaching6: true }, traits: "Power" },
+  ],
+  tech_thrall_cov_tm: [
+    { name: "Close Combat Weapon", ws: 2, s: 3, ap: "-", i: 3, a: 1, w: 1, t: 3, sv: "6", inv: "-", fnp: "6", rules: {} },
+  ],
+  thallax_full_tm: [
+    { name: "Prehensile Mechadendrite", ws: 4, s: 4, ap: "5", i: 4, a: 2, w: 2, t: 5, sv: "3", inv: "6", fnp: "-", rules: {} },
+  ],
+  ursarax_tm: [
+    { name: "Ursarax Power Claws (pair)", ws: 4, s: 4, ap: "1", i: 7, a: 2, w: 2, t: 5, sv: "3", inv: "6", fnp: "-", rules: { m_breaching5: true, m_shred: true }, traits: "Power" },
+  ],
+  echidnax_tm: [
+    { name: "Mechadendrite Harness", ws: 4, s: 4, ap: "5", i: 4, a: 2, w: 2, t: 5, sv: "3", inv: "3", fnp: "-", rules: {} },
+  ],
+  destructor_tm: [
+    { name: "Power Weapon", ws: 4, s: 4, ap: "3", i: 3, a: 2, w: 4, t: 5, sv: "3", inv: "5", fnp: "-", rules: { m_breaching6: true }, traits: "Power" },
+  ],
+  domitar_tm: [
+    { name: "Domitar Battle Fists", ws: 4, s: 6, ap: "3", i: 3, a: 3, w: 4, t: 7, sv: "2", inv: "5", fnp: "-", rules: { m_breaching5: true }, traits: "Power" },
+  ],
+  castellax_dest_tm: [
+    { name: "Shock Chargers (pair)", ws: 4, s: 6, ap: "3", i: 3, a: 2, w: 2, t: 6, sv: "3", inv: "6", fnp: "-", rules: {} },
+    { name: "Siege Wrecker", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 2, t: 6, sv: "3", inv: "6", fnp: "-", rules: { m_armourbane: true } },
+  ],
+  castellax_battle_tm: [
+    { name: "Shock Chargers (pair)", ws: 4, s: 6, ap: "3", i: 3, a: 2, w: 4, t: 6, sv: "3", inv: "6", fnp: "-", rules: {} },
+    { name: "Siege Wrecker", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 4, t: 6, sv: "3", inv: "6", fnp: "-", rules: { m_armourbane: true } },
+    { name: "Power Blade Array", ws: 4, s: 6, ap: "3", i: 3, a: 4, w: 4, t: 6, sv: "3", inv: "6", fnp: "-", rules: { m_rending: true } },
+  ],
+  thanatar_siege_tm: [
+    { name: "Siege Wrecker Appendages", ws: 3, s: 8, ap: "2", i: 1, a: 2, w: 10, t: 8, sv: "2", inv: "5", fnp: "-", rules: { m_armourbane: true } },
+  ],
+  armiger_tm: [
+    { name: "Gyges Siege Claw", ws: 4, s: 9, ap: "3", i: 5, a: 4, w: 4, t: 7, sv: "3", inv: "5", fnp: "-", rules: { m_armourbane: true, m_breaching5: true }, traits: "Power" },
+  ],
+  // ── MACHINA MALEFICA ──
+  decimator_mm: [
+    { name: "Decimator Power Claw", ws: 5, s: 5, ap: "3", i: 5, a: 2, w: 3, t: 5, sv: "2", inv: "5", fnp: "-", rules: { m_breaching6: true }, traits: "Power" },
+  ],
+  blood_slaughterer_mm: [
+    { name: "Slaughterer Blades", ws: 5, s: 6, ap: "3", i: 5, a: 4, w: 4, t: 6, sv: "3", inv: "6", fnp: "-", rules: { m_armourbane: true, m_breaching5: true } },
+  ],
+  brass_scorpion_mm: [
+    { name: "Hellcrusher Claws", ws: 5, s: 8, ap: "2", i: 5, a: 5, w: 15, t: 8, sv: "2", inv: "5", fnp: "-", rules: { m_armourbane: true, m_breaching6: true }, traits: "Power" },
+  ],
+  kytan_mm: [
+    { name: "Cleaver of Slaughter", ws: 5, s: 8, ap: "2", i: 2, a: 4, w: 14, t: 8, sv: "2", inv: "5", fnp: "-", rules: { m_shred: true } },
+  ],
+  scoria_mm: [
+    { name: "Scorian Talons", ws: 5, s: 7, ap: "2", i: 6, a: 4, w: 9, t: 7, sv: "2", inv: "4", fnp: "5", rules: { m_criticalHit: true } },
+    { name: "Vodian Sceptre", ws: 5, s: 10, ap: "2", i: 4, a: 2, w: 9, t: 7, sv: "2", inv: "4", fnp: "5", rules: {} },
+  ],
+  draykavac_mm: [
+    { name: "Power Weapon", ws: 5, s: 4, ap: "3", i: 4, a: 3, w: 4, t: 6, sv: "2", inv: "4", fnp: "5", rules: { m_breaching6: true }, traits: "Power" },
+    { name: "Power Fist", ws: 5, s: 8, ap: "2", i: 1, a: 3, w: 4, t: 6, sv: "2", inv: "4", fnp: "5", rules: {}, traits: "Power" },
   ],
   // CUSTODES
   custodian_guard: [
@@ -346,6 +443,11 @@ var MELEE_WEAPON_PROFILES = {
     { name: "Power Fist", ws: 5, s: 8, ap: "2", i: 1, a: 3, w: 3, t: 4, sv: "2", inv: "4", fnp: "-", rules: {  }, traits: "Power" },
     { name: "Chainfist", ws: 5, s: 8, ap: "2", i: 1, a: 3, w: 3, t: 4, sv: "2", inv: "4", fnp: "-", rules: { m_armourbane: true, m_shred: true }, traits: "Chain" },
     { name: "Thunder Hammer", ws: 5, s: 8, ap: "2", i: 1, a: 3, w: 3, t: 4, sv: "2", inv: "4", fnp: "-", rules: {  }, traits: "Power" },
+  ],
+  // Centurion in Saturnine Terminator Armour: WS5 S4 T6 W5 I4 A3 INV4+
+  // Saturnine Disruption Fist: SM+2, IM-2, AP2, no AM bonus (single fist)
+  centurion_sat: [
+    { name: "Saturnine Disruption Fist", ws: 5, s: 6, ap: "2", i: 2, a: 3, w: 5, t: 6, sv: "2", inv: "4", fnp: "-", rules: {}, traits: "Power" },
   ],
   esoterist: [
     { name: "Force Weapon", ws: 4, s: 5, ap: "3", i: 4, a: 2, w: 2, t: 4, sv: "3", inv: "-", fnp: "-", rules: {  }, traits: "Psychic" },
@@ -700,6 +802,13 @@ var MELEE_WEAPON_PROFILES = {
   anakatis_kul: [
     { name: "Daemon Blade", ws: 4, s: 5, ap: "3", i: 4, a: 2, w: 3, t: 5, sv: "3", inv: "-", fnp: "-", ld: 10, rules: { m_shred: true, m_rending: true } },
   ],
+  // Phraetus Anointed Conclave: WS5 S4 T6 W3 I3 A3 INV4+
+  // Paired disruption fists: SM+2, AM+1, IM-2, AP2. War axe: S7, I unchanged.
+  phraetus_conclave: [
+    { name: "Paired Saturnine Disruption Fists", ws: 5, s: 6, ap: "2", i: 1, a: 4, w: 3, t: 6, sv: "2", inv: "4", fnp: "-", rules: {}, traits: "Power" },
+    { name: "Saturnine War Axe + Disruption Fist", ws: 5, s: 7, ap: "2", i: 3, a: 3, w: 3, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_reapingBlow: true }, traits: "Power" },
+    { name: "Plasma Bombard + Disruption Fist", ws: 5, s: 6, ap: "2", i: 1, a: 3, w: 3, t: 6, sv: "2", inv: "4", fnp: "-", rules: {}, traits: "Power" },
+  ],
   incendiary_wb: [
     { name: "Chainsword", ws: 4, s: 4, ap: "5", i: 4, a: 1, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", ld: 8, rules: { m_shred: true } },
     { name: "Combat Blade", ws: 4, s: 4, ap: "6", i: 4, a: 1, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", ld: 8, rules: {} },
@@ -775,6 +884,58 @@ var MELEE_WEAPON_PROFILES = {
   ],
   kyzagan: [
     { name: "Hull Strike", ws: 3, s: 6, ap: "4", i: 3, a: 1, w: 4, t: 7, sv: "3", inv: "-", fnp: "-", ld: 8, rules: {} },
+  ],
+  // ── LEGIO CUSTODES ──
+  // High Command
+  valdor_c: [
+    { name: "Apollonian Spear (Melee)", ws: 7, s: 7, ap: "2", i: 10, a: 6, w: 6, t: 5, sv: "2", inv: "4", fnp: "-", ld: 12, rules: { m_criticalHit: true, m_impact: true }, traits: "Power" },
+  ],
+  // Command
+  tribune_c: [
+    { name: "Eternity Spear (Melee)", ws: 7, s: 6, ap: "2", i: 6, a: 6, w: 5, t: 5, sv: "2", inv: "4", fnp: "-", ld: 12, rules: { m_criticalHit: true, m_impact: true, m_shred: true }, traits: "Power" },
+    { name: "Eternity Blade", ws: 7, s: 6, ap: "2", i: 7, a: 6, w: 5, t: 5, sv: "2", inv: "4", fnp: "-", ld: 12, rules: { m_criticalHit: true, m_shred: true } },
+  ],
+  shield_captain_c: [
+    { name: "Eternity Blade", ws: 6, s: 6, ap: "2", i: 7, a: 4, w: 5, t: 5, sv: "2", inv: "4", fnp: "-", ld: 10, rules: { m_criticalHit: true, m_shred: true } },
+    { name: "Eternity Spear (Melee, opt)", ws: 6, s: 6, ap: "2", i: 6, a: 4, w: 5, t: 5, sv: "2", inv: "4", fnp: "-", ld: 10, rules: { m_criticalHit: true, m_impact: true, m_shred: true }, traits: "Power" },
+    { name: "Misericordia", ws: 6, s: 5, ap: "3", i: 6, a: 4, w: 5, t: 5, sv: "2", inv: "4", fnp: "-", ld: 10, rules: { m_breaching5: true }, traits: "Power" },
+  ],
+  // Troops
+  custodian_guard_c: [
+    { name: "Guardian Spear (Melee)", ws: 5, s: 6, ap: "2", i: 7, a: 3, w: 2, t: 5, sv: "2", inv: "6", fnp: "-", ld: 10, rules: { m_impact: true }, traits: "Power" },
+    { name: "Misericordia", ws: 5, s: 5, ap: "3", i: 7, a: 3, w: 2, t: 5, sv: "2", inv: "6", fnp: "-", ld: 10, rules: { m_breaching5: true }, traits: "Power" },
+  ],
+  sentinel_guard_c: [
+    { name: "Sentinel Warblade (Melee)", ws: 5, s: 5, ap: "2", i: 5, a: 3, w: 2, t: 5, sv: "2", inv: "5", fnp: "-", ld: 10, rules: {}, traits: "Power" },
+    { name: "Misericordia", ws: 5, s: 5, ap: "3", i: 5, a: 3, w: 2, t: 5, sv: "2", inv: "5", fnp: "-", ld: 10, rules: { m_breaching5: true }, traits: "Power" },
+  ],
+  // Heavy Assault
+  aquilon_c: [
+    { name: "Solarite Power Talon", ws: 5, s: 5, ap: "2", i: 5, a: 3, w: 3, t: 6, sv: "2", inv: "4", fnp: "-", ld: 10, rules: { m_criticalHit: true, m_reapingBlow: true }, traits: "Power" },
+    { name: "Solarite Power Gauntlet (+5pts opt)", ws: 5, s: 9, ap: "2", i: 2, a: 3, w: 3, t: 6, sv: "2", inv: "4", fnp: "-", ld: 10, rules: { m_criticalHit: true }, traits: "Power" },
+    { name: "Misericordia", ws: 5, s: 5, ap: "3", i: 5, a: 3, w: 3, t: 6, sv: "2", inv: "4", fnp: "-", ld: 10, rules: { m_breaching5: true }, traits: "Power" },
+  ],
+  // War Engines (Walkers)
+  contemptor_achillus_c: [
+    { name: "Achillus Dreadspear (Melee)", ws: 5, s: 11, ap: "2", i: 4, a: 5, w: 6, t: 7, sv: "2", inv: "5", fnp: "-", ld: 12, rules: { m_armourbane: true, m_impact: true }, traits: "Power" },
+  ],
+  contemptor_galatus_c: [
+    { name: "Galatus Warblade (Melee)", ws: 5, s: 8, ap: "2", i: 4, a: 5, w: 6, t: 7, sv: "2", inv: "4", fnp: "-", ld: 12, rules: { m_reapingBlow: true }, traits: "Power" },
+  ],
+  // Fast Attack
+  venatari_c: [
+    { name: "Verutum Lance (Melee)", ws: 5, s: 6, ap: "2", i: 5, a: 3, w: 2, t: 5, sv: "3", inv: "6", fnp: "-", ld: 10, rules: { m_impact: true }, traits: "Power" },
+    { name: "Misericordia", ws: 5, s: 5, ap: "3", i: 5, a: 3, w: 2, t: 5, sv: "3", inv: "6", fnp: "-", ld: 10, rules: { m_breaching5: true }, traits: "Power" },
+  ],
+  gyrfalcon_c: [
+    { name: "Solarite Power Lance (Charge)", ws: 5, s: 10, ap: "2", i: 8, a: 2, w: 3, t: 5, sv: "3", inv: "6", fnp: "-", ld: 10, rules: { m_armourbane: true, m_criticalHit: true, m_impact: true }, traits: "Power" },
+    { name: "Solarite Power Lance (Defend)", ws: 5, s: 5, ap: "2", i: 3, a: 2, w: 3, t: 5, sv: "3", inv: "6", fnp: "-", ld: 10, rules: { m_criticalHit: true }, traits: "Power" },
+    { name: "Misericordia", ws: 5, s: 5, ap: "3", i: 4, a: 2, w: 3, t: 5, sv: "3", inv: "6", fnp: "-", ld: 10, rules: { m_breaching5: true }, traits: "Power" },
+  ],
+  // Lord of War (Walker)
+  telemon_c: [
+    { name: "Telemon Caestus", ws: 5, s: 12, ap: "2", i: 3, a: 3, w: 8, t: 8, sv: "2", inv: "4", fnp: "-", ld: 12, rules: { m_criticalHit: true, m_armourbane: true }, traits: "Power" },
+    { name: "Paired Telemon Caestus (opt)", ws: 5, s: 12, ap: "2", i: 3, a: 4, w: 8, t: 8, sv: "2", inv: "4", fnp: "-", ld: 12, rules: { m_criticalHit: true, m_armourbane: true }, traits: "Power" },
   ],
 };
 

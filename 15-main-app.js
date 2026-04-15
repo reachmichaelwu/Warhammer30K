@@ -160,40 +160,65 @@ var ShootingResolver = function () {
     return { valid: errors.length === 0, errors };
   }, [loyalistArmy, traitorArmy, armyBuilderSide]);
 
-  // Get available units for a given role, filtered by allegiance and detachment type
+  // Get available units for a given role, filtered by faction, allegiance, and detachment type
   const getAvailableUnitsForRole = useCallback(
     (role, detachmentId) => {
       const army = getArmy();
       const validIds = getUnitsForRole(role);
       const allUnits = UNIT_PRESETS.flatMap((c) => c.units);
 
-      // Check if this is an Allied Detachment — only non-Legion factions allowed
+      // Check if this is an Allied Detachment
       const det = army.detachments.find((d) => d.id === detachmentId);
       const detDef = det ? ADDITIONAL_DETACHMENTS[det.type] : null;
       const isAllied = detDef?.isAllied || false;
+      const isSolAuxilia  = army.faction === "sol_auxilia";
+      const isMechanicum  = army.faction === "mechanicum";
+      const isCustodes    = army.faction === "custodes";
 
       return allUnits.filter((u) => {
         if (!validIds.includes(u.id)) return false;
+
+        const unitCat = UNIT_PRESETS.find((c) =>
+          c.units.some((uu) => uu.id === u.id),
+        )?.category;
+        // "Allied-category" units = Solar Auxilia, MECH: sub-categories, Custodes
+        const isAlliedCatUnit = ALLIED_FACTION_CATEGORIES.includes(unitCat) || isMechCategory(unitCat);
+
         if (isAllied) {
-          // Allied Detachment command slots allow all legion command units
-          // (they also unlock Auxiliary Detachments just like normal command slots).
-          // All other slots (troops, etc.) are restricted to Solar Auxilia, Mechanicum, Custodes.
+          // Allied Detachment — command slots allow any command unit (allegiance-filtered).
+          // Non-command slots are cross-faction:
+          //   Legion primary  → SA / Mechanicum / Custodes units
+          //   Sol Aux primary → Legion (non-allied-category) units
           if (role === "command" || role === "high_command") {
             const loyalistOnly = ALLEGIANCE_UNITS.loyalist.includes(u.id);
-            const traitorOnly = ALLEGIANCE_UNITS.traitor.includes(u.id);
-            if (army.allegiance === "loyalist" && traitorOnly) return false;
-            if (army.allegiance === "traitor" && loyalistOnly) return false;
+            const traitorOnly  = ALLEGIANCE_UNITS.traitor.includes(u.id);
+            if (army.allegiance === "loyalist" && traitorOnly)  return false;
+            if (army.allegiance === "traitor"  && loyalistOnly) return false;
             return true;
           }
-          const unitCat = UNIT_PRESETS.find((c) =>
-            c.units.some((uu) => uu.id === u.id),
-          )?.category;
-          return ALLIED_FACTION_CATEGORIES.includes(unitCat);
+          return isSolAuxilia ? !isAlliedCatUnit : isAlliedCatUnit;
         }
+
+        // ── Non-Allied detachments: enforce primary-faction unit restriction ──
+        if (isSolAuxilia) {
+          // Sol Auxilia primary: only units from the SOLAR AUXILIA category
+          if (unitCat !== "SOLAR AUXILIA") return false;
+        } else if (isMechanicum) {
+          // Mechanicum primary: only units from a MECH: sub-category
+          if (!isMechCategory(unitCat)) return false;
+        } else if (isCustodes) {
+          // Custodes primary: only units from CUSTODES: sub-categories
+          if (!unitCat || !unitCat.startsWith("CUSTODES:")) return false;
+        } else {
+          // Legion primary: exclude Solar Auxilia / Mechanicum / Custodes units
+          if (isAlliedCatUnit) return false;
+        }
+
+        // Allegiance filtering
         const loyalistOnly = ALLEGIANCE_UNITS.loyalist.includes(u.id);
-        const traitorOnly = ALLEGIANCE_UNITS.traitor.includes(u.id);
-        if (army.allegiance === "loyalist" && traitorOnly) return false;
-        if (army.allegiance === "traitor" && loyalistOnly) return false;
+        const traitorOnly  = ALLEGIANCE_UNITS.traitor.includes(u.id);
+        if (army.allegiance === "loyalist" && traitorOnly)  return false;
+        if (army.allegiance === "traitor"  && loyalistOnly) return false;
         return true;
       });
     },
@@ -1955,6 +1980,13 @@ var ShootingResolver = function () {
   const [deployZoneDepth, setDeployZoneDepth] = useState(12); // deployment zone depth in inches
   const [missionType, setMissionType] = useState("search"); // "search" | "hammer" | "dawn" | "zm"
   const [zmMission, setZmMission] = useState("sector_sweep"); // "sector_sweep" | "terminal_control" | "signal_influx"
+  const [satMission, setSatMission] = useState("ignis_sector_assault"); // saturnine sub-mission
+  const [levMission, setLevMission] = useState("charge_khalekaorus"); // leviathan sub-mission
+  const [turnRollP1, setTurnRollP1] = useState(null); // null | 1-6 — P1 initiative roll
+  const [turnRollP2, setTurnRollP2] = useState(null); // null | 1-6 — P2 initiative roll
+  const [seizeRoll,  setSeizeRoll]  = useState(null); // null | 1-6 — seize-the-initiative roll
+  const [battlefieldAssets, setBattlefieldAssets] = useState([]); // [{id, type, x, y, player}]
+  const [bfaBrush, setBfaBrush] = useState(null); // null | asset type key string
   const [zmSections, setZmSections] = useState(() => {
     // 16 sections (4×4 grid), each 12"×12" on a 48"×48" ZM board
     // type: "alpha" | "beta" | "deployA" | "deployB" | "normal"
@@ -2070,7 +2102,36 @@ var ShootingResolver = function () {
       desc: "4'×4' enclosed battlefield divided into 16 sections (12\"×12\" each). Select a Zone Mortalis mission below.",
       renderZones: () => [], // ZM zones rendered separately
     },
+    saturnine: {
+      id: "saturnine",
+      name: "Saturnine",
+      desc: "Saturnine Legion Missions. Loyalist Attacker vs Traitor Defender. Select a Saturnine mission below to see its deployment map and rules.",
+      renderZones: () => [], // Saturnine zones rendered per sub-mission below
+    },
+    leviathan: {
+      id: "leviathan",
+      name: "Leviathan (Mailed Fist)",
+      desc: "Leviathan Missions from the Mailed Fist supplement. Attacker vs Defender fight for Sector control with super-heavy armour. Includes Battlefield Assets. Select a sub-mission below.",
+      renderZones: () => [], // Leviathan zones rendered per sub-mission in SVG overlay
+    },
   };
+
+  // ── Turn-order helpers ──────────────────────────────────────────────────────
+  const rollD6 = () => Math.floor(Math.random() * 6) + 1;
+  // "p1" | "p2" | "tie" | null
+  const turnWinner =
+    turnRollP1 !== null && turnRollP2 !== null
+      ? turnRollP1 > turnRollP2 ? "p1"
+        : turnRollP2 > turnRollP1 ? "p2"
+        : "tie"
+      : null;
+  // Who goes first after any Seize attempt
+  const turnLoser = turnWinner && turnWinner !== "tie"
+    ? (turnWinner === "p1" ? "p2" : "p1") : null;
+  const seizeSuccess = seizeRoll === 6;
+  const firstPlayer = turnWinner && turnWinner !== "tie"
+    ? (seizeRoll !== null && seizeSuccess ? turnLoser : turnWinner)
+    : null;
 
   // ── Zone Mortalis helpers ──
   const ZM_BOARD = 48; // ZM board is 48"×48"
@@ -2222,6 +2283,389 @@ var ShootingResolver = function () {
         "Last Man Standing (1VP)",
       ],
       turns: 5,
+    },
+  };
+
+  // ── Saturnine Missions ──────────────────────────────────────────────────────
+  const SATURNINE_MISSIONS_INFO = {
+    ignis_sector_assault: {
+      name: "Ignis Sector Assault",
+      type: "Legendary Mission",
+      attacker: "LOYALIST",
+      defender: "TRAITOR",
+      desc: 'The Salamanders, led by their Saturnine Terminators, attack the Death Guard defensive line. Attacker must overrun the enemy positions. Uses the Core Mission Sequence from Age of Darkness Rulebook with specific changes. At end of Turn 4, Defender rolls a die — on 4+ a 5th Game Turn is played.',
+      deployment: [
+        'Attacker (Loyalist) deploys in two Spearhead Sector triangular zones at their Battlefield Edge: each triangle is 18" base × 12" deep, positioned left and right of centre.',
+        'Defender (Traitor) deploys anywhere outside the Attacker\'s Spearhead Sectors, filling the opposite portion of the board.',
+        'Attacker takes the first Player Turn.',
+        'During Step 6 (Declare Reserves), Attacker MUST place all of the following units into Reserves: Praetor in Saturnine Terminator Armour, Centurion in Saturnine Terminator Armour, Saturnine Terminator Command Squad, Saturnine Terminator Squad. No other Attacker units may be placed in Reserves.',
+        'During Reserves Sub-Phase of Attacker\'s Turn 1, all above units must deploy from Reserves into their Spearhead Sector portion of the Attacker\'s Deployment Zone. All other Attacker units deploy normally.',
+        'During Step 6, ALL Allied Detachments of the Defender are placed in Reserves as the Second Wave.',
+        'During Step 7 (Deploy), Defender must deploy all units in their Army first, but Attacker takes the first Player Turn.',
+      ],
+      objectives: [
+        '1 Objective Marker — value 3VP — placed at centre of Battlefield.',
+        '2 Objective Markers — value 2VP each — placed at positions marked ⊕ on the Deployment Map (flanking the centre, 12" left and right of centre along the midline).',
+      ],
+      attackerRules: [
+        'Spearhead Sector: Attacker\'s Saturnine units (Praetor, Centurion, Command Squad, Terminator Squad) must go to Reserves in Step 6, then deploy into the Spearhead Sector portion of the Attacker\'s Deployment Zone during Turn 1 Reserves Sub-Phase. No other Attacker unit may be voluntarily placed in Reserves.',
+      ],
+      defenderRules: [
+        'Preliminary Bombardment: At start of Step 8 (Play Core Mission), before Turn 1 begins, the Defender may make a Preliminary Bombardment with any Tarantula Battery Units or Araknae Quad Accelerator Platform Units they have deployed on the Battlefield. Each may make a Shooting Attack — all resolved as Snap Shots.',
+        'Second Wave: All Allied Detachments of the Defender are placed in Reserves as the Second Wave. Reserves Tests for these units are automatically passed in Turn 3 and Turn 4. Units entering from Second Wave may select any point on the Defender\'s Battlefield Edge NOT within the Attacker\'s Deployment Zone (instead of their own Deployment Zone). The Reactive Player cannot declare an Intercept Advanced Reaction if the Trigger Unit was part of the Second Wave.',
+        'Battlefield Assets: Defender uses the Battlefield Assets Mission Special Rule (see Journal Tactica: The Isstvan V Dropsite Massacre, Part One, p.40).',
+      ],
+      special: [
+        'Reserves (standard rules apply)',
+        'Seize the Initiative (standard rules apply)',
+        'No other Attacker units besides the listed Saturnine units may be voluntarily placed in Reserves.',
+        'Game length: 4 turns. At end of Turn 4 Defender rolls a die — on a 4+ a 5th Turn is played.',
+      ],
+      secondary: [
+        'Slay the Warlord — 3VP',
+        'Giant Killer — 2VP',
+        'Last Man Standing — 3VP',
+        'First Strike — 2VP',
+      ],
+      turns: "4 (5th on 4+)",
+      primaryScore: 'Attacker scores VP equal to value of each Objective Marker they control at game end. Defender scores VP equal to value of each Objective Marker they control. Defender also scores 1VP in the Victory Sub-Phase of each of their Player Turns for each Objective Marker the Attacker does not Control.',
+      victory: 'Player with the most total VP (Primary + Secondary) wins. Objectives: centre = 3VP, two flanking = 2VP each.',
+    },
+    line_advance: {
+      name: "Line Advance",
+      type: "Onslaught Mission",
+      attacker: "LOYALIST",
+      defender: "TRAITOR",
+      desc: 'The lives of many must be spent to pay the price of victory. Attacker must advance Objective Markers towards the enemy line to score VP while the Defender must deny this.',
+      deployment: [
+        'Board is divided into a 16-sector 4×4 grid (each sector 18"×12") by tracing lines along the long and short edges.',
+        'Attacker deploys in an 18"×12" zone at their Battlefield Edge (bottom-left corner strip).',
+        'Defender deploys anywhere not in the Attacker\'s Deployment Zone.',
+        '4 Objective Markers (starting value 1, max 3) placed at grid sector centres marked ⊕ on the Deployment Map — distributed across the 4 columns, in rows 1–3 from the Defender\'s edge.',
+        'Defender always places the first Terrain piece. Players alternate placing Terrain. Defender may remove one Terrain piece wholly within the Attacker\'s half.',
+      ],
+      objectives: [
+        '4 Advancing Objective Markers — each starting at value 1VP (maximum 3VP).',
+        'In each of the Attacker\'s Victory Sub-Phases: score VP equal to value of each Objective Marker controlled, AND every other Objective Marker they control must be advanced toward the Defender\'s Battlefield Edge by one Sector.',
+        'Advancing: value increases by 1 each time it is advanced (max 3). Cannot move diagonally. Cannot advance if already adjacent to Defender\'s edge — value still increases to max 3.',
+        'Defender scores 1VP in the Victory Sub-Phase of each of their Player Turns for each Objective Marker the Attacker does not Control.',
+        'Defender units cannot score VP from controlling Objective Markers. Instead they gain the Vanguard (2) Special Rule (or upgrade existing Vanguard) and are eligible to score using Vanguard if: the last Model in an enemy Unit Controlling or Contesting an Objective is removed as a Casualty, OR at least one attack is made for the Defender\'s Unit in a Combat which results in 1+ enemy Models within 3" of an Objective Marker falling back at the start of that Assault Phase.',
+      ],
+      attackerRules: [
+        'Advancing Objectives: Attacker controls and advances Objective Markers to score VP each Victory Sub-Phase.',
+        'Battlefield Assets Mission Special Rule applies.',
+        'Reserves Mission Special Rule applies.',
+        'Seize the Initiative Mission Special Rule applies.',
+      ],
+      defenderRules: [
+        'Defender cannot score VP directly from controlling Objective Markers — instead uses Vanguard (2) mechanic.',
+        'Defender scores 1VP per Player Turn for each Objective Marker the Attacker does not control.',
+        'Encircling Reinforcements: When a Defender unit enters play from Reserves, it may select any point along their Battlefield Edge or either of the short Battlefield Edges.',
+      ],
+      special: [
+        'Advancing Objectives, Battlefield Assets, Reserves, Seize the Initiative Mission Special Rules.',
+        'Defender places first Terrain piece; may remove one piece wholly in Attacker\'s half.',
+        'Units Stunned, Suppressed, Pinned, Routed, Embarked, Locked in Combat, or with Vehicle Type cannot Control an Objective Marker.',
+      ],
+      secondary: [
+        'Slay the Warlord — 2VP',
+        'Giant Killer — 1VP',
+        'Last Man Standing — 2VP',
+        'First Strike — 1VP',
+      ],
+      turns: 5,
+      primaryScore: 'Attacker scores VP equal to value of each Objective they control in each of their Victory Sub-Phases. Defender scores 1VP per turn for each Objective the Attacker does not control. Defender uses Vanguard (2) to score from Objectives.',
+      victory: 'Player with the most total VP (Primary + Secondary) at game end wins.',
+    },
+    breakthrough: {
+      name: "Breakthrough",
+      type: "Onslaught Mission",
+      attacker: "LOYALIST",
+      defender: "TRAITOR",
+      desc: 'To sustain the momentum of an assault, the attackers must support the advance and resist the temptation to overstretch their lines as they delve into enemy territory. Attacker must advance the central Objective Markers, ever mindful of enemy reinforcements seeking to encircle their position.',
+      deployment: [
+        'Board is divided into a 16-sector 4×4 grid (each sector 18"×12").',
+        'Attacker deploys in an 18"×12" zone at their Battlefield Edge (bottom strip).',
+        'Defender deploys anywhere not in the Attacker\'s Deployment Zone.',
+        '4 Objective Markers (starting value 1, max 3) placed only in the OUTER sectors of the 4×4 grid per the Deployment Map ⊕ positions: 1 in left-outer column row 2, 1 in right-outer column row 2, 1 in left-outer column row 3, 1 in right-outer column row 3 (NOT in the central 2×2 sectors).',
+        'Defender always places first Terrain piece; may remove one piece wholly in Attacker\'s half.',
+      ],
+      objectives: [
+        '4 Advancing Objective Markers — starting value 1VP (maximum 3VP) — placed in outer sectors only.',
+        'Same Advancing Objectives mechanic as Line Advance: Attacker scores and advances each objective in their Victory Sub-Phase.',
+        'Defender uses Encircling Reinforcements and same Vanguard (2) scoring mechanic as Line Advance.',
+        'Defender scores 1VP per Player Turn for each Objective the Attacker does not control.',
+      ],
+      attackerRules: [
+        'Advancing Objectives, Battlefield Assets, Reserves, Seize the Initiative Mission Special Rules apply.',
+        'Same advancing and scoring mechanic as Line Advance.',
+      ],
+      defenderRules: [
+        'Encircling Reinforcements: When a Defender unit enters play from Reserves, it may select any point along their Battlefield Edge OR either of the short Battlefield Edges from which to bring the unit into play.',
+        'Defender cannot score VP from controlling Objectives; uses Vanguard (2) mechanic.',
+        'Defender scores 1VP per Player Turn for each Objective the Attacker does not control.',
+      ],
+      special: [
+        'Advancing Objectives, Battlefield Assets, Reserves, Seize the Initiative Mission Special Rules.',
+        'Encircling Reinforcements: Defender Reserves may enter from any board edge (long or short).',
+        'Objectives placed in outer sectors only (columns 1 & 4 of the 4×4 grid, rows 2 & 3).',
+      ],
+      secondary: [
+        'Slay the Warlord — 2VP',
+        'Giant Killer — 1VP',
+        'Last Man Standing — 2VP',
+        'First Strike — 1VP',
+      ],
+      turns: 5,
+      primaryScore: 'Same as Line Advance. Attacker scores VP per objective controlled and advances markers each Victory Sub-Phase. Defender scores 1VP per turn per uncontrolled objective and uses Vanguard (2) scoring.',
+      victory: 'Player with the most total VP (Primary + Secondary) at game end wins.',
+    },
+    dawn_raid: {
+      name: "Dawn Raid",
+      type: "Onslaught Mission",
+      attacker: "LOYALIST",
+      defender: "TRAITOR",
+      desc: 'A strike made at first light, or a thrust within the shrouding cover of an electro-storm, provides an element of surprise. Defenders scramble to take up their positions whilst attackers must capitalise on their initiative. Attacker must advance and secure Objective Markers; Defender must deny this by consolidating their own position.',
+      deployment: [
+        'Board is divided into a 16-sector 4×4 grid (each sector 18"×12").',
+        'Surprise Attack (Step 7): Players do NOT roll off for deployment order. Instead, the Defender automatically deploys all Units in their Army first.',
+        'Attacker deploys in an 18"×12" zone at their Battlefield Edge after Defender finishes deploying.',
+        '4 Objective Markers (starting value 1, max 3) placed asymmetrically per the Deployment Map ⊕ positions: 3 objectives in rows 1–2 from Defender\'s edge (columns 1, 2, 4), 1 objective in row 3 (column 4 / right flank near Attacker zone).',
+        'Before beginning Turn 1, the Attacker may choose to roll a die. On a 4+ the Attacker takes the First Player Turn instead of the Defender.',
+        'For the duration of the FIRST Battle Turn, all Shooting Attacks are resolved as Snap Shots.',
+      ],
+      objectives: [
+        '4 Advancing Objective Markers — starting value 1VP (maximum 3VP).',
+        'Same Advancing Objectives mechanic as Line Advance: Attacker scores and advances objectives in their Victory Sub-Phase.',
+        'Defender uses same Vanguard (2) mechanic and scores 1VP per turn per uncontrolled objective.',
+        'Turn 1 all Shooting is Snap Shots — limits Turn 1 damage from both sides.',
+      ],
+      attackerRules: [
+        'Advancing Objectives, Battlefield Assets, Reserves, Surprise Attack Mission Special Rules apply.',
+        'Surprise Attack: Attacker may roll 1 die before Turn 1. On 4+ they take the First Player Turn.',
+        'Advancing mechanic identical to Line Advance.',
+      ],
+      defenderRules: [
+        'Defender deploys ALL units first (no roll-off), but may lose first turn to Surprise Attack.',
+        'Defender cannot score VP from controlling Objectives; uses Vanguard (2) mechanic.',
+        'Defender scores 1VP per Player Turn for each Objective the Attacker does not control.',
+      ],
+      special: [
+        'Advancing Objectives, Battlefield Assets, Reserves, Surprise Attack Mission Special Rules.',
+        'Defender deploys first — no deployment roll-off.',
+        'Surprise Attack: Attacker rolls 1 die before Turn 1; on 4+ Attacker goes first.',
+        'ENTIRE Turn 1: All Shooting Attacks from BOTH sides resolved as Snap Shots.',
+      ],
+      secondary: [
+        'Slay the Warlord — 2VP',
+        'Giant Killer — 1VP',
+        'Last Man Standing — 2VP',
+        'First Strike — 1VP',
+      ],
+      turns: 5,
+      primaryScore: 'Same as Line Advance. Attacker scores VP per objective controlled and advances markers each Victory Sub-Phase. Defender scores 1VP per turn per uncontrolled objective and uses Vanguard (2) scoring.',
+      victory: 'Player with the most total VP (Primary + Secondary) at game end wins. Note: Turn 1 is Snap Shots only — plan deployments accordingly.',
+    },
+  };
+
+  // ── Leviathan (Mailed Fist) Mission Data ─────────────────────────────────
+  const LEVIATHAN_MISSIONS_INFO = {
+    charge_khalekaorus: {
+      name: "The Charge of the Khalekaorus",
+      type: "Legendary Mission",
+      attacker: "IRON WARRIORS (LOYALIST)",
+      defender: "ALPHA LEGION / MECHANICUM (TRAITOR)",
+      desc: "The Loyalist super-heavy tanks of the Iron Warriors seek to turn the tide of the invasion of Paramar V. The Attacker must control as much of the Battlefield as possible while the Defender holds Objective Markers in key areas.",
+      armies: [
+        "Attacker: Iron Warriors (Loyalist) — Primary Detachment from Legiones Astartes (Iron Warriors Faction), must include at least 1 Lord of War.",
+        "Defender: Primary Detachment from the Mechanicum Army List + Allied Detachment from Legiones Astartes (Alpha Legion Faction).",
+      ],
+      sectors: "4 Sectors. S1 (top-left, 18\"×24\"), S2 (bottom-left, 18\"×24\"), S3 (centre strip x:36-54\", full height), S4 (right strip x:54-72\", full height — Attacker area). Attacker: 2VP per Sector controlled at end of each Attacker Player Turn. Defender: 2VP per Objective Marker controlled at end of each Defender Player Turn.",
+      deployment: [
+        "Attacker's Battlefield Edge: RIGHT (east) — Attacker enters from right edge.",
+        "Defender's Reserves Entry Zone: LEFT (west) — Defender reserves enter from left edge.",
+        "Defender's Deployment Zone: Rectangle 27\" wide × 14\" tall at x:18\"–45\", y:17\"–31\" (centred vertically, just right of Sectors 1 & 2).",
+        "Sectors: S1 top-left (18\"×24\"), S2 bottom-left (18\"×24\"), S3 centre x:36\"–54\" (full height), S4 right x:54\"–72\" (full height).",
+        "Objective Markers: 3 total — S1 at (9\",12\"), S2 at (9\",36\"), S3 at (45\",24\"). No objective in Sector 4.",
+        "First Contact: Defender may ONLY set up units from Allied Detachments on the Battlefield. All other units go to Reserves entering from the LEFT edge.",
+      ],
+      attackerRules: [
+        "Turning of the Tide: From Battle Turn Four, if the Attacker has fewer VP than the Defender at the start of a Turn, the Attacker may declare a Victory Withdrawal. If they do, all VP scored by the Attacker for the Overrun Secondary Objective can instead be scored for having Models in their own Deployment Zone.",
+      ],
+      defenderRules: [
+        "First Contact: The Defender may only set up Units from Allied Detachments on the Battlefield at the start of the game. All other Units must be placed into Reserves, entering play from the Battlefield Edge marked as the Defender's Reserves Entry Zone.",
+      ],
+      special: [
+        "Uses the Leviathan Mission Pack Special Rules: Reserves and Seize the Initiative.",
+        "Battlefield Assets may be selected and used with this Mission.",
+        "This Mission may be selected as an alternative to the normal Mission during Step 1 of Mission Sequence.",
+      ],
+      secondary: {
+        common: ["Last Man Standing (2)", "Slay the Warlord (2)"],
+        attacker: ["Overrun (4)"],
+        defender: ["Break Their Strength (6)"],
+      },
+      turns: "4 (5th on 4+)",
+      primaryScore: "Attacker: 2VP for each Sector controlled at end of each Attacker Player Turn. Defender: 2VP for each Objective Marker controlled at end of each Defender Player Turn.",
+      victory: "Player with the most total VP (Primary + Secondary) at game end wins. Attacker pushes forward to seize Sectors; Defender holds Objective Markers.",
+    },
+    clash_behemoths: {
+      name: "Clash of Behemoths",
+      type: "Leviathan Mission One",
+      attacker: "ATTACKER (requires Lord of War)",
+      defender: "DEFENDER (requires Lord of War)",
+      desc: "An attacking force is beset by a determined counter-attack by the defenders, the vanguard of each force meeting in a titanic clash of armour. Both players must include at least one Lord of War Unit.",
+      armies: ["Both Players must include at least one Lord of War Unit in their Army."],
+      sectors: "4 Sectors — S1 bottom-left (18\"×24\"), S2 bottom-centre (18\"×24\"), S3 upper-centre (36\"×24\"), S4 right column (18\"×48\"). Attacker: select 1 controlled Sector per turn and score its VP (+2 bonus if Super-heavy Sub-Type present). Defender: score 2VP per controlled Objective Marker per turn.",
+      deployment: [
+        "Attacker's Battlefield Edge: LEFT (west) edge.",
+        "Attacker's Deployment Zone: Upper-left diagonal triangle — 27\" along top edge from left, 24\" down the left edge. Triangle: (0,0)→(27\",0)→(0,24\").",
+        "Defender's Deployment Zone: Lower-right diagonal triangle — 27\" along bottom edge from right, 24\" up the right edge. Triangle: (45\",48\")→(72\",48\")→(72\",24\").",
+        "Sectors: S1 bottom-left (18\"×24\" at x:0-18\", y:24-48\"), S2 bottom-centre (18\"×24\" at x:18-36\", y:24-48\"), S3 upper-centre (36\"×24\" at x:18-54\", y:0-24\"), S4 right column (18\"×48\" at x:54-72\").",
+        "Objective Markers: 4 total, each 2VP — S1@(9\",36\"), S2@(27\",36\"), S3@(36\",14\"), S4@(63\",9\").",
+      ],
+      attackerRules: [
+        "At the end of each Attacker Player Turn, select one Sector in which the Attacker has a Unit wholly within that Sector. Score VP equal to the value of that Sector. If the Unit includes any Model with the Super-heavy Sub-Type, score 2 additional Victory Points.",
+      ],
+      defenderRules: [
+        "At the end of each Defender Player Turn, score VP equal to the value of each Objective Marker controlled by the Defender.",
+      ],
+      special: [
+        "Uses the Reserves and Seize the Initiative Mission Special Rules.",
+        "Battlefield Assets may be selected and used with this Mission.",
+      ],
+      secondary: {
+        common: ["Last Man Standing (2)", "Slay the Warlord (2)"],
+        attacker: ["Overrun (4)"],
+        defender: ["Break Their Strength (4)"],
+      },
+      turns: "4 (5th on 4+)",
+      primaryScore: "Attacker: VP equal to selected Sector value (+2 bonus VP if a Super-heavy Sub-Type Unit is in that Sector). Defender: VP equal to value of each controlled Objective Marker (2VP each).",
+      victory: "Player with most total VP wins. Attacker drives through enemy lines to claim Sectors; Defender holds Objective Markers.",
+    },
+    rolling_bastions: {
+      name: "Rolling Bastions",
+      type: "Leviathan Mission Two",
+      attacker: "ATTACKER",
+      defender: "DEFENDER",
+      desc: "Two forces seek to consolidate an area of open ground, driving forces to set up their heavy armour into a layered and impenetrable position.",
+      armies: [],
+      sectors: "4 Sectors in a 2×2 grid between deployment zones — S1 top-left, S2 top-right, S3 bottom-left, S4 bottom-right. Attacker: 2VP per controlled Sector per turn. Defender: VP per controlled Objective Marker (3VP if own Sector, 2VP if neutral, 1VP if opponent controls that Sector).",
+      deployment: [
+        "Attacker's Battlefield Edge: BOTTOM (south) edge.",
+        "Attacker's Deployment Zone: Bottom 12\" strip, full 72\" width (y:36\"–48\").",
+        "Defender's Deployment Zone: Top 12\" strip, full 72\" width (y:0\"–12\").",
+        "Sectors: S1 top-left (36\"×12\" at x:0-36\", y:12-24\"), S2 top-right (36\"×12\" at x:36-72\", y:12-24\"), S3 bottom-left (36\"×12\" at x:0-36\", y:24-36\"), S4 bottom-right (36\"×12\" at x:36-72\", y:24-36\").",
+        "Objective Markers: One at the centre of each Sector — S1@(18\",18\"), S2@(54\",18\"), S3@(18\",30\"), S4@(54\",30\"). Each value 1-3VP based on Sector control.",
+      ],
+      attackerRules: [
+        "At the end of each Attacker Player Turn, score 2VP for each Sector that the Attacker controls.",
+      ],
+      defenderRules: [
+        "At the end of each Defender Player Turn, score VP for each Objective Marker controlled. The VP value = 3 if the controlling Player also controls that Sector, 2 if neither Player controls the Sector, or 1 if the opponent controls that Sector.",
+      ],
+      special: [
+        "Uses the Reserves and Seize the Initiative Mission Special Rules.",
+        "Battlefield Assets may be selected and used with this Mission.",
+        "Objective Marker values fluctuate based on who controls each Sector — a contested Sector yields less VP from its Objective.",
+      ],
+      secondary: {
+        common: ["Break Their Strength (3)", "Slay the Warlord (3)"],
+        attacker: ["Overrun (3)"],
+        defender: ["Last Man Standing (3)"],
+      },
+      turns: "4 (5th on 4+)",
+      primaryScore: "Attacker: 2VP per controlled Sector per turn. Defender: VP per controlled Objective Marker (3VP if own Sector, 2VP if neutral, 1VP if opponent's Sector).",
+      victory: "Player with most total VP wins. Attacker seizes Sectors; Defender maximises Objective Marker VP by holding Sectors.",
+    },
+    break_the_lines: {
+      name: "Break the Lines",
+      type: "Leviathan Mission Three",
+      attacker: "ATTACKER",
+      defender: "DEFENDER",
+      desc: "The attacking forces drive their heavy armour forward over a wide front, containing the defending forces within their own territory.",
+      armies: [],
+      sectors: "4 Sectors at diagonal corners: S1 top-right (1VP), S2 left-centre (2VP), S3 right-centre (3VP), S4 bottom-left (4VP). Objective value = Sector number. Attacker: 2VP per controlled Sector per turn. Defender: VP per controlled Objective Marker (value = Sector number).",
+      deployment: [
+        "Attacker's Battlefield Edge: BOTTOM (south) edge.",
+        "Defender's Deployment Zone: Upper-left diagonal trapezoid — 36\" wide at top from left edge, 20\" deep on left side, tapering to 9\" deep at x=36\" (centre). Points: (0,0)→(36\",0)→(36\",9\")→(0,20\").",
+        "Attacker's Deployment Zone: Lower-right diagonal trapezoid (mirror) — 36\" wide at bottom from right edge, 20\" deep on right side, tapering to 9\" deep at x=36\". Points: (72\",48\")→(36\",48\")→(36\",39\")→(72\",28\").",
+        "Sectors: S1 top-right (18\"×12\" at x:54-72\", y:0-12\") = 1VP, S2 left-centre (18\"×24\" at x:0-18\", y:12-36\") = 2VP, S3 right-centre (18\"×24\" at x:54-72\", y:12-36\") = 3VP, S4 bottom-left (36\"×12\" at x:0-36\", y:36-48\") = 4VP.",
+        "Objective Markers: One per Sector, value = Sector number — S1@(63\",6\") 1VP, S2@(9\",24\") 2VP, S3@(63\",24\") 3VP, S4@(18\",42\") 4VP.",
+      ],
+      attackerRules: [
+        "At the end of each Attacker Player Turn, score 2VP for each Sector that the Attacker controls.",
+      ],
+      defenderRules: [
+        "At the end of each Defender Player Turn, score VP equal to the value of each Objective Marker controlled.",
+      ],
+      special: [
+        "Uses the Reserves and Seize the Initiative Mission Special Rules.",
+        "Battlefield Assets may be selected and used with this Mission.",
+        "Objective values are fixed: Sector 1=1VP, Sector 2=2VP, Sector 3=3VP, Sector 4=4VP. Higher VP objectives are deeper in the board.",
+      ],
+      secondary: {
+        common: ["Last Man Standing (3)", "Overrun (3)"],
+        attacker: ["Break Their Strength (3)"],
+        defender: ["Slay the Warlord (3)"],
+      },
+      turns: "4 (5th on 4+)",
+      primaryScore: "Attacker: 2VP per controlled Sector per turn. Defender: VP equal to value of each controlled Objective Marker per turn.",
+      victory: "Player with most total VP wins. Attacker must break through to high-value Sectors; Defender holds valuable Objectives deep in their territory.",
+    },
+  };
+
+  // ── Battlefield Asset Definitions ─────────────────────────────────────────
+  const BATTLEFIELD_ASSETS = {
+    tank_traps: {
+      name: "Tank Traps",
+      side: "defender",
+      cost: 1,
+      trait: "Minefield",
+      color: "#8B4513",
+      symbol: "⛝",
+      desc: "Blocks Movement of Vehicle Models. Treated as Impassable Terrain for Vehicles. Set up at start of Deploy Armies Step, not in opponent's Deployment Zone.",
+      effect: "Tank Traps are Impassable Terrain for Vehicle Models and can be targeted by Charges and Ranged/Melee Attacks (AV14, HP2). Cannot gain Tactical Statuses.",
+    },
+    shroud_canister: {
+      name: "Shroud Canister",
+      side: "attacker",
+      cost: 1,
+      trait: null,
+      color: "#2F4F2F",
+      symbol: "☁",
+      desc: "Provides Shrouded rule to nearby Models. Set up at end of Prepare Battlefield Step. Activated in Effects Sub-Phase of End Phase.",
+      effect: "On activation: Models within 3\" get Shrouded(4+), within 6\" get Shrouded(5+), within 9\" get Shrouded(6+). Removed after activation. Next End Phase removes any triggered Canister.",
+    },
+    neutron_bomb: {
+      name: "Neutron Bomb",
+      side: "defender",
+      cost: 1,
+      trait: "Minefield",
+      color: "#4B0082",
+      symbol: "☢",
+      desc: "Suppresses Vehicles and Walkers that move nearby. Set up at end of Prepare Battlefield Step. Must be 6\"+ from other Battlefield Asset Markers and not in opponent's Deployment Zone.",
+      effect: "When a Unit moves within 6\" of this Marker, roll 1 die per Model. On 4+ that Model triggers the Bomb — Unit gains Suppressed Tactical Status and the Marker is removed.",
+    },
+    auto_repair_clade: {
+      name: "Auto-repair Servitor Clade",
+      side: "defender",
+      cost: 2,
+      trait: null,
+      color: "#B8860B",
+      symbol: "⚙",
+      desc: "Repairs Vehicle Tactical Statuses. Set up at start of Deploy Armies Step within Player's Deployment Zone. Cost: 2 Asset Points.",
+      effect: "At start of Defender's Statuses Sub-Phase: select one Vehicle within 4\" — that Vehicle has Auto-repair(4+) until end of Sub-Phase. Removed on 4+ if a Blast Marker covers the centre of this Marker.",
+    },
+    wayfinder_device: {
+      name: "Wayfinder Device",
+      side: "attacker",
+      cost: 2,
+      trait: null,
+      color: "#1E90FF",
+      symbol: "◉",
+      desc: "Grants Move Through Cover for Difficult/Dangerous Terrain nearby. Set up at start of Deploy Armies Step, not in opponent's Deployment Zone. Cost: 2 Asset Points.",
+      effect: "In Effects Sub-Phase: select one Area of Difficult or Dangerous Terrain wholly within 12\" — Models from the controlling Player's Army moving through it gain Move Through Cover this Turn.",
     },
   };
 
@@ -2553,6 +2997,20 @@ var ShootingResolver = function () {
         },
       ]);
       setObjCounter((c) => c + 1);
+      return;
+    }
+    // Battlefield Asset placement mode
+    if (bfaBrush) {
+      const rect = boardRef.current.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / deployScale;
+      const y = (e.clientY - rect.top) / deployScale;
+      if (x < 0 || x > BOARD_W || y < 0 || y > BOARD_H) return;
+      const snapX = Math.round(x * 2) / 2;
+      const snapY = Math.round(y * 2) / 2;
+      setBattlefieldAssets((prev) => [
+        ...prev,
+        { id: Date.now(), type: bfaBrush, x: snapX, y: snapY, player: deployPlayer },
+      ]);
       return;
     }
     // Terrain placement mode
@@ -3336,6 +3794,708 @@ var ShootingResolver = function () {
                 ),
               );
             })(),
+          missionType === "saturnine" &&
+            showZones &&
+            (() => {
+              const sc = deployScale;
+              const BW = BOARD_W; // 72
+              const BH = BOARD_H; // 48
+              // Grid sector dims: 4 cols × 4 rows, each 18"×12"
+              const COL = 18;
+              const ROW = 12;
+              // Objective marker data per mission
+              const SAT_OBJECTIVES = {
+                ignis_sector_assault: [
+                  { x: BW / 2, y: BH / 2, vp: 3 },           // centre 3VP
+                  { x: 18, y: BH / 2, vp: 2 },                 // left flank 2VP
+                  { x: BW - 18, y: BH / 2, vp: 2 },            // right flank 2VP
+                ],
+                line_advance: [
+                  { x: 9,  y: 6, vp: 1 },
+                  { x: 27, y: 6, vp: 1 },
+                  { x: 45, y: 6, vp: 1 },
+                  { x: 63, y: 6, vp: 1 },
+                ],
+                breakthrough: [
+                  { x: 9,  y: 18, vp: 1 },
+                  { x: 63, y: 18, vp: 1 },
+                  { x: 9,  y: 30, vp: 1 },
+                  { x: 63, y: 30, vp: 1 },
+                ],
+                dawn_raid: [
+                  { x: 9,  y: 6,  vp: 1 },
+                  { x: 27, y: 6,  vp: 1 },
+                  { x: 63, y: 6,  vp: 1 },
+                  { x: 63, y: 18, vp: 1 },
+                ],
+              };
+              const objs = SAT_OBJECTIVES[satMission] || [];
+              const isIgnis = satMission === "ignis_sector_assault";
+
+              return React.createElement(
+                "svg",
+                {
+                  style: {
+                    position: "absolute",
+                    inset: 0,
+                    width: BW * sc,
+                    height: BH * sc,
+                    pointerEvents: "none",
+                  },
+                },
+                // ── IGNIS SECTOR ASSAULT: two spearhead triangles ──────────
+                isIgnis && React.createElement(
+                  "g",
+                  null,
+                  // Defender zone (top 36") — blue
+                  React.createElement("rect", {
+                    x: 0, y: 0, width: BW * sc, height: 36 * sc,
+                    fill: "rgba(42,111,180,0.12)",
+                    stroke: "rgba(42,111,180,0.5)",
+                    strokeWidth: 1.5, strokeDasharray: "6,4",
+                  }),
+                  React.createElement("text", {
+                    x: BW * sc / 2, y: 14,
+                    textAnchor: "middle", fontSize: Math.max(7, sc * 1.2),
+                    fill: "rgba(42,111,180,0.8)",
+                    fontFamily: "'Share Tech Mono',serif", letterSpacing: 2,
+                  }, "P2 DEFENDER (TRAITOR)"),
+                  // Left Spearhead Sector triangle (red) — base 18" from left
+                  React.createElement("polygon", {
+                    points: `0,${BH*sc} ${18*sc},${BH*sc} ${9*sc},${36*sc}`,
+                    fill: "rgba(155,45,45,0.22)",
+                    stroke: "rgba(155,45,45,0.8)",
+                    strokeWidth: 1.5, strokeDasharray: "6,4",
+                  }),
+                  React.createElement("text", {
+                    x: 9 * sc, y: BH * sc - 14,
+                    textAnchor: "middle", fontSize: Math.max(6, sc * 0.9),
+                    fill: "rgba(200,80,80,0.9)",
+                    fontFamily: "'Share Tech Mono',serif",
+                  }, "SPEARHEAD"),
+                  React.createElement("text", {
+                    x: 9 * sc, y: BH * sc - 6,
+                    textAnchor: "middle", fontSize: Math.max(6, sc * 0.85),
+                    fill: "rgba(200,80,80,0.9)",
+                    fontFamily: "'Share Tech Mono',serif",
+                  }, "P1"),
+                  // Right Spearhead Sector triangle (red)
+                  React.createElement("polygon", {
+                    points: `${(BW-18)*sc},${BH*sc} ${BW*sc},${BH*sc} ${(BW-9)*sc},${36*sc}`,
+                    fill: "rgba(155,45,45,0.22)",
+                    stroke: "rgba(155,45,45,0.8)",
+                    strokeWidth: 1.5, strokeDasharray: "6,4",
+                  }),
+                  React.createElement("text", {
+                    x: (BW - 9) * sc, y: BH * sc - 14,
+                    textAnchor: "middle", fontSize: Math.max(6, sc * 0.9),
+                    fill: "rgba(200,80,80,0.9)",
+                    fontFamily: "'Share Tech Mono',serif",
+                  }, "SPEARHEAD"),
+                  React.createElement("text", {
+                    x: (BW - 9) * sc, y: BH * sc - 6,
+                    textAnchor: "middle", fontSize: Math.max(6, sc * 0.85),
+                    fill: "rgba(200,80,80,0.9)",
+                    fontFamily: "'Share Tech Mono',serif",
+                  }, "P1"),
+                  // Midline
+                  React.createElement("line", {
+                    x1: 0, y1: 36 * sc, x2: BW * sc, y2: 36 * sc,
+                    stroke: "rgba(255,255,255,0.15)",
+                    strokeWidth: 1, strokeDasharray: "8,4",
+                  }),
+                  // Mission label
+                  React.createElement("text", {
+                    x: BW * sc / 2, y: BH * sc - 4,
+                    textAnchor: "middle", fontSize: Math.max(6, sc * 0.85),
+                    fill: "rgba(200,80,80,0.7)",
+                    fontFamily: "'Share Tech Mono',serif", letterSpacing: 1,
+                  }, "P1 ATTACKER (LOYALIST) — reserve Saturnine units deploy here Turn 1"),
+                ),
+                // ── ONSLAUGHT MISSIONS: 4×4 grid ────────────────────────────
+                !isIgnis && React.createElement(
+                  "g",
+                  null,
+                  // Attacker zone bottom row (y: 36"–48", full width)
+                  React.createElement("rect", {
+                    x: 0, y: 36 * sc, width: BW * sc, height: 12 * sc,
+                    fill: "rgba(155,45,45,0.18)",
+                    stroke: "rgba(155,45,45,0.7)",
+                    strokeWidth: 1.5, strokeDasharray: "6,4",
+                  }),
+                  React.createElement("text", {
+                    x: BW * sc / 2, y: 36 * sc + 10,
+                    textAnchor: "middle", fontSize: Math.max(6, sc * 0.9),
+                    fill: "rgba(200,80,80,0.9)",
+                    fontFamily: "'Share Tech Mono',serif", letterSpacing: 1,
+                  }, "P1 ATTACKER ZONE (18\"×12\")"),
+                  // Encircling arrows for Breakthrough
+                  satMission === "breakthrough" && React.createElement("text", {
+                    x: 4, y: BH * sc / 2,
+                    fontSize: Math.max(12, sc * 2),
+                    fill: "rgba(42,111,180,0.6)",
+                    fontFamily: "sans-serif",
+                  }, "↙"),
+                  satMission === "breakthrough" && React.createElement("text", {
+                    x: BW * sc - 16, y: BH * sc / 2,
+                    fontSize: Math.max(12, sc * 2),
+                    fill: "rgba(42,111,180,0.6)",
+                    fontFamily: "sans-serif",
+                  }, "↘"),
+                  satMission === "breakthrough" && React.createElement("text", {
+                    x: BW * sc / 2 - 8, y: 14,
+                    fontSize: Math.max(12, sc * 2),
+                    fill: "rgba(42,111,180,0.6)",
+                    fontFamily: "sans-serif",
+                  }, "↓"),
+                  satMission === "breakthrough" && React.createElement("text", {
+                    x: BW * sc / 2 - 80, y: 12,
+                    fontSize: Math.max(6, sc * 0.85),
+                    fill: "rgba(42,111,180,0.7)",
+                    fontFamily: "'Share Tech Mono',serif",
+                  }, "← P2 ENCIRCLING RESERVES →"),
+                  // Dawn Raid snap shot warning banner
+                  satMission === "dawn_raid" && React.createElement("rect", {
+                    x: BW * sc / 2 - 120, y: BH * sc / 2 - 10,
+                    width: 240, height: 18,
+                    fill: "rgba(200,60,0,0.18)", rx: 3,
+                  }),
+                  satMission === "dawn_raid" && React.createElement("text", {
+                    x: BW * sc / 2, y: BH * sc / 2 + 4,
+                    textAnchor: "middle", fontSize: Math.max(6, sc * 0.9),
+                    fill: "rgba(240,100,30,1)",
+                    fontFamily: "'Share Tech Mono',serif", fontWeight: "bold",
+                  }, "⚡ TURN 1: ALL SHOOTING = SNAP SHOTS"),
+                  // 4×4 sector grid lines
+                  ...[1,2,3].map((c) =>
+                    React.createElement("line", {
+                      key: "sc"+c,
+                      x1: c * COL * sc, y1: 0,
+                      x2: c * COL * sc, y2: BH * sc,
+                      stroke: "rgba(255,255,255,0.15)", strokeWidth: 1,
+                    }),
+                  ),
+                  ...[1,2,3].map((r) =>
+                    React.createElement("line", {
+                      key: "sr"+r,
+                      x1: 0, y1: r * ROW * sc,
+                      x2: BW * sc, y2: r * ROW * sc,
+                      stroke: "rgba(255,255,255,0.15)", strokeWidth: 1,
+                    }),
+                  ),
+                  // Sector labels
+                  ...[0,1,2,3].map((r) =>
+                    [0,1,2,3].map((c) =>
+                      r < 3 ? React.createElement("text", {
+                        key: "sl"+r+c,
+                        x: (c * COL + COL / 2) * sc,
+                        y: (r * ROW + ROW / 2) * sc + 4,
+                        textAnchor: "middle",
+                        fontSize: Math.max(5, sc * 0.7),
+                        fill: "rgba(255,255,255,0.2)",
+                        fontFamily: "'Share Tech Mono',serif",
+                      }, "R"+(r+1)+"C"+(c+1)) : null,
+                    ),
+                  ).flat(),
+                ),
+                // ── OBJECTIVE MARKERS (all missions) ────────────────────────
+                ...objs.map((obj, i) =>
+                  React.createElement(
+                    "g",
+                    { key: "satobj" + i },
+                    // Outer glow ring
+                    React.createElement("circle", {
+                      cx: obj.x * sc,
+                      cy: obj.y * sc,
+                      r: 7 * sc / 8,
+                      fill: "rgba(255,215,0,0.15)",
+                      stroke: "rgba(255,215,0,0.5)",
+                      strokeWidth: 1,
+                    }),
+                    // Inner circle
+                    React.createElement("circle", {
+                      cx: obj.x * sc,
+                      cy: obj.y * sc,
+                      r: 5 * sc / 8,
+                      fill: "rgba(200,160,0,0.85)",
+                      stroke: "rgba(255,215,0,0.9)",
+                      strokeWidth: 1.5,
+                    }),
+                    // VP text
+                    React.createElement("text", {
+                      x: obj.x * sc,
+                      y: obj.y * sc + 3,
+                      textAnchor: "middle",
+                      fontSize: Math.max(6, sc * 0.85),
+                      fill: "white",
+                      fontFamily: "'Share Tech Mono',serif",
+                      fontWeight: "bold",
+                    }, obj.vp === 1 ? "1" : String(obj.vp)),
+                    // VP label below
+                    React.createElement("text", {
+                      x: obj.x * sc,
+                      y: obj.y * sc + 5 * sc / 8 + Math.max(7, sc),
+                      textAnchor: "middle",
+                      fontSize: Math.max(5, sc * 0.7),
+                      fill: "rgba(255,215,0,0.8)",
+                      fontFamily: "'Share Tech Mono',serif",
+                    }, obj.vp + "VP"),
+                  ),
+                ),
+                // Mission label top-left
+                React.createElement("text", {
+                  x: 4, y: BH * sc - 4,
+                  fontSize: Math.max(6, sc * 0.8),
+                  fill: "rgba(255,200,100,0.6)",
+                  fontFamily: "'Share Tech Mono',serif",
+                }, "SAT: " + (SATURNINE_MISSIONS_INFO[satMission] || {}).name),
+              );
+            })(),
+          // ── LEVIATHAN SVG board overlay ────────────────────────────────────
+          missionType === "leviathan" &&
+            showZones &&
+            (() => {
+              const sc = deployScale;
+              const BW = BOARD_W; // 72
+              const BH = BOARD_H; // 48
+              const levInfo = LEVIATHAN_MISSIONS_INFO[levMission] || {};
+
+              // ─── Objective markers — exact PDF positions ───────────────
+              // Charge of Khalekaorus: 3 objectives in Sectors 1-3
+              //   S1 obj 12" from top on left column (9",12")
+              //   S2 obj 12" from bottom on left column (9",36")
+              //   S3 obj at centre of centre strip (45",24")
+              // Clash of Behemoths: 4 objectives, each 2VP, one per sector
+              //   Measured from PDF: S1@(9,36) S2@(27,36) S3@(36,14) S4@(63,9)
+              // Rolling Bastions: 4 objectives, variable VP (1-3)
+              //   Each at sector centre: (18,18) (54,18) (18,30) (54,30)
+              // Break the Lines: 4 objectives, value = sector number
+              //   S1@(63,6) S2@(9,24) S3@(63,24) S4@(18,42)
+              const LEV_OBJECTIVES = {
+                charge_khalekaorus: [
+                  { x: 27, y: 12, vp: 2, sector: "S1" },
+                  { x: 27, y: 36, vp: 2, sector: "S2" },
+                  { x: 45, y: 24, vp: 2, sector: "S3" },
+                ],
+                clash_behemoths: [
+                  { x: 9,  y: 36, vp: 2, sector: "S1" },
+                  { x: 27, y: 36, vp: 2, sector: "S2" },
+                  { x: 45, y: 12, vp: 2, sector: "S3" },
+                  { x: 63, y: 9,  vp: 2, sector: "S4" },
+                ],
+                rolling_bastions: [
+                  { x: 18, y: 18, vp: "?", sector: "S1" },
+                  { x: 54, y: 18, vp: "?", sector: "S2" },
+                  { x: 18, y: 30, vp: "?", sector: "S3" },
+                  { x: 54, y: 30, vp: "?", sector: "S4" },
+                ],
+                break_the_lines: [
+                  { x: 63, y: 6,  vp: 1, sector: "S1" },
+                  { x: 9,  y: 24, vp: 2, sector: "S2" },
+                  { x: 63, y: 24, vp: 3, sector: "S3" },
+                  { x: 18, y: 42, vp: 4, sector: "S4" },
+                ],
+              };
+              const objs = LEV_OBJECTIVES[levMission] || [];
+
+              // ─── Sector boundaries — exact PDF layout ──────────────────
+              // Charge of Khalekaorus:
+              //   S1 left column top half 18"×24", S2 left column bottom half 18"×24"
+              //   S3 centre strip 36"×48" (x:18-54), S4 right strip 18"×48" (x:54-72)
+              // Clash of Behemoths:
+              //   S1/S2 at bottom (each 18" wide), S3 upper-centre, S4 upper-right
+              // Rolling Bastions:
+              //   4 sectors in 2×2 grid between deployment zones
+              // Break the Lines:
+              //   S1 top-right 18"×12", S2 left-centre 18"×24",
+              //   S3 right-centre 18"×24", S4 bottom-left 36"×12"
+              const sectorAlpha = "rgba(255,255,255,0.08)";
+              const LEV_SECTORS = {
+                charge_khalekaorus: [
+                  { label: "S1", x: 18, y: 0,  w: 18, h: 24, stroke: "rgba(255,255,255,0.25)" },
+                  { label: "S2", x: 18, y: 24, w: 18, h: 24, stroke: "rgba(255,255,255,0.25)" },
+                  { label: "S3", x: 36, y: 0,  w: 18, h: 48, stroke: "rgba(255,255,255,0.25)" },
+                  { label: "S4 (ATTACKER)", x: 54, y: 0,  w: 18, h: 48, stroke: "rgba(200,80,80,0.3)" },
+                ],
+                clash_behemoths: [
+                  { label: "S1", x: 0,  y: 24, w: 18, h: 24, stroke: "rgba(255,255,255,0.25)" },
+                  { label: "S2", x: 18, y: 24, w: 18, h: 24, stroke: "rgba(255,255,255,0.25)" },
+                  { label: "S3", x: 36, y: 0,  w: 18, h: 24, stroke: "rgba(255,255,255,0.25)" },
+                  { label: "S4", x: 54, y: 0,  w: 18, h: 48, stroke: "rgba(255,255,255,0.25)" },
+                ],
+                rolling_bastions: [
+                  { label: "S1", x: 0,  y: 12, w: 36, h: 12, stroke: "rgba(255,255,255,0.25)" },
+                  { label: "S2", x: 36, y: 12, w: 36, h: 12, stroke: "rgba(255,255,255,0.25)" },
+                  { label: "S3", x: 0,  y: 24, w: 36, h: 12, stroke: "rgba(255,255,255,0.25)" },
+                  { label: "S4", x: 36, y: 24, w: 36, h: 12, stroke: "rgba(255,255,255,0.25)" },
+                ],
+                break_the_lines: [
+                  { label: "S1·1VP", x: 54, y: 0,  w: 18, h: 12, stroke: "rgba(255,200,80,0.4)" },
+                  { label: "S2·2VP", x: 0,  y: 12, w: 18, h: 24, stroke: "rgba(255,200,80,0.5)" },
+                  { label: "S3·3VP", x: 54, y: 12, w: 18, h: 24, stroke: "rgba(255,200,80,0.6)" },
+                  { label: "S4·4VP", x: 0,  y: 36, w: 36, h: 12, stroke: "rgba(255,200,80,0.7)" },
+                ],
+              };
+              const sectors = LEV_SECTORS[levMission] || [];
+
+              return React.createElement(
+                "svg",
+                {
+                  style: {
+                    position: "absolute",
+                    inset: 0,
+                    width: BW * sc,
+                    height: BH * sc,
+                    pointerEvents: "none",
+                  },
+                },
+                // ── DEPLOYMENT ZONES per mission ──────────────────────────────
+                // ── Charge of the Khalekaorus ─────────────────────────────────
+                // Defender zone: 27" wide × 14" tall, positioned x:18-45", y:17-31"
+                //   (starts right of Sectors 1&2, centred vertically)
+                // Attacker enters from RIGHT; Defender reserves from LEFT
+                levMission === "charge_khalekaorus" && React.createElement("g", null,
+                  // Shaded Attacker zone on right (S4 column)
+                  React.createElement("rect", {
+                    x: 54*sc, y: 0, width: 18*sc, height: BH*sc,
+                    fill: "rgba(155,45,45,0.08)",
+                    stroke: "none",
+                  }),
+                  // Defender Deployment Zone: 27" wide × 14" tall centred on left portion
+                  React.createElement("rect", {
+                    x: 18*sc, y: 17*sc, width: 27*sc, height: 14*sc,
+                    fill: "rgba(42,111,180,0.18)",
+                    stroke: "rgba(42,111,180,0.7)",
+                    strokeWidth: 1.5, strokeDasharray: "6,3",
+                  }),
+                  React.createElement("text", {
+                    x: 31.5*sc, y: 24*sc+3, textAnchor: "middle",
+                    fontSize: Math.max(5, sc*0.75), fill: "rgba(80,160,240,1)",
+                    fontFamily: "'Share Tech Mono',serif", fontWeight: "bold",
+                  }, "P2 DEPLOY"),
+                  React.createElement("text", {
+                    x: 31.5*sc, y: 24*sc+Math.max(8, sc),
+                    textAnchor: "middle", fontSize: Math.max(5, sc*0.65),
+                    fill: "rgba(80,140,220,0.8)", fontFamily: "'Share Tech Mono',serif",
+                  }, "27\"×14\""),
+                  // Left edge of sectors — x=18" (entry zone boundary)
+                  React.createElement("line", {
+                    x1: 18*sc, y1: 0, x2: 18*sc, y2: BH*sc,
+                    stroke: "rgba(255,255,255,0.15)", strokeWidth: 1, strokeDasharray: "6,4",
+                  }),
+                  // S1/S2 right boundary / S3 left boundary — x=36"
+                  React.createElement("line", {
+                    x1: 36*sc, y1: 0, x2: 36*sc, y2: BH*sc,
+                    stroke: "rgba(255,255,255,0.15)", strokeWidth: 1, strokeDasharray: "6,4",
+                  }),
+                  // Separator between S3 and S4 — x=54"
+                  React.createElement("line", {
+                    x1: 54*sc, y1: 0, x2: 54*sc, y2: BH*sc,
+                    stroke: "rgba(255,255,255,0.15)", strokeWidth: 1, strokeDasharray: "6,4",
+                  }),
+                  // S1/S2 horizontal mid-line — y=24", spanning S1/S2 columns only
+                  React.createElement("line", {
+                    x1: 18*sc, y1: 24*sc, x2: 36*sc, y2: 24*sc,
+                    stroke: "rgba(255,255,255,0.15)", strokeWidth: 1, strokeDasharray: "6,4",
+                  }),
+                  // Attacker edge (RIGHT) label
+                  React.createElement("text", {
+                    x: BW*sc - 3, y: BH*sc/2+30, textAnchor: "middle",
+                    fontSize: Math.max(5, sc*0.75), fill: "rgba(200,80,80,0.7)",
+                    fontFamily: "'Share Tech Mono',serif",
+                    transform: `rotate(-90,${BW*sc-3},${BH*sc/2})`,
+                  }, "P1 ATTACKER EDGE ▶"),
+                  // Defender reserves entry (LEFT) label
+                  React.createElement("text", {
+                    x: 3, y: BH*sc/2-20, textAnchor: "middle",
+                    fontSize: Math.max(5, sc*0.75), fill: "rgba(80,140,220,0.7)",
+                    fontFamily: "'Share Tech Mono',serif",
+                    transform: `rotate(-90,3,${BH*sc/2})`,
+                  }, "◀ P2 RESERVES ENTRY"),
+                ),
+                // ── Clash of Behemoths ────────────────────────────────────────
+                // Attacker zone: upper-left triangle — 27" along top, 24" down left edge
+                //   Points: (0,0)→(27",0)→(0,24")
+                // Defender zone: lower-right triangle — 27" along bottom from right, 24" up right
+                //   Points: (45",48")→(72",48")→(72",24")
+                // Attacker's Battlefield Edge = LEFT
+                levMission === "clash_behemoths" && React.createElement("g", null,
+                  // Attacker zone (red): upper-left triangle 27"×24"
+                  React.createElement("polygon", {
+                    points: `0,0 ${27*sc},0 0,${24*sc}`,
+                    fill: "rgba(155,45,45,0.2)",
+                    stroke: "rgba(200,80,80,0.7)",
+                    strokeWidth: 1.5, strokeDasharray: "6,3",
+                  }),
+                  React.createElement("text", {
+                    x: 7*sc, y: 10, textAnchor: "middle",
+                    fontSize: Math.max(5, sc*0.75), fill: "rgba(220,100,100,1)",
+                    fontFamily: "'Share Tech Mono',serif", fontWeight: "bold",
+                  }, "P1 DEPLOY"),
+                  React.createElement("text", {
+                    x: 7*sc, y: 10+Math.max(8,sc),
+                    textAnchor: "middle", fontSize: Math.max(5, sc*0.65),
+                    fill: "rgba(200,80,80,0.8)", fontFamily: "'Share Tech Mono',serif",
+                  }, "27\"×24\""),
+                  // Defender zone (blue): lower-right triangle 27"×24"
+                  React.createElement("polygon", {
+                    points: `${45*sc},${BH*sc} ${BW*sc},${BH*sc} ${BW*sc},${24*sc}`,
+                    fill: "rgba(42,111,180,0.2)",
+                    stroke: "rgba(42,111,180,0.7)",
+                    strokeWidth: 1.5, strokeDasharray: "6,3",
+                  }),
+                  React.createElement("text", {
+                    x: BW*sc - 7*sc, y: BH*sc - 4,
+                    textAnchor: "middle", fontSize: Math.max(5, sc*0.75),
+                    fill: "rgba(80,160,240,1)", fontFamily: "'Share Tech Mono',serif", fontWeight: "bold",
+                  }, "P2 DEPLOY"),
+                  React.createElement("text", {
+                    x: BW*sc - 7*sc, y: BH*sc - 4 - Math.max(8,sc),
+                    textAnchor: "middle", fontSize: Math.max(5, sc*0.65),
+                    fill: "rgba(42,111,180,0.8)", fontFamily: "'Share Tech Mono',serif",
+                  }, "27\"×24\""),
+                  // Sector dividers
+                  // S1/S2 vertical split — x=18", lower half only
+                  React.createElement("line", {
+                    x1: 18*sc, y1: BH*sc, x2: 18*sc, y2: 24*sc,
+                    stroke: "rgba(255,255,255,0.15)", strokeWidth: 1, strokeDasharray: "6,4",
+                  }),
+                  // Upper/lower horizontal divide — y=24", full width
+                  React.createElement("line", {
+                    x1: 0, y1: 24*sc, x2: BW*sc, y2: 24*sc,
+                    stroke: "rgba(255,255,255,0.15)", strokeWidth: 1, strokeDasharray: "6,4",
+                  }),
+                  // S3 left boundary — x=36", upper half
+                  React.createElement("line", {
+                    x1: 36*sc, y1: 0, x2: 36*sc, y2: 24*sc,
+                    stroke: "rgba(255,255,255,0.15)", strokeWidth: 1, strokeDasharray: "6,4",
+                  }),
+                  // S4 left boundary — x=54", full height
+                  React.createElement("line", {
+                    x1: 54*sc, y1: 0, x2: 54*sc, y2: BH*sc,
+                    stroke: "rgba(255,255,255,0.15)", strokeWidth: 1, strokeDasharray: "6,4",
+                  }),
+                  // Attacker edge (LEFT) label
+                  React.createElement("text", {
+                    x: 3, y: BH*sc/2+20, textAnchor: "middle",
+                    fontSize: Math.max(5, sc*0.75), fill: "rgba(200,80,80,0.7)",
+                    fontFamily: "'Share Tech Mono',serif",
+                    transform: `rotate(-90,3,${BH*sc/2})`,
+                  }, "P1 ATTACKER EDGE ▶"),
+                ),
+                // ── Rolling Bastions ──────────────────────────────────────────
+                // Defender zone: top 12" strip × 72" wide
+                // Attacker zone: bottom 12" strip × 72" wide
+                // 4 sectors in 2×2 grid between the zones (y:12-36", x:0-36"/36-72")
+                // Attacker's Battlefield Edge = BOTTOM
+                levMission === "rolling_bastions" && React.createElement("g", null,
+                  // Defender zone (blue): top 12" strip
+                  React.createElement("rect", {
+                    x: 0, y: 0, width: BW*sc, height: 12*sc,
+                    fill: "rgba(42,111,180,0.17)",
+                    stroke: "rgba(42,111,180,0.7)",
+                    strokeWidth: 1.5, strokeDasharray: "6,3",
+                  }),
+                  React.createElement("text", {
+                    x: BW*sc/2, y: 9, textAnchor: "middle",
+                    fontSize: Math.max(6, sc*0.9), fill: "rgba(80,160,240,1)",
+                    fontFamily: "'Share Tech Mono',serif", fontWeight: "bold", letterSpacing: 1,
+                  }, "P2 DEFENDER ZONE (12\")"),
+                  // Attacker zone (red): bottom 12" strip
+                  React.createElement("rect", {
+                    x: 0, y: 36*sc, width: BW*sc, height: 12*sc,
+                    fill: "rgba(155,45,45,0.17)",
+                    stroke: "rgba(200,80,80,0.7)",
+                    strokeWidth: 1.5, strokeDasharray: "6,3",
+                  }),
+                  React.createElement("text", {
+                    x: BW*sc/2, y: 36*sc + 9, textAnchor: "middle",
+                    fontSize: Math.max(6, sc*0.9), fill: "rgba(220,100,100,1)",
+                    fontFamily: "'Share Tech Mono',serif", fontWeight: "bold", letterSpacing: 1,
+                  }, "P1 ATTACKER ZONE (12\")"),
+                  // Horizontal mid-line between sectors
+                  React.createElement("line", {
+                    x1: 0, y1: 24*sc, x2: BW*sc, y2: 24*sc,
+                    stroke: "rgba(255,255,255,0.2)", strokeWidth: 1, strokeDasharray: "8,4",
+                  }),
+                  // Vertical mid-line between sectors
+                  React.createElement("line", {
+                    x1: 36*sc, y1: 12*sc, x2: 36*sc, y2: 36*sc,
+                    stroke: "rgba(255,255,255,0.2)", strokeWidth: 1, strokeDasharray: "8,4",
+                  }),
+                  // Attacker edge label
+                  React.createElement("text", {
+                    x: BW*sc/2, y: BH*sc - 3, textAnchor: "middle",
+                    fontSize: Math.max(5, sc*0.7), fill: "rgba(200,80,80,0.5)",
+                    fontFamily: "'Share Tech Mono',serif",
+                  }, "P1 ATTACKER BATTLEFIELD EDGE"),
+                ),
+                // ── Break the Lines ───────────────────────────────────────────
+                // Defender zone (upper-left trapezoid):
+                //   Points: (0,0)→(36",0)→(36",9")→(0,20")
+                //   [36" wide at top, 20" deep on left, 9" deep at x=36"]
+                // Attacker zone (lower-right trapezoid, mirror):
+                //   Points: (72",48")→(36",48")→(36",39")→(72",28")
+                //   [36" wide at bottom from right, 20" deep on right, 9" deep at x=36"]
+                // Attacker's Battlefield Edge = BOTTOM
+                levMission === "break_the_lines" && React.createElement("g", null,
+                  // Defender zone (blue): upper-left diagonal trapezoid
+                  React.createElement("polygon", {
+                    points: `0,0 ${36*sc},0 ${36*sc},${9*sc} 0,${20*sc}`,
+                    fill: "rgba(42,111,180,0.18)",
+                    stroke: "rgba(42,111,180,0.7)",
+                    strokeWidth: 1.5, strokeDasharray: "6,3",
+                  }),
+                  React.createElement("text", {
+                    x: 14*sc, y: 8, textAnchor: "middle",
+                    fontSize: Math.max(5, sc*0.75), fill: "rgba(80,160,240,1)",
+                    fontFamily: "'Share Tech Mono',serif", fontWeight: "bold",
+                  }, "P2 DEFENDER"),
+                  React.createElement("text", {
+                    x: 14*sc, y: 8+Math.max(8,sc),
+                    textAnchor: "middle", fontSize: Math.max(5, sc*0.65),
+                    fill: "rgba(42,111,180,0.8)", fontFamily: "'Share Tech Mono',serif",
+                  }, "36\"w · 20\"deep"),
+                  // Attacker zone (red): lower-right diagonal trapezoid
+                  React.createElement("polygon", {
+                    points: `${BW*sc},${BH*sc} ${36*sc},${BH*sc} ${36*sc},${39*sc} ${BW*sc},${28*sc}`,
+                    fill: "rgba(155,45,45,0.18)",
+                    stroke: "rgba(200,80,80,0.7)",
+                    strokeWidth: 1.5, strokeDasharray: "6,3",
+                  }),
+                  React.createElement("text", {
+                    x: BW*sc - 14*sc, y: BH*sc - 8, textAnchor: "middle",
+                    fontSize: Math.max(5, sc*0.75), fill: "rgba(220,100,100,1)",
+                    fontFamily: "'Share Tech Mono',serif", fontWeight: "bold",
+                  }, "P1 ATTACKER"),
+                  React.createElement("text", {
+                    x: BW*sc - 14*sc, y: BH*sc - 8 - Math.max(8,sc), textAnchor: "middle",
+                    fontSize: Math.max(5, sc*0.65), fill: "rgba(200,80,80,0.8)",
+                    fontFamily: "'Share Tech Mono',serif",
+                  }, "36\"w · 20\"deep"),
+                  // Sector boundary lines
+                  React.createElement("line", {
+                    x1: 54*sc, y1: 0, x2: 54*sc, y2: 12*sc,
+                    stroke: "rgba(255,255,255,0.15)", strokeWidth: 1, strokeDasharray: "5,3",
+                  }),
+                  React.createElement("line", {
+                    x1: 0, y1: 12*sc, x2: BW*sc, y2: 12*sc,
+                    stroke: "rgba(255,255,255,0.15)", strokeWidth: 1, strokeDasharray: "5,3",
+                  }),
+                  React.createElement("line", {
+                    x1: 0, y1: 36*sc, x2: BW*sc, y2: 36*sc,
+                    stroke: "rgba(255,255,255,0.15)", strokeWidth: 1, strokeDasharray: "5,3",
+                  }),
+                  // Attacker edge label at bottom
+                  React.createElement("text", {
+                    x: BW*sc/2, y: BH*sc - 3, textAnchor: "middle",
+                    fontSize: Math.max(5, sc*0.7), fill: "rgba(200,80,80,0.5)",
+                    fontFamily: "'Share Tech Mono',serif",
+                  }, "P1 ATTACKER BATTLEFIELD EDGE"),
+                ),
+                // ── SECTOR RECTANGLES ─────────────────────────────────────────
+                ...sectors.map((s, i) =>
+                  React.createElement("g", { key: "levS"+i },
+                    React.createElement("rect", {
+                      x: s.x*sc, y: s.y*sc,
+                      width: s.w*sc, height: s.h*sc,
+                      fill: sectorAlpha,
+                      stroke: s.stroke,
+                      strokeWidth: 1.5, strokeDasharray: "5,3",
+                    }),
+                    React.createElement("text", {
+                      x: (s.x + s.w/2)*sc, y: (s.y + s.h/2)*sc+4,
+                      textAnchor: "middle",
+                      fontSize: Math.max(6, sc*0.85),
+                      fill: "rgba(255,215,0,0.5)",
+                      fontFamily: "'Share Tech Mono',serif",
+                      fontWeight: "bold",
+                    }, s.label),
+                  ),
+                ),
+                // ── OBJECTIVE MARKERS ─────────────────────────────────────────
+                ...objs.map((obj, i) =>
+                  React.createElement("g", { key: "levobj"+i },
+                    React.createElement("circle", {
+                      cx: obj.x*sc, cy: obj.y*sc, r: 7*sc/8,
+                      fill: "rgba(255,215,0,0.15)",
+                      stroke: "rgba(255,215,0,0.5)", strokeWidth: 1,
+                    }),
+                    React.createElement("circle", {
+                      cx: obj.x*sc, cy: obj.y*sc, r: 5*sc/8,
+                      fill: "rgba(200,160,0,0.85)",
+                      stroke: "rgba(255,215,0,0.9)", strokeWidth: 1.5,
+                    }),
+                    React.createElement("text", {
+                      x: obj.x*sc, y: obj.y*sc+3,
+                      textAnchor: "middle",
+                      fontSize: Math.max(6, sc*0.85),
+                      fill: "white", fontFamily: "'Share Tech Mono',serif", fontWeight: "bold",
+                    }, String(obj.vp)),
+                    React.createElement("text", {
+                      x: obj.x*sc, y: obj.y*sc + 5*sc/8 + Math.max(7,sc),
+                      textAnchor: "middle",
+                      fontSize: Math.max(5, sc*0.7),
+                      fill: "rgba(255,215,0,0.8)", fontFamily: "'Share Tech Mono',serif",
+                    }, obj.vp === "?" ? "1-3VP" : obj.vp+"VP"),
+                  ),
+                ),
+                // Mission label
+                React.createElement("text", {
+                  x: 4, y: BH*sc-4,
+                  fontSize: Math.max(6, sc*0.8),
+                  fill: "rgba(255,160,60,0.6)",
+                  fontFamily: "'Share Tech Mono',serif",
+                }, "LEV: " + levInfo.name),
+              );
+            })(),
+          // ── BATTLEFIELD ASSETS SVG overlay ────────────────────────────────
+          battlefieldAssets.length > 0 &&
+            React.createElement(
+              "svg",
+              {
+                style: {
+                  position: "absolute",
+                  inset: 0,
+                  width: BOARD_W * deployScale,
+                  height: BOARD_H * deployScale,
+                  pointerEvents: "none",
+                },
+              },
+              ...battlefieldAssets.map((asset) => {
+                const assetDef = BATTLEFIELD_ASSETS[asset.type] || {};
+                const cx = asset.x * deployScale;
+                const cy = asset.y * deployScale;
+                const r = Math.max(6, deployScale * 0.8);
+                return React.createElement(
+                  "g",
+                  {
+                    key: "bfa"+asset.id,
+                    style: { pointerEvents: "none" },
+                  },
+                  React.createElement("circle", {
+                    cx, cy, r: r+2,
+                    fill: "rgba(0,0,0,0.5)",
+                    stroke: assetDef.color || "#888",
+                    strokeWidth: 1.5,
+                  }),
+                  React.createElement("text", {
+                    x: cx, y: cy+4,
+                    textAnchor: "middle",
+                    fontSize: Math.max(8, deployScale*0.9),
+                    fill: assetDef.color || "#ccc",
+                    fontFamily: "sans-serif",
+                  }, assetDef.symbol || "◆"),
+                  React.createElement("text", {
+                    x: cx, y: cy + r + Math.max(8, deployScale),
+                    textAnchor: "middle",
+                    fontSize: Math.max(5, deployScale*0.65),
+                    fill: "rgba(255,255,255,0.7)",
+                    fontFamily: "'Share Tech Mono',serif",
+                  }, assetDef.name ? assetDef.name.split(" ")[0] : asset.type),
+                );
+              }),
+            ),
           showMoveRange &&
             selectedMoveUnit &&
             React.createElement("div", {
@@ -4256,7 +5416,15 @@ var ShootingResolver = function () {
 
   // Defender
   const [toughness, setToughness] = useState(4);
+  const [targetW, setTargetW] = useState(1); // defender wounds stat
   const [armourSave, setArmourSave] = useState("3");
+  // Vehicle target stats
+  const [isVehicleTarget, setIsVehicleTarget] = useState(false);
+  const [targetAVF, setTargetAVF] = useState(12); // Front Armour Value
+  const [targetAVS, setTargetAVS] = useState(12); // Side Armour Value
+  const [targetAVR, setTargetAVR] = useState(10); // Rear Armour Value
+  const [targetHP, setTargetHP] = useState(3);    // Hull Points
+  const [targetFacing, setTargetFacing] = useState("front"); // "front"|"side"|"rear"
   const [invulnSave, setInvulnSave] = useState("-");
   const [coverSave, setCoverSave] = useState("-");
   const [fnp, setFnp] = useState("-");
@@ -4440,7 +5608,15 @@ var ShootingResolver = function () {
 
   const applyTargetPreset = useCallback((preset) => {
     setToughness(preset.t);
+    setTargetW(preset.w || 1);
     setArmourSave(preset.sv);
+    // Vehicle stats
+    setIsVehicleTarget(preset.isVehicle || false);
+    setTargetAVF(preset.avF || 12);
+    setTargetAVS(preset.avS || 12);
+    setTargetAVR(preset.avR || 10);
+    setTargetHP(preset.hp || preset.w || 3);
+    setTargetFacing("front"); // reset to front facing on unit change
     setInvulnSave(preset.inv);
     setCoverSave(preset.cover || "-");
     setFnp(preset.fnp);
@@ -4918,6 +6094,7 @@ var ShootingResolver = function () {
       attackerInv: attackerUnit.inv || "-",
       attackerFnp: attackerUnit.fnp || "-",
       attackerW: attackerUnit.w || 1,
+      attackerModels: numModels, // so resolver knows if it's a single-model unit
     };
 
     // Calculate primary models (subtract sgt and secondary models)
@@ -5863,7 +7040,7 @@ var ShootingResolver = function () {
                   letterSpacing: 3,
                 },
               },
-              "THE HORUS HERESY · AGE OF DARKNESS · 3RD EDITION · v1.75",
+              "THE HORUS HERESY · AGE OF DARKNESS · 3RD EDITION · v1.85",
             ),
           ),
         ),
@@ -12336,6 +13513,841 @@ var ShootingResolver = function () {
             moveRangeUnit: null,
             unitOnClick: (unit, e) => removeDeployedUnit(unit.id),
           }),
+          // ── UNIVERSAL TURN ORDER & INITIATIVE PANEL ──────────────────────────
+          React.createElement("div", {
+            style: {
+              marginTop: 12, marginBottom: 12, padding: "12px 14px",
+              background: "rgba(255,248,235,0.97)", border: "1px solid rgba(0,0,0,0.18)",
+              borderRadius: 6,
+            },
+          },
+            React.createElement("div", {
+              style: { fontSize: 10, fontFamily: "'Share Tech Mono',serif", color: "#111111", letterSpacing: 2, marginBottom: 10 },
+            }, "⚔ STEP 1 — TURN ORDER & INITIATIVE"),
+            // Roll controls
+            React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" } },
+              React.createElement("button", {
+                onClick: () => { setTurnRollP1(rollD6()); setTurnRollP2(rollD6()); setSeizeRoll(null); },
+                style: {
+                  padding: "6px 18px", borderRadius: 5, cursor: "pointer",
+                  background: "rgba(0,0,0,0.08)", border: "1.5px solid rgba(0,0,0,0.28)",
+                  fontFamily: "'Share Tech Mono',serif", fontSize: 12, color: "#111111", fontWeight: 700,
+                },
+              }, "🎲 Roll Both"),
+              (turnRollP1 !== null || turnRollP2 !== null) && React.createElement("button", {
+                onClick: () => { setTurnRollP1(null); setTurnRollP2(null); setSeizeRoll(null); },
+                style: {
+                  padding: "6px 10px", borderRadius: 5, cursor: "pointer",
+                  background: "none", border: "1px solid rgba(0,0,0,0.15)",
+                  fontFamily: "'Share Tech Mono',serif", fontSize: 11, color: "#666",
+                },
+              }, "✕ Reset"),
+            ),
+            // Dice + result row
+            React.createElement("div", { style: { display: "flex", gap: 16, alignItems: "flex-start", flexWrap: "wrap" } },
+              // P1 die
+              (() => {
+                const winner = turnWinner === "p1";
+                const loser  = turnWinner === "p2";
+                return React.createElement("div", { style: { textAlign: "center" } },
+                  React.createElement("div", {
+                    style: { fontSize: 9, fontFamily: "'Share Tech Mono',serif", color: "#111111", letterSpacing: 1, marginBottom: 4 },
+                  }, "LOYALIST · P1"),
+                  React.createElement("div", {
+                    style: {
+                      width: 60, height: 60, borderRadius: 10,
+                      background: winner ? "rgba(20,140,20,0.12)" : loser ? "rgba(150,20,20,0.06)" : turnWinner === "tie" ? "rgba(140,100,0,0.10)" : "rgba(0,0,0,0.06)",
+                      border: `2.5px solid ${winner ? "rgba(20,140,20,0.55)" : loser ? "rgba(150,20,20,0.25)" : turnWinner === "tie" ? "rgba(140,100,0,0.45)" : "rgba(0,0,0,0.2)"}`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 30, fontFamily: "'Share Tech Mono',serif", fontWeight: 700,
+                      color: winner ? "#0a6010" : loser ? "#7a1010" : "#111111",
+                    },
+                  }, turnRollP1 !== null ? String(turnRollP1) : "—"),
+                  React.createElement("button", {
+                    onClick: () => { setTurnRollP1(rollD6()); setSeizeRoll(null); },
+                    style: {
+                      marginTop: 4, padding: "2px 8px", borderRadius: 3, cursor: "pointer",
+                      background: "none", border: "1px solid rgba(0,0,0,0.15)",
+                      fontFamily: "'Share Tech Mono',serif", fontSize: 9, color: "#555",
+                    },
+                  }, "🎲"),
+                );
+              })(),
+              // VS
+              React.createElement("div", {
+                style: { display: "flex", alignItems: "center", height: 60, marginTop: 22,
+                  fontSize: 11, color: "#999", fontFamily: "'Share Tech Mono',serif" },
+              }, "VS"),
+              // P2 die
+              (() => {
+                const winner = turnWinner === "p2";
+                const loser  = turnWinner === "p1";
+                return React.createElement("div", { style: { textAlign: "center" } },
+                  React.createElement("div", {
+                    style: { fontSize: 9, fontFamily: "'Share Tech Mono',serif", color: "#111111", letterSpacing: 1, marginBottom: 4 },
+                  }, "TRAITOR · P2"),
+                  React.createElement("div", {
+                    style: {
+                      width: 60, height: 60, borderRadius: 10,
+                      background: winner ? "rgba(20,140,20,0.12)" : loser ? "rgba(150,20,20,0.06)" : turnWinner === "tie" ? "rgba(140,100,0,0.10)" : "rgba(0,0,0,0.06)",
+                      border: `2.5px solid ${winner ? "rgba(20,140,20,0.55)" : loser ? "rgba(150,20,20,0.25)" : turnWinner === "tie" ? "rgba(140,100,0,0.45)" : "rgba(0,0,0,0.2)"}`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 30, fontFamily: "'Share Tech Mono',serif", fontWeight: 700,
+                      color: winner ? "#0a6010" : loser ? "#7a1010" : "#111111",
+                    },
+                  }, turnRollP2 !== null ? String(turnRollP2) : "—"),
+                  React.createElement("button", {
+                    onClick: () => { setTurnRollP2(rollD6()); setSeizeRoll(null); },
+                    style: {
+                      marginTop: 4, padding: "2px 8px", borderRadius: 3, cursor: "pointer",
+                      background: "none", border: "1px solid rgba(0,0,0,0.15)",
+                      fontFamily: "'Share Tech Mono',serif", fontSize: 9, color: "#555",
+                    },
+                  }, "🎲"),
+                );
+              })(),
+              // Result verdict
+              turnWinner && React.createElement("div", {
+                style: {
+                  display: "flex", flexDirection: "column", justifyContent: "center",
+                  marginTop: 18, paddingLeft: 16, borderLeft: "2px solid rgba(0,0,0,0.10)",
+                  minWidth: 180,
+                },
+              },
+                turnWinner === "tie"
+                  ? React.createElement("div", {
+                      style: { fontFamily: "'Share Tech Mono',serif", fontSize: 13, color: "#7a6010", fontWeight: 700 },
+                    }, "🤝 TIE — RE-ROLL")
+                  : React.createElement(React.Fragment, null,
+                      React.createElement("div", {
+                        style: { fontFamily: "'Share Tech Mono',serif", fontSize: 13, color: "#0a6010", fontWeight: 700, marginBottom: 6 },
+                      }, "🏆 " + (turnWinner === "p1" ? "LOYALIST (P1)" : "TRAITOR (P2)") + " WINS"),
+                      missionType === "leviathan"
+                        ? React.createElement("div", { style: { lineHeight: 1.7 } },
+                            React.createElement("span", {
+                              style: { display: "block", fontFamily: "'Share Tech Mono',serif", fontSize: 11, color: "#a01010", fontWeight: 700 },
+                            }, "⚔ " + (turnWinner === "p1" ? "P1 = ATTACKER" : "P2 = ATTACKER")),
+                            React.createElement("span", {
+                              style: { display: "block", fontFamily: "'Share Tech Mono',serif", fontSize: 11, color: "#0a3d99", fontWeight: 700 },
+                            }, "🛡 " + (turnWinner === "p1" ? "P2 = DEFENDER" : "P1 = DEFENDER")),
+                          )
+                        : React.createElement("div", {
+                            style: { fontFamily: "'Share Tech Mono',serif", fontSize: 11, color: "#111111" },
+                          },
+                            firstPlayer === "p1" ? "LOYALIST (P1) GOES FIRST" : "TRAITOR (P2) GOES FIRST",
+                            seizeSuccess && React.createElement("span", {
+                              style: { display: "block", fontSize: 10, color: "#4a2880", marginTop: 2 },
+                            }, "(Initiative seized!)"),
+                          ),
+                    ),
+              ),
+            ),
+            // ── Seize the Initiative ───────────────────────────────────────────
+            turnWinner && turnWinner !== "tie" && React.createElement("div", {
+              style: { marginTop: 12, paddingTop: 10, borderTop: "1px solid rgba(0,0,0,0.10)" },
+            },
+              React.createElement("div", {
+                style: { fontSize: 9, fontFamily: "'Share Tech Mono',serif", color: "#111111", letterSpacing: 2, marginBottom: 4 },
+              }, "SEIZE THE INITIATIVE"),
+              React.createElement("div", {
+                style: { fontSize: 10, color: "#444", fontFamily: "'Share Tech Mono',serif", marginBottom: 8 },
+              },
+                (turnWinner === "p1" ? "TRAITOR (P2)" : "LOYALIST (P1)") +
+                " may attempt to seize — roll a 6 to take first Player Turn.",
+              ),
+              seizeRoll === null
+                ? React.createElement("button", {
+                    onClick: () => setSeizeRoll(rollD6()),
+                    style: {
+                      padding: "6px 18px", borderRadius: 5, cursor: "pointer",
+                      background: "rgba(70,30,110,0.08)", border: "1.5px solid rgba(70,30,110,0.3)",
+                      fontFamily: "'Share Tech Mono',serif", fontSize: 11,
+                      color: "#4a1e7a", fontWeight: 700,
+                    },
+                  }, "🎲 " + (turnWinner === "p1" ? "P2" : "P1") + " — Seize the Initiative!")
+                : React.createElement("div", { style: { display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" } },
+                    // Seize die
+                    React.createElement("div", {
+                      style: {
+                        width: 52, height: 52, borderRadius: 8,
+                        background: seizeSuccess ? "rgba(20,140,20,0.12)" : "rgba(150,20,20,0.08)",
+                        border: `2.5px solid ${seizeSuccess ? "rgba(20,140,20,0.55)" : "rgba(150,20,20,0.35)"}`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 26, fontFamily: "'Share Tech Mono',serif", fontWeight: 700,
+                        color: seizeSuccess ? "#0a6010" : "#a01010",
+                      },
+                    }, String(seizeRoll)),
+                    React.createElement("div", null,
+                      React.createElement("div", {
+                        style: { fontFamily: "'Share Tech Mono',serif", fontSize: 12, fontWeight: 700,
+                          color: seizeSuccess ? "#0a6010" : "#a01010", marginBottom: 2 },
+                      }, seizeSuccess
+                          ? "🎉 SEIZED! " + (turnWinner === "p1" ? "P2 (TRAITOR)" : "P1 (LOYALIST)") + " GOES FIRST!"
+                          : "❌ FAILED — " + (turnWinner === "p1" ? "P1 (LOYALIST)" : "P2 (TRAITOR)") + " GOES FIRST"),
+                      React.createElement("div", {
+                        style: { fontSize: 9, color: "#666", fontFamily: "'Share Tech Mono',serif" },
+                      }, seizeSuccess ? "Rolled a 6 — initiative seized!" : "Needed a 6, rolled a " + seizeRoll + "."),
+                    ),
+                    React.createElement("button", {
+                      onClick: () => setSeizeRoll(null),
+                      style: {
+                        padding: "4px 10px", borderRadius: 4, cursor: "pointer",
+                        background: "none", border: "1px solid rgba(0,0,0,0.15)",
+                        fontFamily: "'Share Tech Mono',serif", fontSize: 9, color: "#666",
+                      },
+                    }, "Re-attempt"),
+                  ),
+            ),
+          ),
+          // ── Saturnine mission instructions panel (below the board) ──────────────
+          missionType === "saturnine" &&
+            (() => {
+              const satInfo = SATURNINE_MISSIONS_INFO[satMission];
+              if (!satInfo) return null;
+              return React.createElement(
+                "div",
+                {
+                  style: {
+                    marginTop: 14,
+                    background: "rgba(180,70,30,0.06)",
+                    border: "1px solid rgba(180,70,30,0.25)",
+                    borderRadius: 6,
+                    padding: "12px 14px",
+                  },
+                },
+                // Mission selector buttons
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      fontSize: 10,
+                      fontFamily: "'Share Tech Mono', serif",
+                      color: "#8a4a2a",
+                      letterSpacing: 2,
+                      marginBottom: 6,
+                    },
+                  },
+                  "⚔ SATURNINE MISSION",
+                ),
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      display: "flex",
+                      gap: 6,
+                      flexWrap: "wrap",
+                      marginBottom: 10,
+                    },
+                  },
+                  Object.entries(SATURNINE_MISSIONS_INFO).map(([k, m]) => {
+                    const active = satMission === k;
+                    return React.createElement(
+                      "button",
+                      {
+                        key: k,
+                        onClick: () => setSatMission(k),
+                        style: {
+                          padding: "6px 14px",
+                          borderRadius: 6,
+                          fontSize: 12,
+                          cursor: "pointer",
+                          fontFamily: "'Share Tech Mono', serif",
+                          fontWeight: active ? 700 : 400,
+                          letterSpacing: 1,
+                          background: active ? "rgba(180,70,30,0.18)" : "#f8f4ec",
+                          border: "1.5px solid " + (active ? "#8a4a2a" : "#d0c4aa"),
+                          color: active ? "#7a3020" : "#6a5e4e",
+                        },
+                      },
+                      m.name,
+                    );
+                  }),
+                ),
+                // Name + badges
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      display: "flex",
+                      alignItems: "baseline",
+                      gap: 8,
+                      marginBottom: 2,
+                      flexWrap: "wrap",
+                    },
+                  },
+                  React.createElement(
+                    "span",
+                    {
+                      style: {
+                        fontFamily: "'Share Tech Mono', serif",
+                        fontWeight: 700,
+                        fontSize: 14,
+                        color: "#7a3020",
+                      },
+                    },
+                    satInfo.name,
+                  ),
+                  React.createElement(
+                    "span",
+                    {
+                      style: {
+                        fontFamily: "'Share Tech Mono', serif",
+                        fontSize: 10,
+                        color: "#8a7060",
+                        fontStyle: "italic",
+                      },
+                    },
+                    satInfo.type,
+                  ),
+                ),
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      display: "flex",
+                      gap: 8,
+                      marginBottom: 8,
+                      flexWrap: "wrap",
+                    },
+                  },
+                  React.createElement(
+                    "span",
+                    {
+                      style: {
+                        fontFamily: "'Share Tech Mono', serif",
+                        fontSize: 10,
+                        color: "#9b2d2d",
+                        fontWeight: 700,
+                        background: "rgba(155,45,45,0.1)",
+                        border: "1px solid rgba(155,45,45,0.3)",
+                        borderRadius: 3,
+                        padding: "1px 6px",
+                      },
+                    },
+                    "⚔ ATTACKER: " + satInfo.attacker,
+                  ),
+                  React.createElement(
+                    "span",
+                    {
+                      style: {
+                        fontFamily: "'Share Tech Mono', serif",
+                        fontSize: 10,
+                        color: "#2a6fb4",
+                        fontWeight: 700,
+                        background: "rgba(42,111,180,0.1)",
+                        border: "1px solid rgba(42,111,180,0.3)",
+                        borderRadius: 3,
+                        padding: "1px 6px",
+                      },
+                    },
+                    "🛡 DEFENDER: " + satInfo.defender,
+                  ),
+                  React.createElement(
+                    "span",
+                    {
+                      style: {
+                        fontFamily: "'Share Tech Mono', serif",
+                        fontSize: 10,
+                        color: "#5a4e3e",
+                        background: "rgba(180,160,120,0.12)",
+                        border: "1px solid rgba(180,160,120,0.35)",
+                        borderRadius: 3,
+                        padding: "1px 6px",
+                      },
+                    },
+                    "⏱ " + satInfo.turns + " Rounds",
+                  ),
+                ),
+                // Flavour text
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      fontSize: 11,
+                      fontFamily: "'Share Tech Mono', serif",
+                      fontStyle: "italic",
+                      color: "#5a4e3e",
+                      marginBottom: 10,
+                      lineHeight: 1.5,
+                    },
+                  },
+                  satInfo.desc,
+                ),
+                // Deployment & Setup
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      fontSize: 10,
+                      fontFamily: "'Share Tech Mono', serif",
+                      color: "#5a4a2a",
+                      letterSpacing: 1,
+                      marginBottom: 3,
+                    },
+                  },
+                  "DEPLOYMENT & SETUP",
+                ),
+                satInfo.deployment.map((d, i) =>
+                  React.createElement(
+                    "div",
+                    {
+                      key: i,
+                      style: {
+                        fontSize: 11,
+                        fontFamily: "'Share Tech Mono', serif",
+                        color: "#5a4e3e",
+                        marginBottom: 3,
+                        paddingLeft: 6,
+                        lineHeight: 1.4,
+                      },
+                    },
+                    "• ",
+                    d,
+                  ),
+                ),
+                // Objectives & VP Scoring
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      fontSize: 10,
+                      fontFamily: "'Share Tech Mono', serif",
+                      color: "#7a5a2a",
+                      letterSpacing: 1,
+                      marginBottom: 3,
+                      marginTop: 8,
+                    },
+                  },
+                  "OBJECTIVES & VP SCORING",
+                ),
+                satInfo.objectives.map((o, i) =>
+                  React.createElement(
+                    "div",
+                    {
+                      key: i,
+                      style: {
+                        fontSize: 11,
+                        fontFamily: "'Share Tech Mono', serif",
+                        color: "#5a4e3e",
+                        marginBottom: 3,
+                        paddingLeft: 6,
+                        lineHeight: 1.4,
+                      },
+                    },
+                    "• ",
+                    o,
+                  ),
+                ),
+                // Attacker Rules
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      fontSize: 10,
+                      fontFamily: "'Share Tech Mono', serif",
+                      color: "#9b2d2d",
+                      letterSpacing: 1,
+                      marginBottom: 3,
+                      marginTop: 8,
+                    },
+                  },
+                  "ATTACKER (" + satInfo.attacker + ") SPECIAL RULES",
+                ),
+                satInfo.attackerRules.map((r, i) =>
+                  React.createElement(
+                    "div",
+                    {
+                      key: i,
+                      style: {
+                        fontSize: 11,
+                        fontFamily: "'Share Tech Mono', serif",
+                        color: "#5a4e3e",
+                        marginBottom: 3,
+                        paddingLeft: 6,
+                        lineHeight: 1.4,
+                      },
+                    },
+                    "• ",
+                    r,
+                  ),
+                ),
+                // Defender Rules
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      fontSize: 10,
+                      fontFamily: "'Share Tech Mono', serif",
+                      color: "#2a4a9b",
+                      letterSpacing: 1,
+                      marginBottom: 3,
+                      marginTop: 8,
+                    },
+                  },
+                  "DEFENDER (" + satInfo.defender + ") SPECIAL RULES",
+                ),
+                satInfo.defenderRules.map((r, i) =>
+                  React.createElement(
+                    "div",
+                    {
+                      key: i,
+                      style: {
+                        fontSize: 11,
+                        fontFamily: "'Share Tech Mono', serif",
+                        color: "#5a4e3e",
+                        marginBottom: 3,
+                        paddingLeft: 6,
+                        lineHeight: 1.4,
+                      },
+                    },
+                    "• ",
+                    r,
+                  ),
+                ),
+                // Mission Special Rules
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      fontSize: 10,
+                      fontFamily: "'Share Tech Mono', serif",
+                      color: "#5a4a6a",
+                      letterSpacing: 1,
+                      marginBottom: 3,
+                      marginTop: 8,
+                    },
+                  },
+                  "MISSION SPECIAL RULES",
+                ),
+                satInfo.special.map((r, i) =>
+                  React.createElement(
+                    "div",
+                    {
+                      key: i,
+                      style: {
+                        fontSize: 11,
+                        fontFamily: "'Share Tech Mono', serif",
+                        color: "#5a4e3e",
+                        marginBottom: 3,
+                        paddingLeft: 6,
+                        lineHeight: 1.4,
+                      },
+                    },
+                    "• ",
+                    r,
+                  ),
+                ),
+                // Secondary Objectives
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      fontSize: 10,
+                      fontFamily: "'Share Tech Mono', serif",
+                      color: "#8a7e6e",
+                      letterSpacing: 1,
+                      marginBottom: 3,
+                      marginTop: 8,
+                    },
+                  },
+                  "SECONDARY OBJECTIVES",
+                ),
+                satInfo.secondary.map((r, i) =>
+                  React.createElement(
+                    "div",
+                    {
+                      key: i,
+                      style: {
+                        fontSize: 11,
+                        fontFamily: "'Share Tech Mono', serif",
+                        color: "#5a4e3e",
+                        marginBottom: 2,
+                        paddingLeft: 6,
+                      },
+                    },
+                    "• ",
+                    r,
+                  ),
+                ),
+                // Victory Conditions
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      marginTop: 10,
+                      paddingTop: 7,
+                      borderTop: "1px solid rgba(180,70,30,0.25)",
+                      fontSize: 10,
+                      fontFamily: "'Share Tech Mono', serif",
+                      color: "#7a3020",
+                      letterSpacing: 1,
+                      marginBottom: 3,
+                    },
+                  },
+                  "VICTORY CONDITIONS",
+                ),
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      fontSize: 11,
+                      fontFamily: "'Share Tech Mono', serif",
+                      color: "#5a4e3e",
+                      lineHeight: 1.5,
+                      paddingLeft: 6,
+                    },
+                  },
+                  satInfo.victory,
+                ),
+              );
+            })(),
+          // ── Leviathan mission instructions panel (below the board) ─────────
+          missionType === "leviathan" &&
+            (() => {
+              const levInfo = LEVIATHAN_MISSIONS_INFO[levMission];
+              if (!levInfo) return null;
+              const accentColor = "#111111";
+              const accentBorder = "rgba(0,0,0,0.18)";
+              const accentBg = "rgba(255,248,235,0.97)";
+              const makeBadge = (text, bg, border, color) =>
+                React.createElement("div", {
+                  style: {
+                    padding: "4px 10px", background: bg, border: `1px solid ${border}`,
+                    borderRadius: 4, fontSize: 11,
+                    fontFamily: "'Share Tech Mono', serif", color, fontWeight: 700,
+                  },
+                }, text);
+              const makeSection = (label, items) => items && items.length > 0 ? React.createElement("div", {
+                style: { marginBottom: 8 },
+              },
+                React.createElement("div", {
+                  style: { fontSize: 9, fontFamily: "'Share Tech Mono',serif", color: "#111111", letterSpacing: 2, marginBottom: 3 },
+                }, label),
+                items.map((t, i) => React.createElement("div", {
+                  key: i,
+                  style: { fontSize: 11, color: "#111111", lineHeight: 1.4, marginBottom: 2, paddingLeft: 8 },
+                }, "• " + t)),
+              ) : null;
+
+              return React.createElement("div", {
+                style: { marginTop: 14, background: accentBg, border: `1px solid ${accentBorder}`, borderRadius: 6, padding: "12px 14px" },
+              },
+                // Header label
+                React.createElement("div", {
+                  style: { fontSize: 10, fontFamily: "'Share Tech Mono',serif", color: accentColor, letterSpacing: 2, marginBottom: 6 },
+                }, "🔱 LEVIATHAN (MAILED FIST) MISSION"),
+                // Mission selector buttons
+                React.createElement("div", {
+                  style: { display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 },
+                },
+                  Object.entries(LEVIATHAN_MISSIONS_INFO).map(([k, m]) => {
+                    const active = levMission === k;
+                    return React.createElement("button", {
+                      key: k,
+                      onClick: () => setLevMission(k),
+                      style: {
+                        padding: "6px 14px", borderRadius: 6, fontSize: 12, cursor: "pointer",
+                        fontFamily: "'Share Tech Mono',serif", fontWeight: active ? 700 : 400, letterSpacing: 1,
+                        background: active ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.60)",
+                        border: `1.5px solid ${active ? "#111111" : "rgba(0,0,0,0.15)"}`,
+                        color: active ? "#111111" : "#333333",
+                        boxShadow: active ? "0 0 6px rgba(176,80,16,0.15)" : "none",
+                      },
+                    }, m.name);
+                  }),
+                ),
+                // Attacker/Defender badges — driven by the universal roll-off above
+                React.createElement("div", {
+                  style: { display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 10 },
+                },
+                  turnWinner && turnWinner !== "tie"
+                    ? React.createElement(React.Fragment, null,
+                        React.createElement("div", {
+                          style: { padding: "5px 12px", borderRadius: 4, fontWeight: 700,
+                            background: "rgba(155,20,20,0.08)", border: "1px solid rgba(140,20,20,0.35)",
+                            fontFamily: "'Share Tech Mono',serif", fontSize: 11, color: "#a01010" },
+                        }, "⚔ ATTACKER — " + (turnWinner === "p1" ? "LOYALIST (P1)" : "TRAITOR (P2)") + ": " + levInfo.attacker),
+                        React.createElement("div", {
+                          style: { padding: "5px 12px", borderRadius: 4, fontWeight: 700,
+                            background: "rgba(20,60,160,0.08)", border: "1px solid rgba(20,60,160,0.35)",
+                            fontFamily: "'Share Tech Mono',serif", fontSize: 11, color: "#0a3d99" },
+                        }, "🛡 DEFENDER — " + (turnWinner === "p1" ? "TRAITOR (P2)" : "LOYALIST (P1)") + ": " + levInfo.defender),
+                      )
+                    : React.createElement("div", {
+                        style: { fontSize: 11, color: "#888", fontStyle: "italic", fontFamily: "'Share Tech Mono',serif" },
+                      }, "↑ Roll off above to determine Attacker & Defender."),
+                ),
+                // Mission title + type
+                React.createElement("div", {
+                  style: { fontFamily: "'Share Tech Mono',serif", fontWeight: 700, fontSize: 15, color: "#111111", letterSpacing: 1, marginBottom: 4 },
+                }, levInfo.name),
+                React.createElement("div", {
+                  style: { fontSize: 10, color: "#333333", fontFamily: "'Share Tech Mono',serif", letterSpacing: 1, marginBottom: 8 },
+                }, levInfo.type),
+                // Description
+                React.createElement("div", {
+                  style: { fontSize: 12, color: "#111111", lineHeight: 1.5, marginBottom: 10, fontStyle: "italic" },
+                }, levInfo.desc),
+                // Armies
+                makeSection("ARMIES", levInfo.armies),
+                // Sectors & VP overview
+                React.createElement("div", { style: { marginBottom: 8 } },
+                  React.createElement("div", {
+                    style: { fontSize: 9, fontFamily: "'Share Tech Mono',serif", color: "#111111", letterSpacing: 2, marginBottom: 3 },
+                  }, "SECTORS & SCORING"),
+                  React.createElement("div", {
+                    style: { fontSize: 11, color: "#111111", lineHeight: 1.4, paddingLeft: 8 },
+                  }, levInfo.sectors),
+                ),
+                // Deployment steps
+                makeSection("DEPLOYMENT", levInfo.deployment),
+                // Attacker rules
+                makeSection("ATTACKER SPECIAL RULES", levInfo.attackerRules),
+                // Defender rules
+                makeSection("DEFENDER SPECIAL RULES", levInfo.defenderRules),
+                // Special rules
+                makeSection("MISSION SPECIAL RULES", levInfo.special),
+                // Secondary objectives
+                React.createElement("div", { style: { marginBottom: 8 } },
+                  React.createElement("div", {
+                    style: { fontSize: 9, fontFamily: "'Share Tech Mono',serif", color: "#111111", letterSpacing: 2, marginBottom: 3 },
+                  }, "SECONDARY OBJECTIVES"),
+                  React.createElement("div", { style: { display: "flex", gap: 12, flexWrap: "wrap" } },
+                    levInfo.secondary.common && React.createElement("div", null,
+                      React.createElement("div", { style: { fontSize: 9, color: "#333333", marginBottom: 2 } }, "Common:"),
+                      levInfo.secondary.common.map((s, i) =>
+                        React.createElement("div", { key: i, style: { fontSize: 11, color: "#111111", paddingLeft: 8 } }, "• " + s),
+                      ),
+                    ),
+                    levInfo.secondary.attacker && React.createElement("div", null,
+                      React.createElement("div", { style: { fontSize: 9, color: "#a01010", marginBottom: 2 } }, "Attacker only:"),
+                      levInfo.secondary.attacker.map((s, i) =>
+                        React.createElement("div", { key: i, style: { fontSize: 11, color: "#111111", paddingLeft: 8 } }, "• " + s),
+                      ),
+                    ),
+                    levInfo.secondary.defender && React.createElement("div", null,
+                      React.createElement("div", { style: { fontSize: 9, color: "#0a3d99", marginBottom: 2 } }, "Defender only:"),
+                      levInfo.secondary.defender.map((s, i) =>
+                        React.createElement("div", { key: i, style: { fontSize: 11, color: "#111111", paddingLeft: 8 } }, "• " + s),
+                      ),
+                    ),
+                  ),
+                ),
+                // Victory conditions
+                React.createElement("div", { style: { marginTop: 8, padding: "8px 10px", background: "rgba(0,0,0,0.04)", borderRadius: 4, border: "1px solid rgba(176,80,16,0.2)" } },
+                  React.createElement("div", { style: { fontSize: 9, fontFamily: "'Share Tech Mono',serif", color: "#111111", letterSpacing: 2, marginBottom: 3 } }, "VICTORY CONDITIONS"),
+                  React.createElement("div", { style: { fontSize: 11, color: "#111111", lineHeight: 1.4 } }, levInfo.victory),
+                ),
+              );
+            })(),
+          // ── Battlefield Assets panel (below board, when active) ─────────────
+          missionType === "leviathan" &&
+            (() => {
+              const ASSET_POINTS_TABLE = [
+                { limit: "Up to 1,500 pts", ap: 2 },
+                { limit: "1,501–3,500 pts", ap: 5 },
+                { limit: "3,501–5,000 pts", ap: 8 },
+                { limit: "More than 5,000 pts", ap: 10 },
+              ];
+              return React.createElement("div", {
+                style: {
+                  marginTop: 10, background: "rgba(255,248,235,0.97)",
+                  border: "1px solid rgba(140,90,30,0.25)", borderRadius: 6, padding: "12px 14px",
+                },
+              },
+                React.createElement("div", {
+                  style: { fontSize: 10, fontFamily: "'Share Tech Mono',serif", color: "#111111", letterSpacing: 2, marginBottom: 8 },
+                }, "🛡 BATTLEFIELD ASSETS — CLICK MAP TO PLACE"),
+                // Asset Points reference
+                React.createElement("div", {
+                  style: { fontSize: 10, color: "#333333", marginBottom: 8 },
+                }, "Asset Points by Battle Points Limit: " +
+                  ASSET_POINTS_TABLE.map(r => r.limit + " → " + r.ap + "AP").join(" | ")),
+                // Deactivate brush button
+                bfaBrush && React.createElement("button", {
+                  onClick: () => setBfaBrush(null),
+                  style: {
+                    marginBottom: 8, padding: "4px 12px", fontSize: 11, cursor: "pointer",
+                    background: "rgba(160,16,16,0.08)", border: "1px solid rgba(180,40,40,0.3)",
+                    borderRadius: 4, color: "#a01010", fontFamily: "'Share Tech Mono',serif",
+                  },
+                }, "✕ Stop Placing Assets"),
+                // Asset grid
+                React.createElement("div", {
+                  style: { display: "flex", gap: 8, flexWrap: "wrap" },
+                },
+                  Object.entries(BATTLEFIELD_ASSETS).map(([key, asset]) => {
+                    const active = bfaBrush === key;
+                    return React.createElement("div", {
+                      key,
+                      onClick: () => setBfaBrush(active ? null : key),
+                      style: {
+                        cursor: "pointer", padding: "8px 10px", borderRadius: 5,
+                        border: `1.5px solid ${active ? asset.color : "rgba(0,0,0,0.15)"}`,
+                        background: active ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.60)",
+                        boxShadow: active ? `0 0 6px ${asset.color}44` : "none",
+                        minWidth: 130, maxWidth: 180, transition: "all 0.15s",
+                      },
+                    },
+                      React.createElement("div", {
+                        style: { display: "flex", alignItems: "center", gap: 6, marginBottom: 4 },
+                      },
+                        React.createElement("span", { style: { fontSize: 16, color: asset.color } }, asset.symbol),
+                        React.createElement("span", {
+                          style: { fontFamily: "'Share Tech Mono',serif", fontWeight: 700, fontSize: 11, color: asset.color },
+                        }, asset.name),
+                      ),
+                      React.createElement("div", {
+                        style: { fontSize: 9, color: "#333333", fontFamily: "'Share Tech Mono',serif", marginBottom: 3 },
+                      },
+                        (asset.side === "attacker" ? "⚔ ATTACKER" : "🛡 DEFENDER") +
+                        " · " + asset.cost + "AP" +
+                        (asset.trait ? " · " + asset.trait : ""),
+                      ),
+                      React.createElement("div", {
+                        style: { fontSize: 10, color: "#111111", lineHeight: 1.35 },
+                      }, asset.desc),
+                      active && React.createElement("div", {
+                        style: { fontSize: 9, marginTop: 4, color: "#111111", fontFamily: "'Share Tech Mono',serif", fontStyle: "italic" },
+                      }, "▶ Click board to place"),
+                    );
+                  }),
+                ),
+                // List of placed assets with remove buttons
+                battlefieldAssets.length > 0 && React.createElement("div", {
+                  style: { marginTop: 10, paddingTop: 8, borderTop: "1px solid rgba(140,90,30,0.2)" },
+                },
+                  React.createElement("div", {
+                    style: { fontSize: 9, fontFamily: "'Share Tech Mono',serif", color: "#111111", letterSpacing: 1, marginBottom: 6 },
+                  }, "PLACED ASSETS"),
+                  React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 6 } },
+                    battlefieldAssets.map((a) => {
+                      const def = BATTLEFIELD_ASSETS[a.type] || {};
+                      return React.createElement("div", {
+                        key: a.id,
+                        style: {
+                          display: "flex", alignItems: "center", gap: 6, padding: "4px 8px",
+                          background: "rgba(0,0,0,0.06)", borderRadius: 4,
+                          border: `1px solid ${def.color || "#666"}44`,
+                        },
+                      },
+                        React.createElement("span", { style: { color: def.color, fontSize: 13 } }, def.symbol),
+                        React.createElement("span", { style: { fontSize: 10, color: "#111111" } },
+                          (def.name || a.type) + " @ (" + a.x + '",' + a.y + '")',
+                        ),
+                        React.createElement("button", {
+                          onClick: () => setBattlefieldAssets((prev) => prev.filter((x) => x.id !== a.id)),
+                          style: {
+                            background: "none", border: "none", cursor: "pointer",
+                            color: "#a01010", fontSize: 11, padding: 0,
+                          },
+                        }, "✕"),
+                      );
+                    }),
+                  ),
+                ),
+              );
+            })(),
           deployBrushUnit &&
             React.createElement(
               "div",
@@ -13649,6 +15661,56 @@ var ShootingResolver = function () {
               ),
               React.createElement(
                 "div",
+                {
+                  style: {
+                    marginBottom: 10,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  },
+                },
+                React.createElement(
+                  "label",
+                  {
+                    style: {
+                      fontSize: 12,
+                      color: "#5a4e3e",
+                      textTransform: "uppercase",
+                      letterSpacing: 1,
+                      fontFamily: "'Share Tech Mono', serif",
+                      whiteSpace: "nowrap",
+                    },
+                  },
+                  "Faction",
+                ),
+                React.createElement(
+                  "select",
+                  {
+                    value: shootFaction,
+                    onChange: (e) => setShootFaction(e.target.value),
+                    style: {
+                      flex: 1,
+                      padding: "5px 8px",
+                      borderRadius: 6,
+                      fontSize: 11,
+                      fontFamily: "'Share Tech Mono', serif",
+                      border: "1px solid #b8860b",
+                      background: "#faf8f4",
+                      color: "#2a2418",
+                      cursor: "pointer",
+                    },
+                  },
+                  LEGION_FACTIONS.map((f) =>
+                    React.createElement(
+                      "option",
+                      { key: f.id, value: f.id },
+                      f.name,
+                    ),
+                  ),
+                ),
+              ),
+              React.createElement(
+                "div",
                 { style: { marginBottom: 14 } },
                 selectedUnit
                   ? React.createElement(
@@ -13788,57 +15850,6 @@ var ShootingResolver = function () {
                   onClose: () => setShowAttackerPresets(false),
                   onSelect: applyUnitPreset,
                 }),
-              selectedUnit &&
-                React.createElement(
-                  "div",
-                  {
-                    style: {
-                      marginBottom: 10,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                    },
-                  },
-                  React.createElement(
-                    "label",
-                    {
-                      style: {
-                        fontSize: 12,
-                        color: "#5a4e3e",
-                        textTransform: "uppercase",
-                        letterSpacing: 1,
-                        fontFamily: "'Share Tech Mono', serif",
-                        whiteSpace: "nowrap",
-                      },
-                    },
-                    "Legion",
-                  ),
-                  React.createElement(
-                    "select",
-                    {
-                      value: shootFaction,
-                      onChange: (e) => setShootFaction(e.target.value),
-                      style: {
-                        flex: 1,
-                        padding: "5px 8px",
-                        borderRadius: 6,
-                        fontSize: 11,
-                        fontFamily: "'Share Tech Mono', serif",
-                        border: "1px solid #b8860b",
-                        background: "#faf8f4",
-                        color: "#2a2418",
-                        cursor: "pointer",
-                      },
-                    },
-                    LEGION_FACTIONS.map((f) =>
-                      React.createElement(
-                        "option",
-                        { key: f.id, value: f.id },
-                        f.name,
-                      ),
-                    ),
-                  ),
-                ),
               selectedUnit &&
                 availableWeapons.length > 0 &&
                 React.createElement(
@@ -14549,6 +16560,56 @@ var ShootingResolver = function () {
               ),
               React.createElement(
                 "div",
+                {
+                  style: {
+                    marginBottom: 10,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  },
+                },
+                React.createElement(
+                  "label",
+                  {
+                    style: {
+                      fontSize: 12,
+                      color: "#5a4e3e",
+                      textTransform: "uppercase",
+                      letterSpacing: 1,
+                      fontFamily: "'Share Tech Mono', serif",
+                      whiteSpace: "nowrap",
+                    },
+                  },
+                  "Faction",
+                ),
+                React.createElement(
+                  "select",
+                  {
+                    value: targetFaction,
+                    onChange: (e) => setTargetFaction(e.target.value),
+                    style: {
+                      flex: 1,
+                      padding: "5px 8px",
+                      borderRadius: 6,
+                      fontSize: 11,
+                      fontFamily: "'Share Tech Mono', serif",
+                      border: "1px solid #2a6fb4",
+                      background: "#faf8f4",
+                      color: "#2a2418",
+                      cursor: "pointer",
+                    },
+                  },
+                  LEGION_FACTIONS.map((f) =>
+                    React.createElement(
+                      "option",
+                      { key: f.id, value: f.id },
+                      f.name,
+                    ),
+                  ),
+                ),
+              ),
+              React.createElement(
+                "div",
                 { style: { marginBottom: 14 } },
                 targetPresetName
                   ? React.createElement(
@@ -14694,63 +16755,81 @@ var ShootingResolver = function () {
                   onSelect: applyTargetPreset,
                   isTarget: true,
                 }),
-              targetPresetName &&
-                React.createElement(
-                  "div",
-                  {
-                    style: {
-                      marginBottom: 10,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                    },
+              // Vehicle AV Panel
+              isVehicleTarget && React.createElement(
+                "div",
+                {
+                  style: {
+                    marginBottom: 12,
+                    borderRadius: 6,
+                    overflow: "hidden",
+                    border: "2px solid rgba(180,120,20,0.5)",
                   },
-                  React.createElement(
-                    "label",
-                    {
-                      style: {
-                        fontSize: 12,
-                        color: "#5a4e3e",
-                        textTransform: "uppercase",
-                        letterSpacing: 1,
-                        fontFamily: "'Share Tech Mono', serif",
-                        whiteSpace: "nowrap",
-                      },
-                    },
-                    "Legion",
-                  ),
-                  React.createElement(
-                    "select",
-                    {
-                      value: targetFaction,
-                      onChange: (e) => setTargetFaction(e.target.value),
+                },
+                React.createElement("div", {
+                  style: {
+                    padding: "5px 12px",
+                    background: "#7a5010",
+                    fontSize: 11,
+                    fontFamily: "'Share Tech Mono', serif",
+                    color: "#fff",
+                    letterSpacing: 1,
+                    fontWeight: 700,
+                  },
+                }, "🚗 VEHICLE — ARMOUR VALUES"),
+                React.createElement("div", {
+                  style: {
+                    padding: "10px 12px",
+                    background: "rgba(255,248,220,0.95)",
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr 1fr 1fr",
+                    gap: 10,
+                  },
+                },
+                  React.createElement(NumberInput, { label: "AV Front", value: targetAVF, onChange: setTargetAVF, min: 8, max: 15 }),
+                  React.createElement(NumberInput, { label: "AV Side",  value: targetAVS, onChange: setTargetAVS, min: 8, max: 15 }),
+                  React.createElement(NumberInput, { label: "AV Rear",  value: targetAVR, onChange: setTargetAVR, min: 8, max: 15 }),
+                  React.createElement(NumberInput, { label: "Hull Pts", value: targetHP,  onChange: setTargetHP,  min: 1, max: 20 }),
+                ),
+                React.createElement("div", {
+                  style: {
+                    padding: "8px 12px",
+                    background: "rgba(255,240,180,0.7)",
+                    display: "flex",
+                    gap: 6,
+                  },
+                },
+                  React.createElement("div", { style: { fontSize: 11, fontFamily: "'Share Tech Mono', serif", color: "#5a3800", fontWeight: 700, alignSelf: "center", marginRight: 4 } }, "FACING:"),
+                  ...[
+                    { key: "front", label: "⬆ FRONT", av: targetAVF },
+                    { key: "side",  label: "↔ SIDE",  av: targetAVS },
+                    { key: "rear",  label: "⬇ REAR",  av: targetAVR },
+                  ].map(({ key, label, av }) =>
+                    React.createElement("button", {
+                      key,
+                      onClick: () => setTargetFacing(key),
                       style: {
                         flex: 1,
-                        padding: "5px 8px",
-                        borderRadius: 6,
-                        fontSize: 11,
+                        padding: "5px 4px",
+                        borderRadius: 5,
+                        border: targetFacing === key ? "2px solid #7a5010" : "1px solid #bba060",
+                        background: targetFacing === key ? "#7a5010" : "#fff8e0",
+                        color: targetFacing === key ? "#fff" : "#5a3800",
                         fontFamily: "'Share Tech Mono', serif",
-                        border: "1px solid #2a6fb4",
-                        background: "#faf8f4",
-                        color: "#2a2418",
+                        fontSize: 11,
+                        fontWeight: 700,
                         cursor: "pointer",
                       },
-                    },
-                    LEGION_FACTIONS.map((f) =>
-                      React.createElement(
-                        "option",
-                        { key: f.id, value: f.id },
-                        f.name,
-                      ),
-                    ),
+                    }, label + "  AV" + av)
                   ),
                 ),
+              ),
               React.createElement(
                 "div",
                 {
                   style: {
                     display: "grid",
-                    gridTemplateColumns: "1fr 1fr 1fr",
+                    gridTemplateColumns: "1fr 1fr 1fr 1fr",
                     gap: 12,
                     marginBottom: 12,
                   },
@@ -14761,6 +16840,13 @@ var ShootingResolver = function () {
                   onChange: setToughness,
                   min: 1,
                   max: 20,
+                }),
+                React.createElement(NumberInput, {
+                  label: "W (Wounds)",
+                  value: targetW,
+                  onChange: setTargetW,
+                  min: 1,
+                  max: 10,
                 }),
                 React.createElement(SelectInput, {
                   label: "Armour Save",
@@ -16022,6 +18108,246 @@ var ShootingResolver = function () {
                     color: "#c46a1b",
                   }),
               ),
+              // Wound Outcome Panel
+              result && result.unsaved > 0 && (() => {
+                const weapD = selectedWeapon?.damage || 1;
+                const defW = targetW;
+                const unsaved = result.unsaved;
+                const isSingleModel = targetModels === 1;
+                // Casualty = D exceeds target W (weapon damage > model's wounds stat)
+                const isInstantKill = weapD > defW;
+                const totalDamage = unsaved * weapD;
+                // Single-model unit: no need to divide by W — just track total damage on the model
+                const casualties = isSingleModel
+                  ? (totalDamage >= defW ? 1 : 0)
+                  : (isInstantKill ? unsaved : Math.floor(totalDamage / defW));
+                const remainderWounds = isSingleModel
+                  ? (totalDamage < defW ? totalDamage : 0)
+                  : (isInstantKill ? 0 : totalDamage % defW);
+                const bodyStyle = {
+                  padding: "10px 14px",
+                  background: "rgba(255,255,255,0.92)",
+                  fontSize: 12,
+                  fontFamily: "'Share Tech Mono', serif",
+                  color: "#111",
+                  lineHeight: 1.8,
+                };
+                const statLine = { marginBottom: 4, color: "#333", fontWeight: 600 };
+                const dimLine = { marginBottom: 6, color: "#444" };
+                return React.createElement(
+                  "div",
+                  {
+                    style: {
+                      marginBottom: 16,
+                      borderRadius: 6,
+                      overflow: "hidden",
+                      border: isInstantKill ? "2px solid rgba(199,48,48,0.5)" : "2px solid rgba(180,130,30,0.5)",
+                    },
+                  },
+                  React.createElement(
+                    "div",
+                    {
+                      style: {
+                        padding: "6px 12px",
+                        background: isInstantKill ? "#c73030" : "#b4821e",
+                        fontSize: 11,
+                        fontFamily: "'Share Tech Mono', serif",
+                        color: "#fff",
+                        letterSpacing: 1,
+                        fontWeight: 700,
+                      },
+                    },
+                    isInstantKill ? "💀 WOUND OUTCOME — INSTANT CASUALTY"
+                      : isSingleModel ? "🩸 WOUND OUTCOME — SINGLE MODEL"
+                      : "🩸 WOUND OUTCOME — WOUNDS TAKEN",
+                  ),
+                  React.createElement(
+                    "div",
+                    { style: bodyStyle },
+                    React.createElement("div", { style: statLine },
+                      "Weapon D: " + weapD + "  ·  Target W: " + defW + "  ·  Unsaved Wounds: " + unsaved
+                    ),
+                    isInstantKill
+                      ? React.createElement("div", null,
+                          React.createElement("div", { style: dimLine },
+                            "D (" + weapD + ") > W (" + defW + ") — weapon damage exceeds model wounds → each unsaved wound causes a Casualty"
+                          ),
+                          React.createElement("div", {
+                            style: {
+                              display: "inline-block",
+                              padding: "6px 16px",
+                              borderRadius: 5,
+                              background: "rgba(199,48,48,0.12)",
+                              border: "2px solid #c73030",
+                              color: "#111",
+                              fontWeight: 900,
+                              fontSize: 14,
+                              letterSpacing: 1,
+                            },
+                          },
+                            "💀 CASUALTIES: " + casualties + " model" + (casualties !== 1 ? "s" : "") + " slain"
+                          ),
+                        )
+                      : isSingleModel
+                        ? React.createElement("div", null,
+                            React.createElement("div", { style: dimLine },
+                              "Single model (W" + defW + ") — total damage applied directly, no division needed"
+                            ),
+                            React.createElement("div", { style: { marginBottom: 8, color: "#222" } },
+                              unsaved + " unsaved × D" + weapD + " = " + totalDamage + " damage dealt to model (W" + defW + ")"
+                            ),
+                            casualties > 0
+                              ? React.createElement("div", {
+                                  style: {
+                                    display: "inline-block",
+                                    padding: "6px 16px",
+                                    borderRadius: 5,
+                                    background: "rgba(199,48,48,0.12)",
+                                    border: "2px solid #c73030",
+                                    color: "#111",
+                                    fontWeight: 900,
+                                    fontSize: 14,
+                                    letterSpacing: 1,
+                                  },
+                                },
+                                "💀 MODEL SLAIN (" + totalDamage + " damage ≥ W" + defW + ")"
+                              )
+                              : React.createElement("div", {
+                                  style: {
+                                    display: "inline-block",
+                                    padding: "6px 16px",
+                                    borderRadius: 5,
+                                    background: "rgba(180,130,30,0.12)",
+                                    border: "2px solid #b4821e",
+                                    color: "#111",
+                                    fontWeight: 900,
+                                    fontSize: 14,
+                                    letterSpacing: 1,
+                                  },
+                                },
+                                "🩸 WOUNDS ON MODEL: " + remainderWounds + " / " + defW
+                              ),
+                          )
+                        : React.createElement("div", null,
+                          React.createElement("div", { style: dimLine },
+                            "D (" + weapD + ") ≤ W (" + defW + ") — damage accumulates; a Casualty only occurs when total damage ≥ W"
+                          ),
+                          React.createElement("div", { style: { marginBottom: 8, color: "#222" } },
+                            unsaved + " unsaved wound" + (unsaved !== 1 ? "s" : "") + " × D" + weapD + " = " + totalDamage + " damage  →  " + totalDamage + " ÷ W" + defW + " = " + casualties + " killed" + (remainderWounds > 0 ? ", " + remainderWounds + " remaining" : "")
+                          ),
+                          casualties > 0 && React.createElement("div", {
+                            style: {
+                              display: "inline-block",
+                              padding: "6px 16px",
+                              borderRadius: 5,
+                              background: "rgba(199,48,48,0.12)",
+                              border: "2px solid #c73030",
+                              color: "#111",
+                              fontWeight: 900,
+                              fontSize: 14,
+                              letterSpacing: 1,
+                              marginRight: 8,
+                              marginBottom: remainderWounds > 0 ? 8 : 0,
+                            },
+                          },
+                            "💀 CASUALTIES: " + casualties + " model" + (casualties !== 1 ? "s" : "") + " slain"
+                          ),
+                          remainderWounds > 0 && React.createElement("div", {
+                            style: {
+                              display: "inline-block",
+                              padding: "6px 16px",
+                              borderRadius: 5,
+                              background: "rgba(180,130,30,0.12)",
+                              border: "2px solid #b4821e",
+                              color: "#111",
+                              fontWeight: 900,
+                              fontSize: 14,
+                              letterSpacing: 1,
+                            },
+                          },
+                            "🩸 WOUNDS ON SURVIVOR: " + remainderWounds + " / " + defW
+                          ),
+                        ),
+                  ),
+                );
+              })(),
+              // Armour Penetration Panel — shown for Vehicle targets
+              isVehicleTarget && result && result.hits > 0 && (() => {
+                const weapS = selectedWeapon?.s || 4;
+                const facingAV = targetFacing === "front" ? targetAVF : targetFacing === "side" ? targetAVS : targetAVR;
+                const facingLabel = targetFacing === "front" ? "Front" : targetFacing === "side" ? "Side" : "Rear";
+                const hits = result.hits;
+                // Roll D6 + S per hit → compare vs AV
+                const apRolls = Array.from({ length: hits }, () => {
+                  const die = Math.floor(Math.random() * 6) + 1;
+                  const total = die + weapS;
+                  let outcome;
+                  if (total < facingAV) outcome = "no_effect";
+                  else if (total === facingAV) outcome = "glancing";
+                  else outcome = "penetrating";
+                  return { die, total, outcome };
+                });
+                const glancing = apRolls.filter(r => r.outcome === "glancing").length;
+                const penetrating = apRolls.filter(r => r.outcome === "penetrating").length;
+                // Vehicle Damage Table rolls for penetrating hits
+                const vdtRolls = Array.from({ length: penetrating }, () => Math.floor(Math.random() * 6) + 1);
+                const vdtResults = vdtRolls.map(r => ({
+                  roll: r,
+                  result: r <= 2 ? "STUNNED (Impaired Sensors)" : r <= 4 ? "PINNED (Broken Motors)" : "SUPPRESSED (Weapons Damaged)",
+                  color: r <= 2 ? "#c08020" : r <= 4 ? "#a03030" : "#7030a0",
+                }));
+                return React.createElement("div", {
+                  style: { marginBottom: 16, borderRadius: 6, overflow: "hidden", border: "2px solid rgba(120,80,20,0.5)" },
+                },
+                  React.createElement("div", {
+                    style: { padding: "6px 12px", background: "#7a5010", fontSize: 11, fontFamily: "'Share Tech Mono', serif", color: "#fff", letterSpacing: 1, fontWeight: 700 },
+                  }, "🛡 ARMOUR PENETRATION TEST — " + facingLabel.toUpperCase() + " AV" + facingAV + "  (Weapon S" + weapS + " + D6)"),
+                  React.createElement("div", {
+                    style: { padding: "10px 14px", background: "rgba(255,248,220,0.95)", fontFamily: "'Share Tech Mono', serif", fontSize: 12, color: "#111" },
+                  },
+                    React.createElement("div", { style: { marginBottom: 8, color: "#555", fontSize: 11 } },
+                      "Each Hit: roll D6 + S" + weapS + " vs AV" + facingAV + "  ·  " + hits + " hit" + (hits !== 1 ? "s" : "") + " resolved"
+                    ),
+                    // Hit-by-hit rolls
+                    React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 } },
+                      ...apRolls.map((r, i) => React.createElement("div", {
+                        key: i,
+                        style: {
+                          padding: "4px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700,
+                          background: r.outcome === "no_effect" ? "#eee" : r.outcome === "glancing" ? "rgba(200,160,20,0.2)" : "rgba(180,30,30,0.15)",
+                          border: "1px solid " + (r.outcome === "no_effect" ? "#ccc" : r.outcome === "glancing" ? "#c8a014" : "#b41e1e"),
+                          color: r.outcome === "no_effect" ? "#666" : r.outcome === "glancing" ? "#7a5000" : "#800000",
+                        },
+                      }, "D6(" + r.die + ")+S" + weapS + "=" + r.total + " → " + (r.outcome === "no_effect" ? "No Effect" : r.outcome === "glancing" ? "Glancing" : "Penetrating")))
+                    ),
+                    // Summary badges
+                    React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: glancing > 0 ? 8 : 0, flexWrap: "wrap" } },
+                      React.createElement("div", {
+                        style: { padding: "6px 14px", borderRadius: 5, background: "rgba(200,160,20,0.18)", border: "2px solid #c8a014", color: "#111", fontWeight: 900, fontSize: 14 },
+                      }, "⚡ GLANCING: " + glancing),
+                      React.createElement("div", {
+                        style: { padding: "6px 14px", borderRadius: 5, background: "rgba(180,30,30,0.15)", border: "2px solid #b41e1e", color: "#111", fontWeight: 900, fontSize: 14 },
+                      }, "💥 PENETRATING: " + penetrating),
+                    ),
+                    // Vehicle Damage Table results
+                    vdtResults.length > 0 && React.createElement("div", { style: { marginTop: 10 } },
+                      React.createElement("div", { style: { fontSize: 11, fontWeight: 700, color: "#5a3800", marginBottom: 6, letterSpacing: 1 } }, "VEHICLE DAMAGE TABLE (Penetrating Hits):"),
+                      ...vdtResults.map((vdt, i) => React.createElement("div", {
+                        key: i,
+                        style: { padding: "4px 10px", borderRadius: 4, marginBottom: 4, background: "rgba(255,255,255,0.7)", border: "1px solid #d0b060", fontSize: 12 },
+                      },
+                        React.createElement("span", { style: { fontWeight: 700, color: "#5a3800" } }, "Hit " + (i + 1) + ": "),
+                        React.createElement("span", { style: { color: "#888" } }, "D6=" + vdt.roll + " → "),
+                        React.createElement("span", { style: { color: vdt.color, fontWeight: 700 } }, vdt.result),
+                      )),
+                    ),
+                    // Glancing Hit note
+                    glancing > 0 && React.createElement("div", {
+                      style: { marginTop: 8, padding: "6px 10px", borderRadius: 4, background: "rgba(200,160,20,0.10)", border: "1px solid #c8a014", fontSize: 11, color: "#5a3800" },
+                    }, "⚡ Glancing Hit: no damage — Attacker must roll on Vehicle Damage Table in Step 11 of Shooting Attack process."),
+                  ),
+                );
+              })(),
               result.weaponBreakdown &&
                 result.weaponBreakdown.length > 1 &&
                 React.createElement(
@@ -17490,6 +19816,114 @@ var ShootingResolver = function () {
                   ),
                 ),
               ),
+              // ── Snap Shot Table ──
+              React.createElement(
+                "div",
+                {
+                  style: {
+                    marginTop: 10,
+                    borderTop: "1px solid rgba(255,255,255,0.1)",
+                    paddingTop: 8,
+                  },
+                },
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      fontSize: 11,
+                      color: "#8a7e6e",
+                      fontFamily: "'Share Tech Mono', serif",
+                      marginBottom: 6,
+                      letterSpacing: 1,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                    },
+                  },
+                  "📸 SNAP SHOT TABLE",
+                  snapShots && React.createElement(
+                    "span",
+                    {
+                      style: {
+                        color: bs <= 1 ? "#cc3333" : "#ff8c00",
+                        fontWeight: 700,
+                        fontSize: 12,
+                        marginLeft: 4,
+                      },
+                    },
+                    bs <= 1
+                      ? "— ACTIVE: FAIL"
+                      : "— ACTIVE: " + (bs <= 3 ? 6 : bs <= 5 ? 5 : bs <= 7 ? 4 : bs <= 9 ? 3 : 2) + "+",
+                  ),
+                ),
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      display: "grid",
+                      gridTemplateColumns: "repeat(6, 1fr)",
+                      gap: 4,
+                      fontSize: 11,
+                    },
+                  },
+                  [
+                    { label: "BS 1",   roll: null },
+                    { label: "BS 2–3", roll: 6 },
+                    { label: "BS 4–5", roll: 5 },
+                    { label: "BS 6–7", roll: 4 },
+                    { label: "BS 8–9", roll: 3 },
+                    { label: "BS 10+", roll: 2 },
+                  ].map(({ label, roll }) => {
+                    const isFail = roll === null;
+                    const isActive = snapShots && (
+                      (isFail  && bs <= 1) ||
+                      (roll === 6 && bs >= 2 && bs <= 3) ||
+                      (roll === 5 && bs >= 4 && bs <= 5) ||
+                      (roll === 4 && bs >= 6 && bs <= 7) ||
+                      (roll === 3 && bs >= 8 && bs <= 9) ||
+                      (roll === 2 && bs >= 10)
+                    );
+                    return React.createElement(
+                      "div",
+                      {
+                        key: label,
+                        style: {
+                          textAlign: "center",
+                          padding: 4,
+                          background: isActive
+                            ? (isFail ? "rgba(180,40,40,0.25)" : "rgba(192,96,0,0.25)")
+                            : "transparent",
+                          borderRadius: 3,
+                          border: isActive
+                            ? (isFail ? "1px solid rgba(180,40,40,0.5)" : "1px solid rgba(192,96,0,0.5)")
+                            : "1px solid transparent",
+                        },
+                      },
+                      React.createElement(
+                        "div",
+                        {
+                          style: {
+                            color: "#8a7e6e",
+                            fontSize: 10,
+                            fontFamily: "'Share Tech Mono', serif",
+                          },
+                        },
+                        label,
+                      ),
+                      React.createElement(
+                        "div",
+                        {
+                          style: {
+                            color: isFail ? "#cc3333" : (isActive ? "#ff8c00" : "#b8860b"),
+                            fontWeight: 700,
+                          },
+                        },
+                        isFail ? "F" : (roll + "+"),
+                      ),
+                    );
+                  }),
+                ),
+              ),
             ),
             React.createElement(
               "div",
@@ -17796,6 +20230,56 @@ var ShootingResolver = function () {
                 ),
                 React.createElement(
                   "div",
+                  {
+                    style: {
+                      marginBottom: 10,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                    },
+                  },
+                  React.createElement(
+                    "label",
+                    {
+                      style: {
+                        fontSize: 12,
+                        color: "#5a4e3e",
+                        textTransform: "uppercase",
+                        letterSpacing: 1,
+                        fontFamily: "'Share Tech Mono', serif",
+                        whiteSpace: "nowrap",
+                      },
+                    },
+                    "Faction",
+                  ),
+                  React.createElement(
+                    "select",
+                    {
+                      value: factionV,
+                      onChange: (e) => setFactionF(e.target.value),
+                      style: {
+                        flex: 1,
+                        padding: "7px 10px",
+                        borderRadius: 6,
+                        fontSize: 13,
+                        fontFamily: "'Share Tech Mono', serif",
+                        border: `1px solid ${sColor}`,
+                        background: "#faf8f4",
+                        color: "#2a2418",
+                        cursor: "pointer",
+                      },
+                    },
+                    LEGION_FACTIONS.map((f) =>
+                      React.createElement(
+                        "option",
+                        { key: f.id, value: f.id },
+                        f.name,
+                      ),
+                    ),
+                  ),
+                ),
+                React.createElement(
+                  "div",
                   { style: { marginBottom: 14 } },
                   unit
                     ? React.createElement(
@@ -17939,57 +20423,6 @@ var ShootingResolver = function () {
                     onClose: () => setShowPresets(false),
                     onSelect: (u) => applyAssaultUnit(u, side),
                   }),
-                unit &&
-                  React.createElement(
-                    "div",
-                    {
-                      style: {
-                        marginBottom: 10,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                      },
-                    },
-                    React.createElement(
-                      "label",
-                      {
-                        style: {
-                          fontSize: 12,
-                          color: "#5a4e3e",
-                          textTransform: "uppercase",
-                          letterSpacing: 1,
-                          fontFamily: "'Share Tech Mono', serif",
-                          whiteSpace: "nowrap",
-                        },
-                      },
-                      "Legion",
-                    ),
-                    React.createElement(
-                      "select",
-                      {
-                        value: factionV,
-                        onChange: (e) => setFactionF(e.target.value),
-                        style: {
-                          flex: 1,
-                          padding: "7px 10px",
-                          borderRadius: 6,
-                          fontSize: 13,
-                          fontFamily: "'Share Tech Mono', serif",
-                          border: `1px solid ${sColor}`,
-                          background: "#faf8f4",
-                          color: "#2a2418",
-                          cursor: "pointer",
-                        },
-                      },
-                      LEGION_FACTIONS.map((f) =>
-                        React.createElement(
-                          "option",
-                          { key: f.id, value: f.id },
-                          f.name,
-                        ),
-                      ),
-                    ),
-                  ),
                 unit &&
                   meleeWeapons.length > 0 &&
                   React.createElement(
@@ -22441,24 +24874,34 @@ var ShootingResolver = function () {
                           else if (a === d) need = 4;
                           else if (d >= a * 2) need = 5;
                           else need = 5;
-                          const bg =
-                            need <= 2
-                              ? "rgba(46,125,50,0.15)"
-                              : need <= 3
-                                ? "rgba(107,142,35,0.1)"
-                                : need >= 5
-                                  ? "rgba(200,60,60,0.08)"
-                                  : "transparent";
+                          const isAtkCell = a === aWS && d === dWS;
+                          const isDefCell = a === dWS && d === aWS;
+                          const bg = isAtkCell
+                            ? "rgba(155,45,45,0.35)"
+                            : isDefCell
+                              ? "rgba(42,111,180,0.3)"
+                              : need <= 2
+                                ? "rgba(46,125,50,0.15)"
+                                : need <= 3
+                                  ? "rgba(107,142,35,0.1)"
+                                  : need >= 5
+                                    ? "rgba(200,60,60,0.08)"
+                                    : "transparent";
                           return React.createElement(
                             "td",
                             {
                               key: d,
                               style: {
                                 padding: "2px",
-                                border: "1px solid #d0c4aa",
+                                border: isAtkCell
+                                  ? "2px solid #9b2d2d"
+                                  : isDefCell
+                                    ? "2px solid #2a6fb4"
+                                    : "1px solid #d0c4aa",
                                 textAlign: "center",
                                 background: bg,
-                                fontWeight: need <= 3 ? 700 : 400,
+                                fontWeight: (isAtkCell || isDefCell || need <= 3) ? 700 : 400,
+                                color: isAtkCell ? "#7a0000" : isDefCell ? "#0a3f7a" : undefined,
                               },
                             },
                             need,
@@ -22563,26 +25006,36 @@ var ShootingResolver = function () {
                           else if (t >= s * 2) need = 6;
                           else need = 5;
                           const label = need > 6 ? "—" : `${need}+`;
-                          const bg =
-                            need <= 2
-                              ? "rgba(46,125,50,0.15)"
-                              : need <= 3
-                                ? "rgba(107,142,35,0.1)"
-                                : need >= 6
-                                  ? "rgba(200,60,60,0.1)"
-                                  : need >= 5
-                                    ? "rgba(200,60,60,0.04)"
-                                    : "transparent";
+                          const isAtkCell = s === aS && t === dT;
+                          const isDefCell = s === dS && t === aT;
+                          const bg = isAtkCell
+                            ? "rgba(155,45,45,0.35)"
+                            : isDefCell
+                              ? "rgba(42,111,180,0.3)"
+                              : need <= 2
+                                ? "rgba(46,125,50,0.15)"
+                                : need <= 3
+                                  ? "rgba(107,142,35,0.1)"
+                                  : need >= 6
+                                    ? "rgba(200,60,60,0.1)"
+                                    : need >= 5
+                                      ? "rgba(200,60,60,0.04)"
+                                      : "transparent";
                           return React.createElement(
                             "td",
                             {
                               key: t,
                               style: {
                                 padding: "2px",
-                                border: "1px solid #d0c4aa",
+                                border: isAtkCell
+                                  ? "2px solid #9b2d2d"
+                                  : isDefCell
+                                    ? "2px solid #2a6fb4"
+                                    : "1px solid #d0c4aa",
                                 textAlign: "center",
                                 background: bg,
-                                fontWeight: need <= 3 ? 700 : 400,
+                                fontWeight: (isAtkCell || isDefCell || need <= 3) ? 700 : 400,
+                                color: isAtkCell ? "#7a0000" : isDefCell ? "#0a3f7a" : undefined,
                               },
                             },
                             label,
@@ -22590,6 +25043,216 @@ var ShootingResolver = function () {
                         }),
                       ),
                     ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // ── ROLLS NEEDED FOR SELECTED UNITS ──
+          React.createElement(
+            "div",
+            { style: { ...panelStyle, marginBottom: 16 } },
+            React.createElement(
+              "div",
+              {
+                style: {
+                  fontSize: 12,
+                  fontFamily: "'Share Tech Mono', serif",
+                  fontWeight: 700,
+                  color: "#7a1e1e",
+                  letterSpacing: 1,
+                  marginBottom: 12,
+                  textAlign: "center",
+                },
+              },
+              "🎯 ROLLS NEEDED FOR SELECTED UNITS",
+            ),
+            React.createElement(
+              "div",
+              {
+                style: {
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: 12,
+                },
+              },
+              // Attacker side
+              React.createElement(
+                "div",
+                {
+                  style: {
+                    background: "rgba(155,45,45,0.07)",
+                    border: "1px solid rgba(155,45,45,0.3)",
+                    borderRadius: 6,
+                    padding: "10px 12px",
+                  },
+                },
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      fontSize: 11,
+                      fontFamily: "'Share Tech Mono', serif",
+                      fontWeight: 700,
+                      color: "#9b2d2d",
+                      letterSpacing: 1,
+                      marginBottom: 8,
+                      textAlign: "center",
+                    },
+                  },
+                  "⚔ ATTACKER",
+                ),
+                // To Hit
+                React.createElement(
+                  "div",
+                  { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 } },
+                  React.createElement(
+                    "span",
+                    { style: { fontSize: 11, color: "#6a5e4e", fontFamily: "'Share Tech Mono', serif" } },
+                    "To Hit (WS", aWS, " vs WS", dWS, ")",
+                  ),
+                  React.createElement(
+                    "span",
+                    {
+                      style: {
+                        fontSize: 14,
+                        fontWeight: 700,
+                        color: "#9b2d2d",
+                        fontFamily: "'Share Tech Mono', serif",
+                        background: "rgba(155,45,45,0.15)",
+                        borderRadius: 4,
+                        padding: "2px 8px",
+                      },
+                    },
+                    (() => {
+                      const a = aWS, d = dWS;
+                      if (a >= d * 2) return "2+";
+                      if (a > d) return "3+";
+                      if (a === d) return "4+";
+                      return "5+";
+                    })(),
+                  ),
+                ),
+                // To Wound
+                React.createElement(
+                  "div",
+                  { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } },
+                  React.createElement(
+                    "span",
+                    { style: { fontSize: 11, color: "#6a5e4e", fontFamily: "'Share Tech Mono', serif" } },
+                    "To Wound (S", aS, " vs T", dT, ")",
+                  ),
+                  React.createElement(
+                    "span",
+                    {
+                      style: {
+                        fontSize: 14,
+                        fontWeight: 700,
+                        color: "#9b2d2d",
+                        fontFamily: "'Share Tech Mono', serif",
+                        background: "rgba(155,45,45,0.15)",
+                        borderRadius: 4,
+                        padding: "2px 8px",
+                      },
+                    },
+                    (() => {
+                      const s = aS, t = dT;
+                      if (s >= t * 2) return "2+";
+                      if (s > t) return "3+";
+                      if (s === t) return "4+";
+                      if (t >= s * 2) return "6+";
+                      return "5+";
+                    })(),
+                  ),
+                ),
+              ),
+              // Defender side
+              React.createElement(
+                "div",
+                {
+                  style: {
+                    background: "rgba(42,111,180,0.07)",
+                    border: "1px solid rgba(42,111,180,0.3)",
+                    borderRadius: 6,
+                    padding: "10px 12px",
+                  },
+                },
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      fontSize: 11,
+                      fontFamily: "'Share Tech Mono', serif",
+                      fontWeight: 700,
+                      color: "#2a6fb4",
+                      letterSpacing: 1,
+                      marginBottom: 8,
+                      textAlign: "center",
+                    },
+                  },
+                  "🛡 DEFENDER",
+                ),
+                // To Hit
+                React.createElement(
+                  "div",
+                  { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 } },
+                  React.createElement(
+                    "span",
+                    { style: { fontSize: 11, color: "#6a5e4e", fontFamily: "'Share Tech Mono', serif" } },
+                    "To Hit (WS", dWS, " vs WS", aWS, ")",
+                  ),
+                  React.createElement(
+                    "span",
+                    {
+                      style: {
+                        fontSize: 14,
+                        fontWeight: 700,
+                        color: "#2a6fb4",
+                        fontFamily: "'Share Tech Mono', serif",
+                        background: "rgba(42,111,180,0.15)",
+                        borderRadius: 4,
+                        padding: "2px 8px",
+                      },
+                    },
+                    (() => {
+                      const a = dWS, d = aWS;
+                      if (a >= d * 2) return "2+";
+                      if (a > d) return "3+";
+                      if (a === d) return "4+";
+                      return "5+";
+                    })(),
+                  ),
+                ),
+                // To Wound
+                React.createElement(
+                  "div",
+                  { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } },
+                  React.createElement(
+                    "span",
+                    { style: { fontSize: 11, color: "#6a5e4e", fontFamily: "'Share Tech Mono', serif" } },
+                    "To Wound (S", dS, " vs T", aT, ")",
+                  ),
+                  React.createElement(
+                    "span",
+                    {
+                      style: {
+                        fontSize: 14,
+                        fontWeight: 700,
+                        color: "#2a6fb4",
+                        fontFamily: "'Share Tech Mono', serif",
+                        background: "rgba(42,111,180,0.15)",
+                        borderRadius: 4,
+                        padding: "2px 8px",
+                      },
+                    },
+                    (() => {
+                      const s = dS, t = aT;
+                      if (s >= t * 2) return "2+";
+                      if (s > t) return "3+";
+                      if (s === t) return "4+";
+                      if (t >= s * 2) return "6+";
+                      return "5+";
+                    })(),
                   ),
                 ),
               ),
@@ -22870,6 +25533,104 @@ var ShootingResolver = function () {
                   color: "#2a5e2a",
                 }),
               ),
+              // Assault Wound Outcome Panel
+              (assaultResult.defenderCasualties > 0 || assaultResult.attackerCasualties > 0) && (() => {
+                // Melee D=1; a Casualty only occurs when D > target W
+                const atkD = 1;
+                const defD = 1;
+                const atkVsDefW = dW; // attacker hits → defender's W matters
+                const defVsAtkW = aW; // defender hits → attacker's W matters
+                const atkInstant = atkD > atkVsDefW; // Casualty when D > W
+                const defInstant = defD > defVsAtkW;
+                const casBadge = (color, borderColor, bg, label) =>
+                  React.createElement("div", {
+                    style: {
+                      display: "inline-block",
+                      padding: "6px 16px",
+                      borderRadius: 5,
+                      background: bg,
+                      border: "2px solid " + borderColor,
+                      color: "#111",
+                      fontWeight: 900,
+                      fontSize: 14,
+                      letterSpacing: 1,
+                      marginTop: 4,
+                    },
+                  }, label);
+                const rows = [];
+                if (assaultResult.defenderCasualties > 0) {
+                  const cas = assaultResult.defenderCasualties;
+                  rows.push(
+                    React.createElement("div", { key: "atk", style: { marginBottom: 14, paddingBottom: 12, borderBottom: "1px solid rgba(0,0,0,0.10)" } },
+                      React.createElement("div", { style: { color: "#7a1a1a", fontWeight: 700, marginBottom: 4, fontSize: 11, letterSpacing: 1 } },
+                        "⚔ ATTACKER → DEFENDER  (D" + atkD + " vs W" + atkVsDefW + ")"
+                      ),
+                      React.createElement("div", { style: { color: "#333", marginBottom: 4 } },
+                        atkInstant
+                          ? "D (" + atkD + ") > W (" + atkVsDefW + ") — weapon damage exceeds model wounds → each unsaved wound causes a Casualty"
+                          : "D (" + atkD + ") ≤ W (" + atkVsDefW + ") — damage accumulates; a Casualty occurs when total damage ≥ W (" + atkVsDefW + ")"
+                      ),
+                      casBadge("#c73030", "#c73030", "rgba(199,48,48,0.12)", "💀 CASUALTIES: " + cas + " defender model" + (cas !== 1 ? "s" : "") + " slain"),
+                    )
+                  );
+                }
+                if (assaultResult.attackerCasualties > 0) {
+                  const cas = assaultResult.attackerCasualties;
+                  rows.push(
+                    React.createElement("div", { key: "def" },
+                      React.createElement("div", { style: { color: "#0a3060", fontWeight: 700, marginBottom: 4, fontSize: 11, letterSpacing: 1 } },
+                        "🛡 DEFENDER → ATTACKER  (D" + defD + " vs W" + defVsAtkW + ")"
+                      ),
+                      React.createElement("div", { style: { color: "#333", marginBottom: 4 } },
+                        defInstant
+                          ? "D (" + defD + ") > W (" + defVsAtkW + ") — weapon damage exceeds model wounds → each unsaved wound causes a Casualty"
+                          : "D (" + defD + ") ≤ W (" + defVsAtkW + ") — damage accumulates; a Casualty occurs when total damage ≥ W (" + defVsAtkW + ")"
+                      ),
+                      casBadge("#1a5a99", "#1a5a99", "rgba(42,111,180,0.12)", "💀 CASUALTIES: " + cas + " attacker model" + (cas !== 1 ? "s" : "") + " slain"),
+                    )
+                  );
+                }
+                return React.createElement(
+                  "div",
+                  {
+                    style: {
+                      marginBottom: 16,
+                      borderRadius: 6,
+                      overflow: "hidden",
+                      border: "2px solid rgba(100,60,30,0.4)",
+                    },
+                  },
+                  React.createElement(
+                    "div",
+                    {
+                      style: {
+                        padding: "6px 12px",
+                        background: "#7a4a20",
+                        fontSize: 11,
+                        fontFamily: "'Share Tech Mono', serif",
+                        color: "#fff",
+                        letterSpacing: 1,
+                        fontWeight: 700,
+                      },
+                    },
+                    "🩸 MELEE WOUND OUTCOME",
+                  ),
+                  React.createElement(
+                    "div",
+                    {
+                      style: {
+                        padding: "10px 14px",
+                        background: "rgba(255,255,255,0.92)",
+                        fontSize: 12,
+                        fontFamily: "'Share Tech Mono', serif",
+                        color: "#111",
+                        lineHeight: 1.8,
+                      },
+                    },
+                    ...rows,
+                  ),
+                );
+              })(),
               assaultResult.routCheck &&
                 React.createElement(
                   "div",
@@ -23737,6 +26498,376 @@ var ShootingResolver = function () {
               ),
             ),
           ),
+          missionType === "saturnine" &&
+            (() => {
+              const satInfo = SATURNINE_MISSIONS_INFO[satMission];
+              if (!satInfo) return null;
+              return React.createElement(
+                "div",
+                {
+                  style: {
+                    ...panelStyle,
+                    marginBottom: 16,
+                    background: "rgba(180,70,30,0.04)",
+                    border: "1px solid rgba(180,70,30,0.25)",
+                  },
+                },
+                // Header
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      ...panelHeaderStyle,
+                      color: "#7a3020",
+                      borderBottom: "1px solid rgba(180,70,30,0.2)",
+                      paddingBottom: 8,
+                      marginBottom: 10,
+                    },
+                  },
+                  React.createElement(
+                    "span",
+                    { style: { fontSize: 16, marginRight: 6 } },
+                    "⚔",
+                  ),
+                  React.createElement(
+                    "span",
+                    {
+                      style: {
+                        fontFamily: "'Share Tech Mono', serif",
+                        fontWeight: 700,
+                        fontSize: 13,
+                        color: "#7a3020",
+                        letterSpacing: 2,
+                      },
+                    },
+                    "SATURNINE MISSION: " + satInfo.name.toUpperCase(),
+                  ),
+                  React.createElement(
+                    "span",
+                    {
+                      style: {
+                        fontFamily: "'Share Tech Mono', serif",
+                        fontSize: 10,
+                        color: "#8a7060",
+                        marginLeft: 8,
+                      },
+                    },
+                    satInfo.type + " · " + satInfo.turns + " Rounds",
+                  ),
+                ),
+                // Attacker / Defender role badges
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      display: "flex",
+                      gap: 10,
+                      marginBottom: 10,
+                      flexWrap: "wrap",
+                    },
+                  },
+                  React.createElement(
+                    "div",
+                    {
+                      style: {
+                        padding: "4px 10px",
+                        background: "rgba(155,45,45,0.1)",
+                        border: "1px solid rgba(155,45,45,0.3)",
+                        borderRadius: 4,
+                        fontSize: 11,
+                        fontFamily: "'Share Tech Mono', serif",
+                        color: "#9b2d2d",
+                        fontWeight: 700,
+                      },
+                    },
+                    "⚔ P1 LOYALIST = ATTACKER",
+                  ),
+                  React.createElement(
+                    "div",
+                    {
+                      style: {
+                        padding: "4px 10px",
+                        background: "rgba(42,111,180,0.1)",
+                        border: "1px solid rgba(42,111,180,0.3)",
+                        borderRadius: 4,
+                        fontSize: 11,
+                        fontFamily: "'Share Tech Mono', serif",
+                        color: "#2a6fb4",
+                        fontWeight: 700,
+                      },
+                    },
+                    "🛡 P2 TRAITOR = DEFENDER",
+                  ),
+                  React.createElement(
+                    "div",
+                    {
+                      style: {
+                        padding: "4px 10px",
+                        background: "rgba(180,140,60,0.1)",
+                        border: "1px solid rgba(180,140,60,0.3)",
+                        borderRadius: 4,
+                        fontSize: 11,
+                        fontFamily: "'Share Tech Mono', serif",
+                        color: "#7a5010",
+                      },
+                    },
+                    "⏱ Game Length: " + satInfo.turns + " Rounds",
+                  ),
+                ),
+                // Primary VP scoring explanation
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      fontSize: 10,
+                      fontFamily: "'Share Tech Mono', serif",
+                      color: "#7a5a2a",
+                      letterSpacing: 1,
+                      marginBottom: 4,
+                    },
+                  },
+                  "PRIMARY VP — HOW SCORING WORKS",
+                ),
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      fontSize: 11,
+                      fontFamily: "'Share Tech Mono', serif",
+                      color: "#5a4e3e",
+                      marginBottom: 8,
+                      paddingLeft: 6,
+                      lineHeight: 1.5,
+                      background: "rgba(180,140,60,0.07)",
+                      border: "1px solid rgba(180,140,60,0.2)",
+                      borderRadius: 4,
+                      padding: "6px 8px",
+                    },
+                  },
+                  satInfo.primaryScore,
+                ),
+                // Objective markers detail
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      fontSize: 10,
+                      fontFamily: "'Share Tech Mono', serif",
+                      color: "#7a5a2a",
+                      letterSpacing: 1,
+                      marginBottom: 4,
+                      marginTop: 6,
+                    },
+                  },
+                  "OBJECTIVE MARKERS",
+                ),
+                satInfo.objectives.map((o, i) =>
+                  React.createElement(
+                    "div",
+                    {
+                      key: i,
+                      style: {
+                        fontSize: 11,
+                        fontFamily: "'Share Tech Mono', serif",
+                        color: "#5a4e3e",
+                        marginBottom: 3,
+                        paddingLeft: 6,
+                        lineHeight: 1.4,
+                      },
+                    },
+                    "• ",
+                    o,
+                  ),
+                ),
+                // Secondary objectives
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      fontSize: 10,
+                      fontFamily: "'Share Tech Mono', serif",
+                      color: "#8a7e6e",
+                      letterSpacing: 1,
+                      marginTop: 8,
+                      marginBottom: 4,
+                    },
+                  },
+                  "SECONDARY OBJECTIVES",
+                ),
+                satInfo.secondary.map((r, i) =>
+                  React.createElement(
+                    "div",
+                    {
+                      key: i,
+                      style: {
+                        fontSize: 11,
+                        fontFamily: "'Share Tech Mono', serif",
+                        color: "#5a4e3e",
+                        marginBottom: 3,
+                        paddingLeft: 6,
+                      },
+                    },
+                    "• ",
+                    r,
+                  ),
+                ),
+                // Victory conditions
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      marginTop: 10,
+                      paddingTop: 8,
+                      borderTop: "1px solid rgba(180,70,30,0.25)",
+                      fontSize: 10,
+                      fontFamily: "'Share Tech Mono', serif",
+                      fontWeight: 700,
+                      color: "#7a3020",
+                      letterSpacing: 1,
+                      marginBottom: 4,
+                    },
+                  },
+                  "VICTORY CONDITIONS",
+                ),
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      fontSize: 11,
+                      fontFamily: "'Share Tech Mono', serif",
+                      color: "#5a4e3e",
+                      lineHeight: 1.5,
+                      paddingLeft: 6,
+                    },
+                  },
+                  satInfo.victory,
+                ),
+              );
+            })(),
+          // ── Leviathan End Phase VP Panel ───────────────────────────────────
+          missionType === "leviathan" &&
+            (() => {
+              const levInfo = LEVIATHAN_MISSIONS_INFO[levMission];
+              if (!levInfo) return null;
+              const accentColor = "#111111";
+              const accentBorder = "rgba(0,0,0,0.18)";
+
+              const secBlock = (label, items, color) => items && items.length > 0
+                ? React.createElement("div", { style: { marginBottom: 4 } },
+                    React.createElement("div", { style: { fontSize: 9, color, fontFamily: "'Share Tech Mono',serif", marginBottom: 2 } }, label),
+                    items.map((s, i) =>
+                      React.createElement("div", { key: i, style: { fontSize: 11, color: "#111111", paddingLeft: 8 } }, "• " + s),
+                    ),
+                  ) : null;
+
+              return React.createElement("div", {
+                style: {
+                  ...panelStyle, marginBottom: 16,
+                  background: "rgba(255,248,235,0.97)",
+                  border: `1px solid ${accentBorder}`,
+                },
+              },
+                // Header
+                React.createElement("div", {
+                  style: {
+                    ...panelHeaderStyle, color: "#111111",
+                    borderBottom: "1px solid rgba(176,80,16,0.2)",
+                    paddingBottom: 8, marginBottom: 10,
+                  },
+                },
+                  React.createElement("span", { style: { fontSize: 16, marginRight: 6 } }, "🔱"),
+                  React.createElement("span", {
+                    style: { fontFamily: "'Share Tech Mono',serif", fontWeight: 700, fontSize: 13, color: "#111111", letterSpacing: 2 },
+                  }, "LEVIATHAN MISSION: " + levInfo.name.toUpperCase()),
+                  React.createElement("span", {
+                    style: { fontFamily: "'Share Tech Mono',serif", fontSize: 10, color: "#333333", marginLeft: 8 },
+                  }, levInfo.type + " · " + levInfo.turns + " Rounds"),
+                ),
+                // Attacker / Defender badges — driven by roll-off result
+                React.createElement("div", {
+                  style: { display: "flex", gap: 10, marginBottom: 10, flexWrap: "wrap" },
+                },
+                  React.createElement("div", {
+                    style: { padding: "4px 10px", background: "rgba(180,30,30,0.08)", border: "1px solid rgba(155,45,45,0.3)", borderRadius: 4, fontSize: 11, fontFamily: "'Share Tech Mono',serif", color: "#a01010", fontWeight: 700 },
+                  }, "⚔ ATTACKER — " + (turnWinner === "p2" ? "TRAITOR (P2)" : "LOYALIST (P1)") + ": " + levInfo.attacker),
+                  React.createElement("div", {
+                    style: { padding: "4px 10px", background: "rgba(30,80,180,0.08)", border: "1px solid rgba(42,111,180,0.3)", borderRadius: 4, fontSize: 11, fontFamily: "'Share Tech Mono',serif", color: "#0a3d99", fontWeight: 700 },
+                  }, "🛡 DEFENDER — " + (turnWinner === "p2" ? "LOYALIST (P1)" : "TRAITOR (P2)") + ": " + levInfo.defender),
+                ),
+                // Primary scoring
+                React.createElement("div", {
+                  style: { marginBottom: 10, padding: "8px 10px", background: "rgba(0,0,0,0.04)", borderRadius: 4, border: "1px solid rgba(176,80,16,0.18)" },
+                },
+                  React.createElement("div", {
+                    style: { fontSize: 9, fontFamily: "'Share Tech Mono',serif", color: "#111111", letterSpacing: 2, marginBottom: 4 },
+                  }, "PRIMARY OBJECTIVE SCORING"),
+                  React.createElement("div", { style: { fontSize: 11, color: "#111111", lineHeight: 1.5 } }, levInfo.primaryScore),
+                ),
+                // Sector reference (4 sectors)
+                React.createElement("div", {
+                  style: { marginBottom: 10 },
+                },
+                  React.createElement("div", {
+                    style: { fontSize: 9, fontFamily: "'Share Tech Mono',serif", color: "#111111", letterSpacing: 2, marginBottom: 4 },
+                  }, "SECTORS & OBJECTIVES"),
+                  React.createElement("div", { style: { fontSize: 11, color: "#111111", lineHeight: 1.4 } }, levInfo.sectors),
+                ),
+                // Secondary objectives
+                React.createElement("div", {
+                  style: { marginBottom: 10 },
+                },
+                  React.createElement("div", {
+                    style: { fontSize: 9, fontFamily: "'Share Tech Mono',serif", color: "#111111", letterSpacing: 2, marginBottom: 4 },
+                  }, "SECONDARY OBJECTIVES"),
+                  React.createElement("div", { style: { display: "flex", gap: 16, flexWrap: "wrap" } },
+                    secBlock("Common:", levInfo.secondary.common, "#333333"),
+                    secBlock("Attacker:", levInfo.secondary.attacker, "#a01010"),
+                    secBlock("Defender:", levInfo.secondary.defender, "#0a3d99"),
+                  ),
+                ),
+                // Armoured Dominance reminder
+                React.createElement("div", {
+                  style: { marginBottom: 8, padding: "6px 10px", background: "rgba(0,0,0,0.04)", borderRadius: 4, border: "1px solid rgba(255,200,80,0.2)" },
+                },
+                  React.createElement("div", {
+                    style: { fontSize: 9, fontFamily: "'Share Tech Mono',serif", color: "#111111", letterSpacing: 2, marginBottom: 2 },
+                  }, "ARMOURED DOMINANCE (SECTOR CONTROL)"),
+                  React.createElement("div", { style: { fontSize: 10, color: "#111111", lineHeight: 1.4 } },
+                    "To control a Sector, a Player must have greater Armoured Dominance than their Opponent in that Sector. " +
+                    "Armoured Dominance = sum of Hull Points remaining for each Vehicle Model wholly within that Sector. " +
+                    "Control is checked at end of each Player Turn for VP scoring.",
+                  ),
+                ),
+                // Battlefield Assets reminder (if any placed)
+                battlefieldAssets.length > 0 && React.createElement("div", {
+                  style: { marginBottom: 8, padding: "6px 10px", background: "rgba(255,248,235,0.97)", borderRadius: 4, border: "1px solid rgba(140,90,30,0.2)" },
+                },
+                  React.createElement("div", {
+                    style: { fontSize: 9, fontFamily: "'Share Tech Mono',serif", color: "#111111", letterSpacing: 2, marginBottom: 2 },
+                  }, "BATTLEFIELD ASSETS IN PLAY (" + battlefieldAssets.length + ")"),
+                  React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 6 } },
+                    battlefieldAssets.map((a) => {
+                      const def = BATTLEFIELD_ASSETS[a.type] || {};
+                      return React.createElement("div", {
+                        key: a.id,
+                        style: { fontSize: 10, color: "#111111", display: "flex", gap: 4, alignItems: "center" },
+                      },
+                        React.createElement("span", { style: { color: def.color, fontSize: 12 } }, def.symbol || "◆"),
+                        def.name || a.type,
+                        React.createElement("span", { style: { color: "#333333", fontSize: 9 } }, "@(" + a.x + '",' + a.y + '")'),
+                      );
+                    }),
+                  ),
+                ),
+                // Victory conditions
+                React.createElement("div", {
+                  style: { padding: "8px 10px", background: "rgba(0,0,0,0.04)", borderRadius: 4, border: "1px solid rgba(176,80,16,0.2)" },
+                },
+                  React.createElement("div", { style: { fontSize: 9, fontFamily: "'Share Tech Mono',serif", color: "#111111", letterSpacing: 2, marginBottom: 3 } }, "VICTORY CONDITIONS"),
+                  React.createElement("div", { style: { fontSize: 11, color: "#111111", lineHeight: 1.4, paddingLeft: 6 } }, levInfo.victory),
+                ),
+              );
+            })(),
           React.createElement(
             "div",
             { style: { ...panelStyle, marginBottom: 16 } },
@@ -24851,7 +27982,7 @@ var ShootingResolver = function () {
         React.createElement("br", null),
         "All dice rolls are simulated. Use for quick resolution and statistical analysis.",
         React.createElement("br", null),
-        "Version 1.74 — Artwork Thumbnails, Warlord Split, Army Phase Fixes",
+        "Version 1.85 — Legio Custodes Faction Added, Faction Unit Filtering",
       ),
     ),
   );

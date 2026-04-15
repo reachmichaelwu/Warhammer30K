@@ -12,8 +12,9 @@ var UNIT_ARTWORK_MAP = {
   "heavy_support":     "Heavy_Support.jpg",
   "apothecary":        "Centurion.jpg",
   "techmarine":        "Centurion.jpg",
-  "rapier_la":         "Support.jpg",
-  "araknae":           "Leviathan Dreadnaught.jpg",
+  "rapier_la":         "Rapier.jpg",
+  "rapier":            "Rapier.jpg",
+  "araknae":           "Araknae.jpg",
   // ── Breacher ──────────────────────────────────────────────────
   "breacher":          "Breacher.jpg",
   // ── Assault ───────────────────────────────────────────────────
@@ -27,9 +28,12 @@ var UNIT_ARTWORK_MAP = {
   "tartaros":          "Tartaros Terminator.jpg",
   "tartaros_cmd":      "Tartaros Terminator.jpg",
   "saturnine":         "Saturnine Terminator.jpg",
+  "saturnine_cmd":     "Saturnine_D.jpg",
+  "phraetus_conclave": "Saturnine_D.jpg",
   // ── Command ───────────────────────────────────────────────────
   "centurion":         "Centurion.jpg",
   "centurion_ta":      "Centurion Terminator.jpg",
+  "centurion_sat":     "Saturnine_D.jpg",
   "centurion_cmd":     "Centurion.jpg",
   "praetor_pa":        "Centurion.jpg",
   "praetor_ta":        "Prateor_Terminator.jpg",
@@ -133,6 +137,16 @@ var UNIT_ARTWORK_MAP = {
   "sicaran":           "Sicarian.jpg",
   "sicaran_venator":   "Sicarian.jpg",
   "scorpius":          "Sicarian.jpg",
+  // ── Flyers ────────────────────────────────────────────────────
+  "storm_eagle":       "StormEagle.jpg",
+  "fire_raptor":       "Fireraptor.jpg",
+  "xiphon":            "Xiphon.jpg",
+  // ── Super-Heavies ─────────────────────────────────────────────
+  "cerberus":          "Cerberus.jpg",
+  "typhon":            "Typhon.jpg",
+  "glaive":            "Glaive.jpg",
+  "fellblade":         "Fellblade.jpg",
+  "falchion":          "Falchion.jpg",
 };
 
 // ━━━ FACTION → ARTWORK FILE MAP (used as fallback / faction banner) ━━━━━━━━━
@@ -155,7 +169,9 @@ var FACTION_ARTWORK_MAP = {
   "salamanders":       "legions/Salamanders.jpg",
   "raven_guard":       "legions/Ravenguard.jpg",
   "alpha_legion":      "legions/Alphalegion.jpg",
-  "custodes":          "custodes.jpg",
+  "custodes":          "legions/Custodes_icon.jpg",
+  "mechanicum":        "legions/Mechanicum_icon.jpg",
+  "sol_auxilia":       "legions/Solar_Aux_icon.jpg",
 };
 
 // ━━━ FACTION × TROOP TYPE ARTWORK MAP ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

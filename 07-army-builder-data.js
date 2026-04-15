@@ -34,14 +34,14 @@ var UNIT_BATTLEFIELD_ROLE = {
   // HIGH COMMAND
   praetor_pa: "high_command", praetor_ta: "high_command", praetor_sat: "high_command",
   // COMMAND
-  centurion: "command", centurion_ta: "command", optae: "command", champion: "command", master_signals: "command",
+  centurion: "command", centurion_ta: "command", centurion_sat: "command", optae: "command", champion: "command", master_signals: "command",
   vigilator: "command", chaplain: "command",
   librarian: "command", herald: "command", moritat: "command", siege_breaker: "command",
   esoterist: "command", praevian: "command", overseer: "command",
   damocles_rhino: "command",
   // RETINUE (Command Squads)
   praetorian_cmd_jp: "retinue", praetorian_cmd: "retinue",
-  tartaros_cmd: "retinue", centurion_cmd: "retinue", cataphractii_cmd: "retinue",
+  tartaros_cmd: "retinue", centurion_cmd: "retinue", cataphractii_cmd: "retinue", saturnine_cmd: "retinue",
   // ELITES
   veteran: "elites", veteran_assault: "elites", seeker: "elites",
   custodian_guard: "elites", sagittarum: "elites", aquilon: "elites",
@@ -127,7 +127,7 @@ var UNIT_BATTLEFIELD_ROLE = {
   justaerin: "heavy_assault", reaver_soh: "elites",
   // ── WORD BEARERS (XVII) ──
   kor_phaeron: "high_command", erebus: "command", argel_tal: "command",
-  zardu_layak: "command", dark_brethren: "elites", anakatis_kul: "elites",
+  zardu_layak: "command", dark_brethren: "elites", anakatis_kul: "elites", phraetus_conclave: "elites",
   mhara_gal: "war_engine", incendiary_wb: "troops",
   // ── SALAMANDERS (XVIII) ──
   firedrake: "heavy_assault", pyroclast: "support",
@@ -138,6 +138,80 @@ var UNIT_BATTLEFIELD_ROLE = {
   headhunter: "recon", lernaean: "heavy_assault",
   // OTHER
   daemon_lesser: "troops",
+
+  // ── SOL AUXILIA ──
+  // HIGH COMMAND
+  legate_cmd_sa: "high_command",
+  // COMMAND
+  tactical_cmd_sa: "command", line_cmd_sa: "command",
+  veletaris_cmd_sa: "command", hermes_cmd_sa: "command",
+  artillery_cmd_sa: "command", armoured_cmd_sa: "command",
+  // ELITES
+  veletaris_vanguard_sa: "elites",
+  // HEAVY ASSAULT
+  charonite_sa: "heavy_assault",
+  // SUPPORT
+  basilisk_sa: "support", medusa_sa: "support", aethon_sa: "support",
+  // RECON
+  hermes_light_sa: "recon",
+  // FAST ATTACK
+  hermes_vel_sa: "fast_attack", primaris_lightning_sa: "fast_attack", thunderbolt_sa: "fast_attack",
+  // TRANSPORT
+  arvus_sa: "transport",
+  // HEAVY TRANSPORT
+  dracosan_sa: "heavy_transport",
+  // ARMOUR
+  leman_russ_strike_sa: "armour", leman_russ_assault_sa: "armour",
+  // LORD OF WAR
+  malcador_sa: "lord_of_war", malcador_infernus_sa: "lord_of_war",
+  valdor_sa: "lord_of_war", stormhammer_sa: "lord_of_war",
+
+  // ── LEGIO CUSTODES ──
+  // HIGH COMMAND
+  valdor_c: "high_command",
+  // COMMAND
+  tribune_c: "command", shield_captain_c: "command",
+  // TROOPS
+  custodian_guard_c: "troops", sentinel_guard_c: "troops",
+  // HEAVY ASSAULT
+  aquilon_c: "heavy_assault",
+  // WAR ENGINE (walkers)
+  contemptor_achillus_c: "war_engine", contemptor_galatus_c: "war_engine",
+  // FAST ATTACK
+  venatari_c: "fast_attack", gyrfalcon_c: "fast_attack", pallas_c: "fast_attack",
+  // TRANSPORT
+  coronus_c: "transport",
+  // ARMOUR
+  caladius_c: "armour",
+  // LORD OF WAR
+  telemon_c: "lord_of_war", orion_c: "lord_of_war", ares_c: "lord_of_war",
+
+  // ── MECHANICUM TAGHMATA ──
+  // HIGH COMMAND
+  archmagos_tm: "high_command", archmagos_abeyant_tm: "high_command",
+  // COMMAND
+  magos_tm: "command", magos_abeyant_tm: "command", arcuitor_tm: "command",
+  // SUPPORT
+  tech_priest_tm: "support",
+  // ELITES
+  scyllax_tm: "elites", secutor_tm: "elites",
+  // TROOPS
+  tech_thrall_cov_tm: "troops", thallax_full_tm: "troops",
+  // HEAVY ASSAULT
+  ursarax_tm: "heavy_assault",
+  // SUPPORT (automata)
+  echidnax_tm: "support", destructor_tm: "support",
+  // WAR ENGINE
+  domitar_tm: "war_engine", castellax_dest_tm: "war_engine",
+  castellax_battle_tm: "war_engine", thanatar_siege_tm: "war_engine",
+  armiger_tm: "war_engine",
+  // TRANSPORT
+  triaros_tm: "transport",
+  // ── MACHINA MALEFICA (Traitor) ──
+  decimator_mm: "war_engine", blood_slaughterer_mm: "war_engine",
+  brass_scorpion_mm: "lord_of_war", kytan_mm: "lord_of_war",
+  // ── PERSONA SCINDIO (Named Traitor Characters) ──
+  scoria_mm: "high_command", draykavac_mm: "high_command",
 };
 
 // ━━━ CRUSADE PRIMARY DETACHMENT (p.284) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -188,7 +262,9 @@ var ADDITIONAL_DETACHMENTS = {
 };
 
 // Allied faction unit filter — these categories are available in Allied Detachments
-var ALLIED_FACTION_CATEGORIES = ["SOLAR AUXILIA", "MECHANICUM", "CUSTODES"];
+// "MECHANICUM" is now split into "MECH: *" sub-categories; the helper below is used instead.
+var ALLIED_FACTION_CATEGORIES = ["SOLAR AUXILIA", "CUSTODES"];
+function isMechCategory(cat) { return cat && cat.startsWith("MECH:"); }
 
 // Auxiliary Detachments — each Command slot filled unlocks 1 (p.284)
 var AUXILIARY_DETACHMENTS = {
@@ -205,14 +281,18 @@ var AUXILIARY_DETACHMENTS = {
   techmarine_cov:   { name: "Techmarine Covenant", desc: "Techmarine in Support → unlock", slots: [{ role: "support", count: 4 }] },
   storm_battery:    { name: "Storm Battery",     desc: "Siege Breaker in Command → unlock", slots: [{ role: "support", count: 3 }, { role: "armour", count: 1 }] },
   recon_demi:       { name: "Recon Demi-Company", desc: "Vigilator in Command → unlock", slots: [{ role: "recon", count: 4 }] },
-  apoth_delegation: { name: "Apothecarion Delegation", slots: [{ role: "support", count: 3 }] },
+  apoth_delegation:   { name: "Apothecarion Delegation", slots: [{ role: "support", count: 3 }] },
+  maelstrom_sentry:   { name: "Maelstrom Sentry Battery", desc: "Master of Signals in Command → unlock. Support: Araknae Quad Accelerator Platform only. Recon: Tarantula Battery only.", slots: [{ role: "support", count: 2 }, { role: "recon", count: 3 }] },
 };
 
 // Apex Detachments — each High Command slot filled unlocks 1 (p.284)
 var APEX_DETACHMENTS = {
-  combat_retinue: { name: "Combat Retinue",  slots: [{ role: "retinue", count: 3, primeCount: 1 }] },
-  officer_cadre:  { name: "Officer Cadre",   slots: [{ role: "command", count: 2, primeCount: 1 }] },
-  army_vanguard:  { name: "Army Vanguard",   slots: [{ role: "elites", count: 3, primeCount: 1 }] },
+  combat_retinue:      { name: "Combat Retinue",       slots: [{ role: "retinue", count: 3, primeCount: 1 }] },
+  officer_cadre:       { name: "Officer Cadre",        slots: [{ role: "command", count: 2, primeCount: 1 }] },
+  army_vanguard:       { name: "Army Vanguard",        slots: [{ role: "elites", count: 3, primeCount: 1 }] },
+  linebreaker_echelon:       { name: "Linebreaker Echelon",       desc: "Select 'Saturnine', 'Cataphractii' or 'Tartaros'. Retinue and Heavy Assault Slots restricted to Units whose name includes the selected word.", slots: [{ role: "heavy_assault", count: 2, primeCount: 1 }, { role: "retinue", count: 1 }, { role: "war_engine", count: 1 }] },
+  leviathan_armoured_fist:   { name: "Leviathan Armoured Fist",   desc: "Attacker Detachment (Leviathan Missions). Lord of War Units in this Detachment do NOT count towards the 25% of total Points Limit restriction that usually applies to Lord of War Units.", slots: [{ role: "lord_of_war", count: 3 }] },
+  leviathan_bastion_of_fire: { name: "Leviathan Bastion of Fire", desc: "Defender Detachment (Leviathan Missions). Support units form a layered defensive firebase.", slots: [{ role: "support", count: 3, primeCount: 1 }] },
 };
 
 // Prime Advantages (p.283) — bonus for filling Prime slots
@@ -373,6 +453,124 @@ var LEGION_DETACHMENTS = {
       { id: "headhunter_leviathal", name: "Headhunter Leviathal", desc: "Elites: Seeker Squads or Headhunter Kill Teams only.", slots: [{ role: "recon", count: 2, prime: true }, { role: "elites", count: 2 }] },
     ],
   },
+  mechanicum: {
+    // ── Mechanicum Taghmata-specific Auxiliary Detachments (Taghmata Army List p.16) ──
+    auxiliary: [
+      {
+        id: "taghmata_cohort",
+        name: "Taghmata Cohort",
+        desc: "Standard combined-arms detachment of the Taghmata.",
+        slots: [
+          { role: "command",   count: 1 },
+          { role: "troops",    count: 1 },
+          { role: "support",   count: 1 },
+          { role: "transport", count: 1 },
+        ],
+      },
+      {
+        id: "apprentice_cadre",
+        name: "Apprentice Cadre",
+        desc: "Troops Slots in this Detachment may only be used to select Tech-Priest Units.",
+        slots: [
+          { role: "high_command", count: 1 },
+          { role: "command",      count: 1 },
+          { role: "support",      count: 1 },
+          { role: "troops",       count: 1 },
+        ],
+      },
+    ],
+    // ── Apex Detachments (High Tech Arcana, unlocked by High Command + matching Trait) ──
+    apex: [
+      {
+        id: "heart_of_power",
+        name: "Heart of Power",
+        desc: "Archimandrite Trait required. All Troops Slots must have Combat Veterans Prime Advantage selected.",
+        slots: [
+          { role: "high_command", count: 1 },
+          { role: "command",      count: 2 },
+          { role: "troops",       count: 3 },
+        ],
+      },
+      {
+        id: "command_maniple",
+        name: "Command Maniple",
+        desc: "Cybernetica Trait required. All Slots may only select Units that include Models with the Automata Type.",
+        slots: [
+          { role: "command",    count: 1 },
+          { role: "war_engine", count: 2 },
+        ],
+      },
+      {
+        id: "panoply_of_cruelty",
+        name: "Panoply of Cruelty",
+        desc: "Lacrymaerta Trait required. Heavy Assault Slots may only select Ursarax Cohort Units.",
+        slots: [
+          { role: "heavy_assault", count: 3 },
+        ],
+      },
+      {
+        id: "host_of_destruction",
+        name: "Host of Destruction",
+        desc: "Myrmidax Trait required. Elite Slots may only select Units that include Models with the Myrmidax Trait.",
+        slots: [
+          { role: "command", count: 1 },
+          { role: "elites",  count: 2 },
+          { role: "troops",  count: 1 },
+        ],
+      },
+      {
+        id: "crux_of_judgement",
+        name: "Crux of Judgement",
+        desc: "Malagra Trait required. All Slots must be filled with Arcuitor Magisterium Units. Models form a single Unit before deployment.",
+        slots: [
+          { role: "command", count: 3 },
+        ],
+      },
+      {
+        id: "iron_phalanx",
+        name: "Iron Phalanx",
+        desc: "Macrotek Trait required. All Models must have the Vehicle Type and must have Prime Conveyor Prime Advantage selected.",
+        slots: [
+          { role: "transport", count: 3 },
+          { role: "armour",    count: 3 },
+        ],
+      },
+      {
+        id: "thallax_command_cohort",
+        name: "Thallax Command Cohort",
+        desc: "Reductor Trait required. All Slots must be filled by Thallax Cohort Units with a Praetorian upgrade.",
+        slots: [
+          { role: "command", count: 1 },
+          { role: "troops",  count: 2 },
+        ],
+      },
+    ],
+  },
+  custodes: {
+    auxiliary: [
+      { id: "hykanatoi_c",     name: "Hykanatoi Convocation",    desc: "Troops slots: Custodian Guard or Sentinel Guard Sodalities only. Transport slot: Coronus Grav-carrier only.",                                                     slots: [{ role: "troops", count: 2, primeCount: 1 }, { role: "transport", count: 1 }] },
+      { id: "tharanatoi_c",    name: "Tharanatoi Convocation",   desc: "Heavy Assault slots: Aquilon Terminator Sodalities only.",                                                                                                         slots: [{ role: "heavy_assault", count: 2, primeCount: 1 }] },
+      { id: "ephoroi_c",       name: "Ephoroi Convocation",      desc: "Fast Attack slots: Venatari Sodalities only.",                                                                                                                    slots: [{ role: "fast_attack", count: 2, primeCount: 1 }] },
+      { id: "kataphractoi_c",  name: "Kataphractoi Convocation", desc: "Fast Attack slot: Pallas Grav-attack or Gyrfalcon Jetbike Sodality only. Transport slot: Coronus Grav-carrier only. Armour slot: Caladius Grav-tank only.",       slots: [{ role: "fast_attack", count: 1, primeCount: 1 }, { role: "transport", count: 1 }, { role: "armour", count: 1 }] },
+    ],
+    apex: [
+      { id: "moritoi_c",       name: "Moritoi Convocation",      desc: "War Engine slots: Contemptor-Achillus or Contemptor-Galatus Dreadnoughts only.",                                                                                  slots: [{ role: "war_engine", count: 2, primeCount: 1 }] },
+    ],
+  },
+  sol_auxilia: {
+    auxiliary: [
+      { id: "infantry_tercio_sa",  name: "Infantry Tercio",         desc: "Troops slots: Lasrifle or Veletaris Sections only. Heavy Assault slot: Charonite Ogryn Section only.",  slots: [{ role: "troops", count: 3, primeCount: 1 }, { role: "heavy_assault", count: 1 }] },
+      { id: "armour_company_sa",   name: "Armour Company",          desc: "Armour slots: Leman Russ variants only.",                                                               slots: [{ role: "armour", count: 3, primeCount: 1 }] },
+      { id: "artillery_battery_sa",name: "Artillery Battery",       desc: "Support slots: Basilisk, Medusa, or Rapier Sections only.",                                             slots: [{ role: "support", count: 3, primeCount: 1 }] },
+      { id: "recon_element_sa",    name: "Recon Element",           desc: "Recon slots: Hermes Light Sentinel Squadrons only. Fast Attack: Hermes Veletaris Squadrons only.",      slots: [{ role: "recon", count: 2, primeCount: 1 }, { role: "fast_attack", count: 2 }] },
+      { id: "air_support_sa",      name: "Air Support Wing",        desc: "Fast Attack slots: Primaris-Lightning or Thunderbolt units only.",                                      slots: [{ role: "fast_attack", count: 2, primeCount: 1 }] },
+      { id: "assault_company_sa",  name: "Assault Company",         desc: "Troops must be Veletaris sections. Heavy Assault: Charonite Ogryn Section only.",                      slots: [{ role: "troops", count: 2, primeCount: 1 }, { role: "heavy_assault", count: 2 }] },
+    ],
+    apex: [
+      { id: "cohort_reserve_sa",   name: "Cohort Battle-Reserve",   desc: "Troops: Lasrifle or Veletaris only. Heavy Transport: Dracosan only.",                                   slots: [{ role: "troops", count: 2, primeCount: 1 }, { role: "heavy_transport", count: 1 }, { role: "armour", count: 1 }] },
+      { id: "heavy_armour_grp_sa", name: "Heavy Armour Battle-Group",desc: "Lord of War slots: Malcador, Valdor or Stormhammer variants only.",                                    slots: [{ role: "lord_of_war", count: 2, primeCount: 1 }] },
+    ],
+  },
 };
 
 // Logistical Benefit allowed roles (cannot add these)
@@ -424,10 +622,13 @@ var ALLEGIANCE_UNITS = {
     "ezekyle_abaddon", "little_horus", "tybalt_marr", "vheren_ash", "garviel_loken",
     "maloghurst", "dark_emissary", "justaerin", "reaver_soh",
     // XVII Word Bearers
-    "kor_phaeron", "erebus", "argel_tal", "zardu_layak", "dark_brethren", "anakatis_kul",
+    "kor_phaeron", "erebus", "argel_tal", "zardu_layak", "dark_brethren", "anakatis_kul", "phraetus_conclave",
     "mhara_gal", "incendiary_wb",
     // XX Alpha Legion
     "armillus_dynat", "saboteur", "exodus_al", "headhunter", "lernaean",
+    // ── MECHANICUM MACHINA MALEFICA & PERSONA SCINDIO (Traitor) ──
+    "decimator_mm", "blood_slaughterer_mm", "brass_scorpion_mm", "kytan_mm",
+    "scoria_mm", "draykavac_mm",
   ],
 };
 
@@ -451,7 +652,10 @@ var LEGION_FACTIONS = [
   { id: "salamanders",       name: "Salamanders (XVIII)",    allegiance: "loyalist", numeral: "XVIII" },
   { id: "raven_guard",       name: "Raven Guard (XIX)",      allegiance: "loyalist", numeral: "XIX" },
   { id: "alpha_legion",      name: "Alpha Legion (XX)",      allegiance: "traitor", numeral: "XX" },
-  { id: "legiones_astartes",  name: "Legiones Astartes (Generic)", allegiance: "any", numeral: "-" },
+  { id: "legiones_astartes",  name: "Legiones Astartes (Generic)", allegiance: "any",      numeral: "-" },
+  { id: "sol_auxilia",        name: "Solar Auxilia",               allegiance: "any",      numeral: "-" },
+  { id: "mechanicum",         name: "Mechanicum Taghmata",         allegiance: "any",      numeral: "-" },
+  { id: "custodes",           name: "Legio Custodes",              allegiance: "loyalist", numeral: "-" },
 ];
 
 var MAX_UNIT_SIZE = {
@@ -487,6 +691,19 @@ var MAX_UNIT_SIZE = {
   firedrake: 10, pyroclast: 10,
   mor_deythan: 10, dark_fury_rg: 10,
   headhunter: 10, lernaean: 10,
+  // ── SOL AUXILIA ──
+  legate_cmd_sa: 10, tactical_cmd_sa: 10, line_cmd_sa: 10,
+  veletaris_cmd_sa: 10, hermes_cmd_sa: 6, artillery_cmd_sa: 10,
+  veletaris_vanguard_sa: 20,
+  charonite_sa: 9,
+  hermes_light_sa: 6, hermes_vel_sa: 6, aethon_sa: 3,
+  // ── MECHANICUM TAGHMATA ──
+  scyllax_tm: 16, echidnax_tm: 12, domitar_tm: 4,
+  secutor_tm: 10, destructor_tm: 10,
+  castellax_dest_tm: 6, castellax_battle_tm: 10,
+  ursarax_tm: 9, tech_thrall_cov_tm: 40, thallax_full_tm: 9,
+  // ── MACHINA MALEFICA ──
+  blood_slaughterer_mm: 4,
 };
 
 // Helper: format wargear options for display
@@ -839,6 +1056,14 @@ var WEAPON_PROFILES = {
     { name: "Plasma Blaster (Sustained)", shots: 2, s: 7, ap: "4", damage: 1, type: "Assault", rules: { breaching6: true }, traits: "Plasma" },
     { name: "Plasma Blaster (Maximal)", shots: 2, s: 8, ap: "4", damage: 1, type: "Assault", rules: { breaching5: true, getshot: true }, traits: "Plasma" },
   ],
+  centurion_sat: [
+    { name: "Plasma Bombard (Sustained)", shots: 1, s: 6, ap: "4", damage: 1, type: "Barrage", rules: { barrage: true, blast: true, breaching6: true }, traits: "Plasma" },
+    { name: "Plasma Bombard (Maximal)", shots: 1, s: 7, ap: "4", damage: 1, type: "Barrage", rules: { barrage: true, blast: true, breaching5: true, getshot: true }, traits: "Plasma" },
+    { name: "Twin Heavy Disintegrator", shots: 2, s: 7, ap: "2", damage: 2, type: "Rapid Fire", rules: { getshot: true }, traits: "Disintegrator" },
+    { name: "Particle Shredder", shots: 1, s: 6, ap: "3", damage: 1, type: "Assault", rules: { breaching6: true, getshot: true, template: true }, traits: "Assault, Particle" },
+    { name: "Plasma Blaster (Sustained)", shots: 2, s: 7, ap: "4", damage: 1, type: "Assault", rules: { breaching6: true }, traits: "Plasma" },
+    { name: "Plasma Blaster (Maximal)", shots: 2, s: 8, ap: "4", damage: 1, type: "Assault", rules: { breaching5: true, getshot: true }, traits: "Plasma" },
+  ],
   champion: [
     { name: "Bolt Pistol", shots: 1, s: 4, ap: "5", damage: 1, type: "Pistol", rules: {  }, traits: "Assault, Bolt" },
     { name: "Plasma Pistol", shots: 1, s: 7, ap: "4", damage: 1, type: "Pistol", rules: { breaching5: true, getshot: true }, traits: "Assault, Plasma" },
@@ -903,6 +1128,20 @@ var WEAPON_PROFILES = {
     { name: "Plasma Bombard (Maximal)", shots: 1, s: 7, ap: "4", damage: 1, type: "Barrage", rules: { barrage: true, blast: true, breaching5: true, getshot: true }, traits: "Plasma" },
     { name: "Twin Heavy Disintegrator", shots: 2, s: 7, ap: "2", damage: 2, type: "Rapid Fire", rules: { getshot: true }, traits: "Disintegrator", defaultModels: 1 },
     { name: "Particle Shredder", shots: 1, s: 6, ap: "3", damage: 1, type: "Assault", rules: { breaching6: true, getshot: true, template: true }, traits: "Assault, Particle", defaultModels: 1 },
+  ],
+  saturnine_cmd: [
+    { name: "Plasma Bombard (Sustained)", shots: 1, s: 6, ap: "4", damage: 1, type: "Barrage", rules: { barrage: true, blast: true, breaching6: true }, traits: "Plasma" },
+    { name: "Plasma Bombard (Maximal)", shots: 1, s: 7, ap: "4", damage: 1, type: "Barrage", rules: { barrage: true, blast: true, breaching5: true, getshot: true }, traits: "Plasma" },
+    { name: "Twin Heavy Disintegrator", shots: 2, s: 7, ap: "2", damage: 2, type: "Rapid Fire", rules: { getshot: true }, traits: "Disintegrator" },
+    { name: "Particle Shredder", shots: 1, s: 6, ap: "3", damage: 1, type: "Assault", rules: { breaching6: true, getshot: true, template: true }, traits: "Assault, Particle" },
+    { name: "Plasma Blaster (Sustained)", shots: 2, s: 7, ap: "4", damage: 1, type: "Assault", rules: { breaching6: true }, traits: "Plasma" },
+    { name: "Plasma Blaster (Maximal)", shots: 2, s: 8, ap: "4", damage: 1, type: "Assault", rules: { breaching5: true, getshot: true }, traits: "Plasma" },
+  ],
+  phraetus_conclave: [
+    { name: "Plasma Bombard (Sustained)", shots: 1, s: 6, ap: "4", damage: 1, type: "Barrage", rules: { barrage: true, blast: true, breaching6: true }, traits: "Plasma" },
+    { name: "Plasma Bombard (Maximal)", shots: 1, s: 7, ap: "4", damage: 1, type: "Barrage", rules: { barrage: true, blast: true, breaching5: true, getshot: true }, traits: "Plasma" },
+    { name: "Twin Heavy Disintegrator", shots: 2, s: 7, ap: "2", damage: 2, type: "Rapid Fire", rules: { getshot: true }, traits: "Disintegrator" },
+    { name: "Particle Shredder", shots: 1, s: 6, ap: "3", damage: 1, type: "Assault", rules: { breaching6: true, getshot: true, template: true }, traits: "Assault, Particle" },
   ],
   // VEHICLES & DREADS
   contemptor: [
@@ -978,6 +1217,133 @@ var WEAPON_PROFILES = {
   ],
   rapier: [
     { name: "Laser Destroyer", shots: 2, s: 10, ap: "2", damage: 2, type: "Heavy", rules: { armourbane: true }, traits: "Las" },
+    { name: "Quad Launcher (Frag)", shots: 1, s: 5, ap: "5", damage: 1, type: "Heavy", rules: { blast: true, barrage: true } },
+    { name: "Quad Launcher (Shatter)", shots: 4, s: 7, ap: "4", damage: 1, type: "Heavy", rules: { armourbane: true } },
+  ],
+  // ── SOL AUXILIA COMMAND SECTIONS ──
+  legate_cmd_sa: [
+    { name: "Lasrifle", shots: 1, s: 3, ap: "6", damage: 1, type: "Assault", rules: {}, traits: "Las" },
+    { name: "Laspistol", shots: 1, s: 3, ap: "-", damage: 1, type: "Pistol", rules: {}, traits: "Assault, Las" },
+    { name: "Charnabal Sabre (Legate)", shots: 0, s: "S", ap: "3", damage: 1, type: "Melee", rules: { breaching6: true }, traits: "Charnabal" },
+    { name: "Power Sword (Legate)", shots: 0, s: "S", ap: "3", damage: 1, type: "Melee", rules: { breaching6: true }, traits: "Power" },
+  ],
+  tactical_cmd_sa: [
+    { name: "Lasrifle", shots: 1, s: 3, ap: "6", damage: 1, type: "Assault", rules: {}, traits: "Las" },
+    { name: "Laspistol", shots: 1, s: 3, ap: "-", damage: 1, type: "Pistol", rules: {}, traits: "Assault, Las" },
+    { name: "Charnabal Sabre (Optio)", shots: 0, s: "S", ap: "3", damage: 1, type: "Melee", rules: { breaching6: true }, traits: "Charnabal" },
+  ],
+  line_cmd_sa: [
+    { name: "Lasrifle", shots: 1, s: 3, ap: "6", damage: 1, type: "Assault", rules: {}, traits: "Las" },
+    { name: "Laspistol", shots: 1, s: 3, ap: "-", damage: 1, type: "Pistol", rules: {}, traits: "Assault, Las" },
+    { name: "Charnabal Sabre (Optio)", shots: 0, s: "S", ap: "3", damage: 1, type: "Melee", rules: { breaching6: true }, traits: "Charnabal" },
+  ],
+  veletaris_cmd_sa: [
+    { name: "Volkite Charger", shots: 2, s: 5, ap: "5", damage: 1, type: "Assault", rules: { deflagrate: true }, traits: "Volkite" },
+    { name: "Laspistol", shots: 1, s: 3, ap: "-", damage: 1, type: "Pistol", rules: {}, traits: "Assault, Las" },
+    { name: "Charnabal Sabre (Optio)", shots: 0, s: "S", ap: "3", damage: 1, type: "Melee", rules: { breaching6: true }, traits: "Charnabal" },
+  ],
+  hermes_cmd_sa: [
+    { name: "Multi-laser", shots: 3, s: 6, ap: "6", damage: 1, type: "Heavy", rules: { suppressive: true }, traits: "Las" },
+    { name: "Grenade Launcher (Frag)", shots: 1, s: 3, ap: "6", damage: 1, type: "Assault", rules: { blast: true, stun: true } },
+    { name: "Grenade Launcher (Krak)", shots: 2, s: 7, ap: "4", damage: 2, type: "Assault", rules: {} },
+    { name: "Laspistol", shots: 1, s: 3, ap: "-", damage: 1, type: "Pistol", rules: {}, traits: "Assault, Las" },
+  ],
+  artillery_cmd_sa: [
+    { name: "Lasrifle", shots: 1, s: 3, ap: "6", damage: 1, type: "Assault", rules: {}, traits: "Las" },
+    { name: "Laspistol", shots: 1, s: 3, ap: "-", damage: 1, type: "Pistol", rules: {}, traits: "Assault, Las" },
+    { name: "Charnabal Sabre (Optio)", shots: 0, s: "S", ap: "3", damage: 1, type: "Melee", rules: { breaching6: true }, traits: "Charnabal" },
+  ],
+  armoured_cmd_sa: [
+    { name: "Lasrifle", shots: 1, s: 3, ap: "6", damage: 1, type: "Assault", rules: {}, traits: "Las" },
+    { name: "Laspistol", shots: 1, s: 3, ap: "-", damage: 1, type: "Pistol", rules: {}, traits: "Assault, Las" },
+    { name: "Charnabal Sabre (Optio)", shots: 0, s: "S", ap: "3", damage: 1, type: "Melee", rules: { breaching6: true }, traits: "Charnabal" },
+  ],
+  // ── SOL AUXILIA ELITES / HEAVY ASSAULT ──
+  veletaris_vanguard_sa: [
+    { name: "Volkite Charger", shots: 2, s: 5, ap: "5", damage: 1, type: "Assault", rules: { deflagrate: true }, traits: "Volkite" },
+    { name: "Power Sword (Optio)", shots: 0, s: "S", ap: "3", damage: 1, type: "Melee", rules: { breaching6: true }, traits: "Power" },
+  ],
+  charonite_sa: [
+    { name: "Laspistol", shots: 1, s: 3, ap: "-", damage: 1, type: "Pistol", rules: {}, traits: "Assault, Las" },
+    { name: "Charonite Claws", shots: 0, s: 7, ap: "3", damage: 2, type: "Melee", rules: { breaching5: true }, traits: "Power" },
+  ],
+  // ── SOL AUXILIA SUPPORT / ARTILLERY ──
+  basilisk_sa: [
+    { name: "Earthshaker Cannon", shots: 1, s: 7, ap: "4", damage: 2, type: "Ordnance", rules: { barrage: true, blast: true, pinning: true, breaching6: true } },
+    { name: "Hull Heavy Bolter", shots: 3, s: 5, ap: "4", damage: 1, type: "Heavy", rules: {}, traits: "Bolt" },
+  ],
+  medusa_sa: [
+    { name: "Medusa Mortar", shots: 1, s: 5, ap: "4", damage: 2, type: "Ordnance", rules: { barrage: true, blast: true, pinning: true, breaching5: true } },
+    { name: "Hull Heavy Bolter", shots: 3, s: 5, ap: "4", damage: 1, type: "Heavy", rules: {}, traits: "Bolt" },
+  ],
+  aethon_sa: [
+    { name: "Aethon Missile Battery", shots: 1, s: 4, ap: "5", damage: 2, type: "Heavy", rules: { barrage: true, blast: true, stun: true }, traits: "Missile" },
+    { name: "Multi-laser (alt)", shots: 3, s: 6, ap: "6", damage: 1, type: "Heavy", rules: { suppressive: true }, traits: "Las" },
+    { name: "Lascannon (alt)", shots: 1, s: 9, ap: "2", damage: 1, type: "Heavy", rules: { armourbane: true }, traits: "Las" },
+  ],
+  // ── SOL AUXILIA RECON ──
+  hermes_light_sa: [
+    { name: "Multi-laser", shots: 3, s: 6, ap: "6", damage: 1, type: "Heavy", rules: { suppressive: true }, traits: "Las" },
+    { name: "Grenade Launcher (Frag)", shots: 1, s: 3, ap: "6", damage: 1, type: "Assault", rules: { blast: true, stun: true } },
+    { name: "Grenade Launcher (Krak)", shots: 2, s: 7, ap: "4", damage: 2, type: "Assault", rules: {} },
+  ],
+  // ── SOL AUXILIA FAST ATTACK ──
+  hermes_vel_sa: [
+    { name: "Volkite Culverin", shots: 3, s: 6, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true }, traits: "Volkite" },
+    { name: "Grenade Launcher (Frag)", shots: 1, s: 3, ap: "6", damage: 1, type: "Assault", rules: { blast: true, stun: true } },
+    { name: "Grenade Launcher (Krak)", shots: 2, s: 7, ap: "4", damage: 2, type: "Assault", rules: {} },
+  ],
+  primaris_lightning_sa: [
+    { name: "Autocannon x2", shots: 4, s: 7, ap: "4", damage: 2, type: "Heavy", rules: { breaching6: true }, traits: "Auto" },
+    { name: "Hellstrike Missile", shots: 1, s: 9, ap: "3", damage: 3, type: "Heavy", rules: { armourbane: true, limited: true }, traits: "Missile" },
+    { name: "Lascannon (opt)", shots: 1, s: 9, ap: "2", damage: 1, type: "Heavy", rules: { armourbane: true }, traits: "Las" },
+  ],
+  thunderbolt_sa: [
+    { name: "Autocannon x2", shots: 4, s: 7, ap: "4", damage: 2, type: "Heavy", rules: { breaching6: true }, traits: "Auto" },
+    { name: "Hellstrike Missile", shots: 1, s: 9, ap: "3", damage: 3, type: "Heavy", rules: { armourbane: true, limited: true }, traits: "Missile" },
+    { name: "Twin Lascannon (opt)", shots: 2, s: 9, ap: "2", damage: 1, type: "Heavy", rules: { armourbane: true }, traits: "Las" },
+  ],
+  // ── SOL AUXILIA TRANSPORTS ──
+  arvus_sa: [
+    { name: "Hull Heavy Bolter (opt)", shots: 3, s: 5, ap: "4", damage: 1, type: "Heavy", rules: {}, traits: "Bolt" },
+  ],
+  dracosan_sa: [
+    { name: "Twin Lascannon", shots: 2, s: 9, ap: "2", damage: 1, type: "Heavy", rules: { armourbane: true }, traits: "Las" },
+    { name: "Hull Multi-laser", shots: 3, s: 6, ap: "6", damage: 1, type: "Heavy", rules: { suppressive: true }, traits: "Las" },
+    { name: "Hull Heavy Flamer (opt)", shots: 1, s: 5, ap: "4", damage: 1, type: "Template", rules: { panic: true }, traits: "Flame" },
+  ],
+  // ── SOL AUXILIA ARMOUR ──
+  leman_russ_strike_sa: [
+    { name: "Battlecannon", shots: 1, s: 8, ap: "4", damage: 2, type: "Heavy", rules: { blast: true, pinning: true }, traits: "Auto" },
+    { name: "Hull Heavy Bolter", shots: 3, s: 5, ap: "4", damage: 1, type: "Heavy", rules: {}, traits: "Bolt" },
+    { name: "Hull Lascannon (opt)", shots: 1, s: 9, ap: "2", damage: 1, type: "Heavy", rules: { armourbane: true }, traits: "Las" },
+  ],
+  leman_russ_assault_sa: [
+    { name: "Demolisher Cannon", shots: 1, s: 12, ap: "3", damage: 3, type: "Ordnance", rules: { blast: true, breaching5: true, stun: true } },
+    { name: "Hull Heavy Bolter", shots: 3, s: 5, ap: "4", damage: 1, type: "Heavy", rules: {}, traits: "Bolt" },
+    { name: "Hull Lascannon (opt)", shots: 1, s: 9, ap: "2", damage: 1, type: "Heavy", rules: { armourbane: true }, traits: "Las" },
+  ],
+  // ── SOL AUXILIA LORD OF WAR ──
+  malcador_sa: [
+    { name: "Battlecannon", shots: 1, s: 8, ap: "4", damage: 2, type: "Heavy", rules: { blast: true, pinning: true }, traits: "Auto" },
+    { name: "Twin Battlecannon (alt)", shots: 2, s: 10, ap: "2", damage: 3, type: "Heavy", rules: { criticalHit: true }, traits: "Auto" },
+    { name: "Lascannon Sponsons x2 (opt)", shots: 2, s: 9, ap: "2", damage: 1, type: "Heavy", rules: { armourbane: true }, traits: "Las" },
+    { name: "Hull Heavy Bolter", shots: 3, s: 5, ap: "4", damage: 1, type: "Heavy", rules: {}, traits: "Bolt" },
+  ],
+  malcador_infernus_sa: [
+    { name: "Infernus Cannon", shots: 1, s: 6, ap: "4", damage: 2, type: "Template", rules: { hellstorm: true, panic: true }, traits: "Flame" },
+    { name: "Hull Multi-laser", shots: 3, s: 6, ap: "6", damage: 1, type: "Heavy", rules: { suppressive: true }, traits: "Las" },
+    { name: "Sponson Heavy Flamers x2 (opt)", shots: 1, s: 5, ap: "4", damage: 1, type: "Template", rules: { panic: true }, traits: "Flame" },
+  ],
+  valdor_sa: [
+    { name: "Neutron Beam Laser", shots: 2, s: 10, ap: "2", damage: 2, type: "Ordnance", rules: { armourbane: true, shock: true }, traits: "Las" },
+    { name: "Hull Lascannon", shots: 1, s: 9, ap: "2", damage: 1, type: "Heavy", rules: { armourbane: true }, traits: "Las" },
+  ],
+  stormhammer_sa: [
+    { name: "Stormhammer Cannon", shots: 1, s: 9, ap: "3", damage: 3, type: "Heavy", rules: { blast: true, stun: true }, traits: "Auto" },
+    { name: "Twin Battlecannon (sponson) x2", shots: 4, s: 10, ap: "2", damage: 3, type: "Heavy", rules: { criticalHit: true }, traits: "Auto" },
+    { name: "Hull Multi-laser", shots: 3, s: 6, ap: "6", damage: 1, type: "Heavy", rules: { suppressive: true }, traits: "Las" },
+    { name: "Pintle Heavy Bolter (opt)", shots: 3, s: 5, ap: "4", damage: 1, type: "Heavy", rules: {}, traits: "Bolt" },
   ],
   // MECHANICUM
   thallax: [
@@ -1035,6 +1401,122 @@ var WEAPON_PROFILES = {
   vorax: [
     { name: "Rotor Cannon x2", shots: 3, s: 3, ap: "4", damage: 1, type: "Heavy", rules: { suppressive: true }, traits: "Auto" },
     { name: "Lightning Gun", shots: 3, s: 7, ap: "5", damage: 1, type: "Assault", rules: { rending: true, shred: true }, traits: "Assault" },
+  ],
+  // ── MECHANICUM TAGHMATA ──
+  archmagos_tm: [
+    { name: "Bolt Pistol", shots: 1, s: 4, ap: "5", damage: 1, type: "Pistol", rules: {}, traits: "Assault, Bolt" },
+    { name: "Phased Plasma-Fusil", shots: 2, s: 7, ap: "4", damage: 1, type: "Assault", rules: { breaching5: true }, traits: "Plasma" },
+    { name: "Conversion Beamer (<15\")", shots: 1, s: 6, ap: "4", damage: 1, type: "Heavy", rules: { blast: true } },
+    { name: "Conversion Beamer (15-30\")", shots: 1, s: 7, ap: "3", damage: 2, type: "Heavy", rules: { blast: true } },
+    { name: "Conversion Beamer (>30\")", shots: 1, s: 8, ap: "2", damage: 3, type: "Heavy", rules: { blast: true } },
+    { name: "Irad-Cleanser", shots: 1, s: 5, ap: "1", damage: 1, type: "Assault", rules: { template: true, poisoned2: true }, traits: "Flame" },
+  ],
+  archmagos_abeyant_tm: [
+    { name: "Bolt Pistol", shots: 1, s: 4, ap: "5", damage: 1, type: "Pistol", rules: {}, traits: "Assault, Bolt" },
+    { name: "Phased Plasma-Fusil", shots: 2, s: 7, ap: "4", damage: 1, type: "Assault", rules: { breaching5: true }, traits: "Plasma" },
+    { name: "Conversion Beamer (<15\")", shots: 1, s: 6, ap: "4", damage: 1, type: "Heavy", rules: { blast: true } },
+    { name: "Conversion Beamer (15-30\")", shots: 1, s: 7, ap: "3", damage: 2, type: "Heavy", rules: { blast: true } },
+    { name: "Conversion Beamer (>30\")", shots: 1, s: 8, ap: "2", damage: 3, type: "Heavy", rules: { blast: true } },
+    { name: "Irad-Cleanser", shots: 1, s: 5, ap: "1", damage: 1, type: "Assault", rules: { template: true, poisoned2: true }, traits: "Flame" },
+  ],
+  magos_tm: [
+    { name: "Bolt Pistol", shots: 1, s: 4, ap: "5", damage: 1, type: "Pistol", rules: {}, traits: "Assault, Bolt" },
+    { name: "Phased Plasma-Fusil", shots: 2, s: 7, ap: "4", damage: 1, type: "Assault", rules: { breaching5: true }, traits: "Plasma" },
+    { name: "Conversion Beamer (<15\")", shots: 1, s: 6, ap: "4", damage: 1, type: "Heavy", rules: { blast: true } },
+    { name: "Conversion Beamer (15-30\")", shots: 1, s: 7, ap: "3", damage: 2, type: "Heavy", rules: { blast: true } },
+    { name: "Conversion Beamer (>30\")", shots: 1, s: 8, ap: "2", damage: 3, type: "Heavy", rules: { blast: true } },
+    { name: "Irad-Cleanser", shots: 1, s: 5, ap: "1", damage: 1, type: "Assault", rules: { template: true, poisoned2: true }, traits: "Flame" },
+  ],
+  magos_abeyant_tm: [
+    { name: "Bolt Pistol", shots: 1, s: 4, ap: "5", damage: 1, type: "Pistol", rules: {}, traits: "Assault, Bolt" },
+    { name: "Phased Plasma-Fusil", shots: 2, s: 7, ap: "4", damage: 1, type: "Assault", rules: { breaching5: true }, traits: "Plasma" },
+    { name: "Conversion Beamer (<15\")", shots: 1, s: 6, ap: "4", damage: 1, type: "Heavy", rules: { blast: true } },
+    { name: "Conversion Beamer (15-30\")", shots: 1, s: 7, ap: "3", damage: 2, type: "Heavy", rules: { blast: true } },
+    { name: "Conversion Beamer (>30\")", shots: 1, s: 8, ap: "2", damage: 3, type: "Heavy", rules: { blast: true } },
+    { name: "Irad-Cleanser", shots: 1, s: 5, ap: "1", damage: 1, type: "Assault", rules: { template: true, poisoned2: true }, traits: "Flame" },
+  ],
+  arcuitor_tm: [
+    { name: "Archaeotech Pistol", shots: 1, s: 6, ap: "4", damage: 2, type: "Pistol", rules: { breaching3: true }, traits: "Assault" },
+    { name: "Bolt Pistol", shots: 1, s: 4, ap: "5", damage: 1, type: "Pistol", rules: {}, traits: "Assault, Bolt" },
+  ],
+  tech_priest_tm: [
+    { name: "Bolt Pistol", shots: 1, s: 4, ap: "5", damage: 1, type: "Pistol", rules: {}, traits: "Assault, Bolt" },
+  ],
+  scyllax_tm: [
+    // Scyllax have no ranged weapons; melee-only unit
+  ],
+  secutor_tm: [
+    { name: "Twin Maxima Bolters", shots: 5, s: 4, ap: "5", damage: 1, type: "Assault", rules: {}, traits: "Bolt" },
+    { name: "Phased Plasma-Fusil", shots: 2, s: 7, ap: "4", damage: 1, type: "Assault", rules: { breaching5: true }, traits: "Plasma" },
+    { name: "Volkite Caliver", shots: 2, s: 6, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true }, traits: "Volkite" },
+  ],
+  tech_thrall_cov_tm: [
+    { name: "Las-Lock", shots: 1, s: 4, ap: "6", damage: 1, type: "Assault", rules: {}, traits: "Las" },
+  ],
+  thallax_full_tm: [
+    { name: "Lightning Gun", shots: 3, s: 5, ap: "5", damage: 1, type: "Assault", rules: { rending: true }, traits: "Assault" },
+  ],
+  ursarax_tm: [
+    { name: "Volkite Incinerator", shots: 2, s: 5, ap: "6", damage: 1, type: "Assault", rules: { deflagrate: true }, traits: "Volkite" },
+  ],
+  echidnax_tm: [
+    // Echidnax are maintenance automata — no dedicated ranged weapons
+  ],
+  destructor_tm: [
+    { name: "Volkite Culverin", shots: 3, s: 6, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true }, traits: "Volkite" },
+    { name: "Irradiation Engine", shots: 1, s: 4, ap: "3", damage: 1, type: "Heavy", rules: { fleshbane: true, blast: true } },
+    { name: "Photon Thruster", shots: 2, s: 6, ap: "2", damage: 2, type: "Heavy", rules: { getshot: true } },
+  ],
+  domitar_tm: [
+    { name: "Cyclone ML (Frag)", shots: 1, s: 4, ap: "6", damage: 1, type: "Heavy", rules: { blast: true }, traits: "Missile" },
+    { name: "Cyclone ML (Krak)", shots: 1, s: 8, ap: "3", damage: 1, type: "Heavy", rules: {}, traits: "Missile" },
+    { name: "Cyclone ML (Flak)", shots: 2, s: 7, ap: "4", damage: 1, type: "Heavy", rules: {}, traits: "Missile" },
+  ],
+  castellax_dest_tm: [
+    { name: "Twin Bolters", shots: 4, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {}, traits: "Bolt" },
+    { name: "Mauler Bolt Cannon", shots: 4, s: 6, ap: "4", damage: 1, type: "Heavy", rules: {}, traits: "Bolt" },
+  ],
+  castellax_battle_tm: [
+    { name: "Twin Bolters", shots: 4, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {}, traits: "Bolt" },
+    { name: "Mauler Bolt Cannon", shots: 4, s: 6, ap: "4", damage: 1, type: "Heavy", rules: {}, traits: "Bolt" },
+    { name: "Darkfire Cannon", shots: 2, s: 7, ap: "2", damage: 2, type: "Heavy", rules: { getshot: true } },
+  ],
+  thanatar_siege_tm: [
+    { name: "Twin Mauler Bolt Cannon", shots: 8, s: 6, ap: "4", damage: 1, type: "Heavy", rules: {}, traits: "Bolt" },
+    { name: "Plasma Mortar (Sustained)", shots: 1, s: 8, ap: "2", damage: 2, type: "Barrage", rules: { blast: true, breaching6: true, barrage: true }, traits: "Plasma" },
+    { name: "Plasma Mortar (Maximal)", shots: 1, s: 9, ap: "2", damage: 3, type: "Barrage", rules: { blast: true, breaching5: true, getshot: true, barrage: true }, traits: "Plasma" },
+    { name: "Sollex Heavy-Las", shots: 2, s: 10, ap: "2", damage: 3, type: "Heavy", rules: { armourbane: true }, traits: "Las" },
+  ],
+  armiger_tm: [
+    { name: "Irad-Cleanser", shots: 1, s: 5, ap: "1", damage: 1, type: "Assault", rules: { template: true, poisoned2: true }, traits: "Flame" },
+    { name: "Volkite Veuglaire", shots: 3, s: 6, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true }, traits: "Volkite" },
+    { name: "Lightning Lock", shots: 3, s: 7, ap: "5", damage: 1, type: "Assault", rules: { rending: true }, traits: "Assault" },
+  ],
+  triaros_tm: [
+    { name: "Volkite Calivers (x2)", shots: 4, s: 6, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true }, traits: "Volkite" },
+    { name: "Mauler Bolt Cannon", shots: 4, s: 6, ap: "4", damage: 1, type: "Heavy", rules: {}, traits: "Bolt" },
+  ],
+  // ── MACHINA MALEFICA ──
+  decimator_mm: [
+    { name: "Two Heavy Flamers", shots: 1, s: 5, ap: "4", damage: 1, type: "Assault", rules: { template: true, panic: true }, traits: "Flame" },
+  ],
+  blood_slaughterer_mm: [
+    // Blood Slaughterer is a melee-only daemon engine — no ranged weapons
+  ],
+  brass_scorpion_mm: [
+    { name: "Scorpion Cannon", shots: 4, s: 7, ap: "4", damage: 2, type: "Heavy", rules: { breaching5: true }, traits: "Auto" },
+    { name: "Despoiler Cannon (HE)", shots: 1, s: 8, ap: "4", damage: 2, type: "Ordnance", rules: { blast: true } },
+    { name: "Twin Hellmaw Cannon", shots: 1, s: 6, ap: "4", damage: 1, type: "Assault", rules: { template: true, panic: true }, traits: "Flame" },
+  ],
+  kytan_mm: [
+    { name: "Kytan Gatling Cannon", shots: 12, s: 6, ap: "4", damage: 1, type: "Heavy", rules: {}, traits: "Auto" },
+  ],
+  scoria_mm: [
+    { name: "Twin Archaeotech Pistols", shots: 2, s: 6, ap: "4", damage: 2, type: "Pistol", rules: { breaching3: true }, traits: "Assault" },
+  ],
+  draykavac_mm: [
+    { name: "Bolt Pistol", shots: 1, s: 4, ap: "5", damage: 1, type: "Pistol", rules: {}, traits: "Assault, Bolt" },
+    { name: "Graviton Gun", shots: 1, s: 6, ap: "4", damage: 1, type: "Rapid Fire", rules: { blast: true, breaching6: true, pinning: true }, traits: "Graviton" },
   ],
   // PRIMARCHS (LOYALIST)
   lion: [
@@ -1145,6 +1627,92 @@ var WEAPON_PROFILES = {
     { name: "Volkite Culverin (opt)", shots: 4, s: 6, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true } },
     { name: "Plasma Cannon (opt)", shots: 1, s: 7, ap: "4", damage: 1, type: "Heavy", rules: { getshot: true, breaching: true, blast: true } },
     { name: "Graviton Gun (opt)", shots: 1, s: "-", ap: "4", damage: 1, type: "Heavy", rules: { blast: true } },
+  ],
+  // ── LEGIO CUSTODES ──
+  // High Command
+  valdor_c: [
+    { name: "Apollonian Spear (Ranged)", shots: 2, s: 5, ap: "2", damage: 2, type: "Assault", rules: { suppressive: true }, traits: "Assault, Bolt" },
+  ],
+  // Command
+  tribune_c: [
+    { name: "Eternity Spear (Ranged)", shots: 2, s: 4, ap: "3", damage: 1, type: "Assault", rules: { shred: true }, traits: "Assault, Bolt" },
+  ],
+  shield_captain_c: [
+    { name: "Eternity Spear (Ranged, opt)", shots: 2, s: 4, ap: "3", damage: 1, type: "Assault", rules: { shred: true }, traits: "Assault, Bolt" },
+    { name: "Eternity Blade (Melee only)", shots: 0, s: 5, ap: "2", damage: 2, type: "Melee", rules: {} },
+  ],
+  // Troops
+  custodian_guard_c: [
+    { name: "Guardian Spear (Ranged)", shots: 2, s: 4, ap: "4", damage: 1, type: "Assault", rules: { shred: true }, traits: "Assault, Bolt" },
+  ],
+  sentinel_guard_c: [
+    { name: "Sentinel Warblade (Ranged)", shots: 3, s: 4, ap: "4", damage: 1, type: "Assault", rules: { shred: true }, traits: "Assault, Bolt" },
+  ],
+  // Heavy Assault
+  aquilon_c: [
+    { name: "Infernus Firepike", shots: 1, s: 6, ap: "4", damage: 1, type: "Template", rules: { panic: true }, traits: "Flame" },
+    { name: "Lastrum Storm Bolter (free opt)", shots: 4, s: 5, ap: "4", damage: 1, type: "Rapid Fire", rules: { shred: true }, traits: "Bolt" },
+    { name: "Adrathic Combi-Destructor (+5pts opt)", shots: 2, s: 5, ap: "2", damage: 2, type: "Assault", rules: { rending: true, disintegrator: true } },
+  ],
+  // War Engines
+  contemptor_achillus_c: [
+    { name: "Achillus Dreadspear (Ranged)", shots: 1, s: 10, ap: "3", damage: 2, type: "Heavy", rules: { armourbane: true, breaching4: true }, traits: "Las" },
+    { name: "Infernus Incinerator x2", shots: 1, s: 6, ap: "4", damage: 1, type: "Template", rules: {}, traits: "Flame" },
+    { name: "Lastrum Storm Bolter (free opt, each)", shots: 4, s: 5, ap: "4", damage: 1, type: "Rapid Fire", rules: { shred: true }, traits: "Bolt" },
+    { name: "Adrathic Combi-Destructor (+5pts opt, each)", shots: 2, s: 5, ap: "2", damage: 2, type: "Assault", rules: { rending: true, disintegrator: true } },
+  ],
+  contemptor_galatus_c: [
+    { name: "Galatus Warblade (Ranged)", shots: 1, s: 6, ap: "4", damage: 2, type: "Template", rules: { panic: true }, traits: "Flame" },
+  ],
+  // Fast Attack
+  venatari_c: [
+    { name: "Kinetic Destroyer", shots: 3, s: 7, ap: "4", damage: 1, type: "Assault", rules: { breaching5: true }, traits: "Assault" },
+    { name: "Verutum Lance (Ranged, free opt)", shots: 1, s: 5, ap: "4", damage: 1, type: "Assault", rules: { stun: true }, traits: "Assault" },
+  ],
+  gyrfalcon_c: [
+    { name: "Lastrum Bolt Cannon", shots: 3, s: 6, ap: "4", damage: 2, type: "Heavy", rules: {}, traits: "Bolt" },
+    { name: "Adrathic Devastator (+10pts opt)", shots: 1, s: 6, ap: "2", damage: 4, type: "Heavy", rules: { rending: true, disintegrator: true } },
+    { name: "Twin Corvae Las-Pulser (+10pts opt)", shots: 1, s: 10, ap: "3", damage: 3, type: "Heavy", rules: { armourbane: true, breaching4: true }, traits: "Las" },
+  ],
+  pallas_c: [
+    { name: "Twin Iliastus Accelerator Fusil", shots: 4, s: 7, ap: "3", damage: 2, type: "Heavy", rules: { breaching6: true, rapidTracking: true }, traits: "Auto" },
+    { name: "Twin Arachnus Blaze Cannon — Concentrated (+25pts opt)", shots: 2, s: 9, ap: "2", damage: 2, type: "Heavy", rules: { armourbane: true }, traits: "Las" },
+    { name: "Twin Arachnus Blaze Cannon — Burst (+25pts opt)", shots: 5, s: 6, ap: "3", damage: 1, type: "Heavy", rules: {}, traits: "Las" },
+  ],
+  // Transport
+  coronus_c: [
+    { name: "Twin Arachnus Blaze Cannon — Concentrated", shots: 2, s: 9, ap: "2", damage: 2, type: "Heavy", rules: { armourbane: true }, traits: "Las" },
+    { name: "Twin Arachnus Blaze Cannon — Burst Fire", shots: 5, s: 6, ap: "3", damage: 1, type: "Heavy", rules: {}, traits: "Las" },
+    { name: "Hull Twin Lastrum Bolt Cannon", shots: 6, s: 6, ap: "4", damage: 2, type: "Heavy", rules: {}, traits: "Bolt" },
+    { name: "Hull Twin Neutronium Cascade Projector (+15pts opt)", shots: 1, s: 7, ap: "3", damage: 2, type: "Template", rules: { breaching6: true }, traits: "Assault" },
+  ],
+  // Armour
+  caladius_c: [
+    { name: "Twin Iliastus Accelerator Cannon", shots: 6, s: 8, ap: "3", damage: 2, type: "Heavy", rules: { breaching6: true, rapidTracking: true }, traits: "Auto" },
+    { name: "Twin Arachnus Blaze Carronade — Concentrated (Annihilator opt)", shots: 2, s: 10, ap: "2", damage: 2, type: "Ordnance", rules: { armourbane: true }, traits: "Las" },
+    { name: "Twin Arachnus Blaze Carronade — Burst (Annihilator opt)", shots: 6, s: 7, ap: "3", damage: 2, type: "Heavy", rules: {}, traits: "Las" },
+    { name: "Hull Twin Lastrum Bolt Cannon", shots: 6, s: 6, ap: "4", damage: 2, type: "Heavy", rules: {}, traits: "Bolt" },
+    { name: "Hull Twin Neutronium Cascade Projector (+15pts opt)", shots: 1, s: 7, ap: "3", damage: 2, type: "Template", rules: { breaching6: true }, traits: "Assault" },
+  ],
+  // Lord of War
+  telemon_c: [
+    { name: "Spiculus Missile Launcher", shots: 6, s: 5, ap: "4", damage: 2, type: "Heavy", rules: { breaching6: true, suppressive: true }, traits: "Missile" },
+    { name: "Arachnus Storm Cannon — Concentrated (opt)", shots: 2, s: 9, ap: "2", damage: 3, type: "Heavy", rules: { armourbane: true }, traits: "Las" },
+    { name: "Arachnus Storm Cannon — Burst (opt)", shots: 4, s: 6, ap: "3", damage: 2, type: "Heavy", rules: {}, traits: "Las" },
+    { name: "Adrathic Desolator (opt)", shots: 2, s: 7, ap: "2", damage: 4, type: "Heavy", rules: { rending: true, disintegrator: true } },
+    { name: "Iliastus Accelerator Culverin (opt)", shots: 4, s: 9, ap: "3", damage: 2, type: "Heavy", rules: { breaching5: true, rapidTracking: true }, traits: "Auto" },
+  ],
+  orion_c: [
+    { name: "Twin Arachnus Blaze Carronade — Concentrated", shots: 2, s: 10, ap: "2", damage: 2, type: "Ordnance", rules: { armourbane: true }, traits: "Las" },
+    { name: "Twin Arachnus Blaze Carronade — Burst Fire", shots: 6, s: 7, ap: "3", damage: 2, type: "Heavy", rules: {}, traits: "Las" },
+    { name: "Twin Lastrum Bolt Cannon x2", shots: 6, s: 6, ap: "4", damage: 2, type: "Heavy", rules: {}, traits: "Bolt" },
+    { name: "Spiculus Heavy Missile Pod x2", shots: 4, s: 6, ap: "4", damage: 2, type: "Heavy", rules: { breaching5: true, suppressive: true }, traits: "Missile" },
+  ],
+  ares_c: [
+    { name: "Twin Arachnus Storm Carronade — Concentrated", shots: 2, s: 10, ap: "2", damage: 2, type: "Heavy", rules: { armourbane: true }, traits: "Las" },
+    { name: "Twin Arachnus Storm Carronade — Burst Fire", shots: 6, s: 7, ap: "3", damage: 2, type: "Heavy", rules: {}, traits: "Las" },
+    { name: "Neutronium Magna-Cascade Cannon", shots: 1, s: 10, ap: "3", damage: 3, type: "Template", rules: { hellstorm: true, breaching4: true }, traits: "Assault" },
+    { name: "Infernus Firebomb Clusters x2", shots: 1, s: 6, ap: "4", damage: 2, type: "Assault", rules: { blast: true, panic: true }, traits: "Flame" },
   ],
 };
 

@@ -4,16 +4,43 @@
 // ━━━ UNIT SELECTOR MODAL ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 function UnitSelectorModal({ presets, onSelect, selectedId, onClose, accentColor = "#b8860b", title, isTarget = false, faction }) {
-  const [activeCategory, setActiveCategory] = useState(presets[0]?.category || "");
+  // Faction category prefix helpers
+  const isSACat       = (cat) => cat && cat.startsWith("SA: ");
+  const isMechCat     = (cat) => cat && cat.startsWith("MECH:");
+  const isCustodesCat = (cat) => cat && cat.startsWith("CUSTODES:");
+
+  // Filter preset categories based on selected faction:
+  //   sol_auxilia  → only "SA: *" categories
+  //   mechanicum   → only "MECH: *" categories
+  //   custodes     → only "CUSTODES: *" categories
+  //   any legion   → exclude "SA: *", "MECH: *", and "CUSTODES: *"
+  //                  (keeps legacy "SOLAR AUXILIA" for Allied ogryn)
+  const visiblePresets = useMemo(() => {
+    if (!faction) return presets;
+    if (faction === "sol_auxilia") return presets.filter(c => isSACat(c.category));
+    if (faction === "mechanicum")  return presets.filter(c => isMechCat(c.category));
+    if (faction === "custodes")    return presets.filter(c => isCustodesCat(c.category));
+    // Legion factions: exclude SA, MECH, and CUSTODES sub-categories
+    return presets.filter(c => !isSACat(c.category) && !isMechCat(c.category) && !isCustodesCat(c.category));
+  }, [presets, faction]);
+
+  const [activeCategory, setActiveCategory] = useState(visiblePresets[0]?.category || "");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredUnits = useMemo(() => {
-    if (!searchTerm) {
-      return presets.find(c => c.category === activeCategory)?.units || [];
+  // Keep activeCategory valid when faction filter changes
+  useEffect(() => {
+    if (!visiblePresets.find(c => c.category === activeCategory)) {
+      setActiveCategory(visiblePresets[0]?.category || "");
     }
-    const term = searchTerm.toLowerCase();
-    return presets.flatMap(c => c.units).filter(u => u.name.toLowerCase().includes(term));
-  }, [activeCategory, searchTerm, presets]);
+  }, [visiblePresets]);
+
+  const filteredUnits = useMemo(() => {
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      return visiblePresets.flatMap(c => c.units).filter(u => u.name.toLowerCase().includes(term));
+    }
+    return visiblePresets.find(c => c.category === activeCategory)?.units || [];
+  }, [activeCategory, searchTerm, visiblePresets]);
 
   return (
     React.createElement("div", {"style": {
@@ -40,7 +67,7 @@ function UnitSelectorModal({ presets, onSelect, selectedId, onClose, accentColor
           React.createElement("div", {"style": {
             display: "flex", gap: 0, borderBottom: "1px solid #d0c4aa",
             overflowX: "auto", flexShrink: 0
-          }}, presets.map(cat => (
+          }}, visiblePresets.map(cat => (
               React.createElement("button", {"key": cat.category, "onClick": () => setActiveCategory(cat.category), "style": {
                 padding: "10px 16px", fontSize: 11, cursor: "pointer",
                 fontFamily: "'Share Tech Mono', serif", fontWeight: activeCategory === cat.category ? 700 : 400,

@@ -95,6 +95,15 @@ var UNIT_WARGEAR_OPTIONS = {
     { label: "Vexilla (+10pts)", cost: 10, perModel: false },
     { label: "Cyber-Familiar (+10pts)", cost: 10, perModel: false },
   ],
+  centurion_sat: [
+    // Replace Saturnine disruption fist with ranged weapon
+    { label: "Twin Heavy Disintegrator (replace disruption fist, +10pts)", cost: 10, perModel: false },
+    // Replace plasma bombard with ranged weapon
+    { label: "Twin Heavy Disintegrator (replace plasma bombard, +10pts)", cost: 10, perModel: false },
+    // Secondary option if disruption fist is kept
+    { label: "Particle Shredder (+5pts)", cost: 5, perModel: false },
+    { label: "Plasma Blaster (+10pts)", cost: 10, perModel: false },
+  ],
   centurion_ta: [
     // Ranged (replace combi-bolter)
     { label: "Volkite Charger (free)", cost: 0, perModel: false },
@@ -556,6 +565,382 @@ var UNIT_WARGEAR_OPTIONS = {
     { label: "Pair Lightning Claws (+10pts/mdl)", cost: 10, perModel: true },
     { label: "Legion Standard (+20pts)", cost: 20, perModel: false },
     { label: "Grenade Harness (Sgt, +5pts)", cost: 5, perModel: false },
+  ],
+  saturnine_cmd: [
+    // Replace paired disruption fists per model
+    { label: "Plasma Bombard + Disruption Fist (+10pts/mdl)", cost: 10, perModel: true },
+    { label: "Twin Heavy Disintegrator + Disruption Fist (+20pts/mdl)", cost: 20, perModel: true },
+    { label: "Saturnine War Axe + Disruption Fist (+10pts/mdl)", cost: 10, perModel: true },
+    { label: "Saturnine Concussion Hammer + Disruption Fist (+20pts/mdl)", cost: 20, perModel: true },
+    // Secondary ranged option per model
+    { label: "Particle Shredder (+5pts/mdl)", cost: 5, perModel: true },
+    { label: "Plasma Blaster (+10pts/mdl)", cost: 10, perModel: true },
+    // Banner
+    { label: "Legion Standard (1 Chosen, +20pts)", cost: 20, perModel: false },
+  ],
+  phraetus_conclave: [
+    // Replace paired disruption fists per model
+    { label: "Plasma Bombard + Disruption Fist (+10pts/mdl)", cost: 10, perModel: true },
+    { label: "Twin Heavy Disintegrator + Disruption Fist (+20pts/mdl)", cost: 20, perModel: true },
+    { label: "Saturnine War Axe + Disruption Fist (+10pts/mdl)", cost: 10, perModel: true },
+    // Secondary ranged option per model
+    { label: "Particle Shredder (+5pts/mdl)", cost: 5, perModel: true },
+    // Phraetus Disciple transponder
+    { label: "Saturnine Teleportation Transponder (Disciple, +60pts)", cost: 60, perModel: false },
+  ],
+
+  // ════════════════════════════════════════════════════════════
+  // SOLAR AUXILIA WARGEAR OPTIONS
+  // ════════════════════════════════════════════════════════════
+
+  // ── RAPIER BATTERY ──
+  rapier: [
+    { label: "Quad Launcher (replaces Laser Destroyer, free)", cost: 0, perModel: false, exclusive: "gun" },
+    { label: "Autocannon (replaces Laser Destroyer, free)", cost: 0, perModel: false, exclusive: "gun" },
+    { label: "Searchlights (+5pts)", cost: 5, perModel: false },
+  ],
+
+  // ── INFANTRY TROOPS ──
+  lasrifle: [
+    // Optio melee (Auxilia Melee Weapons list)
+    { label: "Charnabal Sabre - Optio (+3pts)", cost: 3, perModel: false, exclusive: "optio_melee" },
+    { label: "Power Sword - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_melee" },
+    { label: "Power Fist - Optio (+10pts)", cost: 10, perModel: false, exclusive: "optio_melee" },
+    // Optio pistol (Auxilia Pistols list)
+    { label: "Blast Pistol - Optio (+3pts)", cost: 3, perModel: false, exclusive: "optio_pistol" },
+    { label: "Needle Pistol - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    { label: "Volkite Serpenta - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    { label: "Hand Flamer - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    { label: "Plasma Pistol - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    // Section equipment
+    { label: "Auxilia Vexilla (+10pts)", cost: 10, perModel: false },
+    { label: "Augury Scanner (+5pts)", cost: 5, perModel: false },
+    { label: "Command Vox (+5pts)", cost: 5, perModel: false },
+  ],
+  veletaris: [
+    // Optio melee
+    { label: "Charnabal Sabre - Optio (+3pts)", cost: 3, perModel: false, exclusive: "optio_melee" },
+    { label: "Power Sword - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_melee" },
+    { label: "Power Fist - Optio (+10pts)", cost: 10, perModel: false, exclusive: "optio_melee" },
+    // Optio pistol
+    { label: "Blast Pistol - Optio (+3pts)", cost: 3, perModel: false, exclusive: "optio_pistol" },
+    { label: "Needle Pistol - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    { label: "Volkite Serpenta - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    { label: "Hand Flamer - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    { label: "Plasma Pistol - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    // Section equipment
+    { label: "Auxilia Vexilla (+10pts)", cost: 10, perModel: false },
+    { label: "Augury Scanner (+5pts)", cost: 5, perModel: false },
+  ],
+
+  // ── SA COMMAND SECTIONS ──
+  legate_cmd_sa: [
+    // Legate melee (Auxilia Melee Weapons list)
+    { label: "Charnabal Sabre - Legate (+3pts)", cost: 3, perModel: false, exclusive: "legate_melee" },
+    { label: "Power Sword - Legate (+5pts)", cost: 5, perModel: false, exclusive: "legate_melee" },
+    { label: "Power Fist - Legate (+10pts)", cost: 10, perModel: false, exclusive: "legate_melee" },
+    // Legate pistol (Auxilia Pistols list)
+    { label: "Blast Pistol - Legate (+3pts)", cost: 3, perModel: false, exclusive: "legate_pistol" },
+    { label: "Needle Pistol - Legate (+5pts)", cost: 5, perModel: false, exclusive: "legate_pistol" },
+    { label: "Volkite Serpenta - Legate (+5pts)", cost: 5, perModel: false, exclusive: "legate_pistol" },
+    { label: "Hand Flamer - Legate (+5pts)", cost: 5, perModel: false, exclusive: "legate_pistol" },
+    { label: "Plasma Pistol - Legate (+5pts)", cost: 5, perModel: false, exclusive: "legate_pistol" },
+    // Section equipment
+    { label: "Cohorts Vexilla (+15pts)", cost: 15, perModel: false },
+    { label: "Augury Scanner (+5pts)", cost: 5, perModel: false },
+    { label: "Command Vox (+10pts)", cost: 10, perModel: false },
+  ],
+  tactical_cmd_sa: [
+    // Optio melee
+    { label: "Charnabal Sabre - Optio (+3pts)", cost: 3, perModel: false, exclusive: "optio_melee" },
+    { label: "Power Sword - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_melee" },
+    { label: "Power Fist - Optio (+10pts)", cost: 10, perModel: false, exclusive: "optio_melee" },
+    // Optio pistol
+    { label: "Blast Pistol - Optio (+3pts)", cost: 3, perModel: false, exclusive: "optio_pistol" },
+    { label: "Needle Pistol - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    { label: "Volkite Serpenta - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    { label: "Hand Flamer - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    { label: "Plasma Pistol - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    // Section equipment
+    { label: "Auxilia Vexilla (+10pts)", cost: 10, perModel: false },
+    { label: "Augury Scanner (+5pts)", cost: 5, perModel: false },
+    { label: "Command Vox (+10pts)", cost: 10, perModel: false },
+  ],
+  line_cmd_sa: [
+    // Optio melee
+    { label: "Charnabal Sabre - Optio (+3pts)", cost: 3, perModel: false, exclusive: "optio_melee" },
+    { label: "Power Sword - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_melee" },
+    { label: "Power Fist - Optio (+10pts)", cost: 10, perModel: false, exclusive: "optio_melee" },
+    // Optio pistol
+    { label: "Blast Pistol - Optio (+3pts)", cost: 3, perModel: false, exclusive: "optio_pistol" },
+    { label: "Needle Pistol - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    { label: "Volkite Serpenta - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    { label: "Hand Flamer - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    { label: "Plasma Pistol - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    // Section equipment
+    { label: "Auxilia Vexilla (+10pts)", cost: 10, perModel: false },
+    { label: "Augury Scanner (+5pts)", cost: 5, perModel: false },
+    { label: "Command Vox (+10pts)", cost: 10, perModel: false },
+  ],
+  veletaris_cmd_sa: [
+    // Optio melee
+    { label: "Charnabal Sabre - Optio (+3pts)", cost: 3, perModel: false, exclusive: "optio_melee" },
+    { label: "Power Sword - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_melee" },
+    { label: "Power Fist - Optio (+10pts)", cost: 10, perModel: false, exclusive: "optio_melee" },
+    // Optio pistol
+    { label: "Blast Pistol - Optio (+3pts)", cost: 3, perModel: false, exclusive: "optio_pistol" },
+    { label: "Needle Pistol - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    { label: "Volkite Serpenta - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    { label: "Hand Flamer - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    { label: "Plasma Pistol - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    // Section equipment
+    { label: "Auxilia Vexilla (+10pts)", cost: 10, perModel: false },
+    { label: "Augury Scanner (+5pts)", cost: 5, perModel: false },
+    { label: "Command Vox (+10pts)", cost: 10, perModel: false },
+  ],
+  hermes_cmd_sa: [
+    // Optio melee
+    { label: "Charnabal Sabre - Optio (+3pts)", cost: 3, perModel: false, exclusive: "optio_melee" },
+    { label: "Power Sword - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_melee" },
+    // Optio pistol
+    { label: "Blast Pistol - Optio (+3pts)", cost: 3, perModel: false, exclusive: "optio_pistol" },
+    { label: "Needle Pistol - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    { label: "Volkite Serpenta - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    { label: "Hand Flamer - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    { label: "Plasma Pistol - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    // Section equipment
+    { label: "Augury Scanner (+5pts)", cost: 5, perModel: false },
+    { label: "Command Vox (+10pts)", cost: 10, perModel: false },
+  ],
+  artillery_cmd_sa: [
+    // Optio melee
+    { label: "Charnabal Sabre - Optio (+3pts)", cost: 3, perModel: false, exclusive: "optio_melee" },
+    { label: "Power Sword - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_melee" },
+    // Optio pistol
+    { label: "Blast Pistol - Optio (+3pts)", cost: 3, perModel: false, exclusive: "optio_pistol" },
+    { label: "Needle Pistol - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    { label: "Volkite Serpenta - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    { label: "Hand Flamer - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    { label: "Plasma Pistol - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    // Section equipment
+    { label: "Augury Scanner (+5pts)", cost: 5, perModel: false },
+    { label: "Command Vox (+10pts)", cost: 10, perModel: false },
+  ],
+  armoured_cmd_sa: [
+    // Optio melee
+    { label: "Charnabal Sabre - Optio (+3pts)", cost: 3, perModel: false, exclusive: "optio_melee" },
+    { label: "Power Sword - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_melee" },
+    // Optio pistol
+    { label: "Blast Pistol - Optio (+3pts)", cost: 3, perModel: false, exclusive: "optio_pistol" },
+    { label: "Needle Pistol - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    { label: "Volkite Serpenta - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    { label: "Hand Flamer - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    { label: "Plasma Pistol - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    // Section equipment
+    { label: "Augury Scanner (+5pts)", cost: 5, perModel: false },
+    { label: "Command Vox (+10pts)", cost: 10, perModel: false },
+  ],
+
+  // ── SA ELITES / HEAVY ASSAULT ──
+  veletaris_vanguard_sa: [
+    // Optio melee
+    { label: "Charnabal Sabre - Optio (+3pts)", cost: 3, perModel: false, exclusive: "optio_melee" },
+    { label: "Power Sword - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_melee" },
+    { label: "Power Fist - Optio (+10pts)", cost: 10, perModel: false, exclusive: "optio_melee" },
+    // Optio pistol
+    { label: "Blast Pistol - Optio (+3pts)", cost: 3, perModel: false, exclusive: "optio_pistol" },
+    { label: "Volkite Serpenta - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    { label: "Plasma Pistol - Optio (+5pts)", cost: 5, perModel: false, exclusive: "optio_pistol" },
+    // Section equipment
+    { label: "Auxilia Vexilla (+10pts)", cost: 10, perModel: false },
+    { label: "Augury Scanner (+5pts)", cost: 5, perModel: false },
+  ],
+  charonite_sa: [
+    // No standard wargear options — equipment is fixed
+    { label: "Augury Scanner (+5pts)", cost: 5, perModel: false },
+  ],
+
+  // ── SA SUPPORT / ARTILLERY ──
+  // Rapier Battery (already in file above as rapier)
+  basilisk_sa: [
+    // Hull weapon (Auxilia Hull Weapons list)
+    { label: "Hull Heavy Flamer (free, replaces heavy bolter)", cost: 0, perModel: false, exclusive: "hull" },
+    { label: "Hull Multi-laser (free, replaces heavy bolter)", cost: 0, perModel: false, exclusive: "hull" },
+    { label: "Hull Autocannon (+5pts)", cost: 5, perModel: false, exclusive: "hull" },
+    { label: "Hull Lascannon (+10pts)", cost: 10, perModel: false, exclusive: "hull" },
+    // Pintle weapons (Auxilia Pintle Weapons list)
+    { label: "Pintle Heavy Stubber (+5pts)", cost: 5, perModel: false, exclusive: "pintle" },
+    { label: "Pintle Heavy Flamer (+10pts)", cost: 10, perModel: false, exclusive: "pintle" },
+    { label: "Pintle Multi-laser (+10pts)", cost: 10, perModel: false, exclusive: "pintle" },
+  ],
+  medusa_sa: [
+    // Hull weapon
+    { label: "Hull Heavy Flamer (free, replaces heavy bolter)", cost: 0, perModel: false, exclusive: "hull" },
+    { label: "Hull Multi-laser (free, replaces heavy bolter)", cost: 0, perModel: false, exclusive: "hull" },
+    { label: "Hull Autocannon (+5pts)", cost: 5, perModel: false, exclusive: "hull" },
+    { label: "Hull Lascannon (+10pts)", cost: 10, perModel: false, exclusive: "hull" },
+    // Pintle weapons
+    { label: "Pintle Heavy Stubber (+5pts)", cost: 5, perModel: false, exclusive: "pintle" },
+    { label: "Pintle Heavy Flamer (+10pts)", cost: 10, perModel: false, exclusive: "pintle" },
+    { label: "Pintle Multi-laser (+10pts)", cost: 10, perModel: false, exclusive: "pintle" },
+  ],
+  aethon_sa: [
+    // Main weapon options (replaces Aethon missile battery)
+    { label: "Multi-laser (free, replaces missile battery)", cost: 0, perModel: false, exclusive: "main" },
+    { label: "Lascannon (+10pts, replaces missile battery)", cost: 10, perModel: false, exclusive: "main" },
+  ],
+
+  // ── SA RECON ──
+  hermes_light_sa: [
+    // Main weapon options (replaces multi-laser)
+    { label: "Autocannon (+5pts, replaces multi-laser)", cost: 5, perModel: false, exclusive: "main" },
+    { label: "Lascannon (+10pts, replaces multi-laser)", cost: 10, perModel: false, exclusive: "main" },
+    // Additional weapons
+    { label: "Flare Launchers (+5pts)", cost: 5, perModel: false },
+    { label: "Dozer Blade (+5pts)", cost: 5, perModel: false },
+    { label: "Searchlights (+5pts)", cost: 5, perModel: false },
+  ],
+
+  // ── SA FAST ATTACK ──
+  hermes_vel_sa: [
+    // Additional weapons
+    { label: "Flare Launchers (+5pts)", cost: 5, perModel: false },
+    { label: "Searchlights (+5pts)", cost: 5, perModel: false },
+  ],
+  primaris_lightning_sa: [
+    // Weapon loadout options
+    { label: "2x Lascannon (replace autocannon, +10pts)", cost: 10, perModel: false, exclusive: "main_gun" },
+    { label: "Hellstrike Missiles x2 (+10pts)", cost: 10, perModel: false },
+    { label: "Flare Launchers (+5pts)", cost: 5, perModel: false },
+    { label: "Searchlights (+5pts)", cost: 5, perModel: false },
+  ],
+  thunderbolt_sa: [
+    // Weapon loadout options
+    { label: "Twin Lascannon (replace autocannon x2, +10pts)", cost: 10, perModel: false, exclusive: "main_gun" },
+    { label: "Hellstrike Missiles x2 (+10pts)", cost: 10, perModel: false },
+    { label: "Flare Launchers (+5pts)", cost: 5, perModel: false },
+    { label: "Searchlights (+5pts)", cost: 5, perModel: false },
+  ],
+
+  // ── SA TRANSPORTS ──
+  arvus_sa: [
+    // Optional weapon
+    { label: "Hull Heavy Bolter (+5pts)", cost: 5, perModel: false },
+    { label: "Flare Launchers (+5pts)", cost: 5, perModel: false },
+  ],
+  dracosan_sa: [
+    // Hull weapon (Auxilia Hull Weapons list)
+    { label: "Hull Heavy Flamer (free, replaces multi-laser)", cost: 0, perModel: false, exclusive: "hull" },
+    { label: "Hull Heavy Bolter (free, replaces multi-laser)", cost: 0, perModel: false, exclusive: "hull" },
+    { label: "Hull Autocannon (+5pts, replaces multi-laser)", cost: 5, perModel: false, exclusive: "hull" },
+    { label: "Hull Lascannon (+10pts, replaces multi-laser)", cost: 10, perModel: false, exclusive: "hull" },
+    // Pintle weapons
+    { label: "Pintle Heavy Stubber (+5pts)", cost: 5, perModel: false, exclusive: "pintle" },
+    { label: "Pintle Heavy Flamer (+10pts)", cost: 10, perModel: false, exclusive: "pintle" },
+    { label: "Pintle Multi-laser (+10pts)", cost: 10, perModel: false, exclusive: "pintle" },
+    // Other
+    { label: "Flare Shield (+10pts)", cost: 10, perModel: false },
+    { label: "Dozer Blade (+5pts)", cost: 5, perModel: false },
+  ],
+
+  // ── SA ARMOUR ──
+  leman_russ_strike_sa: [
+    // Hull weapon (Auxilia Hull Weapons list)
+    { label: "Hull Heavy Flamer (free, replaces heavy bolter)", cost: 0, perModel: false, exclusive: "hull" },
+    { label: "Hull Multi-laser (free, replaces heavy bolter)", cost: 0, perModel: false, exclusive: "hull" },
+    { label: "Hull Autocannon (+5pts)", cost: 5, perModel: false, exclusive: "hull" },
+    { label: "Hull Lascannon (+10pts)", cost: 10, perModel: false, exclusive: "hull" },
+    // Sponson weapons (Auxilia Sponson Weapons list)
+    { label: "Sponsons: 2x Heavy Bolters (free)", cost: 0, perModel: false, exclusive: "sponson" },
+    { label: "Sponsons: 2x Heavy Flamers (free)", cost: 0, perModel: false, exclusive: "sponson" },
+    { label: "Sponsons: 2x Multi-lasers (free)", cost: 0, perModel: false, exclusive: "sponson" },
+    { label: "Sponsons: 2x Autocannon (+10pts)", cost: 10, perModel: false, exclusive: "sponson" },
+    { label: "Sponsons: 2x Lascannon (+20pts)", cost: 20, perModel: false, exclusive: "sponson" },
+    // Pintle weapons (Auxilia Pintle Weapons list)
+    { label: "Pintle Heavy Stubber (+5pts)", cost: 5, perModel: false, exclusive: "pintle" },
+    { label: "Pintle Heavy Flamer (+10pts)", cost: 10, perModel: false, exclusive: "pintle" },
+    { label: "Pintle Multi-laser (+10pts)", cost: 10, perModel: false, exclusive: "pintle" },
+    // Other
+    { label: "Dozer Blade (+5pts)", cost: 5, perModel: false },
+    { label: "Searchlights (+5pts)", cost: 5, perModel: false },
+  ],
+  leman_russ_assault_sa: [
+    // Hull weapon
+    { label: "Hull Heavy Flamer (free, replaces heavy bolter)", cost: 0, perModel: false, exclusive: "hull" },
+    { label: "Hull Multi-laser (free, replaces heavy bolter)", cost: 0, perModel: false, exclusive: "hull" },
+    { label: "Hull Autocannon (+5pts)", cost: 5, perModel: false, exclusive: "hull" },
+    { label: "Hull Lascannon (+10pts)", cost: 10, perModel: false, exclusive: "hull" },
+    // Sponson weapons
+    { label: "Sponsons: 2x Heavy Bolters (free)", cost: 0, perModel: false, exclusive: "sponson" },
+    { label: "Sponsons: 2x Heavy Flamers (free)", cost: 0, perModel: false, exclusive: "sponson" },
+    { label: "Sponsons: 2x Multi-lasers (free)", cost: 0, perModel: false, exclusive: "sponson" },
+    { label: "Sponsons: 2x Autocannon (+10pts)", cost: 10, perModel: false, exclusive: "sponson" },
+    { label: "Sponsons: 2x Lascannon (+20pts)", cost: 20, perModel: false, exclusive: "sponson" },
+    // Pintle weapons
+    { label: "Pintle Heavy Stubber (+5pts)", cost: 5, perModel: false, exclusive: "pintle" },
+    { label: "Pintle Heavy Flamer (+10pts)", cost: 10, perModel: false, exclusive: "pintle" },
+    { label: "Pintle Multi-laser (+10pts)", cost: 10, perModel: false, exclusive: "pintle" },
+    // Other
+    { label: "Dozer Blade (+5pts)", cost: 5, perModel: false },
+    { label: "Searchlights (+5pts)", cost: 5, perModel: false },
+  ],
+
+  // ── SA LORD OF WAR ──
+  malcador_sa: [
+    // Main gun option (Battlecannon vs Twin Battlecannon variant)
+    { label: "Twin Battlecannon (replaces battlecannon, +20pts)", cost: 20, perModel: false, exclusive: "main" },
+    // Hull weapon
+    { label: "Hull Heavy Flamer (free, replaces heavy bolter)", cost: 0, perModel: false, exclusive: "hull" },
+    { label: "Hull Multi-laser (free, replaces heavy bolter)", cost: 0, perModel: false, exclusive: "hull" },
+    { label: "Hull Autocannon (+5pts)", cost: 5, perModel: false, exclusive: "hull" },
+    { label: "Hull Lascannon (+10pts)", cost: 10, perModel: false, exclusive: "hull" },
+    // Sponson weapons
+    { label: "Sponsons: 2x Heavy Bolters (free)", cost: 0, perModel: false, exclusive: "sponson" },
+    { label: "Sponsons: 2x Heavy Flamers (free)", cost: 0, perModel: false, exclusive: "sponson" },
+    { label: "Sponsons: 2x Lascannon (+20pts)", cost: 20, perModel: false, exclusive: "sponson" },
+    // Pintle weapons
+    { label: "Pintle Heavy Stubber (+5pts)", cost: 5, perModel: false, exclusive: "pintle" },
+    { label: "Pintle Heavy Flamer (+10pts)", cost: 10, perModel: false, exclusive: "pintle" },
+    { label: "Pintle Multi-laser (+10pts)", cost: 10, perModel: false, exclusive: "pintle" },
+    // Other
+    { label: "Dozer Blade (+5pts)", cost: 5, perModel: false },
+    { label: "Searchlights (+5pts)", cost: 5, perModel: false },
+  ],
+  malcador_infernus_sa: [
+    // Sponson weapons
+    { label: "Sponsons: 2x Heavy Flamers (free)", cost: 0, perModel: false, exclusive: "sponson" },
+    { label: "Sponsons: 2x Heavy Bolters (free)", cost: 0, perModel: false, exclusive: "sponson" },
+    { label: "Sponsons: 2x Multi-lasers (free)", cost: 0, perModel: false, exclusive: "sponson" },
+    { label: "Sponsons: 2x Lascannon (+20pts)", cost: 20, perModel: false, exclusive: "sponson" },
+    // Pintle weapons
+    { label: "Pintle Heavy Stubber (+5pts)", cost: 5, perModel: false, exclusive: "pintle" },
+    { label: "Pintle Heavy Flamer (+10pts)", cost: 10, perModel: false, exclusive: "pintle" },
+    { label: "Pintle Multi-laser (+10pts)", cost: 10, perModel: false, exclusive: "pintle" },
+    // Other
+    { label: "Dozer Blade (+5pts)", cost: 5, perModel: false },
+    { label: "Searchlights (+5pts)", cost: 5, perModel: false },
+  ],
+  valdor_sa: [
+    // Hull weapon
+    { label: "Hull Heavy Flamer (free, replaces lascannon)", cost: 0, perModel: false, exclusive: "hull" },
+    { label: "Hull Multi-laser (free, replaces lascannon)", cost: 0, perModel: false, exclusive: "hull" },
+    { label: "Hull Autocannon (+5pts, replaces lascannon)", cost: 5, perModel: false, exclusive: "hull" },
+    // Pintle weapons
+    { label: "Pintle Heavy Stubber (+5pts)", cost: 5, perModel: false, exclusive: "pintle" },
+    { label: "Pintle Heavy Flamer (+10pts)", cost: 10, perModel: false, exclusive: "pintle" },
+    { label: "Pintle Multi-laser (+10pts)", cost: 10, perModel: false, exclusive: "pintle" },
+    // Other
+    { label: "Dozer Blade (+5pts)", cost: 5, perModel: false },
+    { label: "Searchlights (+5pts)", cost: 5, perModel: false },
+  ],
+  stormhammer_sa: [
+    // Pintle weapons (multiple possible)
+    { label: "Pintle Heavy Stubber (+5pts)", cost: 5, perModel: false, exclusive: "pintle" },
+    { label: "Pintle Heavy Flamer (+10pts)", cost: 10, perModel: false, exclusive: "pintle" },
+    { label: "Pintle Multi-laser (+10pts)", cost: 10, perModel: false, exclusive: "pintle" },
+    // Other
+    { label: "Dozer Blade (+5pts)", cost: 5, perModel: false },
+    { label: "Searchlights (+5pts)", cost: 5, perModel: false },
   ],
 };
 

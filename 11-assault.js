@@ -95,10 +95,21 @@ function resolveWeaponGroup(group, remainTarget, log) {
     } else { sideLog.push("Instant Death - FNP cannot be used!"); }
   }
 
-  const modelCas = targetW > 1 ? Math.floor(casualties / targetW) : casualties;
-  if (targetW > 1 && casualties > 0) {
-    const rem = casualties % targetW;
-    sideLog.push(casualties + " unsaved vs " + targetW + "W models -> " + modelCas + " slain" + (rem > 0 ? ", " + rem + "W carry" : ""));
+  const isSingleTarget = remainTarget === 1;
+  let modelCas;
+  if (isSingleTarget) {
+    // Single model — no division; track total wounds dealt, model dies when wounds >= W
+    modelCas = (targetW > 1) ? (casualties >= targetW ? 1 : 0) : casualties;
+    if (targetW > 1 && casualties > 0) {
+      sideLog.push(casualties + " wound(s) dealt to single W" + targetW + " model → " +
+        (casualties >= targetW ? "MODEL SLAIN" : casualties + "/" + targetW + " wounds — model survives"));
+    }
+  } else {
+    modelCas = targetW > 1 ? Math.floor(casualties / targetW) : casualties;
+    if (targetW > 1 && casualties > 0) {
+      const rem = casualties % targetW;
+      sideLog.push(casualties + " unsaved vs " + targetW + "W models -> " + modelCas + " slain" + (rem > 0 ? ", " + rem + "W carry" : ""));
+    }
   }
 
   sideLog.forEach(t => log.push({ phase: "Initiative", text: t }));

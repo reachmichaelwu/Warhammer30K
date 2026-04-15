@@ -9,6 +9,7 @@ function resolveReturnFire(params) {
   const {
     defenderModels, returnFireShots, returnFireS, returnFireAP,
     attackerT, attackerSv, attackerInv, attackerFnp, attackerW,
+    attackerModels, // used to detect single-model attacker units
     bs, // defender's BS — if provided, use BS_TO_HIT; if not, snap shots 6+
     sgtEnabled, sgtWeapon, // optional sergeant with different weapon
   } = params;
@@ -76,9 +77,18 @@ function resolveReturnFire(params) {
         }
 
         const w = attackerW || 1;
-        squadCasualties = w > 1 ? Math.floor(unsaved / w) : unsaved;
-        if (w > 1 && unsaved > 0) {
-          log.push({ phase: "Return Fire", text: `${unsaved} unsaved vs ${w}W → ${squadCasualties} slain` });
+        const isSingleAtk = attackerModels === 1;
+        if (isSingleAtk) {
+          // Single-model attacker — no division; track wounds directly
+          squadCasualties = w > 1 ? (unsaved >= w ? 1 : 0) : unsaved;
+          if (w > 1 && unsaved > 0) {
+            log.push({ phase: "Return Fire", text: `${unsaved} wound(s) on single W${w} model → ${unsaved >= w ? "MODEL SLAIN" : unsaved + "/" + w + " wounds — model survives"}` });
+          }
+        } else {
+          squadCasualties = w > 1 ? Math.floor(unsaved / w) : unsaved;
+          if (w > 1 && unsaved > 0) {
+            log.push({ phase: "Return Fire", text: `${unsaved} unsaved vs ${w}W → ${squadCasualties} slain` });
+          }
         }
       }
     } else {
@@ -139,7 +149,10 @@ function resolveReturnFire(params) {
             log.push({ phase: "Sergeant", text: `Save (${sgtBestSave}+): ${sgtSaved} saved, ${sgtUnsaved} unsaved` });
           }
           const w = attackerW || 1;
-          sgtCasualties = w > 1 ? Math.floor(sgtUnsaved / w) : sgtUnsaved;
+          const isSingleAtk = attackerModels === 1;
+          sgtCasualties = isSingleAtk
+            ? (w > 1 ? (sgtUnsaved >= w ? 1 : 0) : sgtUnsaved)
+            : (w > 1 ? Math.floor(sgtUnsaved / w) : sgtUnsaved);
         }
       }
     }

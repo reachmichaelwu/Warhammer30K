@@ -46,37 +46,41 @@ function resolveShootingPhase(params) {
   let hitMods = [];
   // Helper: 3rd Edition Snap Shot threshold based on BS
   const getSnapThreshold = (bsVal) => {
+    if (bsVal <= 1) return 7; // BS 1 cannot snap shot (treated as impossible)
     if (bsVal <= 3) return 6;
     if (bsVal <= 5) return 5;
     if (bsVal <= 7) return 4;
-    return 3;
+    if (bsVal <= 9) return 3;
+    return 2; // BS 10+
   };
 
   let snapShooting = false;
+
+  const snapRollLabel = (threshold) => threshold >= 7 ? "FAIL (BS1 cannot snap fire)" : `${threshold}+`;
 
   // Manual Snap Shots toggle (e.g. firing at Flyers, reacting, etc.)
   if (snapShots) {
     snapShooting = true;
     toHitNeeded = getSnapThreshold(bs);
-    hitMods.push(`Snap Shots: hits on ${toHitNeeded}+ (BS${bs} snap fire)`);
+    hitMods.push(`Snap Shots: ${snapRollLabel(toHitNeeded)} (BS${bs} snap fire)`);
   }
   // Snap Shots for Heavy weapons that moved - 3rd edition: scales with BS
   if (!snapShooting && weaponType === "Heavy" && moved) {
     snapShooting = true;
     toHitNeeded = getSnapThreshold(bs);
-    hitMods.push(`Snap Shots (moved with Heavy weapon): hits on ${toHitNeeded}+ (scales with BS)`);
+    hitMods.push(`Snap Shots (moved with Heavy weapon): ${snapRollLabel(toHitNeeded)} (scales with BS)`);
   }
   // Barrage indirect fire
   if (!snapShooting && weaponType === "Barrage" && indirect) {
     snapShooting = true;
     toHitNeeded = getSnapThreshold(bs);
-    hitMods.push(`Barrage (Indirect Fire): firing without LoS, hits on ${toHitNeeded}+`);
+    hitMods.push(`Barrage (Indirect Fire): firing without LoS, ${snapRollLabel(toHitNeeded)}`);
   }
   // Barrage moved (Ordnance-type, cannot fire if moved unless specified)
   if (!snapShooting && weaponType === "Barrage" && moved && !indirect) {
     snapShooting = true;
     toHitNeeded = getSnapThreshold(bs);
-    hitMods.push(`Snap Shots (moved with Barrage weapon): hits on ${toHitNeeded}+`);
+    hitMods.push(`Snap Shots (moved with Barrage weapon): ${snapRollLabel(toHitNeeded)}`);
   }
   if (hitMods.length > 0) {
     log.push({ phase: "To Hit", text: `Modifiers: ${hitMods.join(", ")}` });

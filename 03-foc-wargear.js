@@ -16,7 +16,7 @@ var UNIT_FOC_SLOT = {
   thallax: "elites", castellax: "elites", myrmidon_dest: "elites",
   ogryn: "elites",
   praetorian_cmd_jp: "elites", praetorian_cmd: "elites",
-  tartaros_cmd: "elites", centurion_cmd: "elites", cataphractii_cmd: "elites",
+  tartaros_cmd: "elites", centurion_cmd: "elites", cataphractii_cmd: "elites", saturnine_cmd: "elites",
   // HEAVY SUPPORT
   heavy_support: "heavy", contemptor: "heavy", leviathan: "heavy",
   deredeo: "heavy", predator: "heavy", sicaran: "heavy",
@@ -29,7 +29,7 @@ var UNIT_FOC_SLOT = {
   seeker: "fast", recon: "fast", destroyer: "fast", vorax: "fast",
   // HQ
   praetor_pa: "hq", praetor_ta: "hq", praetor_sat: "hq",
-  centurion: "hq", centurion_ta: "hq", champion: "hq", master_signals: "hq",
+  centurion: "hq", centurion_ta: "hq", centurion_sat: "hq", champion: "hq", master_signals: "hq",
   vigilator: "hq", forge_lord: "hq", chaplain: "hq",
   librarian: "hq", herald: "hq", moritat: "hq", siege_breaker: "hq",
   // ── I Dark Angels ──
@@ -100,7 +100,7 @@ var UNIT_FOC_SLOT = {
   // ── XVII Word Bearers ──
   kor_phaeron: "hq",                             // High Command → hq
   erebus: "hq", argel_tal: "hq", zardu_layak: "hq",  // Command → hq
-  dark_brethren: "elites", anakatis_kul: "elites",   // Elite
+  dark_brethren: "elites", anakatis_kul: "elites", phraetus_conclave: "elites",   // Elite
   mhara_gal: "war_engine",                       // War Engine
   incendiary_wb: "troops",                       // Troops
   // ── XVIII Salamanders ──
@@ -114,6 +114,47 @@ var UNIT_FOC_SLOT = {
   armillus_dynat: "hq", saboteur: "hq", exodus_al: "hq",  // High Cmd / Command → hq
   headhunter: "recon",                           // Recon
   lernaean: "heavy_assault",                     // Heavy Assault
+  // ── SOLAR AUXILIA ──
+  // Command / HQ
+  legate_cmd_sa: "hq", tactical_cmd_sa: "hq", line_cmd_sa: "hq",
+  veletaris_cmd_sa: "hq", hermes_cmd_sa: "hq",
+  artillery_cmd_sa: "hq", armoured_cmd_sa: "hq",
+  // Troops (already in map, kept for completeness)
+  // lasrifle: "troops", veletaris: "troops", rapier: "heavy" — already defined above
+  // Elites
+  veletaris_vanguard_sa: "elites",
+  // Heavy Assault
+  charonite_sa: "heavy_assault",
+  // Support
+  basilisk_sa: "support", medusa_sa: "support", aethon_sa: "support",
+  // Recon
+  hermes_light_sa: "recon",
+  // Fast Attack
+  hermes_vel_sa: "fast", primaris_lightning_sa: "fast", thunderbolt_sa: "fast",
+  // Transports
+  arvus_sa: "transport", dracosan_sa: "transport",
+  // Armour
+  leman_russ_strike_sa: "heavy", leman_russ_assault_sa: "heavy",
+  // Lord of War
+  malcador_sa: "lord_of_war", malcador_infernus_sa: "lord_of_war",
+  valdor_sa: "lord_of_war", stormhammer_sa: "lord_of_war",
+  // ── LEGIO CUSTODES ──
+  // High Command / Command → hq
+  valdor_c: "hq", tribune_c: "hq", shield_captain_c: "hq",
+  // Troops
+  custodian_guard_c: "troops", sentinel_guard_c: "troops",
+  // Heavy Assault
+  aquilon_c: "heavy_assault",
+  // War Engines (walkers)
+  contemptor_achillus_c: "war_engine", contemptor_galatus_c: "war_engine",
+  // Fast Attack
+  venatari_c: "fast", gyrfalcon_c: "fast", pallas_c: "fast",
+  // Transport
+  coronus_c: "transport",
+  // Armour
+  caladius_c: "heavy",
+  // Lord of War
+  telemon_c: "lord_of_war", orion_c: "lord_of_war", ares_c: "lord_of_war",
 };
 
 // Equipment available to Troops and Elites
