@@ -265,6 +265,7 @@ var ADDITIONAL_DETACHMENTS = {
 // "MECHANICUM" is now split into "MECH: *" sub-categories; the helper below is used instead.
 var ALLIED_FACTION_CATEGORIES = ["SOLAR AUXILIA", "CUSTODES"];
 function isMechCategory(cat) { return cat && cat.startsWith("MECH:"); }
+function isSACategory(cat)   { return cat === "SOLAR AUXILIA" || (cat && cat.startsWith("SA: ")); }
 
 // Auxiliary Detachments — each Command slot filled unlocks 1 (p.284)
 var AUXILIARY_DETACHMENTS = {

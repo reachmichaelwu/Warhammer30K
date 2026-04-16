@@ -150,23 +150,23 @@ function resolveShootingPhase(params) {
   } else if (specialRules.poisoned) {
     poisonedValue = 4;
     toWoundNeeded = 4;
-    log.push({ phase: "To Wound", text: `Poisoned (4+): wounds on 4+ (S${strength} vs T${toughness})` });
+    log.push({ phase: "To Wound", text: `Poisoned (4+): wounds on 4+ (RS${strength} vs T${toughness})` });
   } else if (specialRules.poisoned3) {
     poisonedValue = 3;
     toWoundNeeded = 3;
-    log.push({ phase: "To Wound", text: `Poisoned (3+): wounds on 3+ (S${strength} vs T${toughness})` });
+    log.push({ phase: "To Wound", text: `Poisoned (3+): wounds on 3+ (RS${strength} vs T${toughness})` });
   } else if (specialRules.poisoned2) {
     poisonedValue = 2;
     toWoundNeeded = 2;
-    log.push({ phase: "To Wound", text: `Poisoned (2+): wounds on 2+ (S${strength} vs T${toughness})` });
+    log.push({ phase: "To Wound", text: `Poisoned (2+): wounds on 2+ (RS${strength} vs T${toughness})` });
   } else {
     toWoundNeeded = getWoundRoll(strength, toughness);
     if (toWoundNeeded === null) {
-      log.push({ phase: "To Wound", text: `S${strength} vs T${toughness}: Cannot wound! (would need 7+)` });
+      log.push({ phase: "To Wound", text: `RS${strength} vs T${toughness}: Cannot wound! (would need 7+)` });
       log.push({ phase: "Result", text: "No wounds possible. Shooting resolved." });
       return { log, rolls, casualties: 0, getsHotWounds, precisionHits, totalShots, hits, wounds: 0, unsaved: 0, deflagrateHits: 0, criticalHitWounds: 0, statusEffects: [], ldRolls: [] };
     }
-    log.push({ phase: "To Wound", text: `S${strength} vs T${toughness} → needs ${toWoundNeeded}+ to wound` });
+    log.push({ phase: "To Wound", text: `RS${strength} vs T${toughness} → needs ${toWoundNeeded}+ to wound` });
   }
 
   // 3rd Edition: Critical hits auto-wound, only roll for regular hits
@@ -355,7 +355,7 @@ function resolveShootingPhase(params) {
   // ━━ STEP 5b: Sergeant's Weapon ━━
   let sgtHits = 0, sgtWounds = 0, sgtUnsaved = 0, sgtCasualties = 0;
   if (hasSgt) {
-    log.push({ phase: "Sergeant", text: `⚔ Sergeant fires ${sgtWeapon.name} (${sgtWeapon.type} ${sgtWeapon.shots}, S${sgtWeapon.s} AP${sgtWeapon.ap} D${sgtWeapon.damage || 1})` });
+    log.push({ phase: "Sergeant", text: `⚔ Sergeant fires ${sgtWeapon.name} (${sgtWeapon.type} ${sgtWeapon.shots}, RS${sgtWeapon.s} AP${sgtWeapon.ap} D${sgtWeapon.damage || 1})` });
     
     // Sergeant shots
     let sgtTotalShots = sgtWeapon.shots;
@@ -415,7 +415,7 @@ function resolveShootingPhase(params) {
       else sgtWoundNeeded = getWoundRoll(sgtS, toughness);
       
       if (sgtWoundNeeded === null) {
-        log.push({ phase: "Sergeant", text: `  S${sgtS} vs T${toughness}: Cannot wound!` });
+        log.push({ phase: "Sergeant", text: `  RS${sgtS} vs T${toughness}: Cannot wound!` });
       } else {
         const sgtWoundRolls = rollD6s(sgtHits);
         let sgtRendingW = 0, sgtBreachingW = 0, sgtNormalW = 0;
