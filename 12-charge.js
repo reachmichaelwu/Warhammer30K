@@ -42,472 +42,485 @@ var MELEE_SPECIAL_RULES = [
   { id: "m_precision", label: "Precision Strikes", desc: "To Wound of 6 — attacker chooses which model in the target unit takes the wound" },
 ];
 
+var MELEE_SPECIAL_RULES_BY_ID = {};
+MELEE_SPECIAL_RULES.forEach(function (rule) {
+  MELEE_SPECIAL_RULES_BY_ID[rule.id] = rule;
+});
+
 // Melee weapons keyed by unit id
 // ws/i/a/w/t/sv/inv/fnp are the MODEL's base stats that get auto-filled
 // s/ap/rules are the WEAPON stats
+function meleeWeapon(name, ws, s, ap, i, a, w, t, sv, inv, fnp, rules, traits) {
+  var profile = {
+    name: name, ws: ws, s: s, ap: ap, i: i, a: a, w: w, t: t, sv: sv, inv: inv, fnp: fnp, rules: rules
+  };
+  if (traits) profile.traits = traits;
+  return profile;
+}
+
 var MELEE_WEAPON_PROFILES = {
   // LEGIONES ASTARTES
   tactical: [
-    { name: "Chain Bayonet", ws: 4, s: 4, ap: "5", i: 4, a: 1, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_shred: true }, traits: "Bayonet, Chain" },
-    { name: "Chainsword", ws: 4, s: 4, ap: "5", i: 4, a: 1, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_shred: true }, traits: "Chain" },
-    { name: "Combat Blade", ws: 4, s: 4, ap: "6", i: 4, a: 1, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: {} },
-    { name: "Bayonet (Bolt)", ws: 4, s: 4, ap: "5", i: 4, a: 1, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: {  }, traits: "Bayonet" },
+    meleeWeapon("Chain Bayonet", 4, 4, "5", 4, 1, 1, 4, "3", "-", "-", { m_shred: true }, "Bayonet, Chain"),
+    meleeWeapon("Chainsword", 4, 4, "5", 4, 1, 1, 4, "3", "-", "-", { m_shred: true }, "Chain"),
+    meleeWeapon("Combat Blade", 4, 4, "6", 4, 1, 1, 4, "3", "-", "-", {}),
+    meleeWeapon("Bayonet (Bolt)", 4, 4, "5", 4, 1, 1, 4, "3", "-", "-", {  }, "Bayonet"),
   ],
   tactical_support: [
-    { name: "Chain Bayonet", ws: 4, s: 4, ap: "5", i: 4, a: 1, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_shred: true }, traits: "Bayonet, Chain" },
-    { name: "Chainsword", ws: 4, s: 4, ap: "5", i: 4, a: 1, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_shred: true }, traits: "Chain" },
-    { name: "Combat Blade", ws: 4, s: 4, ap: "6", i: 4, a: 1, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: {} },
+    meleeWeapon("Chain Bayonet", 4, 4, "5", 4, 1, 1, 4, "3", "-", "-", { m_shred: true }, "Bayonet, Chain"),
+    meleeWeapon("Chainsword", 4, 4, "5", 4, 1, 1, 4, "3", "-", "-", { m_shred: true }, "Chain"),
+    meleeWeapon("Combat Blade", 4, 4, "6", 4, 1, 1, 4, "3", "-", "-", {}),
   ],
   heavy_support: [
-    { name: "Chain Bayonet", ws: 4, s: 4, ap: "5", i: 4, a: 1, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_shred: true }, traits: "Bayonet, Chain" },
-    { name: "Chainsword", ws: 4, s: 4, ap: "5", i: 4, a: 1, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_shred: true }, traits: "Chain" },
+    meleeWeapon("Chain Bayonet", 4, 4, "5", 4, 1, 1, 4, "3", "-", "-", { m_shred: true }, "Bayonet, Chain"),
+    meleeWeapon("Chainsword", 4, 4, "5", 4, 1, 1, 4, "3", "-", "-", { m_shred: true }, "Chain"),
   ],
   breacher: [
-    { name: "Chain Bayonet", ws: 4, s: 4, ap: "5", i: 4, a: 1, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_shred: true }, traits: "Bayonet, Chain" },
-    { name: "Chainsword", ws: 4, s: 4, ap: "5", i: 4, a: 1, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_shred: true }, traits: "Chain" },
-    { name: "Boarding Shield + Blade", ws: 4, s: 4, ap: "-", i: 4, a: 1, w: 1, t: 4, sv: "3", inv: "6", fnp: "-", rules: {} },
+    meleeWeapon("Chain Bayonet", 4, 4, "5", 4, 1, 1, 4, "3", "-", "-", { m_shred: true }, "Bayonet, Chain"),
+    meleeWeapon("Chainsword", 4, 4, "5", 4, 1, 1, 4, "3", "-", "-", { m_shred: true }, "Chain"),
+    meleeWeapon("Boarding Shield + Blade", 4, 4, "-", 4, 1, 1, 4, "3", "6", "-", {}),
   ],
   assault: [
-    { name: "Chain Bayonet", ws: 4, s: 4, ap: "5", i: 4, a: 2, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_shred: true }, traits: "Bayonet, Chain" },
-    { name: "Chainsword", ws: 4, s: 4, ap: "5", i: 4, a: 2, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_shred: true }, traits: "Chain" },
-    { name: "Power Weapon", ws: 4, s: 4, ap: "3", i: 4, a: 2, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_breaching6: true }, traits: "Power" },
-    { name: "Power Fist", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: {  }, traits: "Power" },
-    { name: "Lightning Claw", ws: 4, s: 4, ap: "3", i: 4, a: 2, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_breaching6: true, m_rending: true }, traits: "Power" },
-    { name: "Thunder Hammer", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: {  }, traits: "Power" },
+    meleeWeapon("Chain Bayonet", 4, 4, "5", 4, 2, 1, 4, "3", "-", "-", { m_shred: true }, "Bayonet, Chain"),
+    meleeWeapon("Chainsword", 4, 4, "5", 4, 2, 1, 4, "3", "-", "-", { m_shred: true }, "Chain"),
+    meleeWeapon("Power Weapon", 4, 4, "3", 4, 2, 1, 4, "3", "-", "-", { m_breaching6: true }, "Power"),
+    meleeWeapon("Power Fist", 4, 8, "2", 1, 2, 1, 4, "3", "-", "-", {  }, "Power"),
+    meleeWeapon("Lightning Claw", 4, 4, "3", 4, 2, 1, 4, "3", "-", "-", { m_breaching6: true, m_rending: true }, "Power"),
+    meleeWeapon("Thunder Hammer", 4, 8, "2", 1, 2, 1, 4, "3", "-", "-", {  }, "Power"),
   ],
   seeker: [
-    { name: "Chain Bayonet", ws: 4, s: 4, ap: "5", i: 4, a: 1, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_shred: true }, traits: "Bayonet, Chain" },
-    { name: "Chainsword", ws: 4, s: 4, ap: "5", i: 4, a: 1, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_shred: true }, traits: "Chain" },
+    meleeWeapon("Chain Bayonet", 4, 4, "5", 4, 1, 1, 4, "3", "-", "-", { m_shred: true }, "Bayonet, Chain"),
+    meleeWeapon("Chainsword", 4, 4, "5", 4, 1, 1, 4, "3", "-", "-", { m_shred: true }, "Chain"),
   ],
   recon: [
-    { name: "Chain Bayonet", ws: 4, s: 4, ap: "5", i: 4, a: 1, w: 1, t: 4, sv: "4", inv: "-", fnp: "-", rules: { m_shred: true }, traits: "Bayonet, Chain" },
-    { name: "Combat Blade", ws: 4, s: 4, ap: "6", i: 4, a: 1, w: 1, t: 4, sv: "4", inv: "-", fnp: "-", rules: {} },
+    meleeWeapon("Chain Bayonet", 4, 4, "5", 4, 1, 1, 4, "4", "-", "-", { m_shred: true }, "Bayonet, Chain"),
+    meleeWeapon("Combat Blade", 4, 4, "6", 4, 1, 1, 4, "4", "-", "-", {}),
   ],
   destroyer: [
-    { name: "Chain Bayonet", ws: 4, s: 4, ap: "5", i: 4, a: 1, w: 1, t: 4, sv: "3", inv: "-", fnp: "5", rules: { m_shred: true }, traits: "Bayonet, Chain" },
-    { name: "Chainsword", ws: 4, s: 4, ap: "5", i: 4, a: 1, w: 1, t: 4, sv: "3", inv: "-", fnp: "5", rules: { m_shred: true }, traits: "Chain" },
-    { name: "Power Weapon", ws: 4, s: 4, ap: "3", i: 4, a: 1, w: 1, t: 4, sv: "3", inv: "-", fnp: "5", rules: { m_breaching6: true }, traits: "Power" },
+    meleeWeapon("Chain Bayonet", 4, 4, "5", 4, 1, 1, 4, "3", "-", "5", { m_shred: true }, "Bayonet, Chain"),
+    meleeWeapon("Chainsword", 4, 4, "5", 4, 1, 1, 4, "3", "-", "5", { m_shred: true }, "Chain"),
+    meleeWeapon("Power Weapon", 4, 4, "3", 4, 1, 1, 4, "3", "-", "5", { m_breaching6: true }, "Power"),
   ],
   // ELITES
   veteran: [
-    { name: "Chain Bayonet", ws: 5, s: 4, ap: "5", i: 4, a: 2, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_shred: true }, traits: "Bayonet, Chain" },
-    { name: "Bayonet (Bolt)", ws: 5, s: 4, ap: "5", i: 4, a: 2, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: {  }, traits: "Bayonet" },
-    { name: "Chainsword", ws: 5, s: 4, ap: "5", i: 4, a: 2, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_shred: true }, traits: "Chain" },
-    { name: "Power Weapon", ws: 5, s: 4, ap: "3", i: 4, a: 2, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_breaching6: true }, traits: "Power" },
-    { name: "Power Fist", ws: 5, s: 8, ap: "2", i: 1, a: 2, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: {  }, traits: "Power" },
-    { name: "Lightning Claw", ws: 5, s: 4, ap: "3", i: 4, a: 2, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_breaching6: true, m_rending: true }, traits: "Power" },
-    { name: "Power Axe", ws: 5, s: 5, ap: "2", i: 3, a: 2, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_breaching5: true }, traits: "Power" },
+    meleeWeapon("Chain Bayonet", 5, 4, "5", 4, 2, 1, 4, "3", "-", "-", { m_shred: true }, "Bayonet, Chain"),
+    meleeWeapon("Bayonet (Bolt)", 5, 4, "5", 4, 2, 1, 4, "3", "-", "-", {  }, "Bayonet"),
+    meleeWeapon("Chainsword", 5, 4, "5", 4, 2, 1, 4, "3", "-", "-", { m_shred: true }, "Chain"),
+    meleeWeapon("Power Weapon", 5, 4, "3", 4, 2, 1, 4, "3", "-", "-", { m_breaching6: true }, "Power"),
+    meleeWeapon("Power Fist", 5, 8, "2", 1, 2, 1, 4, "3", "-", "-", {  }, "Power"),
+    meleeWeapon("Lightning Claw", 5, 4, "3", 4, 2, 1, 4, "3", "-", "-", { m_breaching6: true, m_rending: true }, "Power"),
+    meleeWeapon("Power Axe", 5, 5, "2", 3, 2, 1, 4, "3", "-", "-", { m_breaching5: true }, "Power"),
   ],
   praetor_pa: [
-    { name: "Paragon Blade", ws: 6, s: 5, ap: "2", i: 5, a: 4, w: 3, t: 4, sv: "2", inv: "4", fnp: "-", rules: { m_criticalHit: true } },
-    { name: "Power Fist", ws: 6, s: 8, ap: "2", i: 1, a: 4, w: 3, t: 4, sv: "2", inv: "4", fnp: "-", rules: {  }, traits: "Power" },
-    { name: "Thunder Hammer", ws: 6, s: 8, ap: "2", i: 1, a: 4, w: 3, t: 4, sv: "2", inv: "4", fnp: "-", rules: {  }, traits: "Power" },
-    { name: "Chainfist", ws: 6, s: 8, ap: "2", i: 1, a: 4, w: 3, t: 4, sv: "2", inv: "4", fnp: "-", rules: { m_armourbane: true, m_shred: true }, traits: "Chain" },
-    { name: "Power Weapon", ws: 6, s: 4, ap: "3", i: 5, a: 4, w: 3, t: 4, sv: "2", inv: "4", fnp: "-", rules: { m_breaching6: true }, traits: "Power" },
-    { name: "Lightning Claw (pair)", ws: 6, s: 4, ap: "3", i: 5, a: 5, w: 3, t: 4, sv: "2", inv: "4", fnp: "-", rules: { m_breaching6: true, m_rending: true }, traits: "Power" },
-    { name: "Power Axe", ws: 6, s: 5, ap: "2", i: 4, a: 4, w: 3, t: 4, sv: "2", inv: "4", fnp: "-", rules: { m_breaching5: true }, traits: "Power" },
+    meleeWeapon("Paragon Blade", 6, 5, "2", 5, 4, 3, 4, "2", "4", "-", { m_criticalHit: true }),
+    meleeWeapon("Power Fist", 6, 8, "2", 1, 4, 3, 4, "2", "4", "-", {  }, "Power"),
+    meleeWeapon("Thunder Hammer", 6, 8, "2", 1, 4, 3, 4, "2", "4", "-", {  }, "Power"),
+    meleeWeapon("Chainfist", 6, 8, "2", 1, 4, 3, 4, "2", "4", "-", { m_armourbane: true, m_shred: true }, "Chain"),
+    meleeWeapon("Power Weapon", 6, 4, "3", 5, 4, 3, 4, "2", "4", "-", { m_breaching6: true }, "Power"),
+    meleeWeapon("Lightning Claw (pair)", 6, 4, "3", 5, 5, 3, 4, "2", "4", "-", { m_breaching6: true, m_rending: true }, "Power"),
+    meleeWeapon("Power Axe", 6, 5, "2", 4, 4, 3, 4, "2", "4", "-", { m_breaching5: true }, "Power"),
   ],
   praetor_ta: [
-    { name: "Paragon Blade", ws: 6, s: 5, ap: "2", i: 5, a: 4, w: 3, t: 4, sv: "2", inv: "4", fnp: "-", rules: { m_criticalHit: true } },
-    { name: "Power Fist", ws: 6, s: 8, ap: "2", i: 1, a: 4, w: 3, t: 4, sv: "2", inv: "4", fnp: "-", rules: {  }, traits: "Power" },
-    { name: "Chainfist", ws: 6, s: 8, ap: "2", i: 1, a: 4, w: 3, t: 4, sv: "2", inv: "4", fnp: "-", rules: { m_armourbane: true, m_shred: true }, traits: "Chain" },
-    { name: "Lightning Claw (pair)", ws: 6, s: 4, ap: "3", i: 5, a: 5, w: 3, t: 4, sv: "2", inv: "4", fnp: "-", rules: { m_breaching6: true, m_rending: true }, traits: "Power" },
-    { name: "Thunder Hammer", ws: 6, s: 8, ap: "2", i: 1, a: 4, w: 3, t: 4, sv: "2", inv: "4", fnp: "-", rules: {  }, traits: "Power" },
-    { name: "Power Weapon", ws: 6, s: 4, ap: "3", i: 5, a: 4, w: 3, t: 4, sv: "2", inv: "4", fnp: "-", rules: { m_breaching6: true }, traits: "Power" },
+    meleeWeapon("Paragon Blade", 6, 5, "2", 5, 4, 3, 4, "2", "4", "-", { m_criticalHit: true }),
+    meleeWeapon("Power Fist", 6, 8, "2", 1, 4, 3, 4, "2", "4", "-", {  }, "Power"),
+    meleeWeapon("Chainfist", 6, 8, "2", 1, 4, 3, 4, "2", "4", "-", { m_armourbane: true, m_shred: true }, "Chain"),
+    meleeWeapon("Lightning Claw (pair)", 6, 4, "3", 5, 5, 3, 4, "2", "4", "-", { m_breaching6: true, m_rending: true }, "Power"),
+    meleeWeapon("Thunder Hammer", 6, 8, "2", 1, 4, 3, 4, "2", "4", "-", {  }, "Power"),
+    meleeWeapon("Power Weapon", 6, 4, "3", 5, 4, 3, 4, "2", "4", "-", { m_breaching6: true }, "Power"),
   ],
   praetor_sat: [
-    { name: "Saturnine War Axe", ws: 6, s: 7, ap: "2", i: 4, a: 4, w: 4, t: 5, sv: "2", inv: "4", fnp: "-", rules: { m_reapingBlow: true }, traits: "Power" },
-    { name: "Saturnine Disruption Fist", ws: 6, s: 7, ap: "2", i: 2, a: 4, w: 4, t: 5, sv: "2", inv: "4", fnp: "-", rules: {  }, traits: "Power" },
-    { name: "Saturnine Concussion Hammer", ws: 6, s: 10, ap: "2", i: 1, a: 4, w: 4, t: 5, sv: "2", inv: "4", fnp: "-", rules: { m_criticalHit: true }, traits: "Power" },
+    meleeWeapon("Saturnine War Axe", 6, 7, "2", 4, 4, 4, 5, "2", "4", "-", { m_reapingBlow: true }, "Power"),
+    meleeWeapon("Saturnine Disruption Fist", 6, 7, "2", 2, 4, 4, 5, "2", "4", "-", {  }, "Power"),
+    meleeWeapon("Saturnine Concussion Hammer", 6, 10, "2", 1, 4, 4, 5, "2", "4", "-", { m_criticalHit: true }, "Power"),
   ],
   champion: [
-    { name: "Paragon Blade", ws: 6, s: 5, ap: "2", i: 5, a: 4, w: 2, t: 4, sv: "2", inv: "4", fnp: "-", rules: { m_criticalHit: true } },
-    { name: "Power Weapon", ws: 6, s: 4, ap: "3", i: 5, a: 4, w: 2, t: 4, sv: "2", inv: "4", fnp: "-", rules: { m_breaching6: true }, traits: "Power" },
-    { name: "Power Fist", ws: 6, s: 8, ap: "2", i: 1, a: 4, w: 2, t: 4, sv: "2", inv: "4", fnp: "-", rules: {  }, traits: "Power" },
+    meleeWeapon("Paragon Blade", 6, 5, "2", 5, 4, 2, 4, "2", "4", "-", { m_criticalHit: true }),
+    meleeWeapon("Power Weapon", 6, 4, "3", 5, 4, 2, 4, "2", "4", "-", { m_breaching6: true }, "Power"),
+    meleeWeapon("Power Fist", 6, 8, "2", 1, 4, 2, 4, "2", "4", "-", {  }, "Power"),
   ],
   master_signals: [
-    { name: "Power Weapon", ws: 4, s: 4, ap: "3", i: 4, a: 2, w: 2, t: 4, sv: "2", inv: "-", fnp: "-", rules: { m_breaching6: true }, traits: "Power" },
-    { name: "Power Fist", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 2, t: 4, sv: "2", inv: "-", fnp: "-", rules: {  }, traits: "Power" },
+    meleeWeapon("Power Weapon", 4, 4, "3", 4, 2, 2, 4, "2", "-", "-", { m_breaching6: true }, "Power"),
+    meleeWeapon("Power Fist", 4, 8, "2", 1, 2, 2, 4, "2", "-", "-", {  }, "Power"),
   ],
   vigilator: [
-    { name: "Power Weapon", ws: 5, s: 4, ap: "3", i: 4, a: 3, w: 2, t: 4, sv: "2", inv: "-", fnp: "-", rules: { m_breaching6: true }, traits: "Power" },
-    { name: "Power Dagger", ws: 5, s: 4, ap: "3", i: 5, a: 3, w: 2, t: 4, sv: "2", inv: "-", fnp: "-", rules: {} },
+    meleeWeapon("Power Weapon", 5, 4, "3", 4, 3, 2, 4, "2", "-", "-", { m_breaching6: true }, "Power"),
+    meleeWeapon("Power Dagger", 5, 4, "3", 5, 3, 2, 4, "2", "-", "-", {}),
   ],
   forge_lord: [
-    { name: "Thunder Hammer", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 2, t: 4, sv: "2", inv: "-", fnp: "-", rules: {  }, traits: "Power" },
-    { name: "Power Axe", ws: 4, s: 5, ap: "2", i: 3, a: 2, w: 2, t: 4, sv: "2", inv: "-", fnp: "-", rules: { m_breaching5: true }, traits: "Power" },
-    { name: "Servo-Arm", ws: 4, s: 8, ap: "1", i: 1, a: 1, w: 2, t: 4, sv: "2", inv: "-", fnp: "-", rules: { m_unwieldy: true } },
+    meleeWeapon("Thunder Hammer", 4, 8, "2", 1, 2, 2, 4, "2", "-", "-", {  }, "Power"),
+    meleeWeapon("Power Axe", 4, 5, "2", 3, 2, 2, 4, "2", "-", "-", { m_breaching5: true }, "Power"),
+    meleeWeapon("Servo-Arm", 4, 8, "1", 1, 1, 2, 4, "2", "-", "-", { m_unwieldy: true }),
   ],
   chaplain: [
-    { name: "Crozius Arcanum", ws: 5, s: 6, ap: "3", i: 5, a: 3, w: 2, t: 4, sv: "2", inv: "4", fnp: "-", rules: { m_breaching6: true }, traits: "Power" },
+    meleeWeapon("Crozius Arcanum", 5, 6, "3", 5, 3, 2, 4, "2", "4", "-", { m_breaching6: true }, "Power"),
   ],
   librarian: [
-    { name: "Force Weapon", ws: 4, s: 4, ap: "3", i: 4, a: 2, w: 2, t: 4, sv: "2", inv: "4", fnp: "-", rules: {} },
-    { name: "Force Axe", ws: 4, s: 5, ap: "2", i: 3, a: 2, w: 2, t: 4, sv: "2", inv: "4", fnp: "-", rules: { m_force: true }, traits: "Psychic" },
-    { name: "Force Staff", ws: 4, s: 5, ap: "4", i: 4, a: 3, w: 2, t: 4, sv: "2", inv: "4", fnp: "-", rules: { m_force: true }, traits: "Psychic" },
+    meleeWeapon("Force Weapon", 4, 4, "3", 4, 2, 2, 4, "2", "4", "-", {}),
+    meleeWeapon("Force Axe", 4, 5, "2", 3, 2, 2, 4, "2", "4", "-", { m_force: true }, "Psychic"),
+    meleeWeapon("Force Staff", 4, 5, "4", 4, 3, 2, 4, "2", "4", "-", { m_force: true }, "Psychic"),
   ],
   herald: [
-    { name: "Power Weapon", ws: 5, s: 4, ap: "3", i: 4, a: 3, w: 2, t: 4, sv: "2", inv: "-", fnp: "-", rules: { m_breaching6: true }, traits: "Power" },
-    { name: "Power Fist", ws: 5, s: 8, ap: "2", i: 1, a: 3, w: 2, t: 4, sv: "2", inv: "-", fnp: "-", rules: {  }, traits: "Power" },
+    meleeWeapon("Power Weapon", 5, 4, "3", 4, 3, 2, 4, "2", "-", "-", { m_breaching6: true }, "Power"),
+    meleeWeapon("Power Fist", 5, 8, "2", 1, 3, 2, 4, "2", "-", "-", {  }, "Power"),
   ],
   moritat: [
-    { name: "Chain Glaive", ws: 5, s: 5, ap: "3", i: 4, a: 4, w: 2, t: 4, sv: "2", inv: "-", fnp: "-", rules: { m_rending: true } },
-    { name: "Power Weapon", ws: 5, s: 4, ap: "3", i: 4, a: 4, w: 2, t: 4, sv: "2", inv: "-", fnp: "-", rules: { m_breaching6: true }, traits: "Power" },
+    meleeWeapon("Chain Glaive", 5, 5, "3", 4, 4, 2, 4, "2", "-", "-", { m_rending: true }),
+    meleeWeapon("Power Weapon", 5, 4, "3", 4, 4, 2, 4, "2", "-", "-", { m_breaching6: true }, "Power"),
   ],
   siege_breaker: [
-    { name: "Thunder Hammer", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 2, t: 4, sv: "2", inv: "-", fnp: "-", rules: {  }, traits: "Power" },
-    { name: "Power Weapon", ws: 4, s: 4, ap: "3", i: 4, a: 2, w: 2, t: 4, sv: "2", inv: "-", fnp: "-", rules: { m_breaching6: true }, traits: "Power" },
+    meleeWeapon("Thunder Hammer", 4, 8, "2", 1, 2, 2, 4, "2", "-", "-", {  }, "Power"),
+    meleeWeapon("Power Weapon", 4, 4, "3", 4, 2, 2, 4, "2", "-", "-", { m_breaching6: true }, "Power"),
   ],
   centurion: [
-    { name: "Power Weapon", ws: 5, s: 4, ap: "3", i: 4, a: 3, w: 3, t: 4, sv: "2", inv: "-", fnp: "-", rules: { m_breaching6: true }, traits: "Power" },
-    { name: "Power Fist", ws: 5, s: 8, ap: "2", i: 1, a: 3, w: 3, t: 4, sv: "2", inv: "-", fnp: "-", rules: {  }, traits: "Power" },
-    { name: "Power Axe", ws: 5, s: 5, ap: "2", i: 3, a: 3, w: 3, t: 4, sv: "2", inv: "-", fnp: "-", rules: { m_breaching5: true }, traits: "Power" },
+    meleeWeapon("Power Weapon", 5, 4, "3", 4, 3, 3, 4, "2", "-", "-", { m_breaching6: true }, "Power"),
+    meleeWeapon("Power Fist", 5, 8, "2", 1, 3, 3, 4, "2", "-", "-", {  }, "Power"),
+    meleeWeapon("Power Axe", 5, 5, "2", 3, 3, 3, 4, "2", "-", "-", { m_breaching5: true }, "Power"),
   ],
   apothecary: [
-    { name: "Chain Bayonet", ws: 4, s: 4, ap: "5", i: 4, a: 1, w: 1, t: 4, sv: "3", inv: "-", fnp: "5", rules: { m_shred: true }, traits: "Bayonet, Chain" },
-    { name: "Chainsword", ws: 4, s: 4, ap: "5", i: 4, a: 1, w: 1, t: 4, sv: "3", inv: "-", fnp: "5", rules: { m_shred: true }, traits: "Chain" },
+    meleeWeapon("Chain Bayonet", 4, 4, "5", 4, 1, 1, 4, "3", "-", "5", { m_shred: true }, "Bayonet, Chain"),
+    meleeWeapon("Chainsword", 4, 4, "5", 4, 1, 1, 4, "3", "-", "5", { m_shred: true }, "Chain"),
   ],
   // TERMINATORS
   cataphractii: [
-    { name: "Power Fist", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 2, t: 5, sv: "2", inv: "4", fnp: "-", rules: {  }, traits: "Power" },
-    { name: "Chainfist", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 2, t: 5, sv: "2", inv: "4", fnp: "-", rules: { m_armourbane: true, m_shred: true }, traits: "Chain" },
-    { name: "Lightning Claw (pair)", ws: 4, s: 4, ap: "3", i: 4, a: 3, w: 2, t: 5, sv: "2", inv: "4", fnp: "-", rules: { m_breaching6: true, m_rending: true }, traits: "Power" },
-    { name: "Power Weapon", ws: 4, s: 4, ap: "3", i: 4, a: 2, w: 2, t: 5, sv: "2", inv: "4", fnp: "-", rules: { m_breaching6: true }, traits: "Power" },
-    { name: "Thunder Hammer", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 2, t: 5, sv: "2", inv: "4", fnp: "-", rules: {  }, traits: "Power" },
+    meleeWeapon("Power Fist", 4, 8, "2", 1, 2, 2, 5, "2", "4", "-", {  }, "Power"),
+    meleeWeapon("Chainfist", 4, 8, "2", 1, 2, 2, 5, "2", "4", "-", { m_armourbane: true, m_shred: true }, "Chain"),
+    meleeWeapon("Lightning Claw (pair)", 4, 4, "3", 4, 3, 2, 5, "2", "4", "-", { m_breaching6: true, m_rending: true }, "Power"),
+    meleeWeapon("Power Weapon", 4, 4, "3", 4, 2, 2, 5, "2", "4", "-", { m_breaching6: true }, "Power"),
+    meleeWeapon("Thunder Hammer", 4, 8, "2", 1, 2, 2, 5, "2", "4", "-", {  }, "Power"),
   ],
   tartaros: [
-    { name: "Power Fist", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 2, t: 5, sv: "2", inv: "5", fnp: "-", rules: {  }, traits: "Power" },
-    { name: "Chainfist", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 2, t: 5, sv: "2", inv: "5", fnp: "-", rules: { m_armourbane: true, m_shred: true }, traits: "Chain" },
-    { name: "Lightning Claw (pair)", ws: 4, s: 4, ap: "3", i: 4, a: 3, w: 2, t: 5, sv: "2", inv: "5", fnp: "-", rules: { m_breaching6: true, m_rending: true }, traits: "Power" },
-    { name: "Power Weapon", ws: 4, s: 4, ap: "3", i: 4, a: 2, w: 2, t: 5, sv: "2", inv: "5", fnp: "-", rules: { m_breaching6: true }, traits: "Power" },
-    { name: "Thunder Hammer", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 2, t: 5, sv: "2", inv: "5", fnp: "-", rules: {  }, traits: "Power" },
+    meleeWeapon("Power Fist", 4, 8, "2", 1, 2, 2, 5, "2", "5", "-", {  }, "Power"),
+    meleeWeapon("Chainfist", 4, 8, "2", 1, 2, 2, 5, "2", "5", "-", { m_armourbane: true, m_shred: true }, "Chain"),
+    meleeWeapon("Lightning Claw (pair)", 4, 4, "3", 4, 3, 2, 5, "2", "5", "-", { m_breaching6: true, m_rending: true }, "Power"),
+    meleeWeapon("Power Weapon", 4, 4, "3", 4, 2, 2, 5, "2", "5", "-", { m_breaching6: true }, "Power"),
+    meleeWeapon("Thunder Hammer", 4, 8, "2", 1, 2, 2, 5, "2", "5", "-", {  }, "Power"),
   ],
   saturnine: [
-    { name: "Saturnine Concussion Hammer", ws: 4, s: 10, ap: "2", i: 1, a: 2, w: 3, t: 5, sv: "2", inv: "5", fnp: "-", rules: { m_criticalHit: true }, traits: "Power" },
-    { name: "Saturnine War Axe", ws: 4, s: 7, ap: "2", i: 4, a: 2, w: 3, t: 5, sv: "2", inv: "5", fnp: "-", rules: { m_reapingBlow: true }, traits: "Power" },
-    { name: "Power Fist", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 3, t: 5, sv: "2", inv: "5", fnp: "-", rules: {  }, traits: "Power" },
-    { name: "Chainfist", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 3, t: 5, sv: "2", inv: "5", fnp: "-", rules: { m_armourbane: true, m_shred: true }, traits: "Chain" },
-    { name: "Thunder Hammer", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 3, t: 5, sv: "2", inv: "5", fnp: "-", rules: {  }, traits: "Power" },
+    meleeWeapon("Saturnine Concussion Hammer", 4, 10, "2", 1, 2, 3, 5, "2", "5", "-", { m_criticalHit: true }, "Power"),
+    meleeWeapon("Saturnine War Axe", 4, 7, "2", 4, 2, 3, 5, "2", "5", "-", { m_reapingBlow: true }, "Power"),
+    meleeWeapon("Power Fist", 4, 8, "2", 1, 2, 3, 5, "2", "5", "-", {  }, "Power"),
+    meleeWeapon("Chainfist", 4, 8, "2", 1, 2, 3, 5, "2", "5", "-", { m_armourbane: true, m_shred: true }, "Chain"),
+    meleeWeapon("Thunder Hammer", 4, 8, "2", 1, 2, 3, 5, "2", "5", "-", {  }, "Power"),
   ],
   // Saturnine Terminator Command Squad: WS5 S4 T6 W3 I3 A3 INV4+
   // Paired disruption fists: SM+2, AM+1, IM-2, AP2. War axe: S7, no IM. Hammer: S10, IM-2.
   saturnine_cmd: [
-    { name: "Paired Saturnine Disruption Fists", ws: 5, s: 6, ap: "2", i: 1, a: 4, w: 3, t: 6, sv: "2", inv: "4", fnp: "-", rules: {}, traits: "Power" },
-    { name: "Saturnine War Axe + Disruption Fist", ws: 5, s: 7, ap: "2", i: 3, a: 3, w: 3, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_reapingBlow: true }, traits: "Power" },
-    { name: "Saturnine Concussion Hammer + Disruption Fist", ws: 5, s: 10, ap: "2", i: 1, a: 3, w: 3, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_criticalHit: true }, traits: "Power" },
-    { name: "Plasma Bombard + Disruption Fist", ws: 5, s: 6, ap: "2", i: 1, a: 3, w: 3, t: 6, sv: "2", inv: "4", fnp: "-", rules: {}, traits: "Power" },
+    meleeWeapon("Paired Saturnine Disruption Fists", 5, 6, "2", 1, 4, 3, 6, "2", "4", "-", {}, "Power"),
+    meleeWeapon("Saturnine War Axe + Disruption Fist", 5, 7, "2", 3, 3, 3, 6, "2", "4", "-", { m_reapingBlow: true }, "Power"),
+    meleeWeapon("Saturnine Concussion Hammer + Disruption Fist", 5, 10, "2", 1, 3, 3, 6, "2", "4", "-", { m_criticalHit: true }, "Power"),
+    meleeWeapon("Plasma Bombard + Disruption Fist", 5, 6, "2", 1, 3, 3, 6, "2", "4", "-", {}, "Power"),
   ],
   // VEHICLES & DREADS
   contemptor: [
-    { name: "Dreadnought Close Combat Weapon", ws: 5, s: 7, ap: "2", i: 4, a: 4, w: 7, t: 7, sv: "2", inv: "5", fnp: "-", rules: {} },
-    { name: "Chainfist", ws: 5, s: 7, ap: "2", i: 4, a: 4, w: 7, t: 7, sv: "2", inv: "5", fnp: "-", rules: { m_armourbane: true, m_shred: true }, traits: "Chain" },
-    { name: "Graviton Ram", ws: 5, s: 8, ap: "1", i: 4, a: 4, w: 7, t: 7, sv: "2", inv: "5", fnp: "-", rules: {} },
+    meleeWeapon("Dreadnought Close Combat Weapon", 5, 7, "2", 4, 4, 7, 7, "2", "5", "-", {}),
+    meleeWeapon("Chainfist", 5, 7, "2", 4, 4, 7, 7, "2", "5", "-", { m_armourbane: true, m_shred: true }, "Chain"),
+    meleeWeapon("Graviton Ram", 5, 8, "1", 4, 4, 7, 7, "2", "5", "-", {}),
   ],
   saturnine_dread: [
-    { name: "Dreadnought Power Fist", ws: 5, s: 8, ap: "2", i: 4, a: 4, w: 9, t: 8, sv: "2", inv: "5", fnp: "-", rules: {} },
+    meleeWeapon("Dreadnought Power Fist", 5, 8, "2", 4, 4, 9, 8, "2", "5", "-", {}),
   ],
   leviathan: [
-    { name: "Leviathan Siege Drill", ws: 5, s: 10, ap: "2", i: 4, a: 4, w: 8, t: 8, sv: "2", inv: "4", fnp: "-", rules: { m_armourbane: true } },
-    { name: "Leviathan Siege Claw", ws: 5, s: 8, ap: "2", i: 4, a: 4, w: 8, t: 8, sv: "2", inv: "4", fnp: "-", rules: {  } },
+    meleeWeapon("Leviathan Siege Drill", 5, 10, "2", 4, 4, 8, 8, "2", "4", "-", { m_armourbane: true }),
+    meleeWeapon("Leviathan Siege Claw", 5, 8, "2", 4, 4, 8, 8, "2", "4", "-", {  }),
   ],
   // SOLAR AUXILIA
   lasrifle: [
-    { name: "Close Combat Weapon", ws: 2, s: 3, ap: "-", i: 3, a: 1, w: 1, t: 3, sv: "4", inv: "-", fnp: "-", rules: {} },
+    meleeWeapon("Close Combat Weapon", 2, 3, "-", 3, 1, 1, 3, "4", "-", "-", {}),
   ],
   veletaris: [
-    { name: "Power Axe", ws: 3, s: 4, ap: "2", i: 2, a: 1, w: 1, t: 3, sv: "4", inv: "-", fnp: "-", rules: { m_breaching5: true }, traits: "Power" },
-    { name: "Close Combat Weapon", ws: 3, s: 3, ap: "-", i: 3, a: 1, w: 1, t: 3, sv: "4", inv: "-", fnp: "-", rules: {} },
+    meleeWeapon("Power Axe", 3, 4, "2", 2, 1, 1, 3, "4", "-", "-", { m_breaching5: true }, "Power"),
+    meleeWeapon("Close Combat Weapon", 3, 3, "-", 3, 1, 1, 3, "4", "-", "-", {}),
   ],
   ogryn: [
-    { name: "Ogryn Charonite Claws", ws: 4, s: 6, ap: "3", i: 3, a: 3, w: 3, t: 5, sv: "4", inv: "-", fnp: "5", rules: { m_shred: true } },
+    meleeWeapon("Ogryn Charonite Claws", 4, 6, "3", 3, 3, 3, 5, "4", "-", "5", { m_shred: true }),
   ],
   // MECHANICUM
   thallax: [
-    { name: "Lightning Claws", ws: 3, s: 5, ap: "5", i: 3, a: 2, w: 2, t: 5, sv: "4", inv: "-", fnp: "5", rules: { m_rending: true } },
+    meleeWeapon("Lightning Claws", 3, 5, "5", 3, 2, 2, 5, "4", "-", "5", { m_rending: true }),
   ],
   castellax: [
-    { name: "Shock Chargers (pair)", ws: 4, s: 6, ap: "3", i: 3, a: 3, w: 4, t: 7, sv: "3", inv: "-", fnp: "-", rules: {} },
-    { name: "Siege Wrecker", ws: 4, s: 8, ap: "2", i: 3, a: 2, w: 4, t: 7, sv: "3", inv: "-", fnp: "-", rules: {} },
-    { name: "Power Blade Array", ws: 4, s: 6, ap: "3", i: 3, a: 4, w: 4, t: 7, sv: "3", inv: "-", fnp: "-", rules: { m_rending: true } },
+    meleeWeapon("Shock Chargers (pair)", 4, 6, "3", 3, 3, 4, 7, "3", "-", "-", {}),
+    meleeWeapon("Siege Wrecker", 4, 8, "2", 3, 2, 4, 7, "3", "-", "-", {}),
+    meleeWeapon("Power Blade Array", 4, 6, "3", 3, 4, 4, 7, "3", "-", "-", { m_rending: true }),
   ],
   thanatar: [
-    { name: "Thanatar Fists", ws: 3, s: 8, ap: "2", i: 2, a: 2, w: 6, t: 8, sv: "3", inv: "-", fnp: "-", rules: {} },
+    meleeWeapon("Thanatar Fists", 3, 8, "2", 2, 2, 6, 8, "3", "-", "-", {}),
   ],
   tech_thrall: [
-    { name: "Close Combat Weapon", ws: 2, s: 3, ap: "-", i: 3, a: 1, w: 1, t: 3, sv: "5", inv: "-", fnp: "6", rules: {} },
+    meleeWeapon("Close Combat Weapon", 2, 3, "-", 3, 1, 1, 3, "5", "-", "6", {}),
   ],
   myrmidon_dest: [
-    { name: "Power Weapon", ws: 4, s: 5, ap: "3", i: 3, a: 2, w: 3, t: 5, sv: "2", inv: "-", fnp: "5", rules: { m_breaching6: true }, traits: "Power" },
+    meleeWeapon("Power Weapon", 4, 5, "3", 3, 2, 3, 5, "2", "-", "5", { m_breaching6: true }, "Power"),
   ],
   vorax: [
-    { name: "Vorax Power Blades", ws: 4, s: 5, ap: "3", i: 4, a: 4, w: 4, t: 6, sv: "3", inv: "-", fnp: "-", rules: { m_rending: true } },
+    meleeWeapon("Vorax Power Blades", 4, 5, "3", 4, 4, 4, 6, "3", "-", "-", { m_rending: true }),
   ],
   // ── MECHANICUM TAGHMATA ──
   archmagos_tm: [
-    { name: "Mechadendrite Harness", ws: 5, s: 4, ap: "5", i: 4, a: 3, w: 4, t: 6, sv: "2", inv: "4", fnp: "5", rules: {} },
-    { name: "Power Weapon", ws: 5, s: 4, ap: "3", i: 4, a: 3, w: 4, t: 6, sv: "2", inv: "4", fnp: "5", rules: { m_breaching6: true }, traits: "Power" },
-    { name: "Power Fist", ws: 5, s: 8, ap: "2", i: 1, a: 3, w: 4, t: 6, sv: "2", inv: "4", fnp: "5", rules: {}, traits: "Power" },
+    meleeWeapon("Mechadendrite Harness", 5, 4, "5", 4, 3, 4, 6, "2", "4", "5", {}),
+    meleeWeapon("Power Weapon", 5, 4, "3", 4, 3, 4, 6, "2", "4", "5", { m_breaching6: true }, "Power"),
+    meleeWeapon("Power Fist", 5, 8, "2", 1, 3, 4, 6, "2", "4", "5", {}, "Power"),
   ],
   archmagos_abeyant_tm: [
-    { name: "Mechadendrite Harness", ws: 5, s: 4, ap: "5", i: 4, a: 3, w: 4, t: 7, sv: "2", inv: "4", fnp: "5", rules: {} },
-    { name: "Power Weapon", ws: 5, s: 4, ap: "3", i: 4, a: 3, w: 4, t: 7, sv: "2", inv: "4", fnp: "5", rules: { m_breaching6: true }, traits: "Power" },
-    { name: "Power Fist", ws: 5, s: 8, ap: "2", i: 1, a: 3, w: 4, t: 7, sv: "2", inv: "4", fnp: "5", rules: {}, traits: "Power" },
+    meleeWeapon("Mechadendrite Harness", 5, 4, "5", 4, 3, 4, 7, "2", "4", "5", {}),
+    meleeWeapon("Power Weapon", 5, 4, "3", 4, 3, 4, 7, "2", "4", "5", { m_breaching6: true }, "Power"),
+    meleeWeapon("Power Fist", 5, 8, "2", 1, 3, 4, 7, "2", "4", "5", {}, "Power"),
   ],
   magos_tm: [
-    { name: "Mechadendrite Harness", ws: 4, s: 4, ap: "5", i: 3, a: 2, w: 4, t: 5, sv: "2", inv: "3", fnp: "5", rules: {} },
-    { name: "Power Weapon", ws: 4, s: 4, ap: "3", i: 3, a: 2, w: 4, t: 5, sv: "2", inv: "3", fnp: "5", rules: { m_breaching6: true }, traits: "Power" },
-    { name: "Power Fist", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 4, t: 5, sv: "2", inv: "3", fnp: "5", rules: {}, traits: "Power" },
+    meleeWeapon("Mechadendrite Harness", 4, 4, "5", 3, 2, 4, 5, "2", "3", "5", {}),
+    meleeWeapon("Power Weapon", 4, 4, "3", 3, 2, 4, 5, "2", "3", "5", { m_breaching6: true }, "Power"),
+    meleeWeapon("Power Fist", 4, 8, "2", 1, 2, 4, 5, "2", "3", "5", {}, "Power"),
   ],
   magos_abeyant_tm: [
-    { name: "Mechadendrite Harness", ws: 4, s: 4, ap: "5", i: 3, a: 2, w: 4, t: 6, sv: "2", inv: "5", fnp: "5", rules: {} },
-    { name: "Power Weapon", ws: 4, s: 4, ap: "3", i: 3, a: 2, w: 4, t: 6, sv: "2", inv: "5", fnp: "5", rules: { m_breaching6: true }, traits: "Power" },
-    { name: "Power Fist", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 4, t: 6, sv: "2", inv: "5", fnp: "5", rules: {}, traits: "Power" },
+    meleeWeapon("Mechadendrite Harness", 4, 4, "5", 3, 2, 4, 6, "2", "5", "5", {}),
+    meleeWeapon("Power Weapon", 4, 4, "3", 3, 2, 4, 6, "2", "5", "5", { m_breaching6: true }, "Power"),
+    meleeWeapon("Power Fist", 4, 8, "2", 1, 2, 4, 6, "2", "5", "5", {}, "Power"),
   ],
   arcuitor_tm: [
-    { name: "Arc Maul", ws: 5, s: 6, ap: "4", i: 4, a: 2, w: 4, t: 5, sv: "2", inv: "5", fnp: "5", rules: { m_breaching5: true }, traits: "Power" },
-    { name: "Power Weapon", ws: 5, s: 4, ap: "3", i: 4, a: 2, w: 4, t: 5, sv: "2", inv: "5", fnp: "5", rules: { m_breaching6: true }, traits: "Power" },
+    meleeWeapon("Arc Maul", 5, 6, "4", 4, 2, 4, 5, "2", "5", "5", { m_breaching5: true }, "Power"),
+    meleeWeapon("Power Weapon", 5, 4, "3", 4, 2, 4, 5, "2", "5", "5", { m_breaching6: true }, "Power"),
   ],
   tech_priest_tm: [
-    { name: "Mechadendrite Harness", ws: 3, s: 3, ap: "5", i: 3, a: 1, w: 2, t: 5, sv: "3", inv: "6", fnp: "6", rules: {} },
+    meleeWeapon("Mechadendrite Harness", 3, 3, "5", 3, 1, 2, 5, "3", "6", "6", {}),
   ],
   scyllax_tm: [
-    { name: "Scyllax Combat Array", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 2, t: 5, sv: "3", inv: "6", fnp: "-", rules: { m_armourbane: true } },
+    meleeWeapon("Scyllax Combat Array", 4, 8, "2", 1, 2, 2, 5, "3", "6", "-", { m_armourbane: true }),
   ],
   secutor_tm: [
-    { name: "Power Maul", ws: 5, s: 6, ap: "4", i: 4, a: 3, w: 4, t: 5, sv: "3", inv: "5", fnp: "-", rules: { m_breaching5: true }, traits: "Power" },
-    { name: "Power Weapon", ws: 5, s: 4, ap: "3", i: 4, a: 3, w: 4, t: 5, sv: "3", inv: "5", fnp: "-", rules: { m_breaching6: true }, traits: "Power" },
+    meleeWeapon("Power Maul", 5, 6, "4", 4, 3, 4, 5, "3", "5", "-", { m_breaching5: true }, "Power"),
+    meleeWeapon("Power Weapon", 5, 4, "3", 4, 3, 4, 5, "3", "5", "-", { m_breaching6: true }, "Power"),
   ],
   tech_thrall_cov_tm: [
-    { name: "Close Combat Weapon", ws: 2, s: 3, ap: "-", i: 3, a: 1, w: 1, t: 3, sv: "6", inv: "-", fnp: "6", rules: {} },
+    meleeWeapon("Close Combat Weapon", 2, 3, "-", 3, 1, 1, 3, "6", "-", "6", {}),
   ],
   thallax_full_tm: [
-    { name: "Prehensile Mechadendrite", ws: 4, s: 4, ap: "5", i: 4, a: 2, w: 2, t: 5, sv: "3", inv: "6", fnp: "-", rules: {} },
+    meleeWeapon("Prehensile Mechadendrite", 4, 4, "5", 4, 2, 2, 5, "3", "6", "-", {}),
   ],
   ursarax_tm: [
-    { name: "Ursarax Power Claws (pair)", ws: 4, s: 4, ap: "1", i: 7, a: 2, w: 2, t: 5, sv: "3", inv: "6", fnp: "-", rules: { m_breaching5: true, m_shred: true }, traits: "Power" },
+    meleeWeapon("Ursarax Power Claws (pair)", 4, 4, "1", 7, 2, 2, 5, "3", "6", "-", { m_breaching5: true, m_shred: true }, "Power"),
   ],
   echidnax_tm: [
-    { name: "Mechadendrite Harness", ws: 4, s: 4, ap: "5", i: 4, a: 2, w: 2, t: 5, sv: "3", inv: "3", fnp: "-", rules: {} },
+    meleeWeapon("Mechadendrite Harness", 4, 4, "5", 4, 2, 2, 5, "3", "3", "-", {}),
   ],
   destructor_tm: [
-    { name: "Power Weapon", ws: 4, s: 4, ap: "3", i: 3, a: 2, w: 4, t: 5, sv: "3", inv: "5", fnp: "-", rules: { m_breaching6: true }, traits: "Power" },
+    meleeWeapon("Power Weapon", 4, 4, "3", 3, 2, 4, 5, "3", "5", "-", { m_breaching6: true }, "Power"),
   ],
   domitar_tm: [
-    { name: "Domitar Battle Fists", ws: 4, s: 6, ap: "3", i: 3, a: 3, w: 4, t: 7, sv: "2", inv: "5", fnp: "-", rules: { m_breaching5: true }, traits: "Power" },
+    meleeWeapon("Domitar Battle Fists", 4, 6, "3", 3, 3, 4, 7, "2", "5", "-", { m_breaching5: true }, "Power"),
   ],
   castellax_dest_tm: [
-    { name: "Shock Chargers (pair)", ws: 4, s: 6, ap: "3", i: 3, a: 2, w: 2, t: 6, sv: "3", inv: "6", fnp: "-", rules: {} },
-    { name: "Siege Wrecker", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 2, t: 6, sv: "3", inv: "6", fnp: "-", rules: { m_armourbane: true } },
+    meleeWeapon("Shock Chargers (pair)", 4, 6, "3", 3, 2, 2, 6, "3", "6", "-", {}),
+    meleeWeapon("Siege Wrecker", 4, 8, "2", 1, 2, 2, 6, "3", "6", "-", { m_armourbane: true }),
   ],
   castellax_battle_tm: [
-    { name: "Shock Chargers (pair)", ws: 4, s: 6, ap: "3", i: 3, a: 2, w: 4, t: 6, sv: "3", inv: "6", fnp: "-", rules: {} },
-    { name: "Siege Wrecker", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 4, t: 6, sv: "3", inv: "6", fnp: "-", rules: { m_armourbane: true } },
-    { name: "Power Blade Array", ws: 4, s: 6, ap: "3", i: 3, a: 4, w: 4, t: 6, sv: "3", inv: "6", fnp: "-", rules: { m_rending: true } },
+    meleeWeapon("Shock Chargers (pair)", 4, 6, "3", 3, 2, 4, 6, "3", "6", "-", {}),
+    meleeWeapon("Siege Wrecker", 4, 8, "2", 1, 2, 4, 6, "3", "6", "-", { m_armourbane: true }),
+    meleeWeapon("Power Blade Array", 4, 6, "3", 3, 4, 4, 6, "3", "6", "-", { m_rending: true }),
   ],
   thanatar_siege_tm: [
-    { name: "Siege Wrecker Appendages", ws: 3, s: 8, ap: "2", i: 1, a: 2, w: 10, t: 8, sv: "2", inv: "5", fnp: "-", rules: { m_armourbane: true } },
+    meleeWeapon("Siege Wrecker Appendages", 3, 8, "2", 1, 2, 10, 8, "2", "5", "-", { m_armourbane: true }),
   ],
   armiger_tm: [
-    { name: "Gyges Siege Claw", ws: 4, s: 9, ap: "3", i: 5, a: 4, w: 4, t: 7, sv: "3", inv: "5", fnp: "-", rules: { m_armourbane: true, m_breaching5: true }, traits: "Power" },
+    meleeWeapon("Gyges Siege Claw", 4, 9, "3", 5, 4, 4, 7, "3", "5", "-", { m_armourbane: true, m_breaching5: true }, "Power"),
   ],
   // ── MACHINA MALEFICA ──
   decimator_mm: [
-    { name: "Decimator Power Claw", ws: 5, s: 5, ap: "3", i: 5, a: 2, w: 3, t: 5, sv: "2", inv: "5", fnp: "-", rules: { m_breaching6: true }, traits: "Power" },
+    meleeWeapon("Decimator Power Claw", 5, 5, "3", 5, 2, 3, 5, "2", "5", "-", { m_breaching6: true }, "Power"),
   ],
   blood_slaughterer_mm: [
-    { name: "Slaughterer Blades", ws: 5, s: 6, ap: "3", i: 5, a: 4, w: 4, t: 6, sv: "3", inv: "6", fnp: "-", rules: { m_armourbane: true, m_breaching5: true } },
+    meleeWeapon("Slaughterer Blades", 5, 6, "3", 5, 4, 4, 6, "3", "6", "-", { m_armourbane: true, m_breaching5: true }),
   ],
   brass_scorpion_mm: [
-    { name: "Hellcrusher Claws", ws: 5, s: 8, ap: "2", i: 5, a: 5, w: 15, t: 8, sv: "2", inv: "5", fnp: "-", rules: { m_armourbane: true, m_breaching6: true }, traits: "Power" },
+    meleeWeapon("Hellcrusher Claws", 5, 8, "2", 5, 5, 15, 8, "2", "5", "-", { m_armourbane: true, m_breaching6: true }, "Power"),
   ],
   kytan_mm: [
-    { name: "Cleaver of Slaughter", ws: 5, s: 8, ap: "2", i: 2, a: 4, w: 14, t: 8, sv: "2", inv: "5", fnp: "-", rules: { m_shred: true } },
+    meleeWeapon("Cleaver of Slaughter", 5, 8, "2", 2, 4, 14, 8, "2", "5", "-", { m_shred: true }),
   ],
   scoria_mm: [
-    { name: "Scorian Talons", ws: 5, s: 7, ap: "2", i: 6, a: 4, w: 9, t: 7, sv: "2", inv: "4", fnp: "5", rules: { m_criticalHit: true } },
-    { name: "Vodian Sceptre", ws: 5, s: 10, ap: "2", i: 4, a: 2, w: 9, t: 7, sv: "2", inv: "4", fnp: "5", rules: {} },
+    meleeWeapon("Scorian Talons", 5, 7, "2", 6, 4, 9, 7, "2", "4", "5", { m_criticalHit: true }),
+    meleeWeapon("Vodian Sceptre", 5, 10, "2", 4, 2, 9, 7, "2", "4", "5", {}),
   ],
   draykavac_mm: [
-    { name: "Power Weapon", ws: 5, s: 4, ap: "3", i: 4, a: 3, w: 4, t: 6, sv: "2", inv: "4", fnp: "5", rules: { m_breaching6: true }, traits: "Power" },
-    { name: "Power Fist", ws: 5, s: 8, ap: "2", i: 1, a: 3, w: 4, t: 6, sv: "2", inv: "4", fnp: "5", rules: {}, traits: "Power" },
+    meleeWeapon("Power Weapon", 5, 4, "3", 4, 3, 4, 6, "2", "4", "5", { m_breaching6: true }, "Power"),
+    meleeWeapon("Power Fist", 5, 8, "2", 1, 3, 4, 6, "2", "4", "5", {}, "Power"),
   ],
   // CUSTODES
   custodian_guard: [
-    { name: "Guardian Spear", ws: 5, s: 6, ap: "2", i: 5, a: 3, w: 3, t: 5, sv: "2", inv: "4", fnp: "-", rules: {} },
-    { name: "Sentinel Blade + Shield", ws: 5, s: 5, ap: "3", i: 5, a: 3, w: 3, t: 5, sv: "2", inv: "3", fnp: "-", rules: {} },
+    meleeWeapon("Guardian Spear", 5, 6, "2", 5, 3, 3, 5, "2", "4", "-", {}),
+    meleeWeapon("Sentinel Blade + Shield", 5, 5, "3", 5, 3, 3, 5, "2", "3", "-", {}),
   ],
   sagittarum: [
-    { name: "Guardian Spear", ws: 5, s: 6, ap: "2", i: 5, a: 3, w: 3, t: 5, sv: "2", inv: "5", fnp: "-", rules: {} },
+    meleeWeapon("Guardian Spear", 5, 6, "2", 5, 3, 3, 5, "2", "5", "-", {}),
   ],
   aquilon: [
-    { name: "Solerite Power Gauntlet", ws: 5, s: 10, ap: "1", i: 5, a: 4, w: 4, t: 6, sv: "2", inv: "4", fnp: "-", rules: {} },
-    { name: "Solerite Power Talon", ws: 5, s: 6, ap: "2", i: 5, a: 5, w: 4, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_shred: true } },
+    meleeWeapon("Solerite Power Gauntlet", 5, 10, "1", 5, 4, 4, 6, "2", "4", "-", {}),
+    meleeWeapon("Solerite Power Talon", 5, 6, "2", 5, 5, 4, 6, "2", "4", "-", { m_shred: true }),
   ],
   // PRIMARCHS (LOYALIST)
   lion: [
-    { name: "Lion Sword", ws: 9, s: 7, ap: "2", i: 7, a: 6, w: 8, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_murderous: true } },
-    { name: "Wolf Blade", ws: 9, s: 6, ap: "2", i: 7, a: 6, w: 8, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_shred: true, m_rending: true } },
+    meleeWeapon("Lion Sword", 9, 7, "2", 7, 6, 8, 6, "2", "4", "-", { m_murderous: true }),
+    meleeWeapon("Wolf Blade", 9, 6, "2", 7, 6, 8, 6, "2", "4", "-", { m_shred: true, m_rending: true }),
   ],
   khan: [
-    { name: "White Tiger Dao", ws: 8, s: 7, ap: "2", i: 7, a: 6, w: 7, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_murderous: true } },
+    meleeWeapon("White Tiger Dao", 8, 7, "2", 7, 6, 7, 6, "2", "4", "-", { m_murderous: true }),
   ],
   russ: [
-    { name: "Sword of Balenight", ws: 8, s: 7, ap: "2", i: 6, a: 7, w: 8, t: 7, sv: "2", inv: "4", fnp: "-", rules: { m_murderous: true } },
-    { name: "The Axe of Helwinter", ws: 8, s: 8, ap: "2", i: 5, a: 7, w: 8, t: 7, sv: "2", inv: "4", fnp: "-", rules: { m_shred: true } },
+    meleeWeapon("Sword of Balenight", 8, 7, "2", 6, 7, 8, 7, "2", "4", "-", { m_murderous: true }),
+    meleeWeapon("The Axe of Helwinter", 8, 8, "2", 5, 7, 8, 7, "2", "4", "-", { m_shred: true }),
   ],
   dorn: [
-    { name: "Storm's Teeth (Chainsword)", ws: 8, s: 8, ap: "2", i: 5, a: 6, w: 8, t: 7, sv: "2", inv: "4", fnp: "-", rules: { m_shred: true } },
-    { name: "Auric Fist (Power Fist)", ws: 8, s: 10, ap: "1", i: 1, a: 6, w: 8, t: 7, sv: "2", inv: "4", fnp: "-", rules: { m_unwieldy: true } },
+    meleeWeapon("Storm's Teeth (Chainsword)", 8, 8, "2", 5, 6, 8, 7, "2", "4", "-", { m_shred: true }),
+    meleeWeapon("Auric Fist (Power Fist)", 8, 10, "1", 1, 6, 8, 7, "2", "4", "-", { m_unwieldy: true }),
   ],
   sanguinius: [
-    { name: "The Blade Encarmine", ws: 9, s: 7, ap: "2", i: 7, a: 7, w: 8, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_murderous: true } },
-    { name: "The Spear of Telesto", ws: 9, s: 8, ap: "1", i: 6, a: 6, w: 8, t: 6, sv: "2", inv: "4", fnp: "-", rules: {} },
-    { name: "Moonsilver Blade", ws: 9, s: 6, ap: "2", i: 7, a: 7, w: 8, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_murderous: true } },
+    meleeWeapon("The Blade Encarmine", 9, 7, "2", 7, 7, 8, 6, "2", "4", "-", { m_murderous: true }),
+    meleeWeapon("The Spear of Telesto", 9, 8, "1", 6, 6, 8, 6, "2", "4", "-", {}),
+    meleeWeapon("Moonsilver Blade", 9, 6, "2", 7, 7, 8, 6, "2", "4", "-", { m_murderous: true }),
   ],
   ferrus: [
-    { name: "Forgebreaker", ws: 7, s: 10, ap: "1", i: 5, a: 5, w: 8, t: 7, sv: "2", inv: "3", fnp: "-", rules: { m_murderous: true } },
-    { name: "Medusan Fists", ws: 7, s: 8, ap: "2", i: 5, a: 5, w: 8, t: 7, sv: "2", inv: "3", fnp: "-", rules: {} },
+    meleeWeapon("Forgebreaker", 7, 10, "1", 5, 5, 8, 7, "2", "3", "-", { m_murderous: true }),
+    meleeWeapon("Medusan Fists", 7, 8, "2", 5, 5, 8, 7, "2", "3", "-", {}),
   ],
   guilliman: [
-    { name: "The Gladius Incandor", ws: 7, s: 6, ap: "2", i: 6, a: 6, w: 7, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_murderous: true } },
-    { name: "Hand of Dominion (Fist)", ws: 7, s: 10, ap: "1", i: 1, a: 6, w: 7, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_unwieldy: true } },
+    meleeWeapon("The Gladius Incandor", 7, 6, "2", 6, 6, 7, 6, "2", "4", "-", { m_murderous: true }),
+    meleeWeapon("Hand of Dominion (Fist)", 7, 10, "1", 1, 6, 7, 6, "2", "4", "-", { m_unwieldy: true }),
   ],
   vulkan: [
-    { name: "Dawnbringer", ws: 7, s: 10, ap: "1", i: 5, a: 5, w: 9, t: 7, sv: "2", inv: "3", fnp: "-", rules: { m_murderous: true } },
+    meleeWeapon("Dawnbringer", 7, 10, "1", 5, 5, 9, 7, "2", "3", "-", { m_murderous: true }),
   ],
   corax: [
-    { name: "Raven's Talons (pair)", ws: 8, s: 6, ap: "2", i: 7, a: 7, w: 7, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_shred: true, m_rending: true } },
-    { name: "Sable's Edge", ws: 8, s: 7, ap: "2", i: 6, a: 6, w: 7, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_murderous: true } },
+    meleeWeapon("Raven's Talons (pair)", 8, 6, "2", 7, 7, 7, 6, "2", "4", "-", { m_shred: true, m_rending: true }),
+    meleeWeapon("Sable's Edge", 8, 7, "2", 6, 6, 7, 6, "2", "4", "-", { m_murderous: true }),
   ],
   // PRIMARCHS (TRAITOR)
   fulgrim: [
-    { name: "Fireblade (Sword)", ws: 9, s: 6, ap: "2", i: 8, a: 7, w: 7, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_murderous: true } },
-    { name: "Laer Blade", ws: 9, s: 7, ap: "2", i: 8, a: 7, w: 7, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_rending: true } },
+    meleeWeapon("Fireblade (Sword)", 9, 6, "2", 8, 7, 7, 6, "2", "4", "-", { m_murderous: true }),
+    meleeWeapon("Laer Blade", 9, 7, "2", 8, 7, 7, 6, "2", "4", "-", { m_rending: true }),
   ],
   perturabo: [
-    { name: "Forgebreaker", ws: 7, s: 10, ap: "1", i: 5, a: 5, w: 8, t: 7, sv: "2", inv: "3", fnp: "-", rules: { m_murderous: true } },
-    { name: "Logos (Melee)", ws: 7, s: 8, ap: "2", i: 5, a: 5, w: 8, t: 7, sv: "2", inv: "3", fnp: "-", rules: {} },
+    meleeWeapon("Forgebreaker", 7, 10, "1", 5, 5, 8, 7, "2", "3", "-", { m_murderous: true }),
+    meleeWeapon("Logos (Melee)", 7, 8, "2", 5, 5, 8, 7, "2", "3", "-", {}),
   ],
   curze: [
-    { name: "Mercy & Forgiveness (Claws)", ws: 8, s: 6, ap: "2", i: 7, a: 7, w: 7, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_shred: true, m_rending: true } },
+    meleeWeapon("Mercy & Forgiveness (Claws)", 8, 6, "2", 7, 7, 7, 6, "2", "4", "-", { m_shred: true, m_rending: true }),
   ],
   angron: [
-    { name: "Gorefather & Gorechild", ws: 9, s: 8, ap: "2", i: 6, a: 8, w: 8, t: 7, sv: "2", inv: "4", fnp: "-", rules: { m_shred: true } },
-    { name: "Spite Furnace (Fists)", ws: 9, s: 7, ap: "2", i: 6, a: 8, w: 8, t: 7, sv: "2", inv: "4", fnp: "-", rules: {} },
+    meleeWeapon("Gorefather & Gorechild", 9, 8, "2", 6, 8, 8, 7, "2", "4", "-", { m_shred: true }),
+    meleeWeapon("Spite Furnace (Fists)", 9, 7, "2", 6, 8, 8, 7, "2", "4", "-", {}),
   ],
   lorgar: [
-    { name: "Illuminarum (Crozius)", ws: 7, s: 7, ap: "2", i: 6, a: 5, w: 7, t: 6, sv: "2", inv: "4", fnp: "-", rules: {} },
-    { name: "Illuminarum (Force)", ws: 7, s: 7, ap: "2", i: 6, a: 5, w: 7, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_murderous: true } },
+    meleeWeapon("Illuminarum (Crozius)", 7, 7, "2", 6, 5, 7, 6, "2", "4", "-", {}),
+    meleeWeapon("Illuminarum (Force)", 7, 7, "2", 6, 5, 7, 6, "2", "4", "-", { m_murderous: true }),
   ],
   mortarion: [
-    { name: "Silence (Scythe)", ws: 7, s: 8, ap: "2", i: 5, a: 5, w: 9, t: 7, sv: "2", inv: "4", fnp: "5", rules: { m_murderous: true } },
-    { name: "The Lantern (Melee)", ws: 7, s: 7, ap: "2", i: 5, a: 5, w: 9, t: 7, sv: "2", inv: "4", fnp: "5", rules: {} },
+    meleeWeapon("Silence (Scythe)", 7, 8, "2", 5, 5, 9, 7, "2", "4", "5", { m_murderous: true }),
+    meleeWeapon("The Lantern (Melee)", 7, 7, "2", 5, 5, 9, 7, "2", "4", "5", {}),
   ],
   magnus: [
-    { name: "Akhenteru (Force Staff)", ws: 7, s: 8, ap: "1", i: 6, a: 5, w: 7, t: 6, sv: "2", inv: "3", fnp: "-", rules: { m_murderous: true } },
-    { name: "Psychic Blades", ws: 7, s: 6, ap: "2", i: 6, a: 6, w: 7, t: 6, sv: "2", inv: "3", fnp: "-", rules: {} },
+    meleeWeapon("Akhenteru (Force Staff)", 7, 8, "1", 6, 5, 7, 6, "2", "3", "-", { m_murderous: true }),
+    meleeWeapon("Psychic Blades", 7, 6, "2", 6, 6, 7, 6, "2", "3", "-", {}),
   ],
   horus: [
-    { name: "Worldbreaker (Mace)", ws: 8, s: 10, ap: "1", i: 6, a: 6, w: 8, t: 7, sv: "2", inv: "4", fnp: "-", rules: { m_murderous: true } },
-    { name: "Talon of Horus (Claw)", ws: 8, s: 7, ap: "2", i: 7, a: 7, w: 8, t: 7, sv: "2", inv: "4", fnp: "-", rules: { m_shred: true } },
+    meleeWeapon("Worldbreaker (Mace)", 8, 10, "1", 6, 6, 8, 7, "2", "4", "-", { m_murderous: true }),
+    meleeWeapon("Talon of Horus (Claw)", 8, 7, "2", 7, 7, 8, 7, "2", "4", "-", { m_shred: true }),
   ],
   alpharius: [
-    { name: "The Pale Spear", ws: 7, s: 7, ap: "1", i: 6, a: 6, w: 7, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_murderous: true } },
+    meleeWeapon("The Pale Spear", 7, 7, "1", 6, 6, 7, 6, "2", "4", "-", { m_murderous: true }),
   ],
   daemon_lesser: [
-    { name: "Warp Claws", ws: 3, s: 4, ap: "-", i: 4, a: 2, w: 1, t: 4, sv: "-", inv: "5", fnp: "-", rules: {} },
+    meleeWeapon("Warp Claws", 3, 4, "-", 4, 2, 1, 4, "-", "5", "-", {}),
   ],
   daemon_greater: [
-    { name: "Daemon Weapon", ws: 6, s: 7, ap: "2", i: 6, a: 5, w: 6, t: 6, sv: "-", inv: "4", fnp: "-", rules: { m_murderous: true } },
+    meleeWeapon("Daemon Weapon", 6, 7, "2", 6, 5, 6, 6, "-", "4", "-", { m_murderous: true }),
   ],
   // FAST ATTACK
   scimitar_jetbike: [
-    { name: "Chainsword", ws: 4, s: 4, ap: "5", i: 4, a: 1, w: 2, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_shred: true }, traits: "Chain" },
+    meleeWeapon("Chainsword", 4, 4, "5", 4, 1, 2, 4, "3", "-", "-", { m_shred: true }, "Chain"),
   ],
   javelin: [
-    { name: "Close Combat Attack", ws: 4, s: 4, ap: "-", i: 4, a: 2, w: 4, t: 6, sv: "3", inv: "-", fnp: "-", rules: {} },
+    meleeWeapon("Close Combat Attack", 4, 4, "-", 4, 2, 4, 6, "3", "-", "-", {}),
   ],
   land_speeder: [
-    { name: "Close Combat Attack", ws: 4, s: 4, ap: "-", i: 4, a: 2, w: 3, t: 5, sv: "3", inv: "-", fnp: "-", rules: {} },
+    meleeWeapon("Close Combat Attack", 4, 4, "-", 4, 2, 3, 5, "3", "-", "-", {}),
   ],
   // ── COMMAND (missing melee) ──
   optae: [
-    { name: "Chainsword", ws: 4, s: 4, ap: "5", i: 4, a: 2, w: 2, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_shred: true }, traits: "Chain" },
-    { name: "Power Weapon", ws: 4, s: 4, ap: "3", i: 4, a: 2, w: 2, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_breaching6: true }, traits: "Power" },
-    { name: "Power Fist", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 2, t: 4, sv: "3", inv: "-", fnp: "-", rules: {  }, traits: "Power" },
-    { name: "Thunder Hammer", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 2, t: 4, sv: "3", inv: "-", fnp: "-", rules: {  }, traits: "Power" },
+    meleeWeapon("Chainsword", 4, 4, "5", 4, 2, 2, 4, "3", "-", "-", { m_shred: true }, "Chain"),
+    meleeWeapon("Power Weapon", 4, 4, "3", 4, 2, 2, 4, "3", "-", "-", { m_breaching6: true }, "Power"),
+    meleeWeapon("Power Fist", 4, 8, "2", 1, 2, 2, 4, "3", "-", "-", {  }, "Power"),
+    meleeWeapon("Thunder Hammer", 4, 8, "2", 1, 2, 2, 4, "3", "-", "-", {  }, "Power"),
   ],
   centurion_ta: [
-    { name: "Power Weapon", ws: 5, s: 4, ap: "3", i: 4, a: 3, w: 3, t: 4, sv: "2", inv: "4", fnp: "-", rules: { m_breaching6: true }, traits: "Power" },
-    { name: "Lightning Claw (pair)", ws: 5, s: 4, ap: "3", i: 4, a: 3, w: 3, t: 4, sv: "2", inv: "4", fnp: "-", rules: { m_rending: true, m_breaching6: true }, traits: "Power" },
-    { name: "Power Fist", ws: 5, s: 8, ap: "2", i: 1, a: 3, w: 3, t: 4, sv: "2", inv: "4", fnp: "-", rules: {  }, traits: "Power" },
-    { name: "Chainfist", ws: 5, s: 8, ap: "2", i: 1, a: 3, w: 3, t: 4, sv: "2", inv: "4", fnp: "-", rules: { m_armourbane: true, m_shred: true }, traits: "Chain" },
-    { name: "Thunder Hammer", ws: 5, s: 8, ap: "2", i: 1, a: 3, w: 3, t: 4, sv: "2", inv: "4", fnp: "-", rules: {  }, traits: "Power" },
+    meleeWeapon("Power Weapon", 5, 4, "3", 4, 3, 3, 4, "2", "4", "-", { m_breaching6: true }, "Power"),
+    meleeWeapon("Lightning Claw (pair)", 5, 4, "3", 4, 3, 3, 4, "2", "4", "-", { m_rending: true, m_breaching6: true }, "Power"),
+    meleeWeapon("Power Fist", 5, 8, "2", 1, 3, 3, 4, "2", "4", "-", {  }, "Power"),
+    meleeWeapon("Chainfist", 5, 8, "2", 1, 3, 3, 4, "2", "4", "-", { m_armourbane: true, m_shred: true }, "Chain"),
+    meleeWeapon("Thunder Hammer", 5, 8, "2", 1, 3, 3, 4, "2", "4", "-", {  }, "Power"),
   ],
   // Centurion in Saturnine Terminator Armour: WS5 S4 T6 W5 I4 A3 INV4+
   // Saturnine Disruption Fist: SM+2, IM-2, AP2, no AM bonus (single fist)
   centurion_sat: [
-    { name: "Saturnine Disruption Fist", ws: 5, s: 6, ap: "2", i: 2, a: 3, w: 5, t: 6, sv: "2", inv: "4", fnp: "-", rules: {}, traits: "Power" },
+    meleeWeapon("Saturnine Disruption Fist", 5, 6, "2", 2, 3, 5, 6, "2", "4", "-", {}, "Power"),
   ],
   esoterist: [
-    { name: "Force Weapon", ws: 4, s: 5, ap: "3", i: 4, a: 2, w: 2, t: 4, sv: "3", inv: "-", fnp: "-", rules: {  }, traits: "Psychic" },
+    meleeWeapon("Force Weapon", 4, 5, "3", 4, 2, 2, 4, "3", "-", "-", {  }, "Psychic"),
   ],
   praevian: [
-    { name: "Close Combat Weapon", ws: 4, s: 4, ap: "-", i: 4, a: 2, w: 2, t: 4, sv: "3", inv: "-", fnp: "5", rules: {  } },
+    meleeWeapon("Close Combat Weapon", 4, 4, "-", 4, 2, 2, 4, "3", "-", "5", {  }),
   ],
   overseer: [
-    { name: "Power Lash", ws: 4, s: 5, ap: "3", i: 4, a: 2, w: 2, t: 4, sv: "3", inv: "-", fnp: "-", rules: {  }, traits: "Power" },
-    { name: "Power Maul", ws: 4, s: 6, ap: "3", i: 4, a: 2, w: 2, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_breaching6: true }, traits: "Power" },
+    meleeWeapon("Power Lash", 4, 5, "3", 4, 2, 2, 4, "3", "-", "-", {  }, "Power"),
+    meleeWeapon("Power Maul", 4, 6, "3", 4, 2, 2, 4, "3", "-", "-", { m_breaching6: true }, "Power"),
   ],
   techmarine: [
-    { name: "Power Axe", ws: 4, s: 5, ap: "2", i: 3, a: 2, w: 1, t: 4, sv: "2", inv: "-", fnp: "-", rules: { m_breaching5: true }, traits: "Power" },
-    { name: "Servo-arm", ws: 4, s: 8, ap: "2", i: 1, a: 1, w: 1, t: 4, sv: "2", inv: "-", fnp: "-", rules: {  }, traits: "" },
+    meleeWeapon("Power Axe", 4, 5, "2", 3, 2, 1, 4, "2", "-", "-", { m_breaching5: true }, "Power"),
+    meleeWeapon("Servo-arm", 4, 8, "2", 1, 1, 1, 4, "2", "-", "-", {  }),
   ],
   despoiler: [
-    { name: "Chainsword", ws: 4, s: 4, ap: "5", i: 4, a: 1, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_shred: true }, traits: "Chain" },
+    meleeWeapon("Chainsword", 4, 4, "5", 4, 1, 1, 4, "3", "-", "-", { m_shred: true }, "Chain"),
     { name: "Heavy Chainsword", ws: 4, s: 6, ap: "4", i: 3, a: 1, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_shred: true }, traits: "Chain", defaultModels: 2 },
     { name: "Power Weapon", ws: 4, s: 4, ap: "3", i: 4, a: 1, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_breaching6: true }, traits: "Power", defaultModels: 2 },
     { name: "Charnabal Sabre", ws: 4, s: 4, ap: "-", i: 5, a: 1, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_breaching6: true }, traits: "Charnabal", defaultModels: 2 },
   ],
   veteran_assault: [
-    { name: "Chainsword", ws: 5, s: 4, ap: "5", i: 4, a: 2, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_shred: true }, traits: "Chain" },
-    { name: "Power Weapon", ws: 5, s: 4, ap: "3", i: 4, a: 2, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_breaching6: true }, traits: "Power" },
+    meleeWeapon("Chainsword", 5, 4, "5", 4, 2, 1, 4, "3", "-", "-", { m_shred: true }, "Chain"),
+    meleeWeapon("Power Weapon", 5, 4, "3", 4, 2, 1, 4, "3", "-", "-", { m_breaching6: true }, "Power"),
     { name: "Heavy Chainaxe", ws: 5, s: 7, ap: "4", i: 3, a: 2, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_shred: true }, traits: "Chain", defaultModels: 2 },
     { name: "Heavy Chainsword", ws: 5, s: 6, ap: "4", i: 3, a: 2, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_shred: true }, traits: "Chain", defaultModels: 2 },
-    { name: "Lightning Claw (pair)", ws: 5, s: 4, ap: "3", i: 4, a: 2, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_rending: true, m_breaching6: true }, traits: "Power" },
+    meleeWeapon("Lightning Claw (pair)", 5, 4, "3", 4, 2, 1, 4, "3", "-", "-", { m_rending: true, m_breaching6: true }, "Power"),
   ],
   // ── RETINUE (Command Squads) ──
   praetorian_cmd: [
-    { name: "Close Combat Weapon", ws: 5, s: 4, ap: "-", i: 4, a: 2, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: {  } },
-    { name: "Power Weapon", ws: 5, s: 4, ap: "3", i: 4, a: 2, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_breaching6: true }, traits: "Power" },
-    { name: "Lightning Claw (pair)", ws: 5, s: 4, ap: "3", i: 4, a: 2, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_rending: true, m_breaching6: true }, traits: "Power" },
+    meleeWeapon("Close Combat Weapon", 5, 4, "-", 4, 2, 1, 4, "3", "-", "-", {  }),
+    meleeWeapon("Power Weapon", 5, 4, "3", 4, 2, 1, 4, "3", "-", "-", { m_breaching6: true }, "Power"),
+    meleeWeapon("Lightning Claw (pair)", 5, 4, "3", 4, 2, 1, 4, "3", "-", "-", { m_rending: true, m_breaching6: true }, "Power"),
   ],
   praetorian_cmd_jp: [
-    { name: "Close Combat Weapon", ws: 5, s: 4, ap: "-", i: 4, a: 2, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: {  } },
-    { name: "Power Weapon", ws: 5, s: 4, ap: "3", i: 4, a: 2, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_breaching6: true }, traits: "Power" },
-    { name: "Lightning Claw (pair)", ws: 5, s: 4, ap: "3", i: 4, a: 2, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_rending: true, m_breaching6: true }, traits: "Power" },
+    meleeWeapon("Close Combat Weapon", 5, 4, "-", 4, 2, 1, 4, "3", "-", "-", {  }),
+    meleeWeapon("Power Weapon", 5, 4, "3", 4, 2, 1, 4, "3", "-", "-", { m_breaching6: true }, "Power"),
+    meleeWeapon("Lightning Claw (pair)", 5, 4, "3", 4, 2, 1, 4, "3", "-", "-", { m_rending: true, m_breaching6: true }, "Power"),
   ],
   centurion_cmd: [
-    { name: "Close Combat Weapon", ws: 5, s: 4, ap: "-", i: 4, a: 2, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: {  } },
-    { name: "Power Weapon", ws: 5, s: 4, ap: "3", i: 4, a: 2, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_breaching6: true }, traits: "Power" },
-    { name: "Lightning Claw (pair)", ws: 5, s: 4, ap: "3", i: 4, a: 2, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_rending: true, m_breaching6: true }, traits: "Power" },
+    meleeWeapon("Close Combat Weapon", 5, 4, "-", 4, 2, 1, 4, "3", "-", "-", {  }),
+    meleeWeapon("Power Weapon", 5, 4, "3", 4, 2, 1, 4, "3", "-", "-", { m_breaching6: true }, "Power"),
+    meleeWeapon("Lightning Claw (pair)", 5, 4, "3", 4, 2, 1, 4, "3", "-", "-", { m_rending: true, m_breaching6: true }, "Power"),
   ],
   tartaros_cmd: [
-    { name: "Power Weapon", ws: 5, s: 4, ap: "3", i: 4, a: 2, w: 2, t: 5, sv: "2", inv: "5", fnp: "-", rules: { m_breaching6: true }, traits: "Power" },
-    { name: "Lightning Claw", ws: 5, s: 4, ap: "3", i: 4, a: 2, w: 2, t: 5, sv: "2", inv: "5", fnp: "-", rules: { m_rending: true, m_breaching6: true }, traits: "Power" },
-    { name: "Lightning Claw (pair)", ws: 5, s: 4, ap: "3", i: 4, a: 2, w: 2, t: 5, sv: "2", inv: "5", fnp: "-", rules: { m_rending: true, m_breaching6: true }, traits: "Power" },
+    meleeWeapon("Power Weapon", 5, 4, "3", 4, 2, 2, 5, "2", "5", "-", { m_breaching6: true }, "Power"),
+    meleeWeapon("Lightning Claw", 5, 4, "3", 4, 2, 2, 5, "2", "5", "-", { m_rending: true, m_breaching6: true }, "Power"),
+    meleeWeapon("Lightning Claw (pair)", 5, 4, "3", 4, 2, 2, 5, "2", "5", "-", { m_rending: true, m_breaching6: true }, "Power"),
   ],
   cataphractii_cmd: [
-    { name: "Power Weapon", ws: 5, s: 4, ap: "3", i: 4, a: 2, w: 2, t: 5, sv: "2", inv: "4", fnp: "-", rules: { m_breaching6: true }, traits: "Power" },
-    { name: "Power Fist", ws: 5, s: 8, ap: "2", i: 1, a: 2, w: 2, t: 5, sv: "2", inv: "4", fnp: "-", rules: {  }, traits: "Power" },
-    { name: "Chainfist", ws: 5, s: 8, ap: "2", i: 1, a: 2, w: 2, t: 5, sv: "2", inv: "4", fnp: "-", rules: { m_armourbane: true, m_shred: true }, traits: "Chain" },
-    { name: "Thunder Hammer", ws: 5, s: 8, ap: "2", i: 1, a: 2, w: 2, t: 5, sv: "2", inv: "4", fnp: "-", rules: {  }, traits: "Power" },
-    { name: "Lightning Claw (pair)", ws: 5, s: 4, ap: "3", i: 4, a: 2, w: 2, t: 5, sv: "2", inv: "4", fnp: "-", rules: { m_rending: true, m_breaching6: true }, traits: "Power" },
+    meleeWeapon("Power Weapon", 5, 4, "3", 4, 2, 2, 5, "2", "4", "-", { m_breaching6: true }, "Power"),
+    meleeWeapon("Power Fist", 5, 8, "2", 1, 2, 2, 5, "2", "4", "-", {  }, "Power"),
+    meleeWeapon("Chainfist", 5, 8, "2", 1, 2, 2, 5, "2", "4", "-", { m_armourbane: true, m_shred: true }, "Chain"),
+    meleeWeapon("Thunder Hammer", 5, 8, "2", 1, 2, 2, 5, "2", "4", "-", {  }, "Power"),
+    meleeWeapon("Lightning Claw (pair)", 5, 4, "3", 4, 2, 2, 5, "2", "4", "-", { m_rending: true, m_breaching6: true }, "Power"),
   ],
   // ── RECON ──
   outrider: [
-    { name: "Chainsword", ws: 4, s: 4, ap: "5", i: 4, a: 1, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { m_shred: true }, traits: "Chain" },
-    { name: "Astartes Shotgun (melee)", ws: 4, s: 4, ap: "-", i: 4, a: 1, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", rules: { stun: true } },
+    meleeWeapon("Chainsword", 4, 4, "5", 4, 1, 1, 4, "3", "-", "-", { m_shred: true }, "Chain"),
+    meleeWeapon("Astartes Shotgun (melee)", 4, 4, "-", 4, 1, 1, 4, "3", "-", "-", { stun: true }),
   ],
   // ─── LEGION NAMED CHARACTERS ───
   // I: Dark Angels
@@ -805,9 +818,9 @@ var MELEE_WEAPON_PROFILES = {
   // Phraetus Anointed Conclave: WS5 S4 T6 W3 I3 A3 INV4+
   // Paired disruption fists: SM+2, AM+1, IM-2, AP2. War axe: S7, I unchanged.
   phraetus_conclave: [
-    { name: "Paired Saturnine Disruption Fists", ws: 5, s: 6, ap: "2", i: 1, a: 4, w: 3, t: 6, sv: "2", inv: "4", fnp: "-", rules: {}, traits: "Power" },
-    { name: "Saturnine War Axe + Disruption Fist", ws: 5, s: 7, ap: "2", i: 3, a: 3, w: 3, t: 6, sv: "2", inv: "4", fnp: "-", rules: { m_reapingBlow: true }, traits: "Power" },
-    { name: "Plasma Bombard + Disruption Fist", ws: 5, s: 6, ap: "2", i: 1, a: 3, w: 3, t: 6, sv: "2", inv: "4", fnp: "-", rules: {}, traits: "Power" },
+    meleeWeapon("Paired Saturnine Disruption Fists", 5, 6, "2", 1, 4, 3, 6, "2", "4", "-", {}, "Power"),
+    meleeWeapon("Saturnine War Axe + Disruption Fist", 5, 7, "2", 3, 3, 3, 6, "2", "4", "-", { m_reapingBlow: true }, "Power"),
+    meleeWeapon("Plasma Bombard + Disruption Fist", 5, 6, "2", 1, 3, 3, 6, "2", "4", "-", {}, "Power"),
   ],
   incendiary_wb: [
     { name: "Chainsword", ws: 4, s: 4, ap: "5", i: 4, a: 1, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", ld: 8, rules: { m_shred: true } },

@@ -13,8 +13,8 @@ function UnitSelectorModal({ presets, onSelect, selectedId, onClose, accentColor
 
   // For a specific legion faction (not legiones_astartes/SA/MECH/CUSTODES), look up
   // the Roman numeral so we can match its own category (e.g. "I: " for dark_angels).
-  const factionNumeral = (typeof LEGION_FACTIONS !== "undefined")
-    ? ((LEGION_FACTIONS.find(f => f.id === faction) || {}).numeral || null)
+  const factionNumeral = (typeof LEGION_FACTION_BY_ID !== "undefined")
+    ? ((LEGION_FACTION_BY_ID[faction] || {}).numeral || null)
     : null;
   // A "specific legion" means a named legion (not the generic catch-all).
   const isSpecificLegion = faction
@@ -82,7 +82,8 @@ function UnitSelectorModal({ presets, onSelect, selectedId, onClose, accentColor
       const term = searchTerm.toLowerCase();
       return visiblePresets.flatMap(c => c.units).filter(u => u.name.toLowerCase().includes(term));
     }
-    return visiblePresets.find(c => c.category === activeCategory)?.units || [];
+    const activePreset = visiblePresets.find(c => c.category === activeCategory);
+    return activePreset ? activePreset.units : [];
   }, [activeCategory, searchTerm, visiblePresets]);
 
   return (
@@ -275,4 +276,3 @@ function CheckToggle({ checked, label, onChange }) {
 }
 
 // ━━━ MAIN APP ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-

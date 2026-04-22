@@ -1156,6 +1156,10 @@ var UNIT_PRESETS = [
         fnp: "-",
         ld: 8,
         isVehicle: true,
+        isFlyer: true,
+        hasInterceptor: true,
+        move: 30,
+        transportCapacity: 0,
         avF: 12, avS: 12, avR: 10, hp: 3,
       },
       {
@@ -1170,6 +1174,10 @@ var UNIT_PRESETS = [
         fnp: "-",
         ld: 8,
         isVehicle: true,
+        isFlyer: true,
+        isTransport: true,
+        move: 24,
+        transportCapacity: 20,
         avF: 12, avS: 12, avR: 10, hp: 4,
       },
       {
@@ -1184,6 +1192,9 @@ var UNIT_PRESETS = [
         fnp: "-",
         ld: 8,
         isVehicle: true,
+        isFlyer: true,
+        move: 24,
+        transportCapacity: 0,
         avF: 12, avS: 12, avR: 10, hp: 4,
       },
       {
@@ -1314,6 +1325,10 @@ var UNIT_PRESETS = [
         fnp: "-",
         ld: 8,
         isVehicle: true,
+        isFlyer: true,
+        isTransport: true,
+        move: 24,
+        transportCapacity: 30,
         avF: 12, avS: 12, avR: 10, hp: 6,
       },
       {
@@ -1610,6 +1625,11 @@ var UNIT_PRESETS = [
         inv: "-",
         fnp: "-",
         ld: 7,
+        isVehicle: true,
+        isFlyer: true,
+        hasInterceptor: true,
+        move: 30,
+        transportCapacity: 0,
       },
       {
         id: "thunderbolt_sa",
@@ -1622,6 +1642,11 @@ var UNIT_PRESETS = [
         inv: "-",
         fnp: "-",
         ld: 7,
+        isVehicle: true,
+        isFlyer: true,
+        hasInterceptor: true,
+        move: 30,
+        transportCapacity: 0,
       },
     ],
   },
@@ -1738,7 +1763,7 @@ var UNIT_PRESETS = [
   },
   // ── LEGIO CUSTODES ──
   {
-    category: "CUSTODES: HIGH COMMAND",
+    category: "CUSTODES: WARLORD",
     units: [
       {
         id: "valdor_c",
@@ -1756,7 +1781,7 @@ var UNIT_PRESETS = [
     ],
   },
   {
-    category: "CUSTODES: COMMAND",
+    category: "CUSTODES: HIGH COMMAND",
     units: [
       {
         id: "tribune_c",
@@ -1771,6 +1796,11 @@ var UNIT_PRESETS = [
         fnp: "-",
         ld: 12,
       },
+    ],
+  },
+  {
+    category: "CUSTODES: COMMAND",
+    units: [
       {
         id: "shield_captain_c",
         name: "Shield Captain",
@@ -3730,3 +3760,16 @@ var UNIT_PRESETS = [
     ],
   },
 ];
+
+// Shared lookup tables so the UI doesn't repeatedly flatten/search UNIT_PRESETS.
+var UNIT_PRESETS_ALL_UNITS = [];
+var UNIT_PRESET_BY_ID = {};
+var UNIT_CATEGORY_BY_ID = {};
+
+UNIT_PRESETS.forEach(function (category) {
+  category.units.forEach(function (unit) {
+    UNIT_PRESETS_ALL_UNITS.push(unit);
+    UNIT_PRESET_BY_ID[unit.id] = unit;
+    UNIT_CATEGORY_BY_ID[unit.id] = category.category;
+  });
+});

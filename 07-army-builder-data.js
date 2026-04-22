@@ -23,196 +23,36 @@ var BATTLEFIELD_ROLES = {
 };
 
 // Unit -> Battlefield Role mapping (per spreadsheet & Legiones Astartes Army List)
-var UNIT_BATTLEFIELD_ROLE = {
-  // WARLORD (Primarchs)
-  lion: "warlord", khan: "warlord", russ: "warlord", dorn: "warlord",
-  sanguinius: "warlord", ferrus: "warlord", guilliman: "warlord",
-  vulkan: "warlord", corax: "warlord",
-  fulgrim: "warlord", perturabo: "warlord", curze: "warlord",
-  angron: "warlord", lorgar: "warlord", mortarion: "warlord",
-  magnus: "warlord", horus: "warlord", alpharius: "warlord",
-  // HIGH COMMAND
-  praetor_pa: "high_command", praetor_ta: "high_command", praetor_sat: "high_command",
-  // COMMAND
-  centurion: "command", centurion_ta: "command", centurion_sat: "command", optae: "command", champion: "command", master_signals: "command",
-  vigilator: "command", chaplain: "command",
-  librarian: "command", herald: "command", moritat: "command", siege_breaker: "command",
-  esoterist: "command", praevian: "command", overseer: "command",
-  damocles_rhino: "command",
-  // RETINUE (Command Squads)
-  praetorian_cmd_jp: "retinue", praetorian_cmd: "retinue",
-  tartaros_cmd: "retinue", centurion_cmd: "retinue", cataphractii_cmd: "retinue", saturnine_cmd: "retinue",
-  // ELITES
-  veteran: "elites", veteran_assault: "elites", seeker: "elites",
-  custodian_guard: "elites", sagittarum: "elites", aquilon: "elites",
-  // TROOPS
-  tactical: "troops", despoiler: "troops", breacher: "troops", assault: "troops",
-  tactical_support: "troops",
-  lasrifle: "troops", veletaris: "troops", tech_thrall: "troops",
-  // HEAVY ASSAULT
-  cataphractii: "heavy_assault", tartaros: "heavy_assault", saturnine: "heavy_assault",
-  destroyer: "heavy_assault",
-  // SUPPORT
-  heavy_support: "support", rapier_la: "support", rapier: "support",
-  apothecary: "support", techmarine: "support", araknae: "support",
-  thallax: "support", myrmidon_dest: "support", ogryn: "support",
-  // WAR ENGINE
-  contemptor: "war_engine", leviathan: "war_engine", deredeo: "war_engine", saturnine_dread: "war_engine",
-  castellax: "war_engine", thanatar: "war_engine",
-  // TRANSPORT
-  rhino: "transport", termite: "transport", drop_pod: "transport",
-  // HEAVY TRANSPORT
-  land_raider: "heavy_transport", spartan: "heavy_transport",
-  dreadnought_drop_pod: "heavy_transport", dreadclaw: "heavy_transport", kharybdis: "heavy_transport",
-  // ARMOUR
-  predator: "armour", sicaran: "armour", sicaran_venator: "armour",
-  vindicator: "armour", kratos: "armour", scorpius: "armour", arquitor: "armour",
-  caladius: "armour",
-  // RECON
-  recon: "recon", sabre: "recon", outrider: "recon",
-  land_raider_exp: "recon", tarantula: "recon", vorax: "recon",
-  // FAST ATTACK
-  xiphon: "fast_attack", storm_eagle: "fast_attack", fire_raptor: "fast_attack",
-  scimitar_jetbike: "fast_attack", javelin: "fast_attack", land_speeder: "fast_attack",
-  // LORD OF WAR
-  cerberus: "lord_of_war", typhon: "lord_of_war", glaive: "lord_of_war",
-  fellblade: "lord_of_war", falchion: "lord_of_war", thunderhawk: "lord_of_war",
-  daemon_greater: "lord_of_war",
+var UNIT_BATTLEFIELD_ROLE = {};
+function assignUnitRoles(role, unitIds) {
+  unitIds.forEach(function (unitId) {
+    UNIT_BATTLEFIELD_ROLE[unitId] = role;
+  });
+}
 
-  // ── DARK ANGELS (I) ──
-  corswain: "high_command", marduk_sedras: "high_command",
-  deathwing_comp: "elites", inner_circle_knight: "elites",
-  dreadwing_inter: "troops",
-  // ── EMPEROR'S CHILDREN (III) ──
-  eidolon: "high_command", lucius: "command", saul_tarvitz: "command",
-  phoenix_term: "heavy_assault", palatine_blade: "elites", kakophoni: "support",
-  // ── IRON WARRIORS (IV) ──
-  warsmith: "high_command", tyrant_siege_term: "heavy_assault",
-  domitar_ferrum: "war_engine",
-  // ── WHITE SCARS (V) ──
-  qin_xa: "high_command", hibou_khan: "command", stormseer: "command",
-  keshig_rider: "fast_attack", kharash: "elites", kyzagan: "recon",
-  // ── SPACE WOLVES (VI) ──
-  hvarl: "high_command", geigor: "command", caster_of_runes: "command",
-  varagyr: "heavy_assault", deathsworn: "elites", grey_slayer: "troops",
-  // ── IMPERIAL FISTS (VII) ──
-  sigismund: "high_command", fafnir_rann: "high_command", evander_garrius: "high_command",
-  camba_diaz: "command", alexis_polux: "command",
-  templar_brethren: "elites", phalanx_warder: "troops",
-  // ── NIGHT LORDS (VIII) ──
-  sevatar: "high_command", contekar: "heavy_assault",
-  executioner_nl: "troops", night_raptor: "fast_attack",
-  // ── BLOOD ANGELS (IX) ──
-  raldoron: "high_command", dom_zephon: "command", aster_crohne: "command",
-  crimson_paladin: "elites", dawnbreaker: "fast_attack",
-  erelim: "troops", contemp_incaendius: "war_engine",
-  // ── IRON HANDS (X) ──
-  shadrak_meduson: "high_command", iron_father: "high_command",
-  gorgon_term: "heavy_assault", immortal_ih: "troops",
-  // ── WORLD EATERS (XII) ──
-  kharn: "high_command", lotara_sarrin: "command",
-  red_butcher: "heavy_assault", rampager: "elites",
-  // ── ULTRAMARINES (XIII) ──
-  remus_ventanus: "high_command", invictarus_suz: "elites", praetorian_um: "troops",
-  // ── DEATH GUARD (XIV) ──
-  calas_typhon: "high_command", deathshroud: "heavy_assault", grave_warden: "heavy_assault",
-  // ── THOUSAND SONS (XV) ──
-  ahriman: "high_command", magistus_amon: "command", prosperine_sorc: "command",
-  sekhmet: "heavy_assault", khenetai_blade: "elites",
-  castellax_achea: "war_engine", contemp_osiron: "war_engine",
-  // ── SONS OF HORUS (XVI) ──
-  ezekyle_abaddon: "high_command", little_horus: "high_command",
-  tybalt_marr: "command", vheren_ash: "command", garviel_loken: "command",
-  maloghurst: "command", dark_emissary: "command",
-  justaerin: "heavy_assault", reaver_soh: "elites",
-  // ── WORD BEARERS (XVII) ──
-  kor_phaeron: "high_command", erebus: "command", argel_tal: "command",
-  zardu_layak: "command", dark_brethren: "elites", anakatis_kul: "elites", phraetus_conclave: "elites",
-  mhara_gal: "war_engine", incendiary_wb: "troops",
-  // ── SALAMANDERS (XVIII) ──
-  firedrake: "heavy_assault", pyroclast: "support",
-  // ── RAVEN GUARD (XIX) ──
-  kaedes_nex: "command", mor_deythan: "recon", dark_fury_rg: "fast_attack",
-  // ── ALPHA LEGION (XX) ──
-  armillus_dynat: "high_command", saboteur: "command", exodus_al: "command",
-  headhunter: "recon", lernaean: "heavy_assault",
-  // OTHER
-  daemon_lesser: "troops",
+assignUnitRoles("warlord", ["lion", "khan", "russ", "dorn", "sanguinius", "ferrus", "guilliman", "vulkan", "corax", "fulgrim", "perturabo", "curze", "angron", "lorgar", "mortarion", "magnus", "horus", "alpharius", "valdor_c"]);
+assignUnitRoles("high_command", ["praetor_pa", "praetor_ta", "praetor_sat", "corswain", "marduk_sedras", "eidolon", "warsmith", "qin_xa", "hvarl", "sigismund", "fafnir_rann", "evander_garrius", "sevatar", "raldoron", "shadrak_meduson", "iron_father", "kharn", "remus_ventanus", "calas_typhon", "ahriman", "ezekyle_abaddon", "little_horus", "kor_phaeron", "armillus_dynat", "legate_cmd_sa", "tribune_c", "archmagos_tm", "archmagos_abeyant_tm", "scoria_mm", "draykavac_mm"]);
+assignUnitRoles("command", ["centurion", "centurion_ta", "centurion_sat", "optae", "champion", "master_signals", "vigilator", "chaplain", "librarian", "herald", "moritat", "siege_breaker", "esoterist", "praevian", "overseer", "damocles_rhino", "lucius", "saul_tarvitz", "hibou_khan", "stormseer", "geigor", "caster_of_runes", "camba_diaz", "alexis_polux", "dom_zephon", "aster_crohne", "lotara_sarrin", "magistus_amon", "prosperine_sorc", "tybalt_marr", "vheren_ash", "garviel_loken", "maloghurst", "dark_emissary", "erebus", "argel_tal", "zardu_layak", "kaedes_nex", "saboteur", "exodus_al", "tactical_cmd_sa", "line_cmd_sa", "veletaris_cmd_sa", "hermes_cmd_sa", "artillery_cmd_sa", "armoured_cmd_sa", "shield_captain_c", "magos_tm", "magos_abeyant_tm", "arcuitor_tm"]);
+assignUnitRoles("retinue", ["praetorian_cmd_jp", "praetorian_cmd", "tartaros_cmd", "centurion_cmd", "cataphractii_cmd", "saturnine_cmd"]);
+assignUnitRoles("elites", ["veteran", "veteran_assault", "seeker", "custodian_guard", "sagittarum", "aquilon", "deathwing_comp", "inner_circle_knight", "palatine_blade", "kharash", "deathsworn", "templar_brethren", "crimson_paladin", "rampager", "invictarus_suz", "khenetai_blade", "reaver_soh", "dark_brethren", "anakatis_kul", "phraetus_conclave", "veletaris_vanguard_sa", "scyllax_tm", "secutor_tm"]);
+assignUnitRoles("troops", ["tactical", "despoiler", "breacher", "assault", "tactical_support", "lasrifle", "veletaris", "tech_thrall", "dreadwing_inter", "grey_slayer", "phalanx_warder", "executioner_nl", "erelim", "immortal_ih", "praetorian_um", "incendiary_wb", "daemon_lesser", "custodian_guard_c", "sentinel_guard_c", "tech_thrall_cov_tm", "thallax_full_tm"]);
+assignUnitRoles("heavy_assault", ["cataphractii", "tartaros", "saturnine", "destroyer", "phoenix_term", "tyrant_siege_term", "varagyr", "contekar", "gorgon_term", "red_butcher", "deathshroud", "grave_warden", "sekhmet", "justaerin", "firedrake", "lernaean", "charonite_sa", "aquilon_c", "ursarax_tm"]);
+assignUnitRoles("support", ["heavy_support", "rapier_la", "rapier", "apothecary", "techmarine", "araknae", "thallax", "myrmidon_dest", "ogryn", "kakophoni", "pyroclast", "basilisk_sa", "medusa_sa", "aethon_sa", "tech_priest_tm", "echidnax_tm", "destructor_tm"]);
+assignUnitRoles("war_engine", ["contemptor", "leviathan", "deredeo", "saturnine_dread", "castellax", "thanatar", "domitar_ferrum", "contemp_incaendius", "castellax_achea", "contemp_osiron", "mhara_gal", "contemptor_achillus_c", "contemptor_galatus_c", "domitar_tm", "castellax_dest_tm", "castellax_battle_tm", "thanatar_siege_tm", "armiger_tm", "decimator_mm", "blood_slaughterer_mm"]);
+assignUnitRoles("transport", ["rhino", "termite", "drop_pod", "arvus_sa", "coronus_c", "triaros_tm"]);
+assignUnitRoles("heavy_transport", ["land_raider", "spartan", "dreadnought_drop_pod", "dreadclaw", "kharybdis", "dracosan_sa"]);
+assignUnitRoles("armour", ["predator", "sicaran", "sicaran_venator", "vindicator", "kratos", "scorpius", "arquitor", "caladius", "leman_russ_strike_sa", "leman_russ_assault_sa", "caladius_c"]);
+assignUnitRoles("recon", ["recon", "sabre", "outrider", "land_raider_exp", "tarantula", "vorax", "kyzagan", "mor_deythan", "headhunter", "hermes_light_sa"]);
+assignUnitRoles("fast_attack", ["xiphon", "storm_eagle", "fire_raptor", "scimitar_jetbike", "javelin", "land_speeder", "keshig_rider", "night_raptor", "dawnbreaker", "dark_fury_rg", "hermes_vel_sa", "primaris_lightning_sa", "thunderbolt_sa", "venatari_c", "gyrfalcon_c", "pallas_c"]);
+assignUnitRoles("lord_of_war", ["cerberus", "typhon", "glaive", "fellblade", "falchion", "thunderhawk", "daemon_greater", "malcador_sa", "malcador_infernus_sa", "valdor_sa", "stormhammer_sa", "telemon_c", "orion_c", "ares_c", "brass_scorpion_mm", "kytan_mm"]);
 
-  // ── SOL AUXILIA ──
-  // HIGH COMMAND
-  legate_cmd_sa: "high_command",
-  // COMMAND
-  tactical_cmd_sa: "command", line_cmd_sa: "command",
-  veletaris_cmd_sa: "command", hermes_cmd_sa: "command",
-  artillery_cmd_sa: "command", armoured_cmd_sa: "command",
-  // ELITES
-  veletaris_vanguard_sa: "elites",
-  // HEAVY ASSAULT
-  charonite_sa: "heavy_assault",
-  // SUPPORT
-  basilisk_sa: "support", medusa_sa: "support", aethon_sa: "support",
-  // RECON
-  hermes_light_sa: "recon",
-  // FAST ATTACK
-  hermes_vel_sa: "fast_attack", primaris_lightning_sa: "fast_attack", thunderbolt_sa: "fast_attack",
-  // TRANSPORT
-  arvus_sa: "transport",
-  // HEAVY TRANSPORT
-  dracosan_sa: "heavy_transport",
-  // ARMOUR
-  leman_russ_strike_sa: "armour", leman_russ_assault_sa: "armour",
-  // LORD OF WAR
-  malcador_sa: "lord_of_war", malcador_infernus_sa: "lord_of_war",
-  valdor_sa: "lord_of_war", stormhammer_sa: "lord_of_war",
-
-  // ── LEGIO CUSTODES ──
-  // HIGH COMMAND
-  valdor_c: "high_command",
-  // COMMAND
-  tribune_c: "command", shield_captain_c: "command",
-  // TROOPS
-  custodian_guard_c: "troops", sentinel_guard_c: "troops",
-  // HEAVY ASSAULT
-  aquilon_c: "heavy_assault",
-  // WAR ENGINE (walkers)
-  contemptor_achillus_c: "war_engine", contemptor_galatus_c: "war_engine",
-  // FAST ATTACK
-  venatari_c: "fast_attack", gyrfalcon_c: "fast_attack", pallas_c: "fast_attack",
-  // TRANSPORT
-  coronus_c: "transport",
-  // ARMOUR
-  caladius_c: "armour",
-  // LORD OF WAR
-  telemon_c: "lord_of_war", orion_c: "lord_of_war", ares_c: "lord_of_war",
-
-  // ── MECHANICUM TAGHMATA ──
-  // HIGH COMMAND
-  archmagos_tm: "high_command", archmagos_abeyant_tm: "high_command",
-  // COMMAND
-  magos_tm: "command", magos_abeyant_tm: "command", arcuitor_tm: "command",
-  // SUPPORT
-  tech_priest_tm: "support",
-  // ELITES
-  scyllax_tm: "elites", secutor_tm: "elites",
-  // TROOPS
-  tech_thrall_cov_tm: "troops", thallax_full_tm: "troops",
-  // HEAVY ASSAULT
-  ursarax_tm: "heavy_assault",
-  // SUPPORT (automata)
-  echidnax_tm: "support", destructor_tm: "support",
-  // WAR ENGINE
-  domitar_tm: "war_engine", castellax_dest_tm: "war_engine",
-  castellax_battle_tm: "war_engine", thanatar_siege_tm: "war_engine",
-  armiger_tm: "war_engine",
-  // TRANSPORT
-  triaros_tm: "transport",
-  // ── MACHINA MALEFICA (Traitor) ──
-  decimator_mm: "war_engine", blood_slaughterer_mm: "war_engine",
-  brass_scorpion_mm: "lord_of_war", kytan_mm: "lord_of_war",
-  // ── PERSONA SCINDIO (Named Traitor Characters) ──
-  scoria_mm: "high_command", draykavac_mm: "high_command",
-};
+var ROLE_TO_UNIT_IDS = {};
+Object.entries(UNIT_BATTLEFIELD_ROLE).forEach(function (entry) {
+  var unitId = entry[0];
+  var role = entry[1];
+  if (!ROLE_TO_UNIT_IDS[role]) ROLE_TO_UNIT_IDS[role] = [];
+  ROLE_TO_UNIT_IDS[role].push(unitId);
+});
 
 // ━━━ CRUSADE PRIMARY DETACHMENT (p.284) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // The Crusade Primary Detachment: 1 High Command, 3 Command (1st prime), 4 Troops (1st prime), 4 Transport
@@ -659,6 +499,11 @@ var LEGION_FACTIONS = [
   { id: "custodes",           name: "Legio Custodes",              allegiance: "loyalist", numeral: "-" },
 ];
 
+var LEGION_FACTION_BY_ID = {};
+LEGION_FACTIONS.forEach(function (faction) {
+  LEGION_FACTION_BY_ID[faction.id] = faction;
+});
+
 // Maps unit IDs that are restricted to a specific faction (e.g. Primarchs).
 // Units NOT listed here are considered generic and available to any faction.
 var UNIT_SPECIFIC_FACTION = {
@@ -778,7 +623,7 @@ function calcArmyEntryPoints(entry) {
 
 // Helper: get units matching a given battlefield role
 function getUnitsForRole(role) {
-  return Object.entries(UNIT_BATTLEFIELD_ROLE).filter(([, r]) => r === role).map(([id]) => id);
+  return ROLE_TO_UNIT_IDS[role] || [];
 }
 
 // Calculate total points for a deployed unit
@@ -1848,4 +1693,3 @@ function getSgtCategory(unitId) {
 
 // Target presets now use the same UNIT_PRESETS — no separate list needed.
 // The UnitSelectorModal shows defensive stats when isTarget=true.
-

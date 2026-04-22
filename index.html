@@ -71,12 +71,13 @@
 
   <!-- Global error handler to catch script load/exec failures -->
   <script>
-    var _ld = 0, _ldTotal = 18;
+    var _ld = 0, _ldTotal = 19;
     var _ldMsg = [
       'Loading machine spirit...', 'Parsing unit manifests...',
       'Calibrating bolter trajectories...', 'Compiling FOC slot data...',
       'Resolving points costs...', 'Loading weapon profiles...',
       'Initializing wargear options...', 'Building army detachments...',
+      'Loading army presets...',
       'Arming shooting resolver...', 'Calibrating return fire...',
       'Preparing challenge protocols...', 'Loading assault phase...',
       'Charging melee engine...', 'Rendering unit icons...',
@@ -110,6 +111,7 @@
   <script src="05-weapon-profiles.js"    onerror="_ldErr('Failed to load 05-weapon-profiles.js')"    onload="_ldUp()"></script>
   <script src="06-wargear-options.js"    onerror="_ldErr('Failed to load 06-wargear-options.js')"    onload="_ldUp()"></script>
   <script src="07-army-builder-data.js"  onerror="_ldErr('Failed to load 07-army-builder-data.js')"  onload="_ldUp()"></script>
+  <script src="07b-army-presets.js"      onerror="_ldErr('Failed to load 07b-army-presets.js')"      onload="_ldUp()"></script>
   <script src="08-shooting-resolver.js"  onerror="_ldErr('Failed to load 08-shooting-resolver.js')"  onload="_ldUp()"></script>
   <script src="09-return-fire.js"        onerror="_ldErr('Failed to load 09-return-fire.js')"        onload="_ldUp()"></script>
   <script src="10-challenge.js"          onerror="_ldErr('Failed to load 10-challenge.js')"          onload="_ldUp()"></script>
