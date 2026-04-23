@@ -1,6 +1,2296 @@
+var HELP_PHASE_GUIDE = [
+  {
+    id: "army_builder",
+    icon: "📋",
+    label: "ARMY BUILDER",
+    shortLabel: "Army",
+    color: "#4a6741",
+    desc: "Build your Crusade Force. Select your legion and allegiance, set a points limit, then add units from each battlefield role. Configure wargear, weapons, and detachment slots. Export your list to save it, or import a saved list to continue.",
+    howTo:
+      "Start by choosing a faction, allegiance, and points limit. Add units into legal battlefield role slots, then adjust model counts, weapons, wargear, and Warlord status before exporting or deploying the army.",
+    rules:
+      "The builder checks points, primary detachment slot limits, and the 25% Warlord/Lord of War cap. Auxiliary, Apex, and legion detachments expand your force structure but still need valid slot usage.",
+  },
+  {
+    id: "deployment",
+    icon: "📍",
+    label: "DEPLOYMENT",
+    shortLabel: "Deployment",
+    color: "#5b4a8a",
+    desc: "Place your units on the battlefield map. Drag units to their starting positions within your deployment zone. Supports standard and Zone Mortalis style setup.",
+    howTo:
+      "Move units from reserves or army deployment onto the tactical map, place them in legal starting positions, and use the map to establish facing, spacing, and board control before the turn begins.",
+    rules:
+      "Deployment is about initial placement and board state. Reserve units, flyers, deployment zones, and map positioning matter here more than dice resolution.",
+  },
+  {
+    id: "movement",
+    icon: "🚶",
+    label: "MOVEMENT",
+    shortLabel: "Movement",
+    color: "#6b5b2e",
+    desc: "Move your units across the battlefield. Track unit positions and measure distances according to their movement values.",
+    howTo:
+      "Select units on the tactical map, reposition them according to their move allowance, and use the board view to line up shooting lanes, charges, and objective pressure.",
+    rules:
+      "Movement is mostly positional. The map helps measure distances, maintain spacing, and set up later Shooting and Assault decisions.",
+  },
+  {
+    id: "shooting",
+    icon: "⚔",
+    label: "SHOOTING",
+    shortLabel: "Shooting",
+    color: "#b8860b",
+    desc: "Resolve ranged attacks. Select an attacking unit and target, then roll to hit, wound, and save. The resolver also handles many common weapon and attack modifiers.",
+    howTo:
+      "Choose an attacker, choose a target, confirm the weapon profile, then resolve hits, wounds, saves, and follow-up effects in order using the shooting panels.",
+    rules:
+      "The shooting flow follows BS to hit, Strength versus Toughness to wound, then armour, invulnerable, or Feel No Pain style saves where applicable. Common rules like Twin-linked, Shred, Pinning, and Rending are surfaced in the summary.",
+  },
+  {
+    id: "assault",
+    icon: "🗡",
+    label: "ASSAULT",
+    shortLabel: "Assault",
+    color: "#9b2d2d",
+    desc: "Resolve close combat. Includes charge moves, combat resolution, sweeping advances, and challenge sub-phases. Select attacker and defender to calculate Attacks, Strength, and AP.",
+    howTo:
+      "Use the charge tools first, then step through melee resolution by initiative order, apply casualties, calculate combat result, and resolve rout or sweeping outcomes.",
+    rules:
+      "This phase combines charge distance, overwatch or reactions, initiative sequencing, weapon skill comparisons, combat result, and challenge interactions when characters are present.",
+  },
+  {
+    id: "end",
+    icon: "🏛",
+    label: "END PHASE",
+    shortLabel: "End Phase",
+    color: "#2e5e3e",
+    desc: "Handle end-of-turn bookkeeping: morale outcomes, regrouping, and objective scoring. Update unit statuses before moving to the next turn.",
+    howTo:
+      "Review objectives, unit states, routed results, and secondary scoring. Use the end-of-round panels to record VP and prepare the next round cleanly.",
+    rules:
+      "This phase is where you score, regroup, and close the round. It is less about attacks and more about state tracking, victory points, and cleanup.",
+  },
+];
+
+var HELP_ARMY_BUILDER_TIPS = [
+  {
+    tip: "Set your points limit first",
+    detail:
+      "Click the points field at the top and enter your agreed game size, such as 3000. The builder tracks your running total and warns you if you go over.",
+  },
+  {
+    tip: "Detachments",
+    detail:
+      "Units can be assigned to your Primary detachment or an Auxiliary, Apex, or other unlocked detachment. Primary slots follow Force Organisation restrictions.",
+  },
+  {
+    tip: "Warlord",
+    detail:
+      "Designate one HQ style unit as your Warlord using the crown toggle. Only one Warlord is allowed per army.",
+  },
+  {
+    tip: "Saving your army",
+    detail:
+      "Use Export to download your army list, then Import to load it again later. Lists are not automatically persisted between sessions.",
+  },
+  {
+    tip: "Unit configuration",
+    detail:
+      "Each unit row exposes model count, sergeant weapon, secondary weapons, and wargear controls. Points update in real time as you make changes.",
+  },
+];
+
+var HELP_COMBAT_TIPS = [
+  {
+    tip: "Shooting - select attacker and target",
+    detail:
+      "Pick your firing unit and target unit from the controls. The resolver loads their stats and available weapons automatically.",
+  },
+  {
+    tip: "Rolling dice",
+    detail:
+      "Use the roll controls to generate results or enter values manually. Success and failure results are colour-coded in the logs and summaries.",
+  },
+  {
+    tip: "Special rules",
+    detail:
+      "Rules like Pinning, Rending, Shred, and Concussive are surfaced automatically from the weapon and unit profiles where supported.",
+  },
+  {
+    tip: "Assault sequence",
+    detail:
+      "The assault resolver walks through charging, fight order, and combat result step by step. Work from the top panels downward for the cleanest flow.",
+  },
+  {
+    tip: "Challenges",
+    detail:
+      "If a character is present in either unit, the Challenge sub-phase becomes available. Accepting or declining affects who fights and how casualties are allocated.",
+  },
+];
+
+var HELP_FAQ = [
+  {
+    q: "My army went over the points limit - is that OK?",
+    a: "The builder will show a warning but does not hard-block play. Trim the list or agree with your opponent before the game.",
+  },
+  {
+    q: "Can I use this for non-Legiones Astartes factions?",
+    a: "Yes. Sol Auxilia, Mechanicum, and Custodes are available alongside the Legions.",
+  },
+  {
+    q: "How do I undo a change to my army?",
+    a: "There is no undo button right now, so exporting your list before major edits is the safest workflow.",
+  },
+  {
+    q: "Does this tool enforce every special rule?",
+    a: "It covers many common interactions, but niche, mission-specific, or campaign rules may still need manual adjudication.",
+  },
+  {
+    q: "Where is my army saved?",
+    a: "It is not saved automatically. Export it, keep the file, and import it when you come back.",
+  },
+];
+
+var HELP_REFERENCE_CARD_ENTRIES = [
+  {
+    title: "Turn Sequence",
+    keywords: [
+      "turn sequence",
+      "phase order",
+      "start phase",
+      "movement phase",
+      "shooting phase",
+      "assault phase",
+      "end phase",
+    ],
+    text: "Reference card turn order: Start Phase -> Movement Phase -> Shooting Phase -> Assault Phase -> End Phase. The card also calls out sub-phases like Effects, Reserves, Move, Rout, Attack, Morale, Charge, Challenge, Fight, Resolution, Statuses, and Victory.",
+  },
+  {
+    title: "Tactical Statuses",
+    keywords: [
+      "tactical status",
+      "status",
+      "pinned",
+      "suppressed",
+      "stunned",
+      "routed",
+      "disordered",
+    ],
+    text: "All Tactical Statuses impose these penalties: charges are Disordered, Combat Initiative becomes 1, the Unit cannot hold, claim, or contest an Objective, and the Unit cannot benefit from being Stationary. Pinned: cannot Move, Rush, Charge, Pursue, or Disengage. Suppressed: all Shooting Attacks are Snap Shots. Stunned: the Unit may not declare Reactions. Routed: the Unit must Fall Back in the Movement Phase and also suffers the penalties from other Statuses.",
+  },
+  {
+    title: "Core Reactions",
+    keywords: [
+      "core reactions",
+      "reposition",
+      "return fire",
+      "overwatch",
+      "react",
+      "reactions",
+    ],
+    text: "Core Reactions on the reference card: Reposition in the Movement Phase after an enemy Unit moves to within 12 inches, moving up to the reacting Unit's Initiative; Return Fire in the Shooting Phase after an enemy Unit makes a Shooting Attack; and Overwatch in the Assault Phase when an enemy Unit Charges, improving Volley Attacks against them. A Unit cannot React if it is Stunned, Routed, Locked in Combat, or has already Reacted that turn.",
+  },
+  {
+    title: "Advanced Reactions",
+    keywords: [
+      "advanced reactions",
+      "death or glory",
+      "intercept",
+      "evade",
+      "nullify",
+      "heroic intervention",
+    ],
+    text: "Advanced Reactions listed on the reference card: Death or Glory when an enemy Vehicle moves through your Unit; Intercept when an enemy Model enters the battlefield; Evade when an enemy Unit Charges a Unit of only Light or Cavalry Models; Nullify to use a Psyker to stop a Psychic Curse manifested by the enemy; and Heroic Intervention to declare a Challenge as the Reactive Player.",
+  },
+  {
+    title: "Shooting Attack Sequence",
+    keywords: [
+      "shooting attack",
+      "shooting sequence",
+      "shooting steps",
+      "shooting attacks",
+    ],
+    text: "Reference card Shooting Attack sequence: 1. Select Target Unit. 2. Check Target. 3. Declare Weapons. 4. Set Fire Groups. 5. Select Fire Group to Resolve. 6. Make Hit Tests. 7. Make Wound Tests. 8. Select Target Model. 9. Make Saving Throws. 10. Select Next Fire Group. 11. Remove Casualties.",
+  },
+  {
+    title: "Shooting Restrictions",
+    keywords: [
+      "cannot shoot",
+      "shooting restrictions",
+      "unit may not make a shooting attack",
+      "rush",
+      "locked in combat",
+      "embarked",
+    ],
+    text: "A Unit may not make a Shooting Attack if it Rushed in the Movement Phase, is Locked in Combat, or is Embarked on another Model.",
+  },
+  {
+    title: "Morale Sub-Phase Checks",
+    keywords: [
+      "morale sub-phase",
+      "leadership check",
+      "cool check",
+      "morale checks",
+      "25% casualties",
+      "pinning",
+      "panic",
+      "stun",
+      "suppressive",
+    ],
+    text: "The reference card says checks are made in the Morale Sub-Phase if the Unit is out of Coherency (Cool Check), takes 25 percent casualties (Leadership Check), suffers a wound from a Panic (X) attack (Leadership Check), suffers a wound from a Pinning (X) attack (Cool Check), suffers a Hit from a Stun (X) attack (Cool Check), or suffers a Hit from a Suppressive (X) attack (Cool Check).",
+  },
+  {
+    title: "Ranged Hit Test Table Notes",
+    keywords: [
+      "ranged hit test",
+      "hit table",
+      "snap shots",
+      "automatic",
+      "fail",
+      "critical hit",
+      "cx+",
+      "a result",
+      "f result",
+    ],
+    text: "The reference card's Ranged Hit Test table uses special outcomes as well as target numbers. F means automatic failure to Hit. A means automatic success as if the die's natural result had been a 6 and also applies Critical Hit effects. CX+ means the target number is 2+, but if the roll is at least X the Hit also gains the effects of the Critical Hit (X) Special Rule. Snap Shots use the separate Snap Shots row.",
+  },
+  {
+    title: "Vehicle Damage Table",
+    keywords: [
+      "vehicle damage",
+      "damage table",
+      "impaired sensors",
+      "broken motors",
+      "weapons damaged",
+      "hull point",
+    ],
+    text: "Reference card Vehicle Damage table: 1-2 Impaired Sensors gives the Model the Stunned Status. 3-4 Broken Motors gives the Model the Pinned Status. 5-6 Weapons Damaged gives the Model the Suppressed Status. If the Model already has that Status, it instead loses 1 Hull Point with no Saving Throw or Damage Mitigation Roll against it.",
+  },
+  {
+    title: "Charge Sequence",
+    keywords: [
+      "charge",
+      "charge sequence",
+      "charge steps",
+      "declare target",
+      "set-up move",
+      "volley attacks",
+      "charge move",
+    ],
+    text: "Reference card Charge procedure: 1. Declare Target. 2. Check Line of Sight and Maximum Charge Range. 3. Make Set-up Move. 4. Make Volley Attacks. 5. Make Charge Move.",
+  },
+  {
+    title: "Charge Restrictions",
+    keywords: [
+      "cannot charge",
+      "charge restrictions",
+      "unit may not have a charge declared",
+      "rushed",
+      "pinned",
+      "routed",
+      "embarked",
+    ],
+    text: "A Unit may not have a Charge declared for it if it Rushed in the Movement Phase, is already Locked in Combat, is Embarked on another Model, or is Pinned or Routed.",
+  },
+  {
+    title: "Set-up Move Distance",
+    keywords: [
+      "set-up move distance",
+      "setup move",
+      "initiative plus movement",
+      "charge distance",
+    ],
+    text: "Set-up Move Distance from the reference card: add Initiative to Movement, then use 1-6 = 1 inch, 7-9 = 2 inches, 10-11 = 3 inches, 12-13 = 4 inches, 14-19 = 5 inches, and 20+ = 6 inches. Set-up Moves are not reduced by Difficult Terrain, but Dangerous Terrain rolls still apply.",
+  },
+  {
+    title: "Combat Procedure",
+    keywords: [
+      "combat",
+      "fight sequence",
+      "combat steps",
+      "initiative step",
+      "pile-in",
+      "strike group",
+    ],
+    text: "Reference card Combat Round procedure: determine Combat Units, declare Weapons and set Initiative Steps, resolve the first Initiative Step, continue resolving Initiative Steps, and make final Pile-in Moves. Each Initiative Step then follows: declare combatants, make Pile-in Moves, declare Engaged Models, set Strike Groups, make Hit Tests, make Wound Tests, select Strike Group and Target Model, make Saving Throws, select next Strike Group, and remove Casualties.",
+  },
+  {
+    title: "Combat Resolution",
+    keywords: [
+      "combat resolution",
+      "combat result",
+      "resolution points",
+      "outnumber",
+      "challenge points",
+    ],
+    text: "The reference card says the winner in Combat is the side with the most Combat Resolution Points. Players score points for each enemy Model removed as a casualty, for outnumbering all enemy Units in the Combat, and may also gain points from winning a Challenge plus Wargear and or Special Rules.",
+  },
+  {
+    title: "Challenge Gambits",
+    keywords: [
+      "challenge gambits",
+      "gambits",
+      "seize the initiative",
+      "flurry of blows",
+      "test the foe",
+      "guard up",
+      "taunt and bait",
+      "grandstand",
+      "feint and riposte",
+      "withdraw",
+      "finishing blow",
+    ],
+    text: "Core Challenge Gambits on the reference card: Seize the Initiative gives an extra die for the Focus Roll and discards the lowest. Flurry of Blows gives plus D3 attacks but all attacks inflict 1 Damage. Test the Foe automatically gains Challenge Advantage next round. Guard Up gives plus 1 WS but only one attack and a bonus to Focus Rolls next round. Taunt and Bait reduces WS and A to match the opponent but scores plus 1 Combat Resolution Point if you win. Grandstand reduces the Focus Roll result and adds Outside Support to A instead. Feint and Riposte lets you block one gambit if the opponent has not chosen yet. Withdraw makes only 1 attack but may end the Challenge early. Finishing Blow reduces the Focus Roll result but adds plus 1 Strength and Damage to all Hits inflicted.",
+  },
+  {
+    title: "Challenge Focus Roll Modifiers",
+    keywords: [
+      "focus roll",
+      "challenge focus roll",
+      "duellist's edge",
+      "outside support",
+      "heavy subtype",
+      "light subtype",
+      "lost wound",
+    ],
+    text: "Reference card Challenge Focus Roll modifiers: add each Model's Combat Initiative score. A Model with the Heavy Sub-Type suffers minus 1. A Model suffers minus 1 for each lost Wound. The Duellist's Edge (X) Special Rule grants a positive modifier equal to X. A Model with the Light Sub-Type gains plus 1. A Model may also gain a positive modifier from Outside Support.",
+  },
+  {
+    title: "Perils of the Warp",
+    keywords: [
+      "perils of the warp",
+      "warp rupture",
+      "aetheric feedback",
+      "willpower",
+      "psychic",
+    ],
+    text: "The reference card's Perils of the Warp table says a result of 1 or 6 causes Warp Rupture, dealing wounds that ignore Armour Saves, Cover Saves, and Damage Mitigation Rolls, though Invulnerable Saves may still be taken. The number of wounds is 13 minus the Willpower Characteristic of the lowest Willpower Model in the Unit, with Sergeant, Command, or Paragon models allowed to substitute if present. Results of 2, 3, 4, or 5 cause Aetheric Feedback, which gives the Unit the Stunned Status.",
+  },
+  {
+    title: "Terrain Effects",
+    keywords: [
+      "terrain",
+      "difficult terrain",
+      "dangerous terrain",
+      "light area terrain",
+      "medium area terrain",
+      "heavy area terrain",
+      "cover save",
+      "line of sight",
+    ],
+    text: "Terrain effects listed on the reference card: Difficult Terrain reduces Moves made through it by 2 inches. Dangerous Terrain causes Dangerous Terrain Tests when moved through. Light Area Terrain grants a 6+ Cover Saving Throw. Medium Area Terrain grants a 5+ Cover Saving Throw and may block Line of Sight. Heavy Area Terrain grants a 4+ Cover Saving Throw and always blocks Line of Sight.",
+  },
+];
+
+var HELP_BASIC_PRINCIPLES_ENTRIES = [
+  {
+    title: "Basic Principles Overview",
+    keywords: [
+      "basic principles",
+      "principles",
+      "core rules basics",
+      "fundamental rules",
+    ],
+    text: "The Basic Principles section explains the fundamental game concepts used constantly during play, including how characteristics work, how modifiers change values, and how saving throws and AP are interpreted.",
+  },
+  {
+    title: "Characteristics",
+    keywords: [
+      "characteristics",
+      "characteristic",
+      "base value",
+      "current value",
+      "reference characteristic",
+      "profile",
+    ],
+    text: "Characteristics are the values attached to models, units, and wargear profiles. The printed profile number is the Base Value. If rules change it, the modified result is the Current Value. Some values can reference another characteristic instead of using a fixed number, which the rules describe as a Reference Characteristic.",
+  },
+  {
+    title: "Characteristics and Modifiers",
+    keywords: [
+      "characteristics and modifiers",
+      "modifiers",
+      "modifier order",
+      "set value",
+      "multiply",
+      "divide",
+      "add",
+      "subtract",
+    ],
+    text: "Characteristics can be modified by rules and special rules. Once a characteristic has been changed, later modifiers apply to the Current Value rather than restarting from the Base Value. When multiple kinds of modifiers apply, multiplication and division are applied first, then addition and subtraction. Effects that set a value replace the modified Current Value and override the other modifiers while active.",
+  },
+  {
+    title: "Modifier Duration",
+    keywords: [
+      "modifier duration",
+      "duration",
+      "entire battle",
+      "battle turn",
+      "player turn",
+      "phase",
+      "sub-phase",
+    ],
+    text: "Modifiers are temporary adjustments. Their duration can last for a phase or sub-phase, a player turn, a battle turn, or the entire battle, depending on the rule that created them. When the duration ends, that modifier is removed and the characteristic updates again based on any remaining active effects.",
+  },
+  {
+    title: "Saving Throws and AP Modifiers",
+    keywords: [
+      "saving throws",
+      "save modifier",
+      "ap modifier",
+      "improve save",
+      "reduce save",
+      "2+",
+      "6+",
+      "ap",
+    ],
+    text: "Saving Throws are handled differently from most characteristics. Improving a Saving Throw or AP by one step reduces the number by 1. Reducing it by one step increases the number by 1. A Saving Throw or AP value cannot be improved better than 2+ or 2. If it is reduced worse than 6+, the value becomes '-'.",
+  },
+  {
+    title: "Maximum and Minimum Characteristic Values",
+    keywords: [
+      "maximum characteristic values",
+      "minimum characteristic values",
+      "negative value",
+      "fractional value",
+      "round down",
+      "value of 0",
+      "max min",
+    ],
+    text: "A modifier cannot make a characteristic negative or fractional. If a rule would push a value below 0, it becomes 0 instead. Fractional values are rounded down to the nearest whole number. Most characteristics can be increased above their Base Value, while some special categories such as Saving Throws keep their own limits.",
+  },
+  {
+    title: "Model Characteristics",
+    keywords: [
+      "model characteristics",
+      "core characteristics",
+      "movement",
+      "weapon skill",
+      "ballistic skill",
+      "strength",
+      "toughness",
+      "initiative",
+      "attacks",
+    ],
+    text: "The Basic Principles pages shown here explain core model characteristics including Movement, Weapon Skill, Ballistic Skill, Strength, Toughness, Initiative, and Attacks. These values are used to resolve movement, melee hit tests, ranged attacks, wound tests, fight order, and how many attacks a model can make.",
+  },
+  {
+    title: "Zero Value Effects",
+    keywords: [
+      "zero value",
+      "reduced to 0",
+      "movement 0",
+      "ws 0",
+      "bs 0",
+      "strength 0",
+      "toughness 0",
+      "attacks 0",
+    ],
+    text: "The Basic Principles pages call out important effects when characteristics reach 0. Movement 0 prevents moving, rushing, or otherwise changing position until it increases again. Ballistic Skill 0 means the model cannot make Shooting Attacks. Weapon Skill 0 means the model cannot make attacks in Combat and attackers treat the target as Weapon Skill 1 when determining required Hit Tests. Strength 0 causes wound tests using that characteristic to automatically fail. Toughness 0 causes wound tests targeting that model to automatically succeed. Attacks 0 means the model cannot make attacks in Combat.",
+  },
+];
+
+var HELP_ARMOURY_ENTRIES = [
+  {
+    title: "Calibanite Warblade",
+    keywords: [
+      "calibanite warblade",
+      "warblade",
+      "dark angels warblade",
+      "blades of the first legion",
+      "sword of the order",
+    ],
+    text: "Dark Angels armoury entry from Liber Loyalist Armoury V2. A model may exchange a power sword for a Calibanite warblade for +5 points per model. Visible profile: Initiative Modifier 1, Attack Modifier A, Strength Modifier +1, AP 3, Damage 1, Breaching (5+), and the Sword of the Order trait.",
+  },
+  {
+    title: "Terranic Greatsword",
+    keywords: [
+      "terranic greatsword",
+      "greatsword",
+      "dark angels greatsword",
+      "sword of the order",
+    ],
+    text: "Dark Angels armoury entry from Liber Loyalist Armoury V2. A model may exchange a power fist for a Terranic greatsword for free. Visible profile: Initiative Modifier -1, Attack Modifier A, Strength Modifier +2, AP 3, Damage 2, Breaching (5+), and the Sword of the Order trait.",
+  },
+  {
+    title: "Power Glaive",
+    keywords: [
+      "power glaive",
+      "glaive",
+      "white scars power glaive",
+      "white scars glaive",
+    ],
+    text: "White Scars armoury entry from Liber Loyalist Armoury V2. Command sub-type models with the White Scars trait may exchange a power weapon for a power glaive for +10 points per model. Visible profile: Initiative Modifier 1, Attack Modifier A, Strength Modifier +1, AP 3, Damage 1, Impact (AP), Breaching (5+), and the Power trait.",
+  },
+  {
+    title: "Cyber-hawk",
+    keywords: [
+      "cyber-hawk",
+      "cyber hawk",
+      "white scars cyber-hawk",
+      "white scars cyber hawk",
+    ],
+    text: "White Scars armoury entry from Liber Loyalist Armoury V2. Command sub-type models with the White Scars trait may select one cyber-hawk for +10 points per model. Units including one or more models with cyber-hawks gain Move Through Cover.",
+  },
+  {
+    title: "Sonic Shriekers",
+    keywords: [
+      "sonic shriekers",
+      "shriekers",
+      "emperor's children shriekers",
+      "emperors children shriekers",
+    ],
+    text: "Emperor's Children armoury entry from Liber Hereticus Armoury V2. Command or Champion sub-type models with the Emperor's Children and Traitor traits may take sonic shriekers for +15 points per model. If a Unit includes one or more models with sonic shriekers, the target Unit of that Unit's Charge cannot make Reactions until the Charge procedure is complete.",
+  },
+  {
+    title: "Sonic Lance",
+    keywords: [
+      "sonic lance",
+      "lance",
+      "emperor's children sonic lance",
+      "emperors children sonic lance",
+      "sonic weapon",
+    ],
+    text: "Emperor's Children armoury entry from Liber Hereticus Armoury V2. Command or Champion sub-type models with the Emperor's Children and Traitor traits may take a sonic lance for +10 points per model. Visible profile: Range Template 1, Firepower 2, Roll Score 5, AP 1, Damage 1, Template, Breaching (6+), and the Sonic and Assault traits.",
+  },
+  {
+    title: "Phoenix Power Spear",
+    keywords: [
+      "phoenix power spear",
+      "power spear",
+      "phoenix spear",
+      "emperor's children power spear",
+      "emperors children power spear",
+    ],
+    text: "Emperor's Children armoury entry from Liber Hereticus Armoury V2. Command, Champion, or Sergeant sub-type models with the Emperor's Children trait may exchange a power weapon for a Phoenix power spear for +10 points per model. Visible profile: Initiative Modifier +1, Attack Modifier A, Strength Modifier +1, AP 3, Damage 1, Impact (D), Breaching (6+), and the Power trait.",
+  },
+];
+
+var HELP_WEAPON_ARMOURY_ENTRIES = [
+  {
+    title: "Demolisher cannon",
+    keywords: ["demolisher cannon"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 1, Roll Score 12, AP 3, Damage 3. Special Rules: Blast (3"), Breaching (5+), Ordnance (D), Stun (1). Traits: —.',
+  },
+  {
+    title: "Morbus bombard - HE shell",
+    keywords: ["morbus bombard he shell"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 1, Roll Score 9, AP 4, Damage 1. Special Rules: Ordnance (D), Blast (5"), Barrage (2), Breaching (6+), Pinning (1). Traits: —.',
+  },
+  {
+    title: "Morbus bombard - Phosphex shell*",
+    keywords: ["morbus bombard phosphex shell"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 1, Roll Score 5, AP 3, Damage 1. Special Rules: Blast (5"), Barrage (1), Poisoned (3+), Panic (3), Breaching (5+). Traits: Phosphex.',
+  },
+  {
+    title: "Quad launcher - Frag",
+    keywords: ["quad launcher frag"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 60, Firepower 1, Roll Score 5, AP 5, Damage 1. Special Rules: Heavy (FP), Blast (5"), Barrage (2). Traits: —.',
+  },
+  {
+    title: "Quad launcher - Shatter",
+    keywords: ["quad launcher shatter"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 4, Roll Score 7, AP 4, Damage 1. Special Rules: Heavy (D), Armourbane. Traits: —.",
+  },
+  {
+    title: "Quad launcher - Phosphex canister shot*",
+    keywords: ["quad launcher phosphex canister shot"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 1, Roll Score 5, AP 3, Damage 1. Special Rules: Blast (3"), Barrage (1), Poisoned (3+), Panic (3), Breaching (5+). Traits: Phosphex.',
+  },
+  {
+    title: "Dreadhammer siege cannon",
+    keywords: ["dreadhammer siege cannon"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 1, Roll Score 12, AP 3, Damage 3. Special Rules: Ordnance (D), Blast (5"), Breaching (5+), Stun (1). Traits: —.',
+  },
+  {
+    title: "Archaeotech pistol",
+    keywords: ["archaeotech pistol"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 12, Firepower 1, Roll Score 6, AP 4, Damage 2. Special Rules: Pistol, Breaching (3+). Traits: Assault.",
+  },
+  {
+    title: "Astartes shotgun",
+    keywords: ["astartes shotgun"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 12, Firepower 2, Roll Score 4, AP —, Damage 1. Special Rules: Stun (0). Traits: Assault, Auto.",
+  },
+  {
+    title: "Rotor cannon",
+    keywords: ["rotor cannon"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 3, Roll Score 3, AP 4, Damage 1. Special Rules: Heavy (FP), Suppressive (1). Traits: Auto.",
+  },
+  {
+    title: "Autocannon",
+    keywords: ["autocannon"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 48, Firepower 2, Roll Score 7, AP 4, Damage 2. Special Rules: Breaching (6+), Heavy (FP). Traits: Auto.",
+  },
+  {
+    title: "Reaper autocannon",
+    keywords: ["reaper autocannon"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 2, Roll Score 6, AP 4, Damage 2. Special Rules: Breaching (6+), Heavy (FP). Traits: Auto.",
+  },
+  {
+    title: "Kheres assault cannon",
+    keywords: ["kheres assault cannon"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 5, Roll Score 6, AP 4, Damage 1. Special Rules: Breaching (6+), Heavy (FP). Traits: Auto.",
+  },
+  {
+    title: "Gravis autocannon",
+    keywords: ["gravis autocannon"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 48, Firepower 3, Roll Score 8, AP 4, Damage 2. Special Rules: Breaching (6+), Heavy (FP). Traits: Auto.",
+  },
+  {
+    title: "Gravis autocannon battery",
+    keywords: ["gravis autocannon battery"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 48, Firepower 5, Roll Score 8, AP 4, Damage 2. Special Rules: Breaching (6+), Heavy (FP). Traits: Auto.",
+  },
+  {
+    title: "Predator cannon",
+    keywords: ["predator cannon"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 48, Firepower 3, Roll Score 8, AP 4, Damage 2. Special Rules: Breaching (6+), Heavy (FP). Traits: Auto.",
+  },
+  {
+    title: "Punisher rotary cannon",
+    keywords: ["punisher rotary cannon"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 8, Roll Score 6, AP 4, Damage 1. Special Rules: Breaching (6+), Heavy (FP). Traits: Auto.",
+  },
+  {
+    title: "Twin accelerator autocannon",
+    keywords: ["twin accelerator autocannon"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 48, Firepower 6, Roll Score 7, AP 4, Damage 2. Special Rules: Ordnance (FP), Suppressive (2). Traits: Auto.",
+  },
+  {
+    title: "Quad accelerator autocannon",
+    keywords: ["quad accelerator autocannon"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 48, Firepower 10, Roll Score 7, AP 4, Damage 2. Special Rules: Breaching (6+), Rapid Tracking, Skyfire. Traits: Auto.",
+  },
+  {
+    title: "Fellblade accelerator cannon - HE shell",
+    keywords: ["fellblade accelerator cannon he shell"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 100, Firepower 1, Roll Score 8, AP 3, Damage 2. Special Rules: Blast (5"), Stun (2). Traits: Auto.',
+  },
+  {
+    title: "Fellblade accelerator cannon - AE shell",
+    keywords: ["fellblade accelerator cannon ae shell"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 100, Firepower 1, Roll Score 12, AP 2, Damage 3. Special Rules: Blast (3"), Ordnance (D). Traits: Auto.',
+  },
+  {
+    title: "Skyreaper battery",
+    keywords: ["skyreaper battery"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 48, Firepower 6, Roll Score 7, AP 4, Damage 2. Special Rules: Rapid Tracking, Skyfire. Traits: Auto.",
+  },
+  {
+    title: "Anvilus autocannon battery",
+    keywords: ["anvilus autocannon battery"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 48, Firepower 6, Roll Score 8, AP 4, Damage 2. Special Rules: Breaching (5+), Rapid Tracking, Skyfire. Traits: Auto.",
+  },
+  {
+    title: "Anvilus snub autocannon",
+    keywords: ["anvilus snub autocannon"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 3, Roll Score 7, AP 4, Damage 2. Special Rules: Breaching (5+). Traits: Auto.",
+  },
+  {
+    title: "Leviathan storm cannon",
+    keywords: ["leviathan storm cannon"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 4, Roll Score 7, AP 4, Damage 2. Special Rules: Heavy (FP), Breaching (5+). Traits: Auto.",
+  },
+  {
+    title: "Kratos battlecannon - HE shells",
+    keywords: ["kratos battlecannon he shells"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 1, Roll Score 8, AP 4, Damage 1. Special Rules: Ordnance (D), Blast (5"), Stun (1). Traits: Auto.',
+  },
+  {
+    title: "Kratos battlecannon - AP shells",
+    keywords: ["kratos battlecannon ap shells"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 1, Roll Score 8, AP 2, Damage 2. Special Rules: Ordnance (D), Armourbane. Traits: Auto.",
+  },
+  {
+    title: "Kratos battlecannon - Flashburn shells*",
+    keywords: ["kratos battlecannon flashburn shells"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 1, Roll Score 9, AP 2, Damage 3. Special Rules: Ordnance (D), Armourbane, Overload (1). Traits: Auto.",
+  },
+  {
+    title: "Bolt pistol",
+    keywords: ["bolt pistol"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 12, Firepower 1, Roll Score 4, AP 5, Damage 1. Special Rules: Pistol. Traits: Assault, Bolt.",
+  },
+  {
+    title: "Bolter",
+    keywords: ["bolter"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 2, Roll Score 4, AP 5, Damage 1. Special Rules: —. Traits: Bolt.",
+  },
+  {
+    title: "Twin bolter",
+    keywords: ["twin bolter"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 4, Roll Score 4, AP 5, Damage 1. Special Rules: —. Traits: Bolt.",
+  },
+  {
+    title: "Combi-bolter",
+    keywords: ["combi bolter"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 4, Roll Score 4, AP 5, Damage 1. Special Rules: —. Traits: Bolt.",
+  },
+  {
+    title: "Kraken bolter",
+    keywords: ["kraken bolter"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 30, Firepower 4, Roll Score 2, AP 4, Damage 1. Special Rules: Precision (4+), Shot Selector. Traits: Bolt.",
+  },
+  {
+    title: "Nemesis bolter",
+    keywords: ["nemesis bolter"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 48, Firepower 1, Roll Score 4, AP 5, Damage 1. Special Rules: Heavy (RS), Breaching (5+), Pinning (1), Precision (4+). Traits: Bolt.",
+  },
+  {
+    title: "Heavy bolter",
+    keywords: ["heavy bolter"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 5, Roll Score 3, AP 4, Damage 1. Special Rules: Heavy (FP). Traits: Bolt.",
+  },
+  {
+    title: "Twin heavy bolter",
+    keywords: ["twin heavy bolter"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 6, Roll Score 5, AP 4, Damage 1. Special Rules: —. Traits: Bolt.",
+  },
+  {
+    title: "Gravis bolt cannon",
+    keywords: ["gravis bolt cannon"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 6, Roll Score 5, AP 4, Damage 2. Special Rules: Heavy (FP). Traits: Bolt.",
+  },
+  {
+    title: "Gravis heavy bolter battery",
+    keywords: ["gravis heavy bolter battery"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 5, Roll Score 8, AP 4, Damage 1. Special Rules: Suppressive (2). Traits: Bolt.",
+  },
+  {
+    title: "Twin Avenger bolt cannon",
+    keywords: ["twin avenger bolt cannon"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 10, Roll Score 6, AP 3, Damage 1. Special Rules: Suppressive (2). Traits: Bolt.",
+  },
+  {
+    title: "Bolter (Primary)",
+    keywords: ["bolter primary"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 2, Roll Score 4, AP 5, Damage 1. Special Rules: Combi. Traits: Bolt.",
+  },
+  {
+    title: "Flamer (Secondary)",
+    keywords: ["flamer secondary"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range Template, Firepower 1, Roll Score 4, AP 5, Damage 1. Special Rules: Template, Panic (1), Limited (1), Combi. Traits: Flame.",
+  },
+  {
+    title: "Meltagun (Secondary)",
+    keywords: ["meltagun secondary"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 12, Firepower 1, Roll Score 8, AP 1, Damage 2. Special Rules: Melta (6), Limited (1), Combi. Traits: Melta.",
+  },
+  {
+    title: "Plasma gun (Secondary)",
+    keywords: ["plasma gun secondary"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 2, Roll Score 6, AP 4, Damage 1. Special Rules: Breaching (6+), Limited (1), Combi. Traits: Plasma.",
+  },
+  {
+    title: "Volkite charger (Secondary)",
+    keywords: ["volkite charger secondary"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 15, Firepower 2, Roll Score 5, AP 5, Damage 1. Special Rules: Deflagrate (5), Combi. Traits: Volkite.",
+  },
+  {
+    title: "Grenade launcher (Secondary) - Krak",
+    keywords: ["grenade launcher secondary krak"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 1, Roll Score 6, AP 4, Damage 2. Special Rules: Combi. Traits: —.",
+  },
+  {
+    title: "Disintegrator (Secondary)",
+    keywords: ["disintegrator secondary"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 1, Roll Score 4, AP 2, Damage 3. Special Rules: Overload (1), Limited (1), Combi. Traits: Disintegrator.",
+  },
+  {
+    title: "Graviton gun (Secondary)",
+    keywords: ["graviton gun secondary"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 18, Firepower 1, Roll Score 6, AP 4, Damage 1. Special Rules: Blast (3"), Breaching (6+), Shock (Pinned), Pinning (1), Limited (1), Combi. Traits: Graviton.',
+  },
+  {
+    title: "Conversion beam cannon (<15)",
+    keywords: ["conversion beam cannon 15"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range <15, Firepower 1, Roll Score 6, AP 4, Damage 1. Special Rules: Heavy (RS), Blast (3"). Traits: Conversion.',
+  },
+  {
+    title: "Conversion beam cannon (15-30)",
+    keywords: ["conversion beam cannon 15 30"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 15-30, Firepower 1, Roll Score 7, AP 3, Damage 2. Special Rules: Heavy (RS), Blast (3"). Traits: Conversion.',
+  },
+  {
+    title: "Conversion beam cannon (>30-45)",
+    keywords: ["conversion beam cannon 30 45"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range >30-45, Firepower 1, Roll Score 8, AP 2, Damage 3. Special Rules: Heavy (RS), Blast (3"). Traits: Conversion.',
+  },
+  {
+    title: "Heavy conversion beam cannon (<15)",
+    keywords: ["heavy conversion beam cannon 15"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range <15, Firepower 1, Roll Score 6, AP 4, Damage 1. Special Rules: Heavy (RS), Blast (5"). Traits: Conversion.',
+  },
+  {
+    title: "Heavy conversion beam cannon (15-30)",
+    keywords: ["heavy conversion beam cannon 15 30"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 15-30, Firepower 1, Roll Score 7, AP 2, Damage 3. Special Rules: Heavy (RS), Blast (5"). Traits: Conversion.',
+  },
+  {
+    title: "Heavy conversion beam cannon (>30-45)",
+    keywords: ["heavy conversion beam cannon 30 45"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range >30-45, Firepower 1, Roll Score 8, AP 2, Damage 3. Special Rules: Heavy (RS), Blast (5"). Traits: Conversion.',
+  },
+  {
+    title: "Inversion beamer (<15)",
+    keywords: ["inversion beamer 15"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range <15, Firepower 1, Roll Score 8, AP 2, Damage 3. Special Rules: Heavy (RS), Blast (5"). Traits: Conversion.',
+  },
+  {
+    title: "Inversion beamer (15-30)",
+    keywords: ["inversion beamer 15 30"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 15-30, Firepower 1, Roll Score 7, AP 3, Damage 2. Special Rules: Heavy (RS), Blast (5"). Traits: Conversion.',
+  },
+  {
+    title: "Disintegrator pistol",
+    keywords: ["disintegrator pistol"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 12, Firepower 1, Roll Score 4, AP 3, Damage 2. Special Rules: Pistol, Overload (1). Traits: Assault, Disintegrator.",
+  },
+  {
+    title: "Disintegrator rifle",
+    keywords: ["disintegrator rifle"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 1, Roll Score 4, AP 3, Damage 2. Special Rules: Overload (1). Traits: Disintegrator.",
+  },
+  {
+    title: "Disintegrator blaster",
+    keywords: ["disintegrator blaster"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 18, Firepower 1, Roll Score 5, AP 2, Damage 2. Special Rules: Overload (1). Traits: Disintegrator.",
+  },
+  {
+    title: "Heavy disintegrator",
+    keywords: ["heavy disintegrator"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 1, Roll Score 6, AP 2, Damage 2. Special Rules: Heavy (FP), Overload (1). Traits: Disintegrator.",
+  },
+  {
+    title: "Twin heavy disintegrator",
+    keywords: ["twin heavy disintegrator"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 2, Roll Score 7, AP 2, Damage 2. Special Rules: Overload (2). Traits: Disintegrator.",
+  },
+  {
+    title: "Disintegrator cannon",
+    keywords: ["disintegrator cannon"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 2, Roll Score 9, AP 2, Damage 3. Special Rules: Overload (2). Traits: Disintegrator.",
+  },
+  {
+    title: "Graviton gun",
+    keywords: ["graviton gun"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 18, Firepower 1, Roll Score 6, AP 4, Damage 1. Special Rules: Blast (3"), Breaching (6+), Shock (Pinned), Pinning (1). Traits: Graviton.',
+  },
+  {
+    title: "Graviton cannon",
+    keywords: ["graviton cannon"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 1, Roll Score 8, AP 3, Damage 1. Special Rules: Heavy (D), Blast (3"), Breaching (6+), Shock (Pinned), Pinning (2). Traits: Graviton.',
+  },
+  {
+    title: "Graviton-charge cannon",
+    keywords: ["graviton charge cannon"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 1, Roll Score 9, AP 3, Damage 2. Special Rules: Heavy (D), Blast (5"), Barrage (1), Shock (Pinned), Pinning (2). Traits: Graviton.',
+  },
+  {
+    title: "Grav-flux bombard",
+    keywords: ["grav flux bombard"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 18, Firepower 1, Roll Score 7, AP 4, Damage 1. Special Rules: Heavy (D), Blast (5"), Breaching (6+), Shock (Pinned), Pinning (3). Traits: Graviton.',
+  },
+  {
+    title: "Graviton pulveriser",
+    keywords: ["graviton pulveriser"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 18, Firepower 1, Roll Score 9, AP 3, Damage 3. Special Rules: Heavy (D), Blast (3"), Breaching (6+), Shock (Pinned), Pinning (3). Traits: Graviton.',
+  },
+  {
+    title: "Hand flamer",
+    keywords: ["hand flamer"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range Template, Firepower 1, Roll Score 3, AP —, Damage 1. Special Rules: Template, Pistol. Traits: Assault, Flame.",
+  },
+  {
+    title: "Flamer",
+    keywords: ["flamer"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range Template, Firepower 1, Roll Score 4, AP 5, Damage 1. Special Rules: Template, Panic (1). Traits: Flame.",
+  },
+  {
+    title: "Heavy flamer",
+    keywords: ["heavy flamer"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range Template, Firepower 1, Roll Score 5, AP 4, Damage 1. Special Rules: Template, Panic (1). Traits: Flame.",
+  },
+  {
+    title: "Twin heavy flamer",
+    keywords: ["twin heavy flamer"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range Template, Firepower 1, Roll Score 5, AP 4, Damage 1. Special Rules: Template, Panic (2). Traits: Flame.",
+  },
+  {
+    title: "Flamestorm cannon",
+    keywords: ["flamestorm cannon"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range Template, Firepower 1, Roll Score 6, AP 4, Damage 2. Special Rules: Template, Panic (2). Traits: Flame.",
+  },
+  {
+    title: "Photonic incinerator",
+    keywords: ["photonic incinerator"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range Template, Firepower 1, Roll Score 6, AP 4, Damage 1. Special Rules: Template, Panic (2). Traits: Assault, Flame.",
+  },
+  {
+    title: "Lascannon",
+    keywords: ["lascannon"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 48, Firepower 1, Roll Score 9, AP 2, Damage 1. Special Rules: Heavy (D), Armourbane. Traits: Las.",
+  },
+  {
+    title: "Twin lascannon",
+    keywords: ["twin lascannon"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 48, Firepower 2, Roll Score 9, AP 2, Damage 1. Special Rules: Heavy (D), Armourbane. Traits: Las.",
+  },
+  {
+    title: "Lascannon array",
+    keywords: ["lascannon array"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 48, Firepower 2, Roll Score 9, AP 2, Damage 3. Special Rules: Armourbane. Traits: Las.",
+  },
+  {
+    title: "Arachnus heavy lascannon battery",
+    keywords: ["arachnus heavy lascannon battery"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 48, Firepower 2, Roll Score 9, AP 2, Damage 4. Special Rules: Heavy (RS), Armourbane, Skyfire. Traits: Las.",
+  },
+  {
+    title: "Laser destroyer",
+    keywords: ["laser destroyer"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 2, Roll Score 10, AP 2, Damage 2. Special Rules: Heavy (D), Armourbane. Traits: Las.",
+  },
+  {
+    title: "Magna laser destroyer",
+    keywords: ["magna laser destroyer"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 2, Roll Score 10, AP 2, Damage 3. Special Rules: Ordnance (D), Armourbane. Traits: Las.",
+  },
+  {
+    title: "Neutron beam laser",
+    keywords: ["neutron beam laser"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 2, Roll Score 10, AP 2, Damage 2. Special Rules: Ordnance (D), Armourbane, Shock (Suppressed). Traits: Las.",
+  },
+  {
+    title: "Neutron blaster",
+    keywords: ["neutron blaster"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 1, Roll Score 9, AP 2, Damage 3. Special Rules: Armourbane, Shock (Suppressed), Overload (1). Traits: Las.",
+  },
+  {
+    title: "Neutron laser battery",
+    keywords: ["neutron laser battery"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 72, Firepower 3, Roll Score 10, AP 2, Damage 3. Special Rules: Ordnance (D), Armourbane, Shock (Suppressed), Overload (1). Traits: Las.",
+  },
+  {
+    title: "Neutron-wave cannon",
+    keywords: ["neutron wave cannon"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 120, Firepower 2, Roll Score 12, AP 2, Damage 4. Special Rules: Ordnance (D), Armourbane, Shock (Stunned). Traits: Las.",
+  },
+  {
+    title: "Turbo-laser destructor",
+    keywords: ["turbo laser destructor"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 96, Firepower 1, Roll Score 12, AP 2, Damage 6. Special Rules: Blast (3"), Armourbane. Traits: Las.',
+  },
+  {
+    title: "Meltagun",
+    keywords: ["meltagun"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 12, Firepower 1, Roll Score 8, AP 1, Damage 2. Special Rules: Melta (6). Traits: Melta.",
+  },
+  {
+    title: "Multi-melta",
+    keywords: ["multi melta"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 1, Roll Score 8, AP 1, Damage 3. Special Rules: Heavy (RS), Melta (8). Traits: Melta.",
+  },
+  {
+    title: "Twin multi-melta",
+    keywords: ["twin multi melta"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 2, Roll Score 8, AP 1, Damage 3. Special Rules: Heavy (RS), Melta (8). Traits: Melta.",
+  },
+  {
+    title: "Gravis melta cannon",
+    keywords: ["gravis melta cannon"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 1, Roll Score 9, AP 2, Damage 4. Special Rules: Heavy (RS), Melta (8). Traits: Melta.",
+  },
+  {
+    title: "Magna-melta cannon",
+    keywords: ["magna melta cannon"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 1, Roll Score 9, AP 2, Damage 4. Special Rules: Heavy (RS), Melta (8). Traits: Melta.",
+  },
+  {
+    title: "Cyclonic melta lance",
+    keywords: ["cyclonic melta lance"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 12, Firepower 3, Roll Score 8, AP 2, Damage 3. Special Rules: Heavy (RS), Melta (8). Traits: Melta.",
+  },
+  {
+    title: "Siege melta array",
+    keywords: ["siege melta array"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 12, Firepower 1, Roll Score 10, AP 2, Damage 4. Special Rules: Heavy (RS), Melta (12). Traits: Melta.",
+  },
+  {
+    title: "Melta cutters",
+    keywords: ["melta cutters"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 6, Firepower 1, Roll Score 8, AP 2, Damage 3. Special Rules: Heavy (RS), Blast (5"), Melta (6). Traits: Melta.',
+  },
+  {
+    title: "Melta blast-gun",
+    keywords: ["melta blast gun"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 2, Roll Score 9, AP 2, Damage 4. Special Rules: Heavy (RS), Melta (24). Traits: Melta.",
+  },
+  {
+    title: "Sentry melta array",
+    keywords: ["sentry melta array"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 18, Firepower 2, Roll Score 8, AP 2, Damage 2. Special Rules: Heavy (RS), Blast (3"), Melta (3). Traits: Melta.',
+  },
+  {
+    title: "Particle shredder",
+    keywords: ["particle shredder"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range Template, Firepower 1, Roll Score 6, AP 3, Damage 1. Special Rules: Template, Breaching (6+), Overload (1). Traits: Assault, Particle.",
+  },
+  {
+    title: "Heavy particle shredder",
+    keywords: ["heavy particle shredder"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range Template, Firepower 1, Roll Score 6, AP 3, Damage 2. Special Rules: Template, Breaching (6+), Overload (1). Traits: Assault, Particle.",
+  },
+  {
+    title: "Phosphex bomb",
+    keywords: ["phosphex bomb"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 6, Firepower 1, Roll Score 5, AP 3, Damage 1. Special Rules: Blast (3"), Poisoned (3+), Panic (3), Breaching (5+). Traits: Phosphex.',
+  },
+  {
+    title: "Phosphex discharger",
+    keywords: ["phosphex discharger"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 18, Firepower 1, Roll Score 5, AP 3, Damage 1. Special Rules: Blast (3"), Limited (3), Poisoned (3+), Panic (3), Breaching (5+). Traits: Phosphex.',
+  },
+  {
+    title: "Rad grenades",
+    keywords: ["rad grenades"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 8, Firepower 1, Roll Score 4, AP 3, Damage 1. Special Rules: Poisoned (2+), Phage (T). Traits: Rad.",
+  },
+  {
+    title: "Concussive resonator",
+    keywords: ["concussive resonator"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range Template, Firepower 2, Roll Score 6, AP 5, Damage 1. Special Rules: Template, Overload (1), Stun (2). Traits: Assault, Sonic.",
+  },
+  {
+    title: "Plasma pistol - Sustained",
+    keywords: ["plasma pistol sustained"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 12, Firepower 1, Roll Score 6, AP 4, Damage 1. Special Rules: Pistol, Breaching (6+). Traits: Assault, Plasma.",
+  },
+  {
+    title: "Plasma pistol - Maximal",
+    keywords: ["plasma pistol maximal"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 12, Firepower 1, Roll Score 7, AP 4, Damage 1. Special Rules: Pistol, Breaching (5+), Overload (1). Traits: Assault, Plasma.",
+  },
+  {
+    title: "Overcharged plasma pistol",
+    keywords: ["overcharged plasma pistol"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 12, Firepower 1, Roll Score 6, AP 4, Damage 1. Special Rules: Pistol, Breaching (4+), Overload (1). Traits: Assault, Plasma.",
+  },
+  {
+    title: "Plasma gun - Sustained",
+    keywords: ["plasma gun sustained"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 1, Roll Score 6, AP 4, Damage 1. Special Rules: Breaching (6+). Traits: Plasma.",
+  },
+  {
+    title: "Plasma gun - Maximal",
+    keywords: ["plasma gun maximal"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 1, Roll Score 7, AP 4, Damage 1. Special Rules: Breaching (5+), Overload (1). Traits: Plasma.",
+  },
+  {
+    title: "Twin plasma gun - Sustained",
+    keywords: ["twin plasma gun sustained"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 2, Roll Score 6, AP 4, Damage 1. Special Rules: Breaching (5+). Traits: Plasma.",
+  },
+  {
+    title: "Twin plasma gun - Maximal",
+    keywords: ["twin plasma gun maximal"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 2, Roll Score 7, AP 4, Damage 1. Special Rules: Breaching (4+), Overload (1). Traits: Plasma.",
+  },
+  {
+    title: "Plasma bombard - Sustained",
+    keywords: ["plasma bombard sustained"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 1, Roll Score 6, AP 4, Damage 1. Special Rules: Blast (3"), Barrage (1), Breaching (6+). Traits: Plasma.',
+  },
+  {
+    title: "Plasma bombard - Maximal",
+    keywords: ["plasma bombard maximal"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 1, Roll Score 7, AP 4, Damage 1. Special Rules: Blast (3"), Barrage (1), Breaching (5+), Overload (2). Traits: Plasma.',
+  },
+  {
+    title: "Heavy plasma bombard - Sustained",
+    keywords: ["heavy plasma bombard sustained"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 1, Roll Score 7, AP 4, Damage 2. Special Rules: Blast (5"), Barrage (1), Breaching (6+). Traits: Plasma.',
+  },
+  {
+    title: "Heavy plasma bombard - Maximal",
+    keywords: ["heavy plasma bombard maximal"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 1, Roll Score 8, AP 4, Damage 2. Special Rules: Blast (5"), Barrage (1), Breaching (5+), Overload (2). Traits: Plasma.',
+  },
+  {
+    title: "Plasma cannon - Sustained",
+    keywords: ["plasma cannon sustained"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 1, Roll Score 6, AP 4, Damage 1. Special Rules: Heavy (RS), Blast (3"), Breaching (6+). Traits: Plasma.',
+  },
+  {
+    title: "Plasma cannon - Maximal",
+    keywords: ["plasma cannon maximal"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 1, Roll Score 6, AP 4, Damage 1. Special Rules: Heavy (RS), Blast (3"), Breaching (5+), Overload (2). Traits: Plasma.',
+  },
+  {
+    title: "Gravis plasma cannon - Sustained",
+    keywords: ["gravis plasma cannon sustained"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 1, Roll Score 7, AP 4, Damage 1. Special Rules: Heavy (RS), Blast (5"), Breaching (6+). Traits: Plasma.',
+  },
+  {
+    title: "Gravis plasma cannon - Maximal",
+    keywords: ["gravis plasma cannon maximal"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 1, Roll Score 7, AP 4, Damage 2. Special Rules: Heavy (RS), Blast (5"), Breaching (5+), Overload (1). Traits: Plasma.',
+  },
+  {
+    title: "Plasma blaster - Sustained",
+    keywords: ["plasma blaster sustained"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 18, Firepower 2, Roll Score 7, AP 4, Damage 1. Special Rules: Breaching (6+). Traits: Plasma.",
+  },
+  {
+    title: "Plasma blaster - Maximal",
+    keywords: ["plasma blaster maximal"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 18, Firepower 2, Roll Score 8, AP 4, Damage 1. Special Rules: Breaching (5+), Overload (1). Traits: Plasma.",
+  },
+  {
+    title: "Executioner plasma destroyer - Sustained",
+    keywords: ["executioner plasma destroyer sustained"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 1, Roll Score 8, AP 4, Damage 1. Special Rules: Blast (5"), Breaching (5+). Traits: Plasma.',
+  },
+  {
+    title: "Executioner plasma destroyer - Maximal",
+    keywords: ["executioner plasma destroyer maximal"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 1, Roll Score 8, AP 4, Damage 2. Special Rules: Blast (5"), Breaching (4+), Overload (1). Traits: Plasma.',
+  },
+  {
+    title: "Hellfire plasma cannonade - Sustained",
+    keywords: ["hellfire plasma cannonade sustained"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 6, Roll Score 6, AP 4, Damage 1. Special Rules: Heavy (RS), Breaching (5+). Traits: Plasma.",
+  },
+  {
+    title: "Hellfire plasma cannonade - Maximal",
+    keywords: ["hellfire plasma cannonade maximal"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 1, Roll Score 7, AP 4, Damage 2. Special Rules: Heavy (RS), Blast (5"), Breaching (4+), Overload (1). Traits: Plasma.',
+  },
+  {
+    title: "Omega plasma array - Sustained",
+    keywords: ["omega plasma array sustained"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 6, Roll Score 7, AP 4, Damage 2. Special Rules: Breaching (5+). Traits: Plasma.",
+  },
+  {
+    title: "Omega plasma array - Maximal",
+    keywords: ["omega plasma array maximal"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 1, Roll Score 8, AP 4, Damage 2. Special Rules: Blast (5"), Breaching (4+), Overload (1). Traits: Plasma.',
+  },
+  {
+    title: "Volkite serpenta",
+    keywords: ["volkite serpenta"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 10, Firepower 2, Roll Score 5, AP 5, Damage 1. Special Rules: Pistol, Deflagrate (5). Traits: Assault, Volkite.",
+  },
+  {
+    title: "Overcharged volkite serpenta",
+    keywords: ["overcharged volkite serpenta"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 10, Firepower 4, Roll Score 6, AP 5, Damage 1. Special Rules: Pistol, Deflagrate (5), Overload (1). Traits: Assault, Volkite.",
+  },
+  {
+    title: "Volkite charger",
+    keywords: ["volkite charger"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 15, Firepower 2, Roll Score 5, AP 5, Damage 1. Special Rules: Deflagrate (5). Traits: Assault, Volkite.",
+  },
+  {
+    title: "Twin volkite charger",
+    keywords: ["twin volkite charger"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 15, Firepower 3, Roll Score 5, AP 5, Damage 1. Special Rules: Deflagrate (5). Traits: Volkite.",
+  },
+  {
+    title: "Volkite caliver",
+    keywords: ["volkite caliver"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 30, Firepower 2, Roll Score 6, AP 5, Damage 1. Special Rules: Heavy (FP), Deflagrate (6). Traits: Volkite.",
+  },
+  {
+    title: "Twin volkite caliver",
+    keywords: ["twin volkite caliver"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 30, Firepower 3, Roll Score 6, AP 5, Damage 1. Special Rules: Heavy (FP), Deflagrate (6). Traits: Volkite.",
+  },
+  {
+    title: "Volkite culverin",
+    keywords: ["volkite culverin"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 45, Firepower 3, Roll Score 6, AP 5, Damage 1. Special Rules: Heavy (FP), Deflagrate (6). Traits: Volkite.",
+  },
+  {
+    title: "Twin volkite culverin",
+    keywords: ["twin volkite culverin"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 45, Firepower 6, Roll Score 6, AP 5, Damage 1. Special Rules: Heavy (FP), Deflagrate (6). Traits: Volkite.",
+  },
+  {
+    title: "Volkite falconet",
+    keywords: ["volkite falconet"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 45, Firepower 10, Roll Score 7, AP 5, Damage 1. Special Rules: Deflagrate (7), Pinning (2). Traits: Volkite.",
+  },
+  {
+    title: "Volkite saker",
+    keywords: ["volkite saker"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 25, Firepower 6, Roll Score 6, AP 5, Damage 1. Special Rules: Deflagrate (6). Traits: Volkite.",
+  },
+  {
+    title: "Volkite macro-saker",
+    keywords: ["volkite macro saker"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 45, Firepower 8, Roll Score 6, AP 5, Damage 2. Special Rules: Deflagrate (6). Traits: Volkite.",
+  },
+  {
+    title: "Volkite carronade",
+    keywords: ["volkite carronade"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 45, Firepower 12, Roll Score 8, AP 3, Damage 2. Special Rules: Deflagrate (8). Traits: Volkite.",
+  },
+  {
+    title: "Volkite cardanelle",
+    keywords: ["volkite cardanelle"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 45, Firepower 12, Roll Score 7, AP 5, Damage 2. Special Rules: Deflagrate (7), Suppressive (1). Traits: Volkite.",
+  },
+  {
+    title: "Missile launcher - Frag",
+    keywords: ["missile launcher frag"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 48, Firepower 1, Roll Score 4, AP 6, Damage 1. Special Rules: Heavy (RS), Blast (3"). Traits: Missile.',
+  },
+  {
+    title: "Missile launcher - Krak",
+    keywords: ["missile launcher krak"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 48, Firepower 1, Roll Score 8, AP 3, Damage 1. Special Rules: Heavy (D). Traits: Missile.",
+  },
+  {
+    title: "Missile launcher - Flak",
+    keywords: ["missile launcher flak"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 48, Firepower 1, Roll Score 8, AP 4, Damage 1. Special Rules: Heavy (D), Skyfire. Traits: Missile.",
+  },
+  {
+    title: "Vengeance launcher",
+    keywords: ["vengeance launcher"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 48, Firepower 1, Roll Score 7, AP 4, Damage 1. Special Rules: Blast (5"). Traits: Missile.',
+  },
+  {
+    title: "Havoc launcher",
+    keywords: ["havoc launcher"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 48, Firepower 1, Roll Score 5, AP 5, Damage 1. Special Rules: Blast (3"), Stun (1). Traits: Missile.',
+  },
+  {
+    title: "Hunter-killer missile",
+    keywords: ["hunter killer missile"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 48, Firepower 1, Roll Score 9, AP 3, Damage 3. Special Rules: Armourbane, Limited (1). Traits: Missile.",
+  },
+  {
+    title: "Hellstrike missile",
+    keywords: ["hellstrike missile"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 48, Firepower 1, Roll Score 9, AP 3, Damage 3. Special Rules: Armourbane, Limited (1). Traits: Guided Missile.",
+  },
+  {
+    title: "Deathstorm missile launcher",
+    keywords: ["deathstorm missile launcher"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 18, Firepower D3, Roll Score 6, AP 4, Damage 1. Special Rules: Pinning (1). Traits: Missile.",
+  },
+  {
+    title: "Charybdis missile launcher",
+    keywords: ["charybdis missile launcher"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 18, Firepower 5, Roll Score 6, AP 4, Damage 1. Special Rules: Pinning (1). Traits: Missile.",
+  },
+  {
+    title: "Rotary missile launcher",
+    keywords: ["rotary missile launcher"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 48, Firepower 3, Roll Score 8, AP 2, Damage 2. Special Rules: —. Traits: Missile.",
+  },
+  {
+    title: "Sabre missile",
+    keywords: ["sabre missile"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 1, Roll Score 7, AP 4, Damage 2. Special Rules: Breaching (6+), Limited (1). Traits: Missile.",
+  },
+  {
+    title: "Tempest rocket",
+    keywords: ["tempest rocket"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 48, Firepower 1, Roll Score 7, AP 4, Damage 3. Special Rules: Armourbane, Limited (1). Traits: Guided Missile.",
+  },
+  {
+    title: "Stolos missile launcher",
+    keywords: ["stolos missile launcher"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 60, Firepower 1, Roll Score 6, AP 4, Damage 1. Special Rules: Heavy (FP), Blast (3"), Barrage (1). Traits: Missile.',
+  },
+  {
+    title: "Boreas air defence missile",
+    keywords: ["boreas air defence missile"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 48, Firepower 1, Roll Score 8, AP 2, Damage 3. Special Rules: Limited (1), Skyfire, Rapid Tracking. Traits: Missile.",
+  },
+  {
+    title: "Spicula rocket system",
+    keywords: ["spicula rocket system"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 72, Firepower 1, Roll Score 7, AP 4, Damage 1. Special Rules: Blast (7"), Barrage (2), Suppressive (1). Traits: Missile.',
+  },
+  {
+    title: "Arcus missile launcher - Arcus warheads",
+    keywords: ["arcus missile launcher arcus warheads"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 5, Roll Score 8, AP 2, Damage 2. Special Rules: —. Traits: Missile.",
+  },
+  {
+    title: "Arcus missile launcher - Skyspear warheads",
+    keywords: ["arcus missile launcher skyspear warheads"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 3, Roll Score 8, AP 2, Damage 2. Special Rules: Skyfire, Armourbane, Rapid Tracking. Traits: Missile.",
+  },
+  {
+    title: "Arcus missile launcher - Pyrax warheads",
+    keywords: ["arcus missile launcher pyrax warheads"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 1, Roll Score 5, AP 4, Damage 1. Special Rules: Blast (5"), Panic (1). Traits: Missile.',
+  },
+  {
+    title: "Arcus missile launcher - Neutron-flux warheads",
+    keywords: ["arcus missile launcher neutron flux warheads"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 36, Firepower 3, Roll Score 7, AP 4, Damage 1. Special Rules: Shock (Suppressed). Traits: Missile.",
+  },
+  {
+    title: "Cyclone missile launcher - Frag",
+    keywords: ["cyclone missile launcher frag"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 48, Firepower 1, Roll Score 4, AP 6, Damage 1. Special Rules: Heavy (RS), Blast (5"). Traits: Missile.',
+  },
+  {
+    title: "Cyclone missile launcher - Krak",
+    keywords: ["cyclone missile launcher krak"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 48, Firepower 2, Roll Score 8, AP 3, Damage 1. Special Rules: Heavy (D). Traits: Missile.",
+  },
+  {
+    title: "Cyclone missile launcher - Flak",
+    keywords: ["cyclone missile launcher flak"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 48, Firepower 2, Roll Score 8, AP 4, Damage 1. Special Rules: Heavy (D), Skyfire. Traits: Missile.",
+  },
+  {
+    title: "Scorpius missile launcher",
+    keywords: ["scorpius missile launcher"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 48, Firepower 1, Roll Score 8, AP 4, Damage 1. Special Rules: Heavy (FP), Blast (3"), Barrage (2), Breaching (5+). Traits: Missile.',
+  },
+  {
+    title: "Hyperios missile launcher",
+    keywords: ["hyperios missile launcher"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 48, Firepower 3, Roll Score 7, AP 3, Damage 2. Special Rules: Skyfire, Rapid Tracking. Traits: Missile.",
+  },
+  {
+    title: "Orias frag missile",
+    keywords: ["orias frag missile"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 48, Firepower 1, Roll Score 6, AP 5, Damage 1. Special Rules: Barrage (3), Blast (5"), Limited (1). Traits: Missile.',
+  },
+  {
+    title: "Melee Weapon",
+    keywords: ["melee weapon"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range IM, Firepower AM, Roll Score SM, AP AP, Damage D. Special Rules: Special Rules. Traits: Traits.",
+  },
+  {
+    title: "Chainsword",
+    keywords: ["chainsword"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 1, Firepower A, Roll Score S, AP 5, Damage 1. Special Rules: Shred (6+). Traits: Chain.",
+  },
+  {
+    title: "Heavy chainaxe",
+    keywords: ["heavy chainaxe"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range -1, Firepower A, Roll Score +3, AP 4, Damage 1. Special Rules: Shred (6+). Traits: Chain.",
+  },
+  {
+    title: "Heavy chainsword",
+    keywords: ["heavy chainsword"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range -1, Firepower A, Roll Score +2, AP 4, Damage 1. Special Rules: Shred (6+). Traits: Chain.",
+  },
+  {
+    title: "Chainaxe",
+    keywords: ["chainaxe"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 1, Firepower A, Roll Score +1, AP 5, Damage 1. Special Rules: Shred (6+). Traits: Chain.",
+  },
+  {
+    title: "Chainfist",
+    keywords: ["chainfist"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range -3, Firepower -1, Roll Score +6, AP 2, Damage 2. Special Rules: Armourbane, Shred (6+). Traits: Chain.",
+  },
+  {
+    title: "Gravis chainfist",
+    keywords: ["gravis chainfist"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range -1, Firepower A, Roll Score +4, AP 2, Damage 3. Special Rules: Armourbane, Shred (6+). Traits: Chain.",
+  },
+  {
+    title: "Paired Gravis chainfists",
+    keywords: ["paired gravis chainfists"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range -1, Firepower A, Roll Score +4, AP 2, Damage 4. Special Rules: Armourbane, Shred (6+). Traits: Chain.",
+  },
+  {
+    title: "Chain bayonet",
+    keywords: ["chain bayonet"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 1, Firepower A, Roll Score S, AP 5, Damage 1. Special Rules: Shred (6+). Traits: Bayonet, Chain.",
+  },
+  {
+    title: "Charnabal sabre",
+    keywords: ["charnabal sabre"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range +1, Firepower A, Roll Score S, AP —, Damage 1. Special Rules: Breaching (6+), Duellist's Edge (1). Traits: Charnabal.",
+  },
+  {
+    title: "Charnabal tabar",
+    keywords: ["charnabal tabar"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 1, Firepower A, Roll Score +1, AP —, Damage 1. Special Rules: Breaching (6+), Duellist's Edge (1). Traits: Charnabal.",
+  },
+  {
+    title: "Force sword",
+    keywords: ["force sword"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 1, Firepower A, Roll Score +1, AP 3, Damage 1. Special Rules: Force (D). Traits: Psychic.",
+  },
+  {
+    title: "Force axe",
+    keywords: ["force axe"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range -1, Firepower A, Roll Score +2, AP 2, Damage 1. Special Rules: Force (D). Traits: Psychic.",
+  },
+  {
+    title: "Force maul",
+    keywords: ["force maul"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range -1, Firepower A, Roll Score +3, AP 3, Damage 1. Special Rules: Force (D). Traits: Psychic.",
+  },
+  {
+    title: "Force staff",
+    keywords: ["force staff"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range +1, Firepower A, Roll Score +2, AP 4, Damage 1. Special Rules: Force (D). Traits: Psychic.",
+  },
+  {
+    title: "Power sword",
+    keywords: ["power sword"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 1, Firepower A, Roll Score S, AP 3, Damage 1. Special Rules: Breaching (6+). Traits: Power.",
+  },
+  {
+    title: "Power axe",
+    keywords: ["power axe"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range -1, Firepower A, Roll Score +1, AP 2, Damage 1. Special Rules: Breaching (5+). Traits: Power.",
+  },
+  {
+    title: "Power maul",
+    keywords: ["power maul"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 1, Firepower A, Roll Score +2, AP 3, Damage 1. Special Rules: Breaching (6+). Traits: Power.",
+  },
+  {
+    title: "Power lance",
+    keywords: ["power lance"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 1, Firepower A, Roll Score +1, AP 3, Damage 1. Special Rules: Precision (6+). Traits: Power.",
+  },
+  {
+    title: "Power fist",
+    keywords: ["power fist"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range -3, Firepower -1, Roll Score +4, AP 2, Damage 2. Special Rules: —. Traits: Power.",
+  },
+  {
+    title: "Gravis power fist",
+    keywords: ["gravis power fist"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 1, Firepower A, Roll Score +3, AP 2, Damage 2. Special Rules: —. Traits: Power.",
+  },
+  {
+    title: "Paired Gravis power fists",
+    keywords: ["paired gravis power fists"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 1, Firepower A, Roll Score +3, AP 2, Damage 3. Special Rules: —. Traits: Power.",
+  },
+  {
+    title: "Thunder hammer",
+    keywords: ["thunder hammer"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range -2, Firepower A, Roll Score x2, AP 2, Damage 3. Special Rules: —. Traits: Power.",
+  },
+  {
+    title: "Crozius Arcanum",
+    keywords: ["crozius arcanum"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 1, Firepower A, Roll Score +2, AP 3, Damage 2. Special Rules: Breaching (6+). Traits: Power.",
+  },
+  {
+    title: "Lightning claw",
+    keywords: ["lightning claw"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 1, Firepower A, Roll Score S, AP 3, Damage 1. Special Rules: Rending (6+), Breaching (6+). Traits: Power.",
+  },
+  {
+    title: "Pair of lightning claws",
+    keywords: ["pair of lightning claws"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 1, Firepower A, Roll Score S, AP 3, Damage 1. Special Rules: Rending (6+), Breaching (6+). Traits: Power.",
+  },
+  {
+    title: "Saturnine war axe",
+    keywords: ["saturnine war axe"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 1, Firepower A, Roll Score +1, AP 2, Damage 2. Special Rules: Reaping Blow (2). Traits: Power.",
+  },
+  {
+    title: "Saturnine concussion hammer",
+    keywords: ["saturnine concussion hammer"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range -3, Firepower A, Roll Score x2, AP 2, Damage 3. Special Rules: Critical Hit (6+). Traits: Power.",
+  },
+  {
+    title: "Saturnine disruption fist",
+    keywords: ["saturnine disruption fist"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range -2, Firepower A, Roll Score +2, AP 2, Damage 3. Special Rules: —. Traits: Power.",
+  },
+  {
+    title: "Paragon blade",
+    keywords: ["paragon blade"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 1, Firepower A, Roll Score +1, AP 2, Damage 1. Special Rules: Critical Hit (6+). Traits: —.",
+  },
+  {
+    title: "Lascutter (Melee Profile)",
+    keywords: ["lascutter melee profile"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range -3, Firepower 1, Roll Score 10, AP 2, Damage 4. Special Rules: —. Traits: —.",
+  },
+  {
+    title: "Siege drills",
+    keywords: ["siege drills"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range -3, Firepower 1, Roll Score 12, AP 2, Damage 4. Special Rules: —. Traits: —.",
+  },
+  {
+    title: "Krak grenades",
+    keywords: ["krak grenades"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 1, Firepower -3, Roll Score 6, AP 4, Damage 2. Special Rules: Detonation. Traits: —.",
+  },
+  {
+    title: "Melta bombs",
+    keywords: ["melta bombs"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 1, Firepower 1, Roll Score 9, AP 2, Damage 4. Special Rules: Armourbane, Detonation. Traits: —.",
+  },
+  {
+    title: "Leviathan siege claw",
+    keywords: ["leviathan siege claw"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 1, Firepower A, Roll Score +2, AP 2, Damage 3. Special Rules: —. Traits: —.",
+  },
+  {
+    title: "Paired Leviathan siege claws",
+    keywords: ["paired leviathan siege claws"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 1, Firepower A, Roll Score +2, AP 2, Damage 4. Special Rules: —. Traits: —.",
+  },
+  {
+    title: "Leviathan siege drill",
+    keywords: ["leviathan siege drill"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 1, Firepower A, Roll Score +4, AP 2, Damage 3. Special Rules: Armourbane. Traits: —.",
+  },
+  {
+    title: "Bayonet",
+    keywords: ["bayonet"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 1, Firepower A, Roll Score S, AP 5, Damage 1. Special Rules: —. Traits: Bayonet.",
+  },
+  {
+    title: "Grenade harness (Ranged)",
+    keywords: ["grenade harness ranged"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 6, Firepower 1, Roll Score 5, AP 6, Damage 1. Special Rules: Blast (3"), Limited (1). Traits: —.',
+  },
+  {
+    title: "Grenade launcher - Frag (Ranged)",
+    keywords: ["grenade launcher frag ranged"],
+    text: 'Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 1, Roll Score 3, AP 6, Damage 1. Special Rules: Blast (3"). Traits: —.',
+  },
+  {
+    title: "Grenade launcher - Krak (Ranged)",
+    keywords: ["grenade launcher krak ranged"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 24, Firepower 1, Roll Score 6, AP 4, Damage 2. Special Rules: —. Traits: —.",
+  },
+  {
+    title: "Lascutter (Ranged Profile)",
+    keywords: ["lascutter ranged profile"],
+    text: "Weapon profile from Legion Astrastes Weapon Armoury 3rd Ed. V2. Range 8, Firepower 1, Roll Score 10, AP 2, Damage 2. Special Rules: Ordnance (D), Armourbane. Traits: —.",
+  },
+];
+
+var HELP_LIBER_ASTARTES_ENTRIES = [
+  {
+    title: "Praetor",
+    keywords: ["praetor", "high command"],
+    text: "Liber Astrates 3rd Edition High Command entry. Base Composition: 1 Praetor. Base Points: 120 pts. Additional Models: N/A (May be replaced with 1 Praetor with Jump Pack for +20 pts). Wargear: Bolter; Bolt pistol; Frag grenades; Krak grenades.. Traits: [Allegiance]; [Legiones Astartes]; Master of the Legion.. Special Rules: Praetor: None. Praetor with Jump Pack: Bulky (2); Deep Strike.. Type: Praetor: Infantry (Command). Praetor with Jump Pack: Infantry (Command, Antigrav).. Options: This Model may have its bolter and/or bolt pistol exchanged for one paragon blade for +15 Points, one archaeotech pistol for +15 Points or one item from the Legion Officer Wargear list. This Model may have its bolter exchanged for one item from the Legion Combi-weapons list or one of the following: Astartes shotgun +2 Points; Volkite charger +2 Points. This Model may have its bolter and bolt pistol exchanged for one pair of lightning claws for +20 Points. This Model may have melta bombs selected for it for +5 Points. This Model with a bolter may have one of the following selected for it: Bayonet +1 Point; Chain bayonet +2 Points. This Praetor may have one cyber-familiar selected for it for +10 Points (This option may not be selected for a Praetor with Jump Pack)..",
+  },
+  {
+    title: "Praetor in Saturnine Terminator Armour",
+    keywords: ["praetor in saturnine terminator armour", "high command"],
+    text: "Liber Astrates 3rd Edition High Command entry. Base Composition: 1 Saturnine Praetor. Base Points: 200 pts. Additional Models: N/A. Wargear: Saturnine war axe; Saturnine disruption fist; Thermal diffraction field.. Traits: [Allegiance]; [Legiones Astartes]; Master of the Legion.. Special Rules: Bulky (4); Implacable Advance; Slow and Purposeful.. Type: Infantry (Command, Heavy).. Options: This Model may have its Saturnine war axe or Saturnine disruption fist exchanged for one Saturnine concussion hammer for +10 Points. This Model may have a plasma blaster selected for it for +10 Points. This Model may have a Saturnine teleportation transponder selected for it for +60 Points..",
+  },
+  {
+    title: "Praetor in Terminator Armour",
+    keywords: ["praetor in terminator armour", "high command"],
+    text: "Liber Astrates 3rd Edition High Command entry. Base Composition: 1 Cataphractii Praetor. Base Points: 145 pts. Additional Models: N/A (May be replaced with 1 Tartaros Praetor for +10 pts). Wargear: Combi-bolter; Power weapon.. Traits: [Allegiance]; [Legiones Astartes]; Master of the Legion.. Special Rules: Cataphractii Praetor: Bulky (2); Implacable Advance; Slow and Purposeful. Tartaros Praetor: Bulky (2); Implacable Advance.. Type: Cataphractii Praetor: Infantry (Command, Heavy). Tartaros Praetor: Infantry (Command).. Options: This Model may have its combi-bolter exchanged for one volkite charger for Free, or for one item from the Legion Combi-weapons list. This Model may have its power weapon exchanged for one paragon blade for +15 Points, or for one item from the Legion Terminator Melee Weapons list. This Model may have its combi-bolter and power weapon exchanged for one pair of lightning claws for +5 Points..",
+  },
+  {
+    title: "Centurion",
+    keywords: ["centurion", "command"],
+    text: "Liber Astrates 3rd Edition Command entry. Base Composition: 1 Centurion. Base Points: 80 pts. Additional Models: N/A (May be replaced with 1 Centurion with Jump Pack for +20 pts). Wargear: Bolter; Bolt pistol; Frag grenades; Krak grenades.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Centurion: Officer of the Line (2); Centurion with Jump Pack: Officer of the Line (2), Bulky (2), Deep Strike.. Type: Centurion: Infantry (Command); Centurion with Jump Pack: Infantry (Command, Antigrav).. Options: This Model may have its bolter and/or bolt pistol exchanged for one item from the Legion Officer Wargear list; This Model may have its bolter exchanged for one item from the Legion Combi-weapons list or one of the following: Astartes shotgun +2 Points, Volkite charger +2 Points; This Model may have its bolter and bolt pistol exchanged for one pair of lightning claws for +20 Points; This Model may have melta bombs selected for it for +5 Points; This Model with a bolter may have one of the following selected for it: Bayonet +1 Point, Chain bayonet +2 Points; This Centurion may have one vexilla selected for it for +10 Points (This option may not be selected for a Centurion with Jump Pack); This Centurion may have one cyber-familiar selected for it for +10 Points (This option may not be selected for a Centurion with Jump Pack)..",
+  },
+  {
+    title: "Optae",
+    keywords: ["optae", "command"],
+    text: "Liber Astrates 3rd Edition Command entry. Base Composition: 1 Optae. Base Points: 50 pts. Additional Models: N/A (May be replaced with 1 Optae with Jump Pack for +20 pts). Wargear: Bolter; Bolt pistol; Frag grenades; Krak grenades.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Optae: None; Optae with Jump Pack: Bulky (2), Deep Strike.. Type: Optae: Infantry (Command); Optae with Jump Pack: Infantry (Command, Antigrav).. Options: This Model may have its bolter and/or bolt pistol exchanged for one item from the Legion Sergeant Melee Weapons list; This Model may have its bolter exchanged for one item from the Legion Combi-weapons list or for one of the following: Astartes shotgun +2 Points, Volkite charger +2 Points; This Model may have its bolt pistol exchanged for one disintegrator pistol for +5 Points or one item from the Legion Pistols list; This Model may have its bolter and bolt pistol exchanged for one pair of lightning claws for +20 Points; This Model may have melta bombs selected for it for +5 Points; This Model with a bolter may have one of the following selected for it: Bayonet +1 Point, Chain bayonet +2 Points..",
+  },
+  {
+    title: "Centurion in Terminator Armour",
+    keywords: ["centurion in terminator armour", "command"],
+    text: "Liber Astrates 3rd Edition Command entry. Base Composition: 1 Cataphractii Centurion. Base Points: 100 pts. Additional Models: N/A (May be replaced with 1 Tartaros Centurion for Free). Wargear: Combi-bolter; Power weapon.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Cataphractii Centurion: Officer of the Line (2), Bulky (2), Implacable Advance, Slow and Purposeful; Tartaros Centurion: Officer of the Line (2), Bulky (2), Implacable Advance.. Type: Cataphractii Centurion: Infantry (Command, Heavy); Tartaros Centurion: Infantry (Command).. Options: This Model may have its combi-bolter exchanged for one volkite charger for Free, or for one item from the Legion Combi-weapons list; This Model may have its power weapon exchanged for one pair of lightning claws for +5 Points, or for one item from the Legion Terminator Melee Weapons list; This Model may have its combi-bolter and power weapon exchanged for one pair of lightning claws for +5 Points..",
+  },
+  {
+    title: "Librarian",
+    keywords: ["librarian", "command"],
+    text: "Liber Astrates 3rd Edition Command entry. Base Composition: 1 Librarian. Base Points: 85 pts. Additional Models: N/A. Wargear: Force weapon; Bolt pistol; Frag grenades; Krak grenades.. Traits: [Allegiance]; [Legiones Astartes]; Psyker.. Special Rules: None.. Type: Infantry (Command).. Options: This Model may have its bolt pistol exchanged for one item from the Legion Pistols list; This Model may have up to two of the following Psychic Disciplines selected for it: Biomancy +20 Points, Pyromancy +10 Points, Telekinesis +20 Points, Divination +20 Points, Thaumaturgy Free, Telepathy +10 Points..",
+  },
+  {
+    title: "Damocles Command Rhino",
+    keywords: ["damocles command rhino", "command"],
+    text: "Liber Astrates 3rd Edition Command entry. Base Composition: 1 Damocles Command Rhino. Base Points: 120 pts. Additional Models: N/A. Wargear: Two Pintle Mounted bolters; Command vox relay.. Traits: [Allegiance]; [Legiones Astartes]; Smokescreen.. Special Rules: Light Transport; Auto-repair (5+); Mobile Command Vehicle.. Type: Vehicle (Transport).. Options: Each of this Model's Pintle Mounted bolters may be exchanged for one Pintle Mounted combi-bolter for +5 Points each; One of this Model's Pintle Mounted bolters may be exchanged for one item from the Legion Pintle Weapons list; This Model may have one of each of the following selected for it: Searchlight +5 Points, Hull (Front) Mounted hunter-killer missile +10 Points..",
+  },
+  {
+    title: "Vigilator",
+    keywords: ["vigilator", "command"],
+    text: "Liber Astrates 3rd Edition Command entry. Base Composition: 1 Vigilator. Base Points: 95 pts. Additional Models: N/A. Wargear: Nemesis rifle; Bolt pistol; Frag grenades; Krak grenades.. Traits: [Allegiance]; [Legiones Astartes]; Smokescreen.. Special Rules: Infiltrate (9).. Type: Infantry (Command).. Options: None..",
+  },
+  {
+    title: "Legion Champion",
+    keywords: ["legion champion", "command"],
+    text: "Liber Astrates 3rd Edition Command entry. Base Composition: 1 Legion Champion. Base Points: 105 pts. Additional Models: N/A. Wargear: Paragon blade; Volkite serpenta; Frag grenades; Krak grenades.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Never Back Down.. Type: Infantry (Command).. Options: This Model may have its volkite serpenta exchanged for one combi-melta for +10 Points; This Model may have melta bombs selected for it for +5 Points..",
+  },
+  {
+    title: "Esoterist",
+    keywords: ["esoterist", "command"],
+    text: "Liber Astrates 3rd Edition Command entry. Base Composition: 1 Esoterist. Base Points: 95 pts. Additional Models: N/A. Wargear: Force weapon; Archaeotech pistol; Frag grenades; Krak grenades.. Traits: [Allegiance]; [Legiones Astartes]; Psyker; Anathema.. Special Rules: Anathema Discipline.. Type: Infantry (Command).. Options: An Esoterist Model has the Anathema Psychic Discipline..",
+  },
+  {
+    title: "Praevian",
+    keywords: ["praevian", "command"],
+    text: "Liber Astrates 3rd Edition Command entry. Base Composition: 1 Praevian. Base Points: 95 pts. Additional Models: N/A. Wargear: Bolt pistol; Frag grenades; Krak grenades; Cortex controller; Cyber-familiar.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Battlesmith (1); Feel No Pain (5+); Master of Automata.. Type: Infantry (Command).. Options: This Model may have its bolt pistol exchanged for one item from the Legion Pistols list; This Model may have melta bombs selected for it for +5 Points..",
+  },
+  {
+    title: "Master of Signals",
+    keywords: ["master of signals", "command"],
+    text: "Liber Astrates 3rd Edition Command entry. Base Composition: 1 Master of Signals. Base Points: 115 pts. Additional Models: N/A. Wargear: Bolt pistol; Frag grenades; Krak grenades; Command vox relay.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: None.. Type: Infantry (Command).. Options: This Model may have its bolt pistol exchanged for one item from the Legion Pistols list..",
+  },
+  {
+    title: "Siege Breaker",
+    keywords: ["siege breaker", "command"],
+    text: "Liber Astrates 3rd Edition Command entry. Base Composition: 1 Siege Breaker. Base Points: 115 pts. Additional Models: N/A. Wargear: Bolt pistol; Thunder hammer; Frag grenades; Krak grenades; Phosphex bombs; Cognis-signum; Augury scanner.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: None.. Type: Infantry (Command, Heavy).. Options: This Model may have its bolt pistol exchanged for one disintegrator pistol for +5 Points or one item from the Legion Pistols list; This Model may have melta bombs selected for it for +5 Points..",
+  },
+  {
+    title: "Moritat",
+    keywords: ["moritat", "command"],
+    text: "Liber Astrates 3rd Edition Command entry. Base Composition: 1 Moritat. Base Points: 95 pts. Additional Models: N/A. Wargear: Two overcharged volkite serpentas; Frag grenades; Krak grenades; Rad grenades.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Bulky (2); Deep Strike; Firestorm.. Type: Infantry (Specialist, Antigrav).. Options: This Model may have both its overcharged volkite serpentas exchanged for two overcharged plasma pistols for +10 Points; This Model may have melta bombs selected for it for +5 Points..",
+  },
+  {
+    title: "Herald",
+    keywords: ["herald", "command"],
+    text: "Liber Astrates 3rd Edition Command entry. Base Composition: 1 Herald. Base Points: 100 pts. Additional Models: N/A. Wargear: Power weapon; Bolt pistol; Frag grenades; Krak grenades; Icon of Allegiance.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Fear (1).. Type: Infantry (Command).. Options: This Model may have its power weapon exchanged for one power fist for +10 Points; This Model may have melta bombs selected for it for +5 Points..",
+  },
+  {
+    title: "Overseer",
+    keywords: ["overseer", "command"],
+    text: "Liber Astrates 3rd Edition Command entry. Base Composition: 1 Overseer. Base Points: 85 pts. Additional Models: N/A. Wargear: Bolt pistol; Power lash; Frag grenades; Krak grenades.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Fear (1); Master of Auxilia.. Type: Infantry (Command).. Options: This Model may have its power lash exchanged for one power maul for Free; This Model may have its bolt pistol exchanged for one item from the Legion Pistols list; This Model may have one vexilla selected for it for +10 Points; This Model may have melta bombs selected for it for +5 Points..",
+  },
+  {
+    title: "Chaplain",
+    keywords: ["chaplain", "command"],
+    text: "Liber Astrates 3rd Edition Command entry. Base Composition: 1 Chaplain. Base Points: 80 pts. Additional Models: N/A. Wargear: Bolt pistol; Crozius Arcanum; Frag grenades; Krak grenades.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: None.. Type: Infantry (Command).. Options: This Model may have its bolt pistol exchanged for one item from the Legion Pistols list; This Model may have melta bombs selected for it for +5 Points..",
+  },
+  {
+    title: "Praetorian Command Squad With Jump Packs",
+    keywords: ["praetorian command squad with jump packs", "retinue"],
+    text: "Liber Astrates 3rd Edition Retinue entry. Base Composition: 1 Chosen Champion with Jump Pack, 4 Chosen with Jump Packs. Base Points: 160 pts. Additional Models: Up to 5 additional Chosen with Jump Packs (+25 pts/model). Wargear: Bolter; Bolt pistol; Frag grenades; Krak grenades.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Bulky (2); Deep Strike.. Type: Chosen Champion with Jump Pack: Infantry (Champion, Antigrav, Sergeant). Chosen with Jump Pack: Infantry (Antigrav).. Options: Any Model in this Unit may have its bolter exchanged for one item from the Legion Combi-weapons list, one item from the Legion Sergeant Melee Weapons list or one of the following: Astartes shotgun +2 Points per Model; Disintegrator rifle +5 Points per Model; Volkite charger +2 Points per Model. Any Model in this Unit whose bolter has been exchanged for an item from the Legion Sergeant Melee Weapons list may have its bolt pistol exchanged for one combat shield for +2 Points per Model. Any Model in this Unit may have its bolt pistol exchanged for one item from the Legion Pistols list. The Chosen Champion with Jump Pack in this Unit may have its bolt pistol exchanged for one disintegrator pistol for +5 Points. Any Model in this Unit may have its bolter and bolt pistol exchanged for one pair of lightning claws for +10 Points per Model. Any Model in this Unit with a bolter may have one of the following selected for it: Bayonet +1 Point per Model; Chain bayonet +2 Points per Model. One Chosen with Jump Pack in this Unit may have one Legion standard selected for it for +20 Points..",
+  },
+  {
+    title: "Praetorian Command Squad",
+    keywords: ["praetorian command squad", "retinue"],
+    text: "Liber Astrates 3rd Edition Retinue entry. Base Composition: 1 Chosen Champion, 4 Chosen. Base Points: 130 pts. Additional Models: Up to 5 additional Chosen (+20 pts/model). Wargear: Bolter; Bolt pistol; Frag grenades; Krak grenades.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: None.. Type: Chosen Champion: Infantry (Champion, Sergeant). Chosen: Infantry.. Options: Any Model in this Unit may have its bolter exchanged for one item from the Legion Combi-weapons list, one item from the Legion Sergeant Melee Weapons list or one of the following: Astartes shotgun +2 Points per Model; Disintegrator rifle +5 Points per Model; Volkite charger +2 Points per Model. Any Model in this Unit whose bolter has been exchanged for an item from the Legion Sergeant Melee Weapons list may have its bolt pistol exchanged for one combat shield for +2 Points per Model. Any Model in this Unit may have its bolt pistol exchanged for one item from the Legion Pistols list. The Chosen Champion in this Unit may have its bolt pistol exchanged for one disintegrator pistol for +5 Points. Any Model in this Unit may have their bolter and bolt pistol exchanged for one pair of lightning claws for +10 Points per Model. Any Model in this Unit with a bolter may have one of the following selected for it: Bayonet +1 Point per Model; Chain bayonet +2 Points per Model. One Chosen in this Unit may have one Legion standard selected for it for +20 Points..",
+  },
+  {
+    title: "Tartaros Terminator Command Squad",
+    keywords: ["tartaros terminator command squad", "retinue"],
+    text: "Liber Astrates 3rd Edition Retinue entry. Base Composition: 1 Tartaros Chosen Champion, 2 Tartaros Chosen. Base Points: 140 pts. Additional Models: Up to 7 additional Tartaros Chosen (+40 pts/model). Wargear: Combi-bolter; Power weapon.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Bulky (2); Implacable Advance.. Type: Tartaros Chosen Champion: Infantry (Champion, Sergeant). Tartaros Chosen: Infantry.. Options: Any Model in this Unit may have its combi-bolter exchanged for one volkite charger for Free or for one item from the Legion Combi-weapons list. Any Model in this Unit may have its power weapon exchanged for one lightning claw for +5 Points per Model. Any Model in this Unit may have its combi-bolter and power weapon exchanged for one pair of lightning claws for +10 Points per Model. One Tartaros Chosen in this Unit may have its combi-bolter exchanged for one Legion standard for +20 Points. The Tartaros Chosen Champion in this Unit may have one grenade harness selected for it for +5 Points..",
+  },
+  {
+    title: "Centurion Command Squad",
+    keywords: ["centurion command squad", "retinue"],
+    text: "Liber Astrates 3rd Edition Retinue entry. Base Composition: 1 Veteran Champion, 4 Veterans. Base Points: 85 pts. Additional Models: Up to 5 additional Veterans (+15 pts/model). Wargear: Bolter; Bolt pistol; Frag grenades; Krak grenades.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: None.. Type: Veteran Champion: Infantry (Champion, Sergeant). Veteran: Infantry.. Options: Any Model in this Unit may have its bolter exchanged for one item from the Legion Combi-weapons list, one item from the Legion Sergeant Melee Weapons list or one of the following: Astartes shotgun +2 Points per Model; Disintegrator rifle +5 Points per Model; Volkite charger +2 Points per Model. Any Model in this Unit whose bolter has been exchanged for an item from the Legion Sergeant Melee Weapons list may have its bolt pistol exchanged for one combat shield for +2 Points per Model. Any Model in this Unit may have its bolt pistol exchanged for one item from the Legion Pistols list. For every five Models in this Unit, one Veteran in this Unit may have its bolter exchanged for one item from the Legion Special Weapons list or one item from the Legion Heavy Weapons list. The Veteran Champion in this Unit may have its bolt pistol exchanged for one disintegrator pistol for +5 Points. Any Model in this Unit may have its bolter and bolt pistol exchanged for one pair of lightning claws for +10 Points per Model. Any Model in this Unit with a bolter may have one of the following selected for it: Bayonet +1 Point per Model; Chain bayonet +2 Points per Model. One Veteran in this Unit may have one of the following selected for it: Vexilla +10 Points; Company standard +20 Points. Up to two Veterans in this Unit may have one item from the Legion Equipment list selected for them..",
+  },
+  {
+    title: "Cataphractii Terminator Command Squad",
+    keywords: ["cataphractii terminator command squad", "retinue"],
+    text: "Liber Astrates 3rd Edition Retinue entry. Base Composition: 1 Cataphractii Chosen Champion, 2 Cataphractii Chosen. Base Points: 140 pts. Additional Models: Up to 9 additional Cataphractii Chosen (+40 pts/model). Wargear: Volkite charger; Power weapon.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Bulky (2); Implacable Advance; Slow and Purposeful.. Type: Cataphractii Chosen Champion: Infantry (Champion, Sergeant, Heavy). Cataphractii Chosen: Infantry (Heavy).. Options: Any Model in this Unit may have its volkite charger exchanged for one combi-bolter for Free, or for one item from the Legion Combi-weapons list. Any Model in this Unit may have its power weapon exchanged for one item from the Legion Terminator Melee Weapons list. Any Model in this Unit may have its volkite charger and power weapon exchanged for one pair of lightning claws for +10 Points per Model. The Cataphractii Chosen Champion in this Unit may have one grenade harness selected for it for +5 Points. One Cataphractii Chosen in this Unit may have its volkite charger exchanged for one Legion standard for +20 Points..",
+  },
+  {
+    title: "Veteran Assault Squad",
+    keywords: ["veteran assault squad", "elites"],
+    text: "Liber Astrates 3rd Edition Elites entry. Base Composition: 1 Veteran Assault Sergeant, 4 Assault Veterans. Base Points: 120 pts. Additional Models: Up to 5 additional Assault Veterans (+22 pts/model). Wargear: Bolt pistol; Chainsword; Frag grenades; Krak grenades.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Bulky (2); Deep Strike; Vanguard (3).. Type: Veteran Assault Sergeant: Infantry (Sergeant, Antigrav). Assault Veteran: Infantry (Antigrav).. Options: Any Model in this Unit may have its chainsword exchanged for one item from the Legion Sergeant Melee Weapons list. Any Model in this Unit may have its bolt pistol exchanged for one combat shield for +2 Points per Model or one item from the Legion Pistols list. The Veteran Assault Sergeant in this Unit may have its bolt pistol exchanged for one disintegrator pistol for +5 Points. The Veteran Assault Sergeant may have melta bombs selected for it for +10 Points. For every five Models in this Unit, one Assault Veteran in this Unit may have its bolt pistol exchanged for one disintegrator pistol for +5 Points. Any Model in this Unit may have its bolt pistol and chainsword exchanged for one pair of lightning claws for +10 Points per Model. For every five Models in this Unit, two Assault Veterans in this Unit may have their chainsword exchanged for one of the following: Heavy chainaxe +5 Points per Model; Heavy chainsword +5 Points per Model..",
+  },
+  {
+    title: "Veteran Tactical Squad",
+    keywords: ["veteran tactical squad", "elites"],
+    text: "Liber Astrates 3rd Edition Elites entry. Base Composition: 1 Veteran Sergeant, 4 Veterans. Base Points: 85 pts. Additional Models: Up to 5 additional Veterans (+15 pts/model). Wargear: Bolter; Bolt pistol; Frag grenades; Krak grenades.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Line (1).. Type: Veteran Sergeant: Infantry (Sergeant). Veteran: Infantry.. Options: Any Model in this Unit may have its bolter exchanged for one item from the Legion Combi-weapons list or one of the following: Astartes shotgun +2 Points per Model; Disintegrator rifle +5 Points per Model; Volkite charger +2 Points per Model. For every five Models in this Unit, one Veteran in this Unit may have its bolter exchanged for one item from the Legion Heavy Weapons list or one of the following: Disintegrator blaster +10 Points per Model; Heavy disintegrator +15 Points per Model. The Veteran Sergeant in this Unit may have its bolter and/or bolt pistol exchanged for one item each from the Legion Sergeant Melee Weapons list. The Veteran Sergeant in this Unit may have its bolt pistol exchanged for one disintegrator pistol for +5 Points or one item from the Legion Pistols list. One Veteran in this Unit may have one vexilla selected for it for +10 Points. Up to two Veterans in this Unit may have one item each from the Legion Equipment list selected for them. Any Model in this Unit with a bolter may have one of the following selected for it: Bayonet +1 Point per Model; Chain bayonet +2 Points per Model..",
+  },
+  {
+    title: "Seeker Squad",
+    keywords: ["seeker squad", "elites"],
+    text: "Liber Astrates 3rd Edition Elites entry. Base Composition: 1 Seeker Sergeant, 4 Seekers. Base Points: 105 pts. Additional Models: Up to 5 additional Seekers (+18 pts/model). Wargear: Kraken bolter; Bolt pistol; Frag grenades; Krak grenades.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Infiltrate (9).. Type: Seeker Sergeant: Infantry (Sergeant, Skirmish). Seeker: Infantry (Skirmish).. Options: Any Model in this Unit may have its kraken bolter exchanged for one item from the Legion Combi-weapons list. The Seeker Sergeant in this Unit may have its kraken bolter and/or bolt pistol exchanged for one item each from the Legion Sergeant Melee Weapons list. The Seeker Sergeant in this Unit may have its bolt pistol exchanged for one disintegrator pistol for +5 Points or one item from the Legion Pistols list. Any Model in this Unit with a kraken bolter may have one of the following selected for it: Bayonet +1 Point per Model; Chain bayonet +2 Points per Model. The Seeker Sergeant in this Unit may have melta bombs selected for it for +10 Points. Up to two Seekers in this Unit may have one item each from the Legion Equipment list selected for them..",
+  },
+  {
+    title: "Despoiler Squad",
+    keywords: ["despoiler squad", "troops"],
+    text: "Liber Astrates 3rd Edition Troops entry. Base Composition: 1 Despoiler Sergeant, 9 Despoiler Legionaries. Base Points: 100 pts. Additional Models: Up to 10 additional Despoiler Legionaries (+10 pts/model). Wargear: Bolt pistol; Chainsword; Frag grenades; Krak grenades.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Line (2).. Type: Despoiler Sergeant: Infantry (Sergeant); Despoiler Legionary: Infantry.. Options: The Despoiler Sergeant in this Unit may have its chainsword and/or bolt pistol exchanged for one item each from the Legion Sergeant Melee Weapons list; The Despoiler Sergeant in this Unit may have its bolt pistol exchanged for one item from the Legion Pistols list; The Despoiler Sergeant in this Unit may have its bolt pistol and chainsword exchanged for one pair of lightning claws for +10 Points; The Despoiler Sergeant in this Unit may have melta bombs selected for it for +10 Points; For every five Models in this Unit, one Despoiler Legionary in this Unit may have its chainsword exchanged for one of the following: Heavy chainsword +5 Points per Model, Power weapon +10 Points per Model, Charnabal sabre +5 Points per Model; For every five Models in this Unit, one Despoiler Legionary in this Unit may have its bolt pistol exchanged for one item from the Legion Pistols list; One Despoiler Legionary in this Unit may have one vexilla selected for it for +10 Points; Up to two Despoiler Legionaries in this Unit may each have one item from the Legion Equipment list selected for them..",
+  },
+  {
+    title: "Tactical Squad",
+    keywords: ["tactical squad", "troops"],
+    text: "Liber Astrates 3rd Edition Troops entry. Base Composition: 1 Sergeant, 9 Legionaries. Base Points: 100 pts. Additional Models: Up to 10 additional Legionaries (+10 pts/model). Wargear: Bolter; Bolt pistol; Frag grenades; Krak grenades.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Fury of the Legion; Line (2).. Type: Sergeant: Infantry (Sergeant); Legionary: Infantry.. Options: The Sergeant in this Unit may have its bolter and/or bolt pistol exchanged for one item each from the Legion Sergeant Melee Weapons list; The Sergeant in this Unit may have its bolt pistol exchanged for one item from the Legion Pistols list; The Sergeant in this Unit may have its bolter exchanged for one item from the Legion Combi-weapons list; The Sergeant in this Unit may have melta bombs selected for it for +10 Points; One Legionary in this Unit may have one vexilla selected for it for +10 Points; Up to two Legionaries in this Unit may each have one item from the Legion Equipment list selected for them; Any Model in this Unit with a bolter may have one of the following selected for it: Bayonet +1 Point per Model, Chain bayonet +2 Points per Model..",
+  },
+  {
+    title: "Breacher Squad",
+    keywords: ["breacher squad", "troops"],
+    text: "Liber Astrates 3rd Edition Troops entry. Base Composition: 1 Breacher Sergeant, 9 Breacher Legionaries. Base Points: 140 pts. Additional Models: Up to 10 additional Breacher Legionaries (+12 pts/model). Wargear: Bolter; Bolt pistol; Boarding shield; Frag grenades; Krak grenades.. Traits: [Allegiance]; [Legiones Astartes]; Shield.. Special Rules: Line (1).. Type: Breacher Sergeant: Infantry (Sergeant, Heavy); Breacher Legionary: Infantry (Heavy).. Options: The Breacher Sergeant in this Unit may have its bolter exchanged for one item from the Legion Sergeant Melee Weapons list or one item from the Legion Combi-weapons list; The Breacher Sergeant in this Unit may have its bolt pistol exchanged for one item from the Legion Pistols list; The Breacher Sergeant in this Unit may have melta bombs selected for it for +10 Points; One Breacher Legionary in this Unit may have one vexilla selected for it for +10 Points; Up to two Breacher Legionaries in this Unit may each have one item from the Legion Equipment list selected for them; For every five Models in this Unit, one Breacher Legionary in this Unit may have its bolter exchanged for one of the following: Graviton gun +10 Points per Model, Lascutter +10 Points per Model..",
+  },
+  {
+    title: "Assault Squad",
+    keywords: ["assault squad", "troops"],
+    text: "Liber Astrates 3rd Edition Troops entry. Base Composition: 1 Assault Sergeant, 9 Assault Legionaries. Base Points: 140 pts. Additional Models: Up to 10 additional Assault Legionaries (+12 pts/model). Wargear: Bolt pistol; Chainsword; Frag grenades; Krak grenades.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Bulky (2); Deep Strike; Vanguard (2).. Type: Assault Sergeant: Infantry (Sergeant, Antigrav); Assault Legionary: Infantry (Antigrav).. Options: The Assault Sergeant in this Unit may have its chainsword and/or bolt pistol exchanged for one item each from the Legion Sergeant Melee Weapons list; The Assault Sergeant in this Unit may have its bolt pistol exchanged for one disintegrator pistol for +5 Points or one item from the Legion Pistols list; The Assault Sergeant in this Unit may have its bolt pistol and chainsword, or its combat shield and chainsword, exchanged for one pair of lightning claws for +10 Points; The Assault Sergeant in this Unit may have melta bombs selected for it for +10 Points; Every Model in this Unit may have its bolt pistol exchanged for a combat shield for +2 Points per Model; Any Model in this Unit may have its chainsword exchanged for one chainaxe for Free; For every five Models in this Unit, one Assault Legionary in this Unit may have one of the following options selected for it: Have its chainsword exchanged for one power weapon for +10 Points per Model, Have its chainsword exchanged for one charnabal sabre for +5 Points per Model, Have its chainsword and bolt pistol, or its combat shield and chainsword, exchanged for one pair of lightning claws for +15 Points per Model; For every five Models in this Unit, one Assault Legionary in this Unit may have their chainsword exchanged for one heavy chainaxe for +5 Points per Model; For every five Models in this Unit, one Assault Legionary in this Unit may have its bolt pistol exchanged for one item from the Legion Pistols list..",
+  },
+  {
+    title: "Tactical Support Squad",
+    keywords: ["tactical support squad", "troops"],
+    text: "Liber Astrates 3rd Edition Troops entry. Base Composition: 1 Sergeant, 4 Legionaries. Base Points: 40 pts. Additional Models: Up to 5 additional Legionaries (+8 pts/model). Wargear: Bolt pistol; Frag grenades; Krak grenades.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: None.. Type: Sergeant: Infantry (Sergeant); Legionary: Infantry.. Options: Every Model in this Unit must have one item from the Legion Special Weapons list selected for it. Every Model in this Unit must have the same item selected for it; The Sergeant in this Unit may have one item from the Legion Sergeant Melee Weapons list selected for it; The Sergeant in this Unit may have melta bombs selected for it for +10 Points; One Legionary in this Unit may have one vexilla selected for it for +10 Points; Up to two Legionaries in this Unit may each have one item from the Legion Equipment list selected for them..",
+  },
+  {
+    title: "Tartaros Terminator Squad",
+    keywords: ["tartaros terminator squad", "heavy assault"],
+    text: "Liber Astrates 3rd Edition Heavy Assault entry. Base Composition: 1 Tartaros Terminator Sergeant, 4 Tartaros Terminators. Base Points: 150 pts. Additional Models: Up to 5 additional Tartaros Terminators (+30 pts/model). Wargear: Combi-bolter; Power weapon.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Bulky (2); Implacable Advance; Vanguard (3).. Type: Tartaros Terminator Sergeant: Infantry (Sergeant); Tartaros Terminator: Infantry.. Options: Any Model in this Unit may have its combi-bolter exchanged for one volkite charger for Free, or for one item from the Legion Combi-weapons list; Any Model in this Unit may have its power weapon exchanged for one lightning claw for +5 Points per Model; Any Model in this Unit may have its combi-bolter and power weapon exchanged for one pair of lightning claws for +10 Points per Model; For every five Models in this Unit, one Tartaros Terminator in this Unit may have its combi-bolter exchanged for one of the following: Heavy flamer +5 Points per Model, Reaper autocannon +15 Points per Model, Plasma blaster +10 Points per Model; The Tartaros Terminator Sergeant in this Unit may have one grenade harness selected for it for +5 Points..",
+  },
+  {
+    title: "Cataphractii Terminator Squad",
+    keywords: ["cataphractii terminator squad", "heavy assault"],
+    text: "Liber Astrates 3rd Edition Heavy Assault entry. Base Composition: 1 Cataphractii Terminator Sergeant, 4 Cataphractii Terminators. Base Points: 150 pts. Additional Models: Up to 7 additional Cataphractii Terminators (+30 pts/model). Wargear: Volkite charger; Power weapon.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Bulky (2); Implacable Advance; Slow and Purposeful; Vanguard (3).. Type: Cataphractii Terminator Sergeant: Infantry (Sergeant, Heavy); Cataphractii Terminator: Infantry (Heavy).. Options: Any Model in this Unit may have its volkite charger exchanged for one combi-bolter for Free, or for one item from the Legion Combi-weapons list; Any Model in this Unit may have its power weapon exchanged for one item from the Legion Terminator Melee Weapons list; Any Model in this Unit may have its volkite charger and power weapon exchanged for one pair of lightning claws for +10 Points per Model; The Cataphractii Terminator Sergeant in this Unit may have one grenade harness selected for it for +5 Points; For every five Models in this Unit, one Cataphractii Terminator in this Unit may have its volkite charger exchanged for one of the following: Heavy flamer +5 Points per Model, Reaper autocannon +15 Points per Model, Plasma blaster +10 Points per Model..",
+  },
+  {
+    title: "Saturnine Terminator Squad",
+    keywords: ["saturnine terminator squad", "heavy assault"],
+    text: "Liber Astrates 3rd Edition Heavy Assault entry. Base Composition: 1 Saturnine Terminator Sergeant, 2 Saturnine Terminators. Base Points: 200 pts. Additional Models: Up to 3 additional Saturnine Terminators (+60 pts/model). Wargear: Plasma bombard; Saturnine disruption fist; Occulix targeting auspex; Thermal diffraction field.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Bulky (4); Explodes (6+); Implacable Advance; Slow and Purposeful.. Type: Saturnine Terminator Sergeant: Infantry (Sergeant, Heavy); Saturnine Terminator: Infantry (Heavy).. Options: Any Model in this Unit may have its Saturnine disruption fist exchanged for one of the following: Plasma bombard Free, Twin heavy disintegrator +10 Points per Model; Any Model in this Unit may have its plasma bombard exchanged for one twin heavy disintegrator for +10 Points per Model; Any Model in this Unit with a Saturnine disruption fist may have one particle shredder selected for it for +5 Points per Model..",
+  },
+  {
+    title: "Rapier Battery",
+    keywords: ["rapier battery", "support"],
+    text: "Liber Astrates 3rd Edition Support entry. Base Composition: 1 Rapier Crew. Base Points: 40 pts. Additional Models: Up to 3 additional Rapier Crews (+40 pts/crew). Wargear: Legionary: Bolter; Bolt pistol; Frag grenades; Krak grenades. Rapier Carrier: Gravis heavy bolter battery.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Rapier Crew; Bulky (3) (Rapier Carrier only); Slow and Purposeful; Support Unit (1).. Type: Legionary: Infantry (Sergeant); Rapier Carrier: Infantry.. Options: Each Rapier Carrier in this Unit may have its Gravis heavy bolter battery exchanged for one of the following: Laser destroyer +25 Points per Model, Graviton cannon +20 Points per Model, Quad launcher +20 Points per Model; If your Army includes a Siege Breaker Model with the same Faction Trait as the Models in this Unit, any Rapier Carrier with a quad launcher in this Unit may also have phosphex canister shot for +15 Points per Model..",
+  },
+  {
+    title: "Heavy Support Squad",
+    keywords: ["heavy support squad", "support"],
+    text: "Liber Astrates 3rd Edition Support entry. Base Composition: 1 Sergeant, 4 Legionaries. Base Points: 50 pts. Additional Models: Up to 5 additional Legionaries (+10 pts/model). Wargear: Bolt pistol; Frag grenades; Krak grenades.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Support Unit (1).. Type: Sergeant: Infantry (Sergeant); Legionary: Infantry.. Options: Every Model in this Unit must have one item from the Legion Heavy Weapons list selected for it. Every Model in this Unit must have the same item selected for it; The Sergeant in this Unit may have one item from the Legion Sergeant Melee Weapons list selected for it; One Legionary in this Unit may have one vexilla selected for it for +10 Points; Up to two Legionaries in this Unit may each have one item from the Legion Equipment list selected for them..",
+  },
+  {
+    title: "Techmarine",
+    keywords: ["techmarine", "support"],
+    text: "Liber Astrates 3rd Edition Support entry. Base Composition: 1 Techmarine. Base Points: 50 pts. Additional Models: N/A. Wargear: Bolt pistol; Power axe; Servo-arm; Frag grenades; Krak grenades.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Battlesmith (2).. Type: Infantry (Specialist).. Options: This Model may have its bolt pistol exchanged for one item from the Legion Pistols list; This Model may have melta bombs selected for it for +10 Points; This Model may have one cyber-familiar selected for it for +10 Points..",
+  },
+  {
+    title: "Apothecary",
+    keywords: ["apothecary", "support"],
+    text: "Liber Astrates 3rd Edition Support entry. Base Composition: 1 Apothecary. Base Points: 30 pts. Additional Models: N/A. Wargear: Bolt pistol; Chainsword; Narthecium; Frag grenades; Krak grenades.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Medic (4+).. Type: Infantry (Specialist).. Options: This Model may have its chainsword exchanged for one item from the Legion Sergeant Melee Weapons list; This Model may have its bolt pistol exchanged for one item from the Legion Pistols list..",
+  },
+  {
+    title: "Araknae Quad Accelerator Platform",
+    keywords: ["araknae quad accelerator platform", "support"],
+    text: "Liber Astrates 3rd Edition Support entry. Base Composition: 1 Quad Accelerator Platform. Base Points: 125 pts. Additional Models: N/A. Wargear: Turret Mounted quad accelerator autocannon; Atomantic pavise.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Gun Emplacement; Explodes (4+).. Type: Vehicle.. Options: None..",
+  },
+  {
+    title: "Deathstorm Drop Pod",
+    keywords: ["deathstorm drop pod", "support"],
+    text: "Liber Astrates 3rd Edition Support entry. Base Composition: 1 Deathstorm Drop Pod. Base Points: 90 pts. Additional Models: N/A. Wargear: Turret Mounted Deathstorm missile launcher.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Impact Reactive Doors; Orbital Assault Vehicle; Deathstorm.. Type: Vehicle.. Options: None..",
+  },
+  {
+    title: "Contemptor Dreadnought",
+    keywords: ["contemptor dreadnought", "war engine"],
+    text: "Liber Astrates 3rd Edition War Engine entry. Base Composition: 1 Contemptor Dreadnought. Base Points: 150 pts. Additional Models: N/A. Wargear: None.. Traits: [Allegiance]; [Legiones Astartes]; Smokescreen.. Special Rules: Bulky (6); Explodes (5+); Implacable Advance.. Type: Walker.. Options: This Model must have one of the following options selected for it: Two options from the following list: Gravis power fist and one combi-bolter +5 Points each, Gravis chainfist and one combi-bolter +5 Points each, Gravis bolt cannon Free, Gravis melta cannon +15 Points each, Gravis autocannon +10 Points each, Gravis plasma cannon +10 Points each, Conversion beam cannon +20 Points each, Twin volkite culverin +15 Points each, Kheres assault cannon +15 Points each, Twin lascannon +15 Points each; Paired Gravis power fists and two combi-bolters +5 Points; Paired Gravis chainfists and two combi-bolters +5 Points. This Model may also have any of the following options selected for it: Each of this Model's combi-bolters may be exchanged for one of the following: Heavy flamer +5 Points each, Plasma blaster +10 Points each, Graviton gun +10 Points each, Meltagun +15 Points each; This Model may have one havoc launcher selected for it for +5 Points..",
+  },
+  {
+    title: "Leviathan Dreadnought",
+    keywords: ["leviathan dreadnought", "war engine"],
+    text: "Liber Astrates 3rd Edition War Engine entry. Base Composition: 1 Leviathan Dreadnought. Base Points: 220 pts. Additional Models: N/A. Wargear: Two heavy flamers.. Traits: [Allegiance]; [Legiones Astartes]; Smokescreen.. Special Rules: Bulky (7); Explodes (5+); Implacable Advance.. Type: Walker (Heavy).. Options: This Model must have one of the following options selected for it: Two options from the following list: Leviathan siege claw and one meltagun Free, Leviathan siege drill and one meltagun +5 Points each, Grav-flux bombard +10 Points each, Leviathan storm cannon +15 Points each, Cyclonic melta lance +20 Points each; Paired Leviathan siege claws and two meltaguns +5 Points; Paired Leviathan siege drills and two meltaguns +5 Points. This Model may also have any of the following options selected for it: Both of this Model's heavy flamers may be exchanged for two twin volkite calivers for +15 Points; This Model may have one phosphex discharger selected for it for +20 Points..",
+  },
+  {
+    title: "Deredeo Dreadnought",
+    keywords: ["deredeo dreadnought", "war engine"],
+    text: "Liber Astrates 3rd Edition War Engine entry. Base Composition: 1 Deredeo Dreadnought. Base Points: 190 pts. Additional Models: N/A. Wargear: Anvilus autocannon battery; Twin heavy bolter; Aiolos missile launcher.. Traits: [Allegiance]; [Legiones Astartes]; Smokescreen.. Special Rules: Bulky (7); Explodes (5+); Implacable Advance.. Type: Walker (Heavy).. Options: This Model may have its Anvilus autocannon battery exchanged for one of the following: Hellfire plasma cannonade +15 Points, Arachnus heavy lascannon battery +25 Points, Volkite falconet Free; This Model may have its Aiolos missile launcher exchanged for four Boreas air defence missiles for Free; This Model may have its twin heavy bolter exchanged for one twin heavy flamer for Free..",
+  },
+  {
+    title: "Saturnine Dreadnought",
+    keywords: ["saturnine dreadnought", "war engine"],
+    text: "Liber Astrates 3rd Edition War Engine entry. Base Composition: 1 Saturnine Dreadnought. Base Points: 340 pts. Additional Models: N/A. Wargear: Disintegrator cannon; Heavy plasma bombard; Two photonic incinerators; Thermal diffraction field.. Traits: [Allegiance]; [Legiones Astartes]; Smokescreen.. Special Rules: Bulky (8); Explodes (4+); Implacable Advance.. Type: Walker (Heavy).. Options: This Model may have its heavy plasma bombard exchanged for one of the following: Disintegrator cannon +10 Points, Inversion beamer +10 Points, Graviton pulveriser +10 Points; This Model may have its disintegrator cannon exchanged for one of the following: Heavy plasma bombard Free, Inversion beamer Free, Graviton pulveriser Free; Both of this Model's photonic incinerators may be exchanged for one of the following: Two concussive resonators +10 Points, Two heavy particle shredders +10 Points..",
+  },
+  {
+    title: "Rhino",
+    keywords: ["rhino", "transport"],
+    text: "Liber Astrates 3rd Edition Transport entry. Base Composition: 1 Rhino. Base Points: 60 pts. Additional Models: N/A. Wargear: Pintle Mounted combi-bolter.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Light Transport; Orbital Assault Vehicle; Impact Reactive Doors.. Type: Vehicle (Transport).. Options: None..",
+  },
+  {
+    title: "Termite",
+    keywords: ["termite", "transport"],
+    text: "Liber Astrates 3rd Edition Transport entry. Base Composition: 1 Termite. Base Points: 80 pts. Additional Models: N/A. Wargear: Two Pintle Mounted bolters.. Traits: [Allegiance]; [Legiones Astartes]; Smokescreen.. Special Rules: Light Transport; Auto-repair (4+).. Type: Vehicle (Transport).. Options: Each of this Model's Pintle Mounted bolters may be exchanged for one Pintle Mounted combi-bolter for +5 Points each; One of this Model's Pintle Mounted bolters may be exchanged for one item from the Legion Pintle Weapons list; This Model may have one of each of the following selected for it: Searchlights +5 Points, One Hull (Front) Mounted hunter-killer missile +10 Points, Dozer blade +5 Points..",
+  },
+  {
+    title: "Drop Pod",
+    keywords: ["drop pod", "transport"],
+    text: "Liber Astrates 3rd Edition Transport entry. Base Composition: 1 Drop Pod. Base Points: 50 pts. Additional Models: N/A. Wargear: Two Pintle Mounted combi-bolters; Centreline Mounted melta cutters.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Light Transport; Deep Strike.. Type: Vehicle (Transport).. Options: Both of this Model's combi-bolters may be exchanged for one of the following: Two Pintle Mounted twin volkite chargers +10 Points, Two Pintle Mounted heavy flamers +5 Points..",
+  },
+  {
+    title: "Land Raider Carrier",
+    keywords: ["land raider carrier", "heavy transport"],
+    text: "Liber Astrates 3rd Edition Heavy Transport entry. Base Composition: 1 Land Raider Carrier. Base Points: 265 pts. Additional Models: N/A. Wargear: Two Sponson Mounted twin lascannon; Hull (Front) twin heavy bolter.. Traits: [Allegiance]; [Legiones Astartes]; Smokescreen.. Special Rules: Assault Vehicle; Auto-repair (5+).. Type: Vehicle (Transport).. Options: This Model may have its Hull (Front) Mounted twin heavy bolter exchanged for one of the following: Hull (Front) Mounted twin heavy flamer Free, Hull (Front) Mounted twin lascannon +10 Points; This Model may have one item from the Legion Pintle Weapons list selected for it; This Model may have one of each of the following selected for it: One Hull (Front) Mounted hunter-killer missile +5 Points, Searchlights +5 Points..",
+  },
+  {
+    title: "Spartan",
+    keywords: ["spartan", "heavy transport"],
+    text: "Liber Astrates 3rd Edition Heavy Transport entry. Base Composition: 1 Spartan. Base Points: 400 pts. Additional Models: N/A. Wargear: Two Sponson Mounted lascannon arrays; Hull (Front) Mounted twin heavy bolter.. Traits: [Allegiance]; [Legiones Astartes]; Smokescreen.. Special Rules: Assault Vehicle; Auto-repair (4+).. Type: Vehicle (Transport).. Options: This Model may have both its Sponson Mounted lascannon arrays exchanged for one of the following: Two Sponson Mounted laser destroyers Free, Two Sponson Mounted Gravis heavy bolter battery Free; This Model may have its Hull (Front) Mounted twin heavy bolter exchanged for one of the following: Hull (Front) Mounted twin heavy flamer Free, Hull (Front) Mounted twin lascannon +10 Points; This Model may have one item from the Legion Pintle Weapons list selected for it; This Model may have one of each of the following selected for it: One Hull (Front) Mounted hunter-killer missile +5 Points, Searchlights +5 Points..",
+  },
+  {
+    title: "Dreadnought Drop Pod",
+    keywords: ["dreadnought drop pod", "heavy transport"],
+    text: "Liber Astrates 3rd Edition Heavy Transport entry. Base Composition: 1 Dreadnought Drop Pod. Base Points: 100 pts. Additional Models: N/A. Wargear: None.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Dreadnought Transport; Orbital Assault Vehicle; Impact Reactive Doors.. Type: Vehicle (Transport).. Options: None..",
+  },
+  {
+    title: "Dreadclaw Drop Pod",
+    keywords: ["dreadclaw drop pod", "heavy transport"],
+    text: "Liber Astrates 3rd Edition Heavy Transport entry. Base Composition: 1 Dreadclaw Drop Pod. Base Points: 115 pts. Additional Models: N/A. Wargear: None.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Drop Transport.. Type: Vehicle (Flyer, Transport).. Options: None..",
+  },
+  {
+    title: "Kharybdis Assault Claw",
+    keywords: ["kharybdis assault claw", "heavy transport"],
+    text: "Liber Astrates 3rd Edition Heavy Transport entry. Base Composition: 1 Kharybdis Assault Claw. Base Points: 235 pts. Additional Models: N/A. Wargear: Turret Mounted Kharybdis missile launcher.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Heavy Drop Transport.. Type: Vehicle (Flyer, Transport).. Options: None..",
+  },
+  {
+    title: "Predator",
+    keywords: ["predator", "armour"],
+    text: "Liber Astrates 3rd Edition Armour entry. Base Composition: 1 Predator. Base Points: 100 pts. Additional Models: N/A. Wargear: Turret Mounted Predator cannon; Two Sponson Mounted heavy bolters.. Traits: [Allegiance]; [Legiones Astartes]; Smokescreen.. Special Rules: None.. Type: Vehicle.. Options: This Model may have its Turret Mounted Predator cannon exchanged for one of the following: Turret Mounted flamestorm cannon Free, Turret Mounted executioner plasma destroyer +25 Points, Turret Mounted heavy conversion beam cannon +30 Points, Turret Mounted magna-melta cannon +20 Points, Turret Mounted graviton cannon +20 Points, Turret Mounted volkite macro-saker +5 Points, Turret Mounted neutron blaster +15 Points, Turret Mounted twin lascannon +10 Points; This Model may have both Sponson Mounted heavy bolters exchanged for one item from the Legion Sponson Weapons list; This Model may have one item from the Legion Pintle Weapons list selected for it; This Model may have one of each of the following selected for it: One Turret Mounted hunter-killer missile +5 Points, Searchlights +5 Points, Dozer blade +5 Points..",
+  },
+  {
+    title: "Sicaran",
+    keywords: ["sicaran", "armour"],
+    text: "Liber Astrates 3rd Edition Armour entry. Base Composition: 1 Sicaran. Base Points: 160 pts. Additional Models: N/A. Wargear: Turret Mounted twin accelerator autocannon; Hull (Front) Mounted heavy bolter; Two Sponson Mounted heavy bolters.. Traits: [Allegiance]; [Legiones Astartes]; Smokescreen.. Special Rules: None.. Type: Vehicle.. Options: This Model may have its Turret Mounted twin accelerator autocannon exchanged for one of the following: Turret Mounted Arcus missile launcher +40 Points, Turret Mounted punisher rotary cannon +10 Points, Turret Mounted Omega plasma array +25 Points; This Model may have both Sponson Mounted heavy bolters exchanged for one item from the Legion Sponson Weapons list; This Model may have one item from the Legion Pintle Weapons list selected for it; This Model may have one of each of the following selected for it: One Turret Mounted hunter-killer missile +5 Points, Searchlights +5 Points..",
+  },
+  {
+    title: "Sicaran Venator",
+    keywords: ["sicaran venator", "armour"],
+    text: "Liber Astrates 3rd Edition Armour entry. Base Composition: 1 Sicaran Venator. Base Points: 170 pts. Additional Models: N/A. Wargear: Centreline Mounted neutron beam laser; Turret Mounted heavy bolter; Two Sponson Mounted heavy bolters.. Traits: [Allegiance]; [Legiones Astartes]; Smokescreen.. Special Rules: Explodes (5+).. Type: Vehicle.. Options: This Model may have both Sponson Mounted heavy bolters exchanged for one item from the Legion Sponson Weapons list; This Model may have one item from the Legion Pintle Weapons list selected for it; This Model may have one of each of the following selected for it: One Hull (Front) Mounted hunter-killer missile +5 Points, Searchlights +5 Points..",
+  },
+  {
+    title: "Kratos Assault Tank",
+    keywords: ["kratos assault tank", "armour"],
+    text: "Liber Astrates 3rd Edition Armour entry. Base Composition: 1 Kratos Assault Tank. Base Points: 280 pts. Additional Models: N/A. Wargear: Turret Mounted Kratos battlecannon; Co-axial (Kratos battlecannon) Mounted autocannon; Hull (Front, Left) Mounted heavy bolter; Hull (Front, Right) Mounted heavy bolter; Two Sponson Mounted heavy bolters.. Traits: [Allegiance]; [Legiones Astartes]; Smokescreen.. Special Rules: None.. Type: Vehicle (Stable).. Options: This Model may have flashburn shells selected for its Turret Mounted Kratos battlecannon at a cost of +10 Points; This Model may have its Turret Mounted Kratos battlecannon exchanged for one of the following: Turret Mounted volkite cardanelle Free, Turret Mounted melta blast-gun +30 Points; This Model may have its Hull (Front, Right) Mounted heavy bolter and its Hull (Front, Left) Mounted heavy bolter exchanged for one of the following: Hull (Front, Right) Mounted volkite caliver and Hull (Front, Left) Mounted volkite caliver +5 Points, Hull (Front, Right) Mounted autocannon and Hull (Front, Left) Mounted autocannon +10 Points, Hull (Front, Right) Mounted lascannon and Hull (Front, Left) Mounted lascannon +25 Points; This Model may have both Sponson Mounted heavy bolters exchanged for one item from the Legion Sponson Weapons list; This Model may have one item from the Legion Pintle Weapons list selected for it; This Model may have one of each of the following selected for it: One Turret Mounted hunter-killer missile +5 Points, Searchlights +5 Points, Dozer blade +5 Points..",
+  },
+  {
+    title: "Vindicator Siege Tank",
+    keywords: ["vindicator siege tank", "armour"],
+    text: "Liber Astrates 3rd Edition Armour entry. Base Composition: 1 Vindicator Siege Tank. Base Points: 140 pts. Additional Models: N/A. Wargear: Centreline Mounted demolisher cannon; Hull (Front) Mounted combi-bolter.. Traits: [Allegiance]; [Legiones Astartes]; Smokescreen.. Special Rules: None.. Type: Vehicle.. Options: This Model may have its Centreline Mounted demolisher cannon exchanged for one Centreline Mounted magna laser destroyer for +20 Points; This Model may have one item from the Legion Pintle Weapons list selected for it; This Model may have one of each of the following selected for it: One Hull (Front) Mounted hunter-killer missile +5 Points, Searchlights +5 Points, Dozer blade +5 Points..",
+  },
+  {
+    title: "Scorpius Missile Tank",
+    keywords: ["scorpius missile tank", "armour"],
+    text: "Liber Astrates 3rd Edition Armour entry. Base Composition: 1 Scorpius Missile Tank. Base Points: 120 pts. Additional Models: N/A. Wargear: Turret Mounted Scorpius missile launcher; Two Pintle Mounted bolters.. Traits: [Allegiance]; [Legiones Astartes]; Smokescreen.. Special Rules: None.. Type: Vehicle.. Options: This Model may have one of its Pintle Mounted bolters exchanged for one item from the Legion Pintle Weapons list; This Model may have one of each of the following selected for it: One Hull (Front) Mounted hunter-killer missile +5 Points, Searchlights +5 Points, Dozer blade +5 Points..",
+  },
+  {
+    title: "Arquitor Bombard",
+    keywords: ["arquitor bombard", "armour"],
+    text: "Liber Astrates 3rd Edition Armour entry. Base Composition: 1 Arquitor Bombard. Base Points: 150 pts. Additional Models: N/A. Wargear: Centreline Mounted Morbus bombard; Two Sponson Mounted heavy bolters.. Traits: [Allegiance]; [Legiones Astartes]; Smokescreen.. Special Rules: None.. Type: Vehicle.. Options: If your Army includes a Siege Breaker Model with the same Faction Trait as this Model, this Model's Centreline Mounted Morbus bombard may also have phosphex shells selected for it for +20 Points; This Model may have its Centreline Mounted Morbus bombard exchanged for one of the following: Centreline Mounted graviton-charge cannon +15 Points, Centreline Mounted Spicula rocket system +15 Points; This Model may have both Sponson Mounted heavy bolters exchanged for two Sponson Mounted autocannon for +10 Points or for one item from the Legion Sponson Weapons list; This Model may have one item from the Legion Pintle Weapons list selected for it; This Model may have one of each of the following selected for it: One Hull (Front) Mounted hunter-killer missile +5 Points, Searchlights +5 Points..",
+  },
+  {
+    title: "Reconnaissance Squad",
+    keywords: ["reconnaissance squad", "recon"],
+    text: "Liber Astrates 3rd Edition Recon entry. Base Composition: 1 Recon Sergeant, 4 Recon Legionaries. Base Points: 110 pts. Additional Models: Up to 5 additional Recon Legionaries (+17 pts/model). Wargear: Astartes shotgun; Bolt pistol; Frag grenades; Krak grenades.. Traits: [Allegiance]; [Legiones Astartes]; Smokescreen.. Special Rules: Infiltrate (9); Move Through Cover; Support Unit (2).. Type: Recon Sergeant: Infantry (Sergeant, Skirmish); Recon Legionary: Infantry (Skirmish).. Options: The Recon Sergeant in this Unit may have its Astartes shotgun and/or bolt pistol exchanged for one item from the Legion Sergeant Melee Weapons list; The Recon Sergeant in this Unit may have its bolt pistol exchanged for one item from the Legion Pistols list; Up to two Recon Legionaries in this Unit may each have one item from the Legion Equipment list selected for them; Any Model in this Unit may have its Astartes shotgun exchanged for one Nemesis bolter for +5 Points per Model; The Recon Sergeant in this Unit may have melta bombs selected for it for +10 Points..",
+  },
+  {
+    title: "Sabre",
+    keywords: ["sabre", "recon"],
+    text: "Liber Astrates 3rd Edition Recon entry. Base Composition: 1 Sabre. Base Points: 80 pts. Additional Models: N/A. Wargear: Centreline Mounted Anvilus snub autocannon; Hull (Front) Mounted heavy bolter.. Traits: [Allegiance]; [Legiones Astartes]; Smokescreen.. Special Rules: Outflank.. Type: Vehicle (Rapid).. Options: This Model may have its Centreline Mounted Anvilus snub autocannon exchanged for one of the following: Centreline Mounted neutron blaster +10 Points, Centreline Mounted volkite saker Free; This Model may have its Hull (Front) Mounted heavy bolter exchanged for one of the following: Hull (Front) Mounted multi-melta +25 Points, Hull (Front) Mounted volkite culverin +15 Points, Hull (Front) Mounted heavy flamer Free; This Model may have one item from the Legion Pintle Weapons list selected for it; This Model may have searchlights selected for it for +5 Points; This Model may have up to four Hull (Front) Mounted Sabre missiles selected for it for +5 Points each..",
+  },
+  {
+    title: "Outrider Squadron",
+    keywords: ["outrider squadron", "recon"],
+    text: "Liber Astrates 3rd Edition Recon entry. Base Composition: 1 Outrider Sergeant, 2 Outriders. Base Points: 85 pts. Additional Models: Up to 7 additional Outriders (+20 pts/model). Wargear: Twin bolter; Bolt pistol; Chainsword; Frag grenades; Krak grenades.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Bulky (2); Vanguard (1); Firestorm; Implacable Advance; Outflank.. Type: Outrider Sergeant: Cavalry (Sergeant); Outrider: Cavalry.. Options: Up to two Outriders in this Unit may each have one item from the Legion Equipment list selected for them; The Outrider Sergeant in this Unit may have its chainsword exchanged for one item from the Legion Sergeant Melee Weapons list; Any Model in this Unit may have its bolt pistol exchanged for one item from the Legion Pistols list; All Models in the Unit may have their twin bolter exchanged for one twin plasma gun for +15 Points per Model; Any Model in this Unit may have their chainsword exchanged for one Astartes shotgun for Free..",
+  },
+  {
+    title: "Land Raider Explorator",
+    keywords: ["land raider explorator", "recon"],
+    text: "Liber Astrates 3rd Edition Recon entry. Base Composition: 1 Land Raider Explorator. Base Points: 220 pts. Additional Models: N/A. Wargear: Two Sponson Mounted twin lascannon; Dozer blade.. Traits: [Allegiance]; [Legiones Astartes]; Smokescreen.. Special Rules: Auto-repair (5+); Outflank.. Type: Vehicle (Transport).. Options: This Model may have one item from the Legion Pintle Weapons list selected for it; This Model may have one of the following selected for it: One Hull (Front) Mounted twin lascannon +20 Points, One Hull (Front) Mounted twin heavy bolter +10 Points, One Hull (Front) Mounted twin heavy flamer +10 Points; This Model may have one of each of the following selected for it: One Hull (Front) Mounted hunter-killer missile +5 Points, Searchlights +5 Points..",
+  },
+  {
+    title: "Tarantula Battery",
+    keywords: ["tarantula battery", "recon"],
+    text: "Liber Astrates 3rd Edition Recon entry. Base Composition: 2 Tarantula Sentry Guns. Base Points: 45 pts. Additional Models: N/A. Wargear: Turret Mounted twin heavy bolter.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Expendable (3); Infiltrate (9); Automated Fire Protocols; Independent Sentries.. Type: Vehicle.. Options: Any Model in this Unit may have its Turret Mounted twin heavy bolter exchanged for one of the following: Turret Mounted twin lascannon +20 Points per Model, Turret Mounted twin volkite culverin +15 Points per Model, Turret Mounted sentry melta array +25 Points per Model, Turret Mounted Hyperios missile launcher +15 Points per Model, Two Turret Mounted Orias frag missiles +15 Points per Model..",
+  },
+  {
+    title: "Xiphon Interceptor",
+    keywords: ["xiphon interceptor", "fast attack"],
+    text: "Liber Astrates 3rd Edition Fast Attack entry. Base Composition: 1 Xiphon Interceptor. Base Points: 120 pts. Additional Models: N/A. Wargear: Two Centreline Mounted twin lascannon; Centreline Mounted rotary missile launcher.. Traits: [Allegiance]; [Legiones Astartes]; Interceptor.. Special Rules: None.. Type: Vehicle (Flyer).. Options: None..",
+  },
+  {
+    title: "Storm Eagle",
+    keywords: ["storm eagle", "fast attack"],
+    text: "Liber Astrates 3rd Edition Fast Attack entry. Base Composition: 1 Storm Eagle. Base Points: 200 pts. Additional Models: N/A. Wargear: Centreline Mounted twin heavy bolter; Centreline Mounted vengeance launcher; Four Centreline Mounted tempest rockets.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Assault Vehicle.. Type: Vehicle (Stable, Transport, Flyer).. Options: This Model may have its Centreline Mounted twin heavy bolter exchanged for one of the following: Centreline Mounted twin multi-melta +15 Points, Centreline Mounted cyclone missile launcher +10 Points; This Model may have its four Centreline Mounted tempest rockets exchanged for one of the following: Four Centreline Mounted hunter-killer missiles +15 Points, Two Centreline Mounted twin lascannon +30 Points..",
+  },
+  {
+    title: "Fire Raptor",
+    keywords: ["fire raptor", "fast attack"],
+    text: "Liber Astrates 3rd Edition Fast Attack entry. Base Composition: 1 Fire Raptor. Base Points: 220 pts. Additional Models: N/A. Wargear: Centreline Mounted twin avenger bolt cannon; Two Sponson Mounted Gravis heavy bolter batteries; Four Centreline Mounted tempest rockets.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: None.. Type: Vehicle (Stable, Flyer).. Options: This Model may have its two Sponson Mounted Gravis heavy bolter batteries exchanged for two Sponson Mounted Gravis autocannon batteries for +15 Points; This Model may have its four Centreline Mounted tempest rockets all be exchanged for four Centreline Mounted hellstrike missiles for +20 Points..",
+  },
+  {
+    title: "Scimitar Jetbike Squadron",
+    keywords: ["scimitar jetbike squadron", "fast attack"],
+    text: "Liber Astrates 3rd Edition Fast Attack entry. Base Composition: 1 Scimitar Sergeant, 2 Scimitar Hunters. Base Points: 95 pts. Additional Models: Up to 7 additional Scimitar Hunters (+30 pts/model). Wargear: Bolt pistol; Chainsword; Heavy bolter; Frag grenades; Krak grenades.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Bulky (3); Deep Strike.. Type: Scimitar Sergeant: Cavalry (Sergeant, Antigrav); Scimitar Hunter: Cavalry (Antigrav).. Options: One Scimitar Hunter in this Unit may have one augury scanner selected for it for +10 Points; The Scimitar Sergeant in this Unit may have its chainsword exchanged for one item from the Legion Sergeant Melee Weapons list; Any Model in this Unit may have its bolt pistol exchanged for one item from the Legion Pistols list; Any Model in this Unit may have its heavy bolter exchanged for one of the following: Volkite culverin +5 Points per Model, Multi-melta +15 Points per Model, Plasma cannon +10 Points per Model..",
+  },
+  {
+    title: "Javelin Squadron",
+    keywords: ["javelin squadron", "fast attack"],
+    text: "Liber Astrates 3rd Edition Fast Attack entry. Base Composition: 1 Javelin. Base Points: 75 pts. Additional Models: Up to 2 additional Javelins (+75 pts/model). Wargear: Heavy bolter; Cyclone missile launcher.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Bulky (5); Deep Strike; Firing Protocols (3).. Type: Cavalry (Skirmish, Antigrav).. Options: Any Model in this Unit may have its cyclone missile launcher exchanged for one of the following: Two heavy flamers Free, Two heavy bolters Free, Two lascannon +5 Points per Model, Two volkite culverin +5 Points per Model..",
+  },
+  {
+    title: "Land Speeder Squadron",
+    keywords: ["land speeder squadron", "fast attack"],
+    text: "Liber Astrates 3rd Edition Fast Attack entry. Base Composition: 1 Land Speeder. Base Points: 50 pts. Additional Models: Up to 4 additional Land Speeders (+50 pts/model). Wargear: Heavy bolter; Augury scanner.. Traits: [Allegiance]; [Legiones Astartes].. Special Rules: Bulky (4); Deep Strike; Firing Protocols (2).. Type: Cavalry (Skirmish, Antigrav).. Options: Any Model in this Unit may have its heavy bolter exchanged for one of the following: Heavy flamer Free, Havoc launcher +5 Points per Model, Multi-melta +20 Points per Model, Volkite culverin +5 Points per Model, Plasma cannon +10 Points per Model, Graviton gun +10 Points per Model; Any Model in this Unit may have its augury scanner exchanged for one of the following: Heavy flamer Free, Heavy bolter Free, Havoc launcher Free, Multi-melta +20 Points per Model, Volkite culverin +5 Points per Model, Plasma cannon +10 Points per Model, Graviton gun +10 Points per Model; Any Model in this Unit may have up to two hunter-killer missiles selected for it for +5 Points each..",
+  },
+  {
+    title: "Cerberus Heavy Tank Destroyer",
+    keywords: ["cerberus heavy tank destroyer", "lord of war"],
+    text: "Liber Astrates 3rd Edition Lord of War entry. Base Composition: 1 Cerberus Heavy Tank Destroyer. Base Points: 400 pts. Additional Models: N/A. Wargear: Centreline Mounted neutron laser battery; Two Sponson Mounted heavy bolters.. Traits: [Allegiance]; [Legiones Astartes]; Smokescreen.. Special Rules: Explodes (4+).. Type: Vehicle (Super-heavy).. Options: This Model may have both Sponson Mounted heavy bolters exchanged for one item from the Legion Sponson Weapons list; This Model may have one item from the Legion Pintle Mounted Weapons list selected for it; This Model may have one of each of the following selected for it: One Hull (Front) Mounted hunter-killer missile +5 Points, Searchlights +5 Points..",
+  },
+  {
+    title: "Typhon Heavy Siege Tank",
+    keywords: ["typhon heavy siege tank", "lord of war"],
+    text: "Liber Astrates 3rd Edition Lord of War entry. Base Composition: 1 Typhon Heavy Siege Tank. Base Points: 400 pts. Additional Models: N/A. Wargear: Centreline Mounted Dreadhammer siege cannon; Two Sponson Mounted heavy bolters.. Traits: [Allegiance]; [Legiones Astartes]; Smokescreen.. Special Rules: Explodes (5+).. Type: Vehicle (Super-heavy).. Options: This Model may have both Sponson Mounted heavy bolters exchanged for one item from the Legion Sponson Weapons list; This Model may have one item from the Legion Pintle Mounted Weapons list selected for it; This Model may have one of each of the following selected for it: One Hull (Front) Mounted hunter-killer missile +5 Points, Searchlights +5 Points..",
+  },
+  {
+    title: "Glaive Super-Heavy Special Weapons Tank",
+    keywords: ["glaive super heavy special weapons tank", "lord of war"],
+    text: "Liber Astrates 3rd Edition Lord of War entry. Base Composition: 1 Glaive Super-Heavy Special Weapons Tank. Base Points: 650 pts. Additional Models: N/A. Wargear: Turret Mounted volkite carronade; Hull (Front) Mounted twin heavy bolter; Two Sponson Mounted lascannon arrays.. Traits: [Allegiance]; [Legiones Astartes]; Smokescreen.. Special Rules: None.. Type: Vehicle (Super-heavy).. Options: This Model may have its Hull (Front) Mounted twin heavy bolter exchanged for one Hull (Front) Mounted twin heavy flamer for Free; This Model may have both Sponson Mounted lascannon arrays exchanged for one of the following: Two Sponson Mounted laser destroyers Free, Two Sponson Mounted Gravis heavy bolter batteries Free; This Model may have one item from the Legion Pintle Mounted Weapons list selected for it; This Model may have one of each of the following selected for it: One Hull (Front) Mounted hunter-killer missile +5 Points, Searchlights +5 Points..",
+  },
+  {
+    title: "Fellblade Super-Heavy Battle Tank",
+    keywords: ["fellblade super heavy battle tank", "lord of war"],
+    text: "Liber Astrates 3rd Edition Lord of War entry. Base Composition: 1 Fellblade Super-Heavy Battle Tank. Base Points: 650 pts. Additional Models: N/A. Wargear: Turret Mounted Fellblade accelerator cannon; Hull (Front) Mounted twin heavy bolter; Hull (Front) Mounted demolisher cannon; Two Sponson Mounted lascannon arrays.. Traits: [Allegiance]; [Legiones Astartes]; Smokescreen.. Special Rules: None.. Type: Vehicle (Super-heavy).. Options: This Model may have its Hull (Front) Mounted twin heavy bolter exchanged for one Hull (Front) Mounted twin heavy flamer for Free; This Model may have both Sponson Mounted lascannon arrays exchanged for one of the following: Two Sponson Mounted laser destroyers Free, Two Sponson Mounted Gravis heavy bolter batteries Free; This Model may have one item from the Legion Pintle Mounted Weapons list selected for it; This Model may have one of each of the following selected for it: One Hull (Front) Mounted hunter-killer missile +5 Points, Searchlights +5 Points..",
+  },
+  {
+    title: "Falchion Super-Heavy Tank Destroyer",
+    keywords: ["falchion super heavy tank destroyer", "lord of war"],
+    text: "Liber Astrates 3rd Edition Lord of War entry. Base Composition: 1 Falchion Super-Heavy Tank Destroyer. Base Points: 650 pts. Additional Models: N/A. Wargear: Centreline Mounted neutron-wave cannon; Two Sponson Mounted lascannon arrays.. Traits: [Allegiance]; [Legiones Astartes]; Smokescreen.. Special Rules: None.. Type: Vehicle (Super-heavy).. Options: This Model may have both Sponson Mounted lascannon arrays exchanged for one of the following: Two Sponson Mounted laser destroyers Free, Two Sponson Mounted Gravis heavy bolter batteries Free; This Model may have one item from the Legion Pintle Mounted Weapons list selected for it; This Model may have one of each of the following selected for it: One Hull (Front) Mounted hunter-killer missile +5 Points, Searchlights +5 Points..",
+  },
+  {
+    title: "Thunderhawk Gunship",
+    keywords: ["thunderhawk gunship", "lord of war"],
+    text: "Liber Astrates 3rd Edition Lord of War entry. Base Composition: 1 Thunderhawk Gunship. Base Points: 685 pts. Additional Models: N/A. Wargear: Centreline Mounted turbo-laser destructor; Two Turret Mounted twin heavy bolters; Two Sponson Mounted twin heavy bolters; Two Hull (Front) Mounted lascannon; Six Centreline Mounted hellstrike missiles.. Traits: [Allegiance]; [Legiones Astartes]; Smokescreen.. Special Rules: Thunderhawk Transport Bay.. Type: Vehicle (Transport, Super-heavy, Flyer).. Options: None..",
+  },
+];
+
+var HELP_CHAT_SUGGESTIONS = [
+  "How do I use the army builder?",
+  "Explain deployment",
+  "How does shooting work here?",
+  "Walk me through the assault phase",
+  "What happens in the end phase?",
+  "How do detachments and the Warlord work?",
+  "What does Pinned do?",
+  "How does Return Fire work?",
+  "How do modifiers work?",
+  "What happens at BS 0 or WS 0?",
+  "What does a power glaive do?",
+  "How do sonic shriekers work?",
+  "What are the stats for a meltagun?",
+  "What can a Praetor take?",
+];
+
+function getHelpPhaseById(phaseId) {
+  return (
+    HELP_PHASE_GUIDE.find(function (phase) {
+      return phase.id === phaseId;
+    }) || HELP_PHASE_GUIDE[0]
+  );
+}
+
+function detectHelpPhase(question, contextPhaseId) {
+  var q = (question || "").toLowerCase();
+  if (
+    q.includes("this phase") ||
+    q.includes("current phase") ||
+    q.includes("current tab")
+  ) {
+    return getHelpPhaseById(contextPhaseId);
+  }
+  if (
+    q.includes("army") ||
+    q.includes("warlord") ||
+    q.includes("detachment") ||
+    q.includes("list") ||
+    q.includes("import") ||
+    q.includes("export") ||
+    q.includes("save")
+  ) {
+    return getHelpPhaseById("army_builder");
+  }
+  if (
+    q.includes("deploy") ||
+    q.includes("reserve") ||
+    q.includes("map") ||
+    q.includes("placement")
+  ) {
+    return getHelpPhaseById("deployment");
+  }
+  if (
+    q.includes("move") ||
+    q.includes("movement") ||
+    q.includes("position") ||
+    q.includes("distance")
+  ) {
+    return getHelpPhaseById("movement");
+  }
+  if (
+    q.includes("shoot") ||
+    q.includes("shooting") ||
+    q.includes("to hit") ||
+    q.includes("to wound") ||
+    q.includes("save") ||
+    q.includes("reaction") ||
+    q.includes("return fire") ||
+    q.includes("overwatch")
+  ) {
+    return getHelpPhaseById("shooting");
+  }
+  if (
+    q.includes("assault") ||
+    q.includes("charge") ||
+    q.includes("melee") ||
+    q.includes("combat") ||
+    q.includes("challenge") ||
+    q.includes("initiative")
+  ) {
+    return getHelpPhaseById("assault");
+  }
+  if (
+    q.includes("end") ||
+    q.includes("vp") ||
+    q.includes("victory") ||
+    q.includes("objective") ||
+    q.includes("score") ||
+    q.includes("morale") ||
+    q.includes("regroup")
+  ) {
+    return getHelpPhaseById("end");
+  }
+  return null;
+}
+
+function searchHelpReferenceCard(question) {
+  var q = (question || "").toLowerCase();
+  if (!q) return null;
+
+  var best = null;
+  HELP_REFERENCE_CARD_ENTRIES.forEach(function (entry) {
+    var score = 0;
+    entry.keywords.forEach(function (keyword) {
+      if (q.includes(keyword)) score += keyword.split(" ").length + 2;
+    });
+
+    q.split(/[^a-z0-9+']+/)
+      .filter(Boolean)
+      .forEach(function (token) {
+        if (
+          token.length > 2 &&
+          (entry.title.toLowerCase().includes(token) ||
+            entry.text.toLowerCase().includes(token))
+        ) {
+          score += 1;
+        }
+      });
+
+    if (!best || score > best.score) {
+      best = { entry: entry, score: score };
+    }
+  });
+
+  return best && best.score >= 3 ? best.entry : null;
+}
+
+function searchHelpKnowledgeEntries(question, entries) {
+  var q = (question || "").toLowerCase();
+  if (!q) return null;
+
+  var best = null;
+  entries.forEach(function (entry) {
+    var score = 0;
+    entry.keywords.forEach(function (keyword) {
+      if (q.includes(keyword)) score += keyword.split(" ").length + 2;
+    });
+
+    q.split(/[^a-z0-9+']+/)
+      .filter(Boolean)
+      .forEach(function (token) {
+        if (
+          token.length > 2 &&
+          (entry.title.toLowerCase().includes(token) ||
+            entry.text.toLowerCase().includes(token))
+        ) {
+          score += 1;
+        }
+      });
+
+    if (!best || score > best.score) {
+      best = { entry: entry, score: score };
+    }
+  });
+
+  return best && best.score >= 3 ? best.entry : null;
+}
+
+function makeHelpChatResponse(text, helpTarget) {
+  return { text: text, helpTarget: helpTarget || null };
+}
+
+function buildHelpChatReply(question, contextPhaseId) {
+  var q = (question || "").trim();
+  var lower = q.toLowerCase();
+  var referenceEntry = searchHelpReferenceCard(q);
+  var principlesEntry = searchHelpKnowledgeEntries(
+    q,
+    HELP_BASIC_PRINCIPLES_ENTRIES,
+  );
+  var armouryEntry = searchHelpKnowledgeEntries(q, HELP_ARMOURY_ENTRIES);
+  var weaponArmouryEntry = searchHelpKnowledgeEntries(
+    q,
+    HELP_WEAPON_ARMOURY_ENTRIES,
+  );
+  var liberAstartesEntry = searchHelpKnowledgeEntries(
+    q,
+    HELP_LIBER_ASTARTES_ENTRIES,
+  );
+  var phase = detectHelpPhase(q, contextPhaseId);
+
+  if (!q) {
+    return makeHelpChatResponse(
+      "Ask me about any phase, rule flow, or toolkit feature. For example: how does shooting work, how do I deploy units, or how do detachments work?",
+      "phase-guide",
+    );
+  }
+
+  if (lower === "hi" || lower === "hello" || lower === "hey") {
+    return makeHelpChatResponse(
+      "Ask me about Army Builder, Deployment, Movement, Shooting, Assault, or End Phase and I will explain the rules flow and how to use the toolkit panels for it.",
+      "phase-guide",
+    );
+  }
+
+  if (lower.includes("what can you do") || lower.includes("help me")) {
+    return makeHelpChatResponse(
+      "I can explain phase order, what each tab does, how to use the in-app controls, look up reference card rules like Pinned, Return Fire, charge steps, challenge gambits, terrain effects, and vehicle damage results, answer Basic Principles questions about characteristics, modifiers, saves, and value limits, look up armoury entries like power glaives and sonic shriekers, and answer spreadsheet-based Legion Astartes lookups for weapon profiles, unit wargear, base points, and options.",
+      "astrates-reference",
+    );
+  }
+
+  if (weaponArmouryEntry) {
+    return makeHelpChatResponse(
+      weaponArmouryEntry.title +
+        ":\n\n" +
+        weaponArmouryEntry.text +
+        "\n\nSource: Legion Astrastes Weapon Armoury 3rd Ed. V2. See Help > Legion Astartes References for workbook coverage.",
+      "astrates-reference",
+    );
+  }
+
+  if (liberAstartesEntry) {
+    return makeHelpChatResponse(
+      liberAstartesEntry.title +
+        ":\n\n" +
+        liberAstartesEntry.text +
+        "\n\nSource: Liber Astrates 3rd Edition workbook. See Help > Legion Astartes References for workbook coverage.",
+      "astrates-reference",
+    );
+  }
+
+  if (armouryEntry) {
+    return makeHelpChatResponse(
+      armouryEntry.title +
+        ":\n\n" +
+        armouryEntry.text +
+        "\n\nSource: Liber Loyalist Armoury V2 and Liber Hereticus Armoury V2. See Help > Armoury Rules for the reference summary.",
+      "armoury-rules",
+    );
+  }
+
+  if (principlesEntry) {
+    return makeHelpChatResponse(
+      principlesEntry.title +
+        ":\n\n" +
+        principlesEntry.text +
+        "\n\nSource: HH3.0 Basic Principles. See Help > Basic Principles for the reference summary.",
+      "basic-principles",
+    );
+  }
+
+  if (referenceEntry) {
+    return makeHelpChatResponse(
+      referenceEntry.title +
+        ":\n\n" +
+        referenceEntry.text +
+        "\n\nSource: WarHarmmer 30k 3.0ed reference card. See Help > Reference Card Rules for the reference summary.",
+      "reference-card",
+    );
+  }
+
+  if (phase) {
+    var parts = [
+      phase.icon + " " + phase.label + ": " + phase.desc,
+      "How to use it: " + phase.howTo,
+      "Rules focus: " + phase.rules,
+    ];
+
+    if (phase.id === "army_builder") {
+      parts.push(
+        "Extra tip: " +
+          HELP_ARMY_BUILDER_TIPS.slice(0, 2)
+            .map(function (item) {
+              return item.tip + " - " + item.detail;
+            })
+            .join(" "),
+      );
+    }
+
+    if (phase.id === "shooting" || phase.id === "assault") {
+      parts.push(
+        "Extra tip: " +
+          HELP_COMBAT_TIPS.filter(function (item) {
+            return phase.id === "shooting"
+              ? item.tip.toLowerCase().includes("shooting") ||
+                  item.tip.toLowerCase().includes("rolling") ||
+                  item.tip.toLowerCase().includes("special")
+              : item.tip.toLowerCase().includes("assault") ||
+                  item.tip.toLowerCase().includes("challenge");
+          })
+            .map(function (item) {
+              return item.tip + " - " + item.detail;
+            })
+            .join(" "),
+      );
+    }
+
+    return makeHelpChatResponse(parts.join("\n\n"), "phase-guide");
+  }
+
+  if (
+    lower.includes("phase order") ||
+    lower.includes("turn order") ||
+    lower.includes("sequence")
+  ) {
+    return makeHelpChatResponse(
+      "The toolkit flow is Army Builder -> Deployment -> Movement -> Shooting -> Assault -> End Phase. Use Help when you want a rules refresher, then move tab by tab as the turn progresses.",
+      "phase-guide",
+    );
+  }
+
+  return makeHelpChatResponse(
+    "I could not match that to one specific phase, but I can help with Army Builder, Deployment, Movement, Shooting, Assault, End Phase, detachments, Warlords, reactions, challenges, scoring, Basic Principles topics like modifiers and characteristics, armoury lookups such as power glaives and sonic shriekers, and Legion Astartes spreadsheet lookups like meltagun stats or Praetor options. Try asking in a short form like 'explain shooting', 'what does a power glaive do?', or 'what are the stats for a meltagun?'.",
+    "overview",
+  );
+}
+
+function createHelpWelcomeMessage(contextPhaseId) {
+  var phase = getHelpPhaseById(contextPhaseId || "army_builder");
+  return (
+    "AI Help Chatbot online. Ask about rules, phase order, or how to use a tab.\n\n" +
+    "Current context: " +
+    phase.label +
+    ". Try 'Explain this phase', 'How do detachments work?', or 'Walk me through shooting.'"
+  );
+}
 
 var ShootingResolver = function () {
   const [activePhase, setActivePhase] = useState("army_builder");
+  const [lastNonHelpPhase, setLastNonHelpPhase] = useState("army_builder");
+  const [helpChatOpen, setHelpChatOpen] = useState(false);
+  const [helpChatInput, setHelpChatInput] = useState("");
+  const helpSectionRefs = useRef({});
+  const [helpChatMessages, setHelpChatMessages] = useState(() => [
+    { role: "assistant", text: createHelpWelcomeMessage("army_builder") },
+  ]);
 
   const emptyArmy = () => ({
     allegiance: "loyalist",
@@ -23,6 +2313,312 @@ var ShootingResolver = function () {
   const [abShowAuxPicker, setAbShowAuxPicker] = useState(null); // command entry id to show aux picker for
   const [abShowApexPicker, setAbShowApexPicker] = useState(null); // high command entry id
   const abFileInputRef = useRef(null);
+  const helpChatScrollRef = useRef(null);
+
+  useEffect(() => {
+    if (activePhase !== "help") setLastNonHelpPhase(activePhase);
+  }, [activePhase]);
+
+  useEffect(() => {
+    if (helpChatScrollRef.current) {
+      helpChatScrollRef.current.scrollTop =
+        helpChatScrollRef.current.scrollHeight;
+    }
+  }, [helpChatMessages]);
+
+  const helpChatContextPhase =
+    activePhase === "help" ? lastNonHelpPhase : activePhase;
+
+  const sendHelpChatMessage = useCallback(
+    (rawQuestion) => {
+      const question = (rawQuestion || helpChatInput).trim();
+      if (!question) return;
+      const reply = buildHelpChatReply(question, helpChatContextPhase);
+      setHelpChatMessages((prev) => [
+        ...prev,
+        { role: "user", text: question },
+        {
+          role: "assistant",
+          text: reply.text,
+          helpTarget: reply.helpTarget,
+        },
+      ]);
+      setHelpChatInput("");
+    },
+    [helpChatInput, helpChatContextPhase],
+  );
+
+  const resetHelpChat = useCallback(() => {
+    setHelpChatMessages([
+      {
+        role: "assistant",
+        text: createHelpWelcomeMessage(helpChatContextPhase),
+      },
+    ]);
+    setHelpChatInput("");
+  }, [helpChatContextPhase]);
+
+  const openHelpSection = useCallback((sectionId) => {
+    setHelpChatOpen(false);
+    setActivePhase("help");
+    setTimeout(function () {
+      var node = helpSectionRefs.current[sectionId];
+      if (node && typeof node.scrollIntoView === "function") {
+        node.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 80);
+  }, []);
+
+  const renderHelpChatPanel = useCallback(
+    (opts) => {
+      const options = opts || {};
+      const compact = !!options.compact;
+      return React.createElement(
+        "div",
+        { style: { ...panelStyle, marginBottom: options.marginBottom ?? 12 } },
+        React.createElement(
+          "div",
+          {
+            style: {
+              ...panelHeaderStyle,
+              justifyContent: "space-between",
+              marginBottom: 12,
+            },
+          },
+          React.createElement(
+            "div",
+            { style: { display: "flex", alignItems: "center", gap: 10 } },
+            React.createElement("span", { style: { fontSize: 16 } }, "🤖"),
+            React.createElement(
+              "span",
+              { style: { color: "#5a7a9a" } },
+              compact ? "AI CHAT" : "AI HELP CHATBOT",
+            ),
+          ),
+          React.createElement(
+            "div",
+            { style: { display: "flex", gap: 8, alignItems: "center" } },
+            compact &&
+              React.createElement(
+                "button",
+                {
+                  onClick: function () {
+                    setHelpChatOpen(false);
+                  },
+                  style: {
+                    padding: "6px 10px",
+                    borderRadius: 6,
+                    border: "1px solid #d8cdb8",
+                    background: "#fbf7f0",
+                    color: "#7a6e5e",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    letterSpacing: 1,
+                  },
+                },
+                "CLOSE",
+              ),
+            React.createElement(
+              "button",
+              {
+                onClick: resetHelpChat,
+                style: {
+                  padding: "6px 10px",
+                  borderRadius: 6,
+                  border: "1px solid #c7d6e6",
+                  background: "#f4f8fc",
+                  color: "#5a7a9a",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: 1,
+                },
+              },
+              "RESET CHAT",
+            ),
+          ),
+        ),
+        React.createElement(
+          "div",
+          {
+            style: {
+              fontSize: 13,
+              color: "#5a4e3e",
+              lineHeight: 1.7,
+              marginBottom: 12,
+            },
+          },
+          "Ask about rules, tab flow, or how to use the toolkit. The chatbot uses the built-in phase guide and answers in the context of ",
+          getHelpPhaseById(helpChatContextPhase).label,
+          ".",
+        ),
+        React.createElement(
+          "div",
+          {
+            ref: helpChatScrollRef,
+            style: {
+              maxHeight: compact ? 480 : 360,
+              overflowY: "auto",
+              display: "flex",
+              flexDirection: "column",
+              gap: 10,
+              padding: 12,
+              marginBottom: 12,
+              borderRadius: 8,
+              border: "1px solid #d8cdb8",
+              background: "linear-gradient(180deg, #fcfaf6 0%, #f5efe4 100%)",
+            },
+          },
+          helpChatMessages.map(function (message, index) {
+            var isUser = message.role === "user";
+            return React.createElement(
+              "div",
+              {
+                key: message.role + "_" + index,
+                style: {
+                  alignSelf: isUser ? "flex-end" : "flex-start",
+                  maxWidth: "86%",
+                  padding: "10px 12px",
+                  borderRadius: 10,
+                  whiteSpace: "pre-wrap",
+                  lineHeight: 1.6,
+                  fontSize: 13,
+                  fontFamily: "'Share Tech Mono', serif",
+                  background: isUser ? "rgba(90,122,154,0.14)" : "#fffdf9",
+                  border: `1px solid ${isUser ? "rgba(90,122,154,0.35)" : "#d8cdb8"}`,
+                  color: isUser ? "#4b6a88" : "#5a4e3e",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                },
+              },
+              React.createElement("div", null, message.text),
+              !isUser &&
+                message.helpTarget &&
+                React.createElement(
+                  "button",
+                  {
+                    onClick: function () {
+                      openHelpSection(message.helpTarget);
+                    },
+                    style: {
+                      marginTop: 8,
+                      padding: "5px 9px",
+                      borderRadius: 999,
+                      border: "1px solid rgba(90,122,154,0.35)",
+                      background: "#f6fafe",
+                      color: "#5a7a9a",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      letterSpacing: 0.4,
+                    },
+                  },
+                  "OPEN IN HELP",
+                ),
+            );
+          }),
+        ),
+        React.createElement(
+          "div",
+          {
+            style: {
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 8,
+              marginBottom: 12,
+            },
+          },
+          HELP_CHAT_SUGGESTIONS.map(function (prompt) {
+            return React.createElement(
+              "button",
+              {
+                key: prompt,
+                onClick: function () {
+                  sendHelpChatMessage(prompt);
+                },
+                style: {
+                  padding: "7px 10px",
+                  borderRadius: 999,
+                  border: "1px solid #d6e1ec",
+                  background: "#f6fafe",
+                  color: "#5a7a9a",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: 0.4,
+                },
+              },
+              prompt,
+            );
+          }),
+        ),
+        React.createElement(
+          "div",
+          {
+            style: {
+              display: "grid",
+              gridTemplateColumns: compact ? "1fr" : "1fr auto",
+              gap: 10,
+              alignItems: "center",
+            },
+          },
+          React.createElement("textarea", {
+            value: helpChatInput,
+            rows: 3,
+            placeholder:
+              "Ask about a rule or phase. Example: How do I use the shooting tab?",
+            onChange: function (e) {
+              setHelpChatInput(e.target.value);
+            },
+            onKeyDown: function (e) {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendHelpChatMessage();
+              }
+            },
+            style: {
+              width: "100%",
+              resize: "vertical",
+              minHeight: 82,
+              borderRadius: 8,
+              border: "1px solid #d8cdb8",
+              background: "#fffdf9",
+              color: "#4a3e2e",
+              padding: 12,
+              fontSize: 13,
+              lineHeight: 1.5,
+            },
+          }),
+          React.createElement(
+            "button",
+            {
+              onClick: function () {
+                sendHelpChatMessage();
+              },
+              style: {
+                alignSelf: "stretch",
+                minWidth: compact ? "100%" : 120,
+                minHeight: compact ? 46 : undefined,
+                padding: compact ? "12px 16px" : "0 16px",
+                borderRadius: 8,
+                border: "1px solid #5a7a9a",
+                background: "linear-gradient(180deg, #6f90b0 0%, #5a7a9a 100%)",
+                color: "#fff",
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: 1,
+              },
+            },
+            "ASK AI",
+          ),
+        ),
+      );
+    },
+    [
+      helpChatContextPhase,
+      helpChatInput,
+      helpChatMessages,
+      openHelpSection,
+      resetHelpChat,
+      sendHelpChatMessage,
+    ],
+  );
 
   const getArmy = () =>
     armyBuilderSide === "loyalist" ? loyalistArmy : traitorArmy;
@@ -504,9 +3100,7 @@ var ShootingResolver = function () {
             weaponsByName[weapon.name] = weapon;
           });
           const rangedWeapon =
-            weaponsByName[entry.weaponName] ||
-            weapons[0] ||
-            null;
+            weaponsByName[entry.weaponName] || weapons[0] || null;
           const iconType = getUnitIconType(entry.unitName);
           const symbol = getSymbolForType(iconType);
           const baseUnit = {
@@ -670,10 +3264,7 @@ var ShootingResolver = function () {
         if (byKey) return byKey.name;
         const legion = LEGION_DETACHMENTS[army.faction];
         if (legion) {
-          const all = [
-            ...(legion.auxiliary || []),
-            ...(legion.apex || []),
-          ];
+          const all = [...(legion.auxiliary || []), ...(legion.apex || [])];
           const found = all.find((d) => d.id === det.type);
           if (found) return found.name;
         }
@@ -743,9 +3334,7 @@ var ShootingResolver = function () {
       );
       rows.push([]);
       // TOTAL row is aligned under the Points column (index 11).
-      rows.push([
-        "", "", "", "", "", "", "", "", "", "", "TOTAL:", total, "",
-      ]);
+      rows.push(["", "", "", "", "", "", "", "", "", "", "TOTAL:", total, ""]);
       const csv = rows
         .map((r) =>
           r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(","),
@@ -799,9 +3388,7 @@ var ShootingResolver = function () {
       };
       // Strip BOM, split on newline (handle CRLF), parse each line.
       const raw = text.replace(/^\uFEFF/, "");
-      const lines = raw
-        .split(/\r?\n/)
-        .map((l) => parseCsvLine(l));
+      const lines = raw.split(/\r?\n/).map((l) => parseCsvLine(l));
       // Locate the header row ("#","Unit Name",...) and build a
       // name → column-index lookup. If no header is found, fall back to
       // legacy fixed positions for backward compatibility.
@@ -985,10 +3572,9 @@ var ShootingResolver = function () {
   const loadArmyPreset = useCallback(
     (presetId) => {
       if (!presetId) return;
-      const preset =
-        (typeof ARMY_PRESETS !== "undefined" ? ARMY_PRESETS : []).find(
-          (p) => p.id === presetId,
-        );
+      const preset = (
+        typeof ARMY_PRESETS !== "undefined" ? ARMY_PRESETS : []
+      ).find((p) => p.id === presetId);
       if (!preset) {
         alert("Preset not found.");
         return;
@@ -1229,20 +3815,19 @@ var ShootingResolver = function () {
       return isFlyer;
     });
     const edgeBg =
-      edgePlayer === "p1"
-        ? "rgba(155,45,45,0.10)"
-        : "rgba(42,111,180,0.10)";
+      edgePlayer === "p1" ? "rgba(155,45,45,0.10)" : "rgba(42,111,180,0.10)";
     const edgeBorder =
-      edgePlayer === "p1"
-        ? "rgba(155,45,45,0.35)"
-        : "rgba(42,111,180,0.35)";
+      edgePlayer === "p1" ? "rgba(155,45,45,0.35)" : "rgba(42,111,180,0.35)";
     const flyerIconSize = Math.max(14, Math.min(24, scale * 2));
     const flex = edge === "N" || edge === "S" ? "row" : "column";
     const label =
-      edge === "N" ? "P1 AERIAL RESERVES (N)"
-      : edge === "W" ? "P1 AERIAL RESERVES (W)"
-      : edge === "S" ? "P2 AERIAL RESERVES (S)"
-      : "P2 AERIAL RESERVES (E)";
+      edge === "N"
+        ? "P1 AERIAL RESERVES (N)"
+        : edge === "W"
+          ? "P1 AERIAL RESERVES (W)"
+          : edge === "S"
+            ? "P2 AERIAL RESERVES (S)"
+            : "P2 AERIAL RESERVES (E)";
     return React.createElement(
       "div",
       {
@@ -1654,11 +4239,15 @@ var ShootingResolver = function () {
     const distE = BOARD_W - x;
     const minDist = Math.min(distN, distS, distW, distE);
     const edge =
-      minDist === distN ? "N"
-      : minDist === distS ? "S"
-      : minDist === distW ? "W"
-      : "E";
-    let snapX = x, snapY = y;
+      minDist === distN
+        ? "N"
+        : minDist === distS
+          ? "S"
+          : minDist === distW
+            ? "W"
+            : "E";
+    let snapX = x,
+      snapY = y;
     if (edge === "N") snapY = 0;
     if (edge === "S") snapY = BOARD_H;
     if (edge === "W") snapX = 0;
@@ -1985,8 +4574,7 @@ var ShootingResolver = function () {
     const missionLabel = flyer.mission
       ? FLYER_MISSIONS[flyer.mission].label
       : null;
-    const isFlyer =
-      flyer.isFlyer || (flyer.unitData && flyer.unitData.isFlyer);
+    const isFlyer = flyer.isFlyer || (flyer.unitData && flyer.unitData.isFlyer);
     return React.createElement(
       "div",
       {
@@ -2060,7 +4648,7 @@ var ShootingResolver = function () {
           {
             onClick: () => toggleReserveDeepStrike(flyer.id),
             title:
-              "Deep Strike: unit may arrive anywhere on the battlefield (subject to 1D6\" scatter) instead of from the table edge",
+              'Deep Strike: unit may arrive anywhere on the battlefield (subject to 1D6" scatter) instead of from the table edge',
             style: {
               padding: "3px 8px",
               borderRadius: 3,
@@ -2108,8 +4696,7 @@ var ShootingResolver = function () {
                 "button",
                 {
                   key: m.id,
-                  onClick: () =>
-                    assignMissionAndPrepareEntry(flyer.id, m.id),
+                  onClick: () => assignMissionAndPrepareEntry(flyer.id, m.id),
                   title: m.desc,
                   style: {
                     padding: "4px 8px",
@@ -2268,7 +4855,7 @@ var ShootingResolver = function () {
             fontStyle: "italic",
           },
         },
-        'Reserves roll is made each turn during the Reserves Sub-Phase. First time 3+, +1 per return (max 6+). On pass: flyers pick a Combat Assignment then place on a board edge; ground units simply place on their controlling player\'s table edge.',
+        "Reserves roll is made each turn during the Reserves Sub-Phase. First time 3+, +1 per return (max 6+). On pass: flyers pick a Combat Assignment then place on a board edge; ground units simply place on their controlling player's table edge.",
       ),
       React.createElement(
         "div",
@@ -2863,7 +5450,11 @@ var ShootingResolver = function () {
     ]);
     setMapAttackerId(reactor.id);
     setMapTargetId(capReaction.triggerFlyerId);
-    setCapReaction((prev) => ({ ...prev, shootingResolved: false, resolving: true }));
+    setCapReaction((prev) => ({
+      ...prev,
+      shootingResolved: false,
+      resolving: true,
+    }));
   };
 
   const finishCombatAirPatrol = (returnToReserves = true) => {
@@ -3199,8 +5790,8 @@ var ShootingResolver = function () {
               },
             },
             atkFlyer.flyingAcross
-              ? `Flight in progress — attack units within ${atkFlyer.mission === "strafing" ? "12\" side arc" : "4\" centreline"} of the flight path, then END PASS.`
-              : `Attack along a straight flight line from ${atkFlyer.edgeEntry || "current edge"} → opposite edge. Path width ${atkFlyer.mission === "strafing" ? "12\" (side arc)" : "4\" (centreline)"}.`,
+              ? `Flight in progress — attack units within ${atkFlyer.mission === "strafing" ? '12" side arc' : '4" centreline'} of the flight path, then END PASS.`
+              : `Attack along a straight flight line from ${atkFlyer.edgeEntry || "current edge"} → opposite edge. Path width ${atkFlyer.mission === "strafing" ? '12" (side arc)' : '4" (centreline)'}.`,
           ),
           !atkFlyer.flyingAcross &&
             React.createElement(
@@ -3482,10 +6073,7 @@ var ShootingResolver = function () {
                       setBarrageScatterDir(null);
                       setBarrageScatterDist(null);
                       setBarrageScatterDice(null);
-                    } else if (
-                      phase === "movement" &&
-                      flyerBringOnId
-                    ) {
+                    } else if (phase === "movement" && flyerBringOnId) {
                       const rect = e.currentTarget.getBoundingClientRect();
                       const bx = (e.clientX - rect.left) / deployScale;
                       const by = (e.clientY - rect.top) / deployScale;
@@ -3511,557 +6099,558 @@ var ShootingResolver = function () {
                     height: BOARD_H * deployScale,
                     background: "#3a3a2e",
                     cursor:
-                      phase === "shooting" &&
-                      activeRules &&
-                      activeRules.barrage
+                      phase === "shooting" && activeRules && activeRules.barrage
                         ? "crosshair"
                         : phase === "movement" && flyerBringOnId
                           ? "crosshair"
                           : "default",
                   },
                 },
-              React.createElement("div", {
-                style: {
-                  position: "absolute",
-                  inset: 0,
-                  opacity: 0.06,
-                  backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent ${deployScale - 1}px, rgba(255,255,255,0.1) ${deployScale}px), repeating-linear-gradient(90deg, transparent, transparent ${deployScale - 1}px, rgba(255,255,255,0.1) ${deployScale}px)`,
-                  pointerEvents: "none",
-                },
-              }),
-              deployShowGrid &&
-                Array.from({ length: Math.floor(BOARD_W / 6) + 1 }, (_, i) =>
-                  React.createElement("div", {
-                    key: `gv${i}`,
-                    style: {
-                      position: "absolute",
-                      left: i * 6 * deployScale,
-                      top: 0,
-                      width: 1,
-                      height: BOARD_H * deployScale,
-                      background: "rgba(255,255,255,0.06)",
-                      pointerEvents: "none",
-                    },
-                  }),
-                ),
-              deployShowGrid &&
-                Array.from({ length: Math.floor(BOARD_H / 6) + 1 }, (_, i) =>
-                  React.createElement("div", {
-                    key: `gh${i}`,
-                    style: {
-                      position: "absolute",
-                      top: i * 6 * deployScale,
-                      left: 0,
-                      height: 1,
-                      width: BOARD_W * deployScale,
-                      background: "rgba(255,255,255,0.06)",
-                      pointerEvents: "none",
-                    },
-                  }),
-                ),
-              phase === "shooting" &&
-                atkUnit &&
-                weaponRange > 0 &&
                 React.createElement("div", {
                   style: {
                     position: "absolute",
-                    left: atkUnit.x * deployScale - weaponRange * deployScale,
-                    top: atkUnit.y * deployScale - weaponRange * deployScale,
-                    width: weaponRange * 2 * deployScale,
-                    height: weaponRange * 2 * deployScale,
-                    borderRadius: "50%",
-                    border: "1.5px dashed rgba(184,134,11,0.35)",
-                    background: "rgba(184,134,11,0.04)",
+                    inset: 0,
+                    opacity: 0.06,
+                    backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent ${deployScale - 1}px, rgba(255,255,255,0.1) ${deployScale}px), repeating-linear-gradient(90deg, transparent, transparent ${deployScale - 1}px, rgba(255,255,255,0.1) ${deployScale}px)`,
                     pointerEvents: "none",
                   },
                 }),
-              phase === "shooting" &&
-                flyerFlightPaths.map((p) => {
-                  const dx = p.toX - p.fromX;
-                  const dy = p.toY - p.fromY;
-                  const length = Math.sqrt(dx * dx + dy * dy);
-                  if (length < 0.01) return null;
-                  const angleDeg = (Math.atan2(dy, dx) * 180) / Math.PI;
-                  const bandColor =
-                    p.mission === "strafing"
-                      ? "rgba(199,64,64,0.18)"
-                      : "rgba(184,134,11,0.20)";
-                  const bandBorder =
-                    p.mission === "strafing"
-                      ? "rgba(199,64,64,0.75)"
-                      : "rgba(184,134,11,0.85)";
+                deployShowGrid &&
+                  Array.from({ length: Math.floor(BOARD_W / 6) + 1 }, (_, i) =>
+                    React.createElement("div", {
+                      key: `gv${i}`,
+                      style: {
+                        position: "absolute",
+                        left: i * 6 * deployScale,
+                        top: 0,
+                        width: 1,
+                        height: BOARD_H * deployScale,
+                        background: "rgba(255,255,255,0.06)",
+                        pointerEvents: "none",
+                      },
+                    }),
+                  ),
+                deployShowGrid &&
+                  Array.from({ length: Math.floor(BOARD_H / 6) + 1 }, (_, i) =>
+                    React.createElement("div", {
+                      key: `gh${i}`,
+                      style: {
+                        position: "absolute",
+                        top: i * 6 * deployScale,
+                        left: 0,
+                        height: 1,
+                        width: BOARD_W * deployScale,
+                        background: "rgba(255,255,255,0.06)",
+                        pointerEvents: "none",
+                      },
+                    }),
+                  ),
+                phase === "shooting" &&
+                  atkUnit &&
+                  weaponRange > 0 &&
+                  React.createElement("div", {
+                    style: {
+                      position: "absolute",
+                      left: atkUnit.x * deployScale - weaponRange * deployScale,
+                      top: atkUnit.y * deployScale - weaponRange * deployScale,
+                      width: weaponRange * 2 * deployScale,
+                      height: weaponRange * 2 * deployScale,
+                      borderRadius: "50%",
+                      border: "1.5px dashed rgba(184,134,11,0.35)",
+                      background: "rgba(184,134,11,0.04)",
+                      pointerEvents: "none",
+                    },
+                  }),
+                phase === "shooting" &&
+                  flyerFlightPaths.map((p) => {
+                    const dx = p.toX - p.fromX;
+                    const dy = p.toY - p.fromY;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+                    if (length < 0.01) return null;
+                    const angleDeg = (Math.atan2(dy, dx) * 180) / Math.PI;
+                    const bandColor =
+                      p.mission === "strafing"
+                        ? "rgba(199,64,64,0.18)"
+                        : "rgba(184,134,11,0.20)";
+                    const bandBorder =
+                      p.mission === "strafing"
+                        ? "rgba(199,64,64,0.75)"
+                        : "rgba(184,134,11,0.85)";
+                    return React.createElement(
+                      "div",
+                      {
+                        key: `flight-${p.flyerId}-${p.ts}`,
+                        style: {
+                          position: "absolute",
+                          left: p.fromX * deployScale,
+                          top:
+                            p.fromY * deployScale - (p.width * deployScale) / 2,
+                          width: length * deployScale,
+                          height: p.width * deployScale,
+                          transform: `rotate(${angleDeg}deg)`,
+                          transformOrigin: `0 ${(p.width * deployScale) / 2}px`,
+                          background: bandColor,
+                          border: `1.5px dashed ${bandBorder}`,
+                          pointerEvents: "none",
+                          zIndex: 14,
+                        },
+                      },
+                      React.createElement("div", {
+                        style: {
+                          position: "absolute",
+                          left: 0,
+                          top: (p.width * deployScale) / 2 - 1,
+                          width: "100%",
+                          height: 2,
+                          background: bandBorder,
+                        },
+                      }),
+                      React.createElement("div", {
+                        style: {
+                          position: "absolute",
+                          right: -6,
+                          top: (p.width * deployScale) / 2 - 6,
+                          width: 0,
+                          height: 0,
+                          borderTop: "6px solid transparent",
+                          borderBottom: "6px solid transparent",
+                          borderLeft: `10px solid ${bandBorder}`,
+                        },
+                      }),
+                      React.createElement(
+                        "div",
+                        {
+                          style: {
+                            position: "absolute",
+                            left: 4,
+                            top: -14,
+                            fontSize: 9,
+                            fontFamily: "'Share Tech Mono', serif",
+                            fontWeight: 700,
+                            color: bandBorder,
+                            letterSpacing: 1,
+                            whiteSpace: "nowrap",
+                            textShadow: "0 0 3px rgba(0,0,0,0.8)",
+                          },
+                        },
+                        p.mission === "strafing"
+                          ? `✈ ${p.name} — STRAFING RUN`
+                          : `✈ ${p.name} — STRIKE PASS`,
+                      ),
+                    );
+                  }),
+                phase === "shooting" &&
+                  barrageBlastPos &&
+                  React.createElement(
+                    "div",
+                    {
+                      style: {
+                        position: "absolute",
+                        left:
+                          barrageBlastPos.x * deployScale -
+                          barrageBlastRadius * deployScale,
+                        top:
+                          barrageBlastPos.y * deployScale -
+                          barrageBlastRadius * deployScale,
+                        width: barrageBlastRadius * 2 * deployScale,
+                        height: barrageBlastRadius * 2 * deployScale,
+                        borderRadius: "50%",
+                        border: "2px dashed rgba(255,80,0,0.9)",
+                        background: "rgba(255,80,0,0.18)",
+                        pointerEvents: "none",
+                        zIndex: 18,
+                      },
+                    },
+                    React.createElement(
+                      "div",
+                      {
+                        style: {
+                          position: "absolute",
+                          top: "50%",
+                          left: "50%",
+                          transform: "translate(-50%,-50%)",
+                          fontSize: Math.max(
+                            8,
+                            barrageBlastRadius * deployScale * 0.5,
+                          ),
+                          color: "rgba(255,120,0,0.9)",
+                          pointerEvents: "none",
+                        },
+                      },
+                      "💣",
+                    ),
+                  ),
+                phase === "assault" &&
+                  atkUnit &&
+                  React.createElement("div", {
+                    style: {
+                      position: "absolute",
+                      left: atkUnit.x * deployScale - 9 * deployScale,
+                      top: atkUnit.y * deployScale - 9 * deployScale,
+                      width: 18 * deployScale,
+                      height: 18 * deployScale,
+                      borderRadius: "50%",
+                      border: "1.5px dashed rgba(155,45,45,0.35)",
+                      background: "rgba(155,45,45,0.03)",
+                      pointerEvents: "none",
+                    },
+                  }),
+                atkUnit &&
+                  defUnit &&
+                  React.createElement(
+                    "svg",
+                    {
+                      style: {
+                        position: "absolute",
+                        inset: 0,
+                        width: BOARD_W * deployScale,
+                        height: BOARD_H * deployScale,
+                        pointerEvents: "none",
+                      },
+                    },
+                    React.createElement("line", {
+                      x1: atkUnit.x * deployScale,
+                      y1: atkUnit.y * deployScale,
+                      x2: defUnit.x * deployScale,
+                      y2: defUnit.y * deployScale,
+                      stroke:
+                        phase === "shooting"
+                          ? "rgba(184,134,11,0.5)"
+                          : chargeAnimating
+                            ? "rgba(220,60,60,0.9)"
+                            : "rgba(155,45,45,0.5)",
+                      strokeWidth: chargeAnimating ? 3 : 2,
+                      strokeDasharray: chargeAnimating ? "none" : "6,4",
+                    }),
+                    chargeAnimating &&
+                      phase === "assault" &&
+                      (() => {
+                        const dx = defUnit.x - atkUnit.x;
+                        const dy = defUnit.y - atkUnit.y;
+                        const totalDist = Math.sqrt(dx * dx + dy * dy);
+                        const chevrons = [];
+                        for (
+                          let i = 0.15;
+                          i < chargeAnimProgress - 0.05;
+                          i += 0.2
+                        ) {
+                          const cx =
+                            atkUnit.x * deployScale +
+                            (defUnit.x - atkUnit.x) * i * deployScale;
+                          const cy =
+                            atkUnit.y * deployScale +
+                            (defUnit.y - atkUnit.y) * i * deployScale;
+                          const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
+                          chevrons.push(
+                            React.createElement(
+                              "text",
+                              {
+                                key: i,
+                                x: cx,
+                                y: cy,
+                                fill: "rgba(220,80,80,0.7)",
+                                fontSize: "10",
+                                textAnchor: "middle",
+                                dominantBaseline: "middle",
+                                transform: `rotate(${angle}, ${cx}, ${cy})`,
+                              },
+                              "›",
+                            ),
+                          );
+                        }
+                        return chevrons;
+                      })(),
+                    distance &&
+                      React.createElement(
+                        "text",
+                        {
+                          x: ((atkUnit.x + defUnit.x) / 2) * deployScale,
+                          y: ((atkUnit.y + defUnit.y) / 2) * deployScale - 6,
+                          fill: chargeAnimating ? "#ff6060" : "#ffd700",
+                          fontSize: "10",
+                          fontFamily: "Cinzel",
+                          textAnchor: "middle",
+                        },
+                        distance,
+                        '"',
+                      ),
+                  ),
+                chargeAnimating &&
+                  phase === "assault" &&
+                  React.createElement(
+                    "div",
+                    {
+                      style: {
+                        position: "absolute",
+                        top: 6,
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        background: "rgba(180,20,20,0.85)",
+                        color: "#fff",
+                        fontFamily: "'Share Tech Mono', serif",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        letterSpacing: 2,
+                        padding: "3px 12px",
+                        borderRadius: 0,
+                        border: "1px solid #ff4444",
+                        pointerEvents: "none",
+                        zIndex: 20,
+                        textShadow: "0 0 8px rgba(255,100,100,0.8)",
+                      },
+                    },
+                    "⚔ CHARGING...",
+                  ),
+                terrainPieces.map((terrain) => {
+                  const ttype = TERRAIN_TYPES.find(
+                    (t) => t.id === terrain.type,
+                  );
                   return React.createElement(
                     "div",
                     {
-                      key: `flight-${p.flyerId}-${p.ts}`,
+                      key: terrain.id,
                       style: {
                         position: "absolute",
-                        left: p.fromX * deployScale,
-                        top: p.fromY * deployScale - (p.width * deployScale) / 2,
-                        width: length * deployScale,
-                        height: p.width * deployScale,
-                        transform: `rotate(${angleDeg}deg)`,
-                        transformOrigin: `0 ${(p.width * deployScale) / 2}px`,
-                        background: bandColor,
-                        border: `1.5px dashed ${bandBorder}`,
+                        left: terrain.x * deployScale,
+                        top: terrain.y * deployScale,
+                        width: terrain.w * deployScale,
+                        height: terrain.h * deployScale,
+                        background: terrain.bg,
+                        border: `2px solid ${terrain.border}`,
+                        borderRadius: terrain.type === "fortification" ? 3 : 6,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
                         pointerEvents: "none",
-                        zIndex: 14,
+                        zIndex: 2,
+                      },
+                    },
+                    React.createElement(
+                      "div",
+                      {
+                        style: {
+                          fontSize: Math.max(terrain.w * deployScale * 0.22, 8),
+                          color: terrain.color,
+                          lineHeight: 1,
+                        },
+                      },
+                      ttype?.symbol,
+                    ),
+                    terrain.w * deployScale > 40 &&
+                      React.createElement(
+                        "div",
+                        {
+                          style: {
+                            fontSize: 6,
+                            color: terrain.color,
+                            fontFamily: "'Share Tech Mono', serif",
+                            fontWeight: 700,
+                            textAlign: "center",
+                            textShadow: "0 1px 2px rgba(0,0,0,0.8)",
+                          },
+                        },
+                        terrain.w,
+                        "″×",
+                        terrain.h,
+                        "″",
+                      ),
+                  );
+                }),
+                deployedUnits.map((unit) => {
+                  const isP1 = unit.player === "p1";
+                  const col = isP1 ? "#e05555" : "#5599dd";
+                  const bgCol = isP1
+                    ? "rgba(200,60,60,0.85)"
+                    : "rgba(50,120,200,0.85)";
+                  const sz = getUnitMapSize(unit);
+                  const isAtk = unit.id === mapAttackerId;
+                  const isDef = unit.id === mapTargetId;
+                  const isRouted = routedUnits.has(unit.id);
+                  const facing = getUnitFacing(unit);
+                  const isHovered = mapHoveredUnitId === unit.id;
+
+                  return React.createElement(
+                    "div",
+                    {
+                      key: unit.id,
+                      onMouseEnter: () => setMapHoveredUnitId(unit.id),
+                      onMouseLeave: () =>
+                        setMapHoveredUnitId((cur) =>
+                          cur === unit.id ? null : cur,
+                        ),
+                      style: {
+                        position: "absolute",
+                        left: unit.x * deployScale - sz / 2,
+                        top: unit.y * deployScale - sz / 2,
                       },
                     },
                     React.createElement("div", {
                       style: {
                         position: "absolute",
-                        left: 0,
-                        top: (p.width * deployScale) / 2 - 1,
-                        width: "100%",
-                        height: 2,
-                        background: bandBorder,
-                      },
-                    }),
-                    React.createElement("div", {
-                      style: {
-                        position: "absolute",
-                        right: -6,
-                        top: (p.width * deployScale) / 2 - 6,
+                        left: sz / 2,
+                        top: -4,
                         width: 0,
                         height: 0,
-                        borderTop: "6px solid transparent",
-                        borderBottom: "6px solid transparent",
-                        borderLeft: `10px solid ${bandBorder}`,
+                        transform: `translate(-50%, -100%) rotate(${facing}deg)`,
+                        transformOrigin: `50% ${sz / 2 + 4}px`,
+                        borderLeft: "4px solid transparent",
+                        borderRight: "4px solid transparent",
+                        borderBottom: `8px solid ${isRouted ? "#ff6600" : isAtk ? "#ffd700" : isDef ? "#ff4444" : "rgba(255,255,255,0.3)"}`,
+                        pointerEvents: "none",
+                        zIndex: 15,
                       },
                     }),
+                    isHovered &&
+                      React.createElement(
+                        "div",
+                        {
+                          style: {
+                            position: "absolute",
+                            bottom: sz + 6,
+                            left: sz / 2,
+                            transform: "translateX(-50%)",
+                            padding: "3px 8px",
+                            background: "rgba(20,24,34,0.95)",
+                            border: `1px solid ${col}`,
+                            borderRadius: 3,
+                            color: "#f0e8d8",
+                            fontSize: 11,
+                            fontFamily: "'Share Tech Mono', serif",
+                            fontWeight: 600,
+                            whiteSpace: "nowrap",
+                            pointerEvents: "none",
+                            zIndex: 40,
+                            boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
+                          },
+                        },
+                        unit.label || unit.name || "—",
+                      ),
                     React.createElement(
                       "div",
                       {
+                        onClick: (e) => {
+                          e.stopPropagation();
+                          onUnitClick && onUnitClick(unit);
+                        },
+                        title: `${unit.label} (${unit.player.toUpperCase()}) ${unit.x}",${unit.y}"${isRouted ? " — ROUTED" : ""}`,
                         style: {
-                          position: "absolute",
-                          left: 4,
-                          top: -14,
-                          fontSize: 9,
-                          fontFamily: "'Share Tech Mono', serif",
+                          width: sz,
+                          height: sz,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          borderRadius:
+                            unit.type === "tank" || unit.type === "transport"
+                              ? 3
+                              : unit.type === "objective"
+                                ? "50%"
+                                : 4,
+                          background: isRouted
+                            ? "rgba(255,102,0,0.85)"
+                            : unit.type === "objective"
+                              ? "rgba(255,215,0,0.85)"
+                              : bgCol,
+                          border: isAtk
+                            ? "2.5px solid #ffd700"
+                            : isDef
+                              ? "2.5px solid #ff4444"
+                              : `1.5px solid ${unit.type === "objective" ? "#ffd700" : col}`,
+                          color: unit.type === "objective" ? "#2a2418" : "#fff",
+                          fontSize: Math.max(sz * 0.55, 10),
                           fontWeight: 700,
-                          color: bandBorder,
-                          letterSpacing: 1,
-                          whiteSpace: "nowrap",
-                          textShadow: "0 0 3px rgba(0,0,0,0.8)",
+                          cursor: "pointer",
+                          boxShadow: isAtk
+                            ? "0 0 12px rgba(255,215,0,0.6)"
+                            : isDef
+                              ? "0 0 12px rgba(255,68,68,0.6)"
+                              : "0 1px 4px rgba(0,0,0,0.4)",
+                          zIndex: isAtk || isDef ? 20 : 10,
+                          lineHeight: 1,
+                          opacity: isRouted ? 0.7 : 1,
                         },
                       },
-                      p.mission === "strafing"
-                        ? `✈ ${p.name} — STRAFING RUN`
-                        : `✈ ${p.name} — STRIKE PASS`,
+                      unit.symbol,
                     ),
                   );
                 }),
-              phase === "shooting" &&
-                barrageBlastPos &&
-                React.createElement(
-                  "div",
-                  {
-                    style: {
-                      position: "absolute",
-                      left:
-                        barrageBlastPos.x * deployScale -
-                        barrageBlastRadius * deployScale,
-                      top:
-                        barrageBlastPos.y * deployScale -
-                        barrageBlastRadius * deployScale,
-                      width: barrageBlastRadius * 2 * deployScale,
-                      height: barrageBlastRadius * 2 * deployScale,
-                      borderRadius: "50%",
-                      border: "2px dashed rgba(255,80,0,0.9)",
-                      background: "rgba(255,80,0,0.18)",
-                      pointerEvents: "none",
-                      zIndex: 18,
-                    },
-                  },
+                deepStrikePending &&
                   React.createElement(
                     "div",
                     {
                       style: {
                         position: "absolute",
-                        top: "50%",
-                        left: "50%",
-                        transform: "translate(-50%,-50%)",
-                        fontSize: Math.max(
-                          8,
-                          barrageBlastRadius * deployScale * 0.5,
-                        ),
-                        color: "rgba(255,120,0,0.9)",
+                        left: deepStrikePending.intendedX * scale,
+                        top: deepStrikePending.intendedY * scale,
+                        width: 0,
+                        height: 0,
                         pointerEvents: "none",
+                        zIndex: 30,
                       },
                     },
-                    "💣",
-                  ),
-                ),
-              phase === "assault" &&
-                atkUnit &&
-                React.createElement("div", {
-                  style: {
-                    position: "absolute",
-                    left: atkUnit.x * deployScale - 9 * deployScale,
-                    top: atkUnit.y * deployScale - 9 * deployScale,
-                    width: 18 * deployScale,
-                    height: 18 * deployScale,
-                    borderRadius: "50%",
-                    border: "1.5px dashed rgba(155,45,45,0.35)",
-                    background: "rgba(155,45,45,0.03)",
-                    pointerEvents: "none",
-                  },
-                }),
-              atkUnit &&
-                defUnit &&
-                React.createElement(
-                  "svg",
-                  {
-                    style: {
-                      position: "absolute",
-                      inset: 0,
-                      width: BOARD_W * deployScale,
-                      height: BOARD_H * deployScale,
-                      pointerEvents: "none",
-                    },
-                  },
-                  React.createElement("line", {
-                    x1: atkUnit.x * deployScale,
-                    y1: atkUnit.y * deployScale,
-                    x2: defUnit.x * deployScale,
-                    y2: defUnit.y * deployScale,
-                    stroke:
-                      phase === "shooting"
-                        ? "rgba(184,134,11,0.5)"
-                        : chargeAnimating
-                          ? "rgba(220,60,60,0.9)"
-                          : "rgba(155,45,45,0.5)",
-                    strokeWidth: chargeAnimating ? 3 : 2,
-                    strokeDasharray: chargeAnimating ? "none" : "6,4",
-                  }),
-                  chargeAnimating &&
-                    phase === "assault" &&
-                    (() => {
-                      const dx = defUnit.x - atkUnit.x;
-                      const dy = defUnit.y - atkUnit.y;
-                      const totalDist = Math.sqrt(dx * dx + dy * dy);
-                      const chevrons = [];
-                      for (
-                        let i = 0.15;
-                        i < chargeAnimProgress - 0.05;
-                        i += 0.2
-                      ) {
-                        const cx =
-                          atkUnit.x * deployScale +
-                          (defUnit.x - atkUnit.x) * i * deployScale;
-                        const cy =
-                          atkUnit.y * deployScale +
-                          (defUnit.y - atkUnit.y) * i * deployScale;
-                        const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
-                        chevrons.push(
-                          React.createElement(
-                            "text",
-                            {
-                              key: i,
-                              x: cx,
-                              y: cy,
-                              fill: "rgba(220,80,80,0.7)",
-                              fontSize: "10",
-                              textAnchor: "middle",
-                              dominantBaseline: "middle",
-                              transform: `rotate(${angle}, ${cx}, ${cy})`,
-                            },
-                            "›",
-                          ),
-                        );
-                      }
-                      return chevrons;
-                    })(),
-                  distance &&
-                    React.createElement(
-                      "text",
-                      {
-                        x: ((atkUnit.x + defUnit.x) / 2) * deployScale,
-                        y: ((atkUnit.y + defUnit.y) / 2) * deployScale - 6,
-                        fill: chargeAnimating ? "#ff6060" : "#ffd700",
-                        fontSize: "10",
-                        fontFamily: "Cinzel",
-                        textAnchor: "middle",
-                      },
-                      distance,
-                      '"',
-                    ),
-                ),
-              chargeAnimating &&
-                phase === "assault" &&
-                React.createElement(
-                  "div",
-                  {
-                    style: {
-                      position: "absolute",
-                      top: 6,
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                      background: "rgba(180,20,20,0.85)",
-                      color: "#fff",
-                      fontFamily: "'Share Tech Mono', serif",
-                      fontSize: 11,
-                      fontWeight: 700,
-                      letterSpacing: 2,
-                      padding: "3px 12px",
-                      borderRadius: 0,
-                      border: "1px solid #ff4444",
-                      pointerEvents: "none",
-                      zIndex: 20,
-                      textShadow: "0 0 8px rgba(255,100,100,0.8)",
-                    },
-                  },
-                  "⚔ CHARGING...",
-                ),
-              terrainPieces.map((terrain) => {
-                const ttype = TERRAIN_TYPES.find((t) => t.id === terrain.type);
-                return React.createElement(
-                  "div",
-                  {
-                    key: terrain.id,
-                    style: {
-                      position: "absolute",
-                      left: terrain.x * deployScale,
-                      top: terrain.y * deployScale,
-                      width: terrain.w * deployScale,
-                      height: terrain.h * deployScale,
-                      background: terrain.bg,
-                      border: `2px solid ${terrain.border}`,
-                      borderRadius: terrain.type === "fortification" ? 3 : 6,
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      pointerEvents: "none",
-                      zIndex: 2,
-                    },
-                  },
-                  React.createElement(
-                    "div",
-                    {
+                    React.createElement("div", {
                       style: {
-                        fontSize: Math.max(terrain.w * deployScale * 0.22, 8),
-                        color: terrain.color,
-                        lineHeight: 1,
+                        position: "absolute",
+                        left: -6 * scale,
+                        top: -6 * scale,
+                        width: 12 * scale,
+                        height: 12 * scale,
+                        borderRadius: "50%",
+                        border: "1.5px dashed rgba(195,130,20,0.5)",
+                        background: "rgba(195,130,20,0.05)",
                       },
-                    },
-                    ttype?.symbol,
-                  ),
-                  terrain.w * deployScale > 40 &&
-                    React.createElement(
-                      "div",
-                      {
-                        style: {
-                          fontSize: 6,
-                          color: terrain.color,
-                          fontFamily: "'Share Tech Mono', serif",
-                          fontWeight: 700,
-                          textAlign: "center",
-                          textShadow: "0 1px 2px rgba(0,0,0,0.8)",
-                        },
+                    }),
+                    React.createElement("div", {
+                      style: {
+                        position: "absolute",
+                        left: -10,
+                        top: -1,
+                        width: 20,
+                        height: 2,
+                        background: "#c38214",
+                        boxShadow: "0 0 4px rgba(195,130,20,0.7)",
                       },
-                      terrain.w,
-                      "″×",
-                      terrain.h,
-                      "″",
-                    ),
-                );
-              }),
-              deployedUnits.map((unit) => {
-                const isP1 = unit.player === "p1";
-                const col = isP1 ? "#e05555" : "#5599dd";
-                const bgCol = isP1
-                  ? "rgba(200,60,60,0.85)"
-                  : "rgba(50,120,200,0.85)";
-                const sz = getUnitMapSize(unit);
-                const isAtk = unit.id === mapAttackerId;
-                const isDef = unit.id === mapTargetId;
-                const isRouted = routedUnits.has(unit.id);
-                const facing = getUnitFacing(unit);
-                const isHovered = mapHoveredUnitId === unit.id;
-
-                return React.createElement(
-                  "div",
-                  {
-                    key: unit.id,
-                    onMouseEnter: () => setMapHoveredUnitId(unit.id),
-                    onMouseLeave: () =>
-                      setMapHoveredUnitId((cur) =>
-                        cur === unit.id ? null : cur,
-                      ),
-                    style: {
-                      position: "absolute",
-                      left: unit.x * deployScale - sz / 2,
-                      top: unit.y * deployScale - sz / 2,
-                    },
-                  },
-                  React.createElement("div", {
-                    style: {
-                      position: "absolute",
-                      left: sz / 2,
-                      top: -4,
-                      width: 0,
-                      height: 0,
-                      transform: `translate(-50%, -100%) rotate(${facing}deg)`,
-                      transformOrigin: `50% ${sz / 2 + 4}px`,
-                      borderLeft: "4px solid transparent",
-                      borderRight: "4px solid transparent",
-                      borderBottom: `8px solid ${isRouted ? "#ff6600" : isAtk ? "#ffd700" : isDef ? "#ff4444" : "rgba(255,255,255,0.3)"}`,
-                      pointerEvents: "none",
-                      zIndex: 15,
-                    },
-                  }),
-                  isHovered &&
+                    }),
+                    React.createElement("div", {
+                      style: {
+                        position: "absolute",
+                        left: -1,
+                        top: -10,
+                        width: 2,
+                        height: 20,
+                        background: "#c38214",
+                        boxShadow: "0 0 4px rgba(195,130,20,0.7)",
+                      },
+                    }),
                     React.createElement(
                       "div",
                       {
                         style: {
                           position: "absolute",
-                          bottom: sz + 6,
-                          left: sz / 2,
-                          transform: "translateX(-50%)",
-                          padding: "3px 8px",
-                          background: "rgba(20,24,34,0.95)",
-                          border: `1px solid ${col}`,
-                          borderRadius: 3,
-                          color: "#f0e8d8",
-                          fontSize: 11,
+                          left: 14,
+                          top: -8,
+                          fontSize: 10,
+                          color: "#c38214",
+                          textShadow: "0 0 3px rgba(0,0,0,0.7)",
                           fontFamily: "'Share Tech Mono', serif",
-                          fontWeight: 600,
+                          fontWeight: 700,
+                          letterSpacing: 1,
                           whiteSpace: "nowrap",
-                          pointerEvents: "none",
-                          zIndex: 40,
-                          boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
                         },
                       },
-                      unit.label || unit.name || "—",
+                      "⚡ DROP POINT",
                     ),
-                  React.createElement(
-                    "div",
-                    {
-                      onClick: (e) => {
-                        e.stopPropagation();
-                        onUnitClick && onUnitClick(unit);
-                      },
-                      title: `${unit.label} (${unit.player.toUpperCase()}) ${unit.x}",${unit.y}"${isRouted ? " — ROUTED" : ""}`,
-                      style: {
-                        width: sz,
-                        height: sz,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        borderRadius:
-                          unit.type === "tank" || unit.type === "transport"
-                            ? 3
-                            : unit.type === "objective"
-                              ? "50%"
-                              : 4,
-                        background: isRouted
-                          ? "rgba(255,102,0,0.85)"
-                          : unit.type === "objective"
-                            ? "rgba(255,215,0,0.85)"
-                            : bgCol,
-                        border: isAtk
-                          ? "2.5px solid #ffd700"
-                          : isDef
-                            ? "2.5px solid #ff4444"
-                            : `1.5px solid ${unit.type === "objective" ? "#ffd700" : col}`,
-                        color: unit.type === "objective" ? "#2a2418" : "#fff",
-                        fontSize: Math.max(sz * 0.55, 10),
-                        fontWeight: 700,
-                        cursor: "pointer",
-                        boxShadow: isAtk
-                          ? "0 0 12px rgba(255,215,0,0.6)"
-                          : isDef
-                            ? "0 0 12px rgba(255,68,68,0.6)"
-                            : "0 1px 4px rgba(0,0,0,0.4)",
-                        zIndex: isAtk || isDef ? 20 : 10,
-                        lineHeight: 1,
-                        opacity: isRouted ? 0.7 : 1,
-                      },
-                    },
-                    unit.symbol,
                   ),
-                );
-              }),
-              deepStrikePending &&
-                React.createElement(
-                  "div",
-                  {
-                    style: {
-                      position: "absolute",
-                      left: deepStrikePending.intendedX * scale,
-                      top: deepStrikePending.intendedY * scale,
-                      width: 0,
-                      height: 0,
-                      pointerEvents: "none",
-                      zIndex: 30,
-                    },
+                React.createElement("div", {
+                  style: {
+                    position: "absolute",
+                    inset: 0,
+                    border: "2px solid rgba(255,255,255,0.2)",
+                    borderRadius: 2,
+                    pointerEvents: "none",
                   },
-                  React.createElement("div", {
-                    style: {
-                      position: "absolute",
-                      left: -6 * scale,
-                      top: -6 * scale,
-                      width: 12 * scale,
-                      height: 12 * scale,
-                      borderRadius: "50%",
-                      border: "1.5px dashed rgba(195,130,20,0.5)",
-                      background: "rgba(195,130,20,0.05)",
-                    },
-                  }),
-                  React.createElement("div", {
-                    style: {
-                      position: "absolute",
-                      left: -10,
-                      top: -1,
-                      width: 20,
-                      height: 2,
-                      background: "#c38214",
-                      boxShadow: "0 0 4px rgba(195,130,20,0.7)",
-                    },
-                  }),
-                  React.createElement("div", {
-                    style: {
-                      position: "absolute",
-                      left: -1,
-                      top: -10,
-                      width: 2,
-                      height: 20,
-                      background: "#c38214",
-                      boxShadow: "0 0 4px rgba(195,130,20,0.7)",
-                    },
-                  }),
-                  React.createElement(
-                    "div",
-                    {
-                      style: {
-                        position: "absolute",
-                        left: 14,
-                        top: -8,
-                        fontSize: 10,
-                        color: "#c38214",
-                        textShadow: "0 0 3px rgba(0,0,0,0.7)",
-                        fontFamily: "'Share Tech Mono', serif",
-                        fontWeight: 700,
-                        letterSpacing: 1,
-                        whiteSpace: "nowrap",
-                      },
-                    },
-                    "⚡ DROP POINT",
-                  ),
-                ),
-              React.createElement("div", {
-                style: {
-                  position: "absolute",
-                  inset: 0,
-                  border: "2px solid rgba(255,255,255,0.2)",
-                  borderRadius: 2,
-                  pointerEvents: "none",
-                },
-              }),
-            ),
+                }),
+              ),
             ),
           ),
       (deployedUnits.length > 0 || aerialReserves.length > 0) &&
@@ -5969,7 +8558,12 @@ var ShootingResolver = function () {
       React.createElement(
         "div",
         {
-          style: { overflow: "auto", maxHeight: "70vh", background: "#2a2a20", padding: 4 },
+          style: {
+            overflow: "auto",
+            maxHeight: "70vh",
+            background: "#2a2a20",
+            padding: 4,
+          },
         },
         React.createElement(
           "div",
@@ -5984,28 +8578,84 @@ var ShootingResolver = function () {
           ["N", "S", "E", "W"].map((edge) =>
             renderAerialReservesBay(edge, deployScale, 8),
           ),
-        React.createElement(
-          "div",
-          {
-            ref: refObj,
-            onClick: (e) => {
-              if (
-                flyerBringOnId &&
-                (activePhase === "movement" || activePhase === "deployment")
-              ) {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const bx = (e.clientX - rect.left) / deployScale;
-                const by = (e.clientY - rect.top) / deployScale;
-                const pending = aerialReserves.find(
-                  (f) => f.id === flyerBringOnId,
-                );
-                const pendingIsFlyer =
-                  pending &&
-                  (pending.isFlyer ||
-                    (pending.unitData && pending.unitData.isFlyer));
-                if (activePhase === "deployment" && pending && !pendingIsFlyer) {
-                  // Deployment-phase placement: drop exactly where clicked,
-                  // no edge-snapping (unlike movement-phase outflank).
+          React.createElement(
+            "div",
+            {
+              ref: refObj,
+              onClick: (e) => {
+                if (
+                  flyerBringOnId &&
+                  (activePhase === "movement" || activePhase === "deployment")
+                ) {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const bx = (e.clientX - rect.left) / deployScale;
+                  const by = (e.clientY - rect.top) / deployScale;
+                  const pending = aerialReserves.find(
+                    (f) => f.id === flyerBringOnId,
+                  );
+                  const pendingIsFlyer =
+                    pending &&
+                    (pending.isFlyer ||
+                      (pending.unitData && pending.unitData.isFlyer));
+                  if (
+                    activePhase === "deployment" &&
+                    pending &&
+                    !pendingIsFlyer
+                  ) {
+                    // Deployment-phase placement: drop exactly where clicked,
+                    // no edge-snapping (unlike movement-phase outflank).
+                    const snapX = Math.max(
+                      0,
+                      Math.min(BOARD_W, Math.round(bx * 2) / 2),
+                    );
+                    const snapY = Math.max(
+                      0,
+                      Math.min(BOARD_H, Math.round(by * 2) / 2),
+                    );
+                    setAerialReserves((prev) =>
+                      prev.filter((f) => f.id !== flyerBringOnId),
+                    );
+                    setDeployedUnits((prev) => [
+                      ...prev,
+                      {
+                        ...pending,
+                        x: snapX,
+                        y: snapY,
+                        edgeEntry: null,
+                        inFlight: false,
+                        isReserveUnit: false,
+                      },
+                    ]);
+                    setFlyerBringOnId(null);
+                    setReservesSelectedId(null);
+                    return;
+                  }
+                  if (pendingIsFlyer) {
+                    bringFlyerIntoPlay(flyerBringOnId, bx, by);
+                  } else {
+                    bringReserveUnitIntoPlay(flyerBringOnId, bx, by);
+                  }
+                  return;
+                }
+                if (onClick) onClick(e);
+              },
+              onMouseMove: (e) => {
+                if (
+                  deployDragRef.current &&
+                  deployDragRef.current.unitId &&
+                  activePhase === "deployment"
+                ) {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const bx = (e.clientX - rect.left) / deployScale;
+                  const by = (e.clientY - rect.top) / deployScale;
+                  const dx = e.clientX - (deployDragRef.current.startX || 0);
+                  const dy = e.clientY - (deployDragRef.current.startY || 0);
+                  // Treat a move as an actual drag once the cursor has traveled
+                  // more than 3 pixels — keeps short-click-to-remove working.
+                  if (!deployDragRef.current.moved && dx * dx + dy * dy > 9) {
+                    deployDragRef.current.moved = true;
+                  }
+                  if (!deployDragRef.current.moved) return;
                   const snapX = Math.max(
                     0,
                     Math.min(BOARD_W, Math.round(bx * 2) / 2),
@@ -6014,1803 +8664,1546 @@ var ShootingResolver = function () {
                     0,
                     Math.min(BOARD_H, Math.round(by * 2) / 2),
                   );
-                  setAerialReserves((prev) =>
-                    prev.filter((f) => f.id !== flyerBringOnId),
+                  const id = deployDragRef.current.unitId;
+                  setDeployedUnits((prev) =>
+                    prev.map((u) =>
+                      u.id === id ? { ...u, x: snapX, y: snapY } : u,
+                    ),
                   );
-                  setDeployedUnits((prev) => [
-                    ...prev,
-                    {
-                      ...pending,
-                      x: snapX,
-                      y: snapY,
-                      edgeEntry: null,
-                      inFlight: false,
-                      isReserveUnit: false,
-                    },
-                  ]);
-                  setFlyerBringOnId(null);
-                  setReservesSelectedId(null);
-                  return;
                 }
-                if (pendingIsFlyer) {
-                  bringFlyerIntoPlay(flyerBringOnId, bx, by);
-                } else {
-                  bringReserveUnitIntoPlay(flyerBringOnId, bx, by);
+              },
+              onMouseUp: () => {
+                // Keep `moved` set so the follow-up click handler knows to
+                // suppress; the click handler itself will clear the ref.
+                if (
+                  deployDragRef.current &&
+                  deployDragRef.current.unitId &&
+                  !deployDragRef.current.moved
+                ) {
+                  deployDragRef.current = { unitId: null };
                 }
-                return;
-              }
-              if (onClick) onClick(e);
+              },
+              onMouseLeave: () => {
+                if (deployDragRef.current)
+                  deployDragRef.current = { unitId: null };
+              },
+              style: {
+                position: "absolute",
+                left: 8 * deployScale,
+                top: 8 * deployScale,
+                width: BOARD_W * deployScale,
+                height: BOARD_H * deployScale,
+                background: "#3a3a2e",
+                cursor:
+                  flyerBringOnId &&
+                  (activePhase === "movement" || activePhase === "deployment")
+                    ? "crosshair"
+                    : cursorMode || "default",
+              },
             },
-            onMouseMove: (e) => {
-              if (
-                deployDragRef.current &&
-                deployDragRef.current.unitId &&
-                activePhase === "deployment"
-              ) {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const bx = (e.clientX - rect.left) / deployScale;
-                const by = (e.clientY - rect.top) / deployScale;
-                const dx = e.clientX - (deployDragRef.current.startX || 0);
-                const dy = e.clientY - (deployDragRef.current.startY || 0);
-                // Treat a move as an actual drag once the cursor has traveled
-                // more than 3 pixels — keeps short-click-to-remove working.
-                if (!deployDragRef.current.moved && dx * dx + dy * dy > 9) {
-                  deployDragRef.current.moved = true;
-                }
-                if (!deployDragRef.current.moved) return;
-                const snapX = Math.max(
-                  0,
-                  Math.min(BOARD_W, Math.round(bx * 2) / 2),
-                );
-                const snapY = Math.max(
-                  0,
-                  Math.min(BOARD_H, Math.round(by * 2) / 2),
-                );
-                const id = deployDragRef.current.unitId;
-                setDeployedUnits((prev) =>
-                  prev.map((u) =>
-                    u.id === id ? { ...u, x: snapX, y: snapY } : u,
-                  ),
-                );
-              }
-            },
-            onMouseUp: () => {
-              // Keep `moved` set so the follow-up click handler knows to
-              // suppress; the click handler itself will clear the ref.
-              if (
-                deployDragRef.current &&
-                deployDragRef.current.unitId &&
-                !deployDragRef.current.moved
-              ) {
-                deployDragRef.current = { unitId: null };
-              }
-            },
-            onMouseLeave: () => {
-              if (deployDragRef.current) deployDragRef.current = { unitId: null };
-            },
-            style: {
-              position: "absolute",
-              left: 8 * deployScale,
-              top: 8 * deployScale,
-              width: BOARD_W * deployScale,
-              height: BOARD_H * deployScale,
-              background: "#3a3a2e",
-              cursor:
-                flyerBringOnId &&
-                (activePhase === "movement" || activePhase === "deployment")
-                  ? "crosshair"
-                  : (cursorMode || "default"),
-            },
-          },
-          React.createElement("div", {
-            style: {
-              position: "absolute",
-              inset: 0,
-              opacity: 0.08,
-              backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent ${deployScale - 1}px, rgba(255,255,255,0.1) ${deployScale}px), repeating-linear-gradient(90deg, transparent, transparent ${deployScale - 1}px, rgba(255,255,255,0.1) ${deployScale}px)`,
-              pointerEvents: "none",
-            },
-          }),
-          deployShowGrid &&
-            Array.from({ length: Math.floor(BOARD_W / 6) + 1 }, (_, i) =>
-              React.createElement("div", {
-                key: `gv${i}`,
-                style: {
-                  position: "absolute",
-                  left: i * 6 * deployScale,
-                  top: 0,
-                  width: 1,
-                  height: BOARD_H * deployScale,
-                  background:
-                    i % 2 === 0
-                      ? "rgba(255,255,255,0.12)"
-                      : "rgba(255,255,255,0.06)",
-                  pointerEvents: "none",
-                },
-              }),
-            ),
-          deployShowGrid &&
-            Array.from({ length: Math.floor(BOARD_H / 6) + 1 }, (_, i) =>
-              React.createElement("div", {
-                key: `gh${i}`,
-                style: {
-                  position: "absolute",
-                  top: i * 6 * deployScale,
-                  left: 0,
-                  height: 1,
-                  width: BOARD_W * deployScale,
-                  background:
-                    i % 2 === 0
-                      ? "rgba(255,255,255,0.12)"
-                      : "rgba(255,255,255,0.06)",
-                  pointerEvents: "none",
-                },
-              }),
-            ),
-          deployShowGrid &&
-            Array.from({ length: Math.floor(BOARD_W / 12) + 1 }, (_, i) =>
-              React.createElement(
-                "div",
-                {
-                  key: `lv${i}`,
-                  style: {
-                    position: "absolute",
-                    left: i * 12 * deployScale - 6,
-                    top: 2,
-                    fontSize: 8,
-                    color: "rgba(255,255,255,0.3)",
-                    fontFamily: "'Share Tech Mono', serif",
-                    pointerEvents: "none",
-                  },
-                },
-                i * 12,
-                '"',
-              ),
-            ),
-          deployShowGrid &&
-            Array.from({ length: Math.floor(BOARD_H / 12) + 1 }, (_, i) =>
-              React.createElement(
-                "div",
-                {
-                  key: `lh${i}`,
-                  style: {
-                    position: "absolute",
-                    top: i * 12 * deployScale - 4,
-                    left: 3,
-                    fontSize: 8,
-                    color: "rgba(255,255,255,0.3)",
-                    fontFamily: "'Share Tech Mono', serif",
-                    pointerEvents: "none",
-                  },
-                },
-                i * 12,
-                '"',
-              ),
-            ),
-          showZones &&
-            (() => {
-              const mission = MISSIONS[missionType];
-              if (!mission) return null;
-              const zones = mission.renderZones(deployScale);
-              return React.createElement(
-                React.Fragment,
-                null,
-                zones.map((z, i) =>
-                  React.createElement(
-                    "div",
-                    {
-                      key: i,
-                      style: {
-                        position: "absolute",
-                        left: z.left,
-                        top: z.top,
-                        width: z.width,
-                        height: z.height,
-                        background: z.color,
-                        border: z.border,
-                        pointerEvents: "none",
-                      },
-                    },
-                    React.createElement(
-                      "div",
-                      {
-                        style: {
-                          position: "absolute",
-                          fontSize: 11,
-                          fontFamily: "'Share Tech Mono', serif",
-                          letterSpacing: 1,
-                          ...z.labelStyle,
-                        },
-                      },
-                      z.label,
-                    ),
-                  ),
-                ),
-                mission.exclusionCircle &&
-                  React.createElement(
-                    "svg",
-                    {
-                      style: {
-                        position: "absolute",
-                        inset: 0,
-                        width: BOARD_W * deployScale,
-                        height: BOARD_H * deployScale,
-                        pointerEvents: "none",
-                      },
-                    },
-                    React.createElement("circle", {
-                      cx: (BOARD_W / 2) * deployScale,
-                      cy: (BOARD_H / 2) * deployScale,
-                      r: 9 * deployScale,
-                      fill: "none",
-                      stroke: "rgba(255,255,255,0.18)",
-                      strokeWidth: 1.5,
-                      strokeDasharray: "6,4",
-                    }),
-                    React.createElement(
-                      "text",
-                      {
-                        x: (BOARD_W / 2) * deployScale,
-                        y: (BOARD_H / 2) * deployScale - 2,
-                        textAnchor: "middle",
-                        fontSize: 8,
-                        fill: "rgba(255,255,255,0.18)",
-                        fontFamily: "'Share Tech Mono', serif",
-                      },
-                      '18" EXCLUSION ZONE',
-                    ),
-                  ),
+            React.createElement("div", {
+              style: {
+                position: "absolute",
+                inset: 0,
+                opacity: 0.08,
+                backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent ${deployScale - 1}px, rgba(255,255,255,0.1) ${deployScale}px), repeating-linear-gradient(90deg, transparent, transparent ${deployScale - 1}px, rgba(255,255,255,0.1) ${deployScale}px)`,
+                pointerEvents: "none",
+              },
+            }),
+            deployShowGrid &&
+              Array.from({ length: Math.floor(BOARD_W / 6) + 1 }, (_, i) =>
                 React.createElement("div", {
+                  key: `gv${i}`,
                   style: {
                     position: "absolute",
-                    left: 0,
-                    top: (BOARD_H / 2) * deployScale - 0.5,
-                    width: BOARD_W * deployScale,
-                    height: 1,
-                    background: "rgba(255,255,255,0.08)",
+                    left: i * 6 * deployScale,
+                    top: 0,
+                    width: 1,
+                    height: BOARD_H * deployScale,
+                    background:
+                      i % 2 === 0
+                        ? "rgba(255,255,255,0.12)"
+                        : "rgba(255,255,255,0.06)",
                     pointerEvents: "none",
                   },
                 }),
-                missionType === "hammer" &&
+              ),
+            deployShowGrid &&
+              Array.from({ length: Math.floor(BOARD_H / 6) + 1 }, (_, i) =>
+                React.createElement("div", {
+                  key: `gh${i}`,
+                  style: {
+                    position: "absolute",
+                    top: i * 6 * deployScale,
+                    left: 0,
+                    height: 1,
+                    width: BOARD_W * deployScale,
+                    background:
+                      i % 2 === 0
+                        ? "rgba(255,255,255,0.12)"
+                        : "rgba(255,255,255,0.06)",
+                    pointerEvents: "none",
+                  },
+                }),
+              ),
+            deployShowGrid &&
+              Array.from({ length: Math.floor(BOARD_W / 12) + 1 }, (_, i) =>
+                React.createElement(
+                  "div",
+                  {
+                    key: `lv${i}`,
+                    style: {
+                      position: "absolute",
+                      left: i * 12 * deployScale - 6,
+                      top: 2,
+                      fontSize: 8,
+                      color: "rgba(255,255,255,0.3)",
+                      fontFamily: "'Share Tech Mono', serif",
+                      pointerEvents: "none",
+                    },
+                  },
+                  i * 12,
+                  '"',
+                ),
+              ),
+            deployShowGrid &&
+              Array.from({ length: Math.floor(BOARD_H / 12) + 1 }, (_, i) =>
+                React.createElement(
+                  "div",
+                  {
+                    key: `lh${i}`,
+                    style: {
+                      position: "absolute",
+                      top: i * 12 * deployScale - 4,
+                      left: 3,
+                      fontSize: 8,
+                      color: "rgba(255,255,255,0.3)",
+                      fontFamily: "'Share Tech Mono', serif",
+                      pointerEvents: "none",
+                    },
+                  },
+                  i * 12,
+                  '"',
+                ),
+              ),
+            showZones &&
+              (() => {
+                const mission = MISSIONS[missionType];
+                if (!mission) return null;
+                const zones = mission.renderZones(deployScale);
+                return React.createElement(
+                  React.Fragment,
+                  null,
+                  zones.map((z, i) =>
+                    React.createElement(
+                      "div",
+                      {
+                        key: i,
+                        style: {
+                          position: "absolute",
+                          left: z.left,
+                          top: z.top,
+                          width: z.width,
+                          height: z.height,
+                          background: z.color,
+                          border: z.border,
+                          pointerEvents: "none",
+                        },
+                      },
+                      React.createElement(
+                        "div",
+                        {
+                          style: {
+                            position: "absolute",
+                            fontSize: 11,
+                            fontFamily: "'Share Tech Mono', serif",
+                            letterSpacing: 1,
+                            ...z.labelStyle,
+                          },
+                        },
+                        z.label,
+                      ),
+                    ),
+                  ),
+                  mission.exclusionCircle &&
+                    React.createElement(
+                      "svg",
+                      {
+                        style: {
+                          position: "absolute",
+                          inset: 0,
+                          width: BOARD_W * deployScale,
+                          height: BOARD_H * deployScale,
+                          pointerEvents: "none",
+                        },
+                      },
+                      React.createElement("circle", {
+                        cx: (BOARD_W / 2) * deployScale,
+                        cy: (BOARD_H / 2) * deployScale,
+                        r: 9 * deployScale,
+                        fill: "none",
+                        stroke: "rgba(255,255,255,0.18)",
+                        strokeWidth: 1.5,
+                        strokeDasharray: "6,4",
+                      }),
+                      React.createElement(
+                        "text",
+                        {
+                          x: (BOARD_W / 2) * deployScale,
+                          y: (BOARD_H / 2) * deployScale - 2,
+                          textAnchor: "middle",
+                          fontSize: 8,
+                          fill: "rgba(255,255,255,0.18)",
+                          fontFamily: "'Share Tech Mono', serif",
+                        },
+                        '18" EXCLUSION ZONE',
+                      ),
+                    ),
                   React.createElement("div", {
                     style: {
                       position: "absolute",
-                      left: (BOARD_W / 2) * deployScale - 0.5,
-                      top: 0,
-                      width: 1,
-                      height: BOARD_H * deployScale,
+                      left: 0,
+                      top: (BOARD_H / 2) * deployScale - 0.5,
+                      width: BOARD_W * deployScale,
+                      height: 1,
                       background: "rgba(255,255,255,0.08)",
                       pointerEvents: "none",
                     },
                   }),
-                React.createElement(
-                  "div",
+                  missionType === "hammer" &&
+                    React.createElement("div", {
+                      style: {
+                        position: "absolute",
+                        left: (BOARD_W / 2) * deployScale - 0.5,
+                        top: 0,
+                        width: 1,
+                        height: BOARD_H * deployScale,
+                        background: "rgba(255,255,255,0.08)",
+                        pointerEvents: "none",
+                      },
+                    }),
+                  React.createElement(
+                    "div",
+                    {
+                      style: {
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        fontSize: 12,
+                        color: "rgba(255,255,255,0.15)",
+                        fontFamily: "'Share Tech Mono', serif",
+                        letterSpacing: 4,
+                        pointerEvents: "none",
+                        whiteSpace: "nowrap",
+                      },
+                    },
+                    "NO MAN'S LAND",
+                  ),
+                );
+              })(),
+            missionType === "zm" &&
+              showZones &&
+              (() => {
+                const zm =
+                  ZM_SECTION_TYPES[zmMission] || ZM_SECTION_TYPES.sector_sweep;
+                const zmObjs = ZM_OBJECTIVES[zmMission] || [];
+                const zmOffX = (BOARD_W - ZM_BOARD) / 2; // 12" offset on each side
+                const zmOffY = 0;
+                const S = ZM_SECTION * deployScale;
+                const OX = zmOffX * deployScale;
+                const OY = zmOffY * deployScale;
+
+                const sectionColors = {
+                  alpha: {
+                    bg: "rgba(120,80,200,0.12)",
+                    border: "rgba(150,100,220,0.5)",
+                    label: "α CS(8)",
+                  },
+                  beta: {
+                    bg: "rgba(60,140,200,0.12)",
+                    border: "rgba(80,160,220,0.5)",
+                    label: "β CS(6)",
+                  },
+                  normal: {
+                    bg: "rgba(80,180,80,0.1)",
+                    border: "rgba(100,200,100,0.4)",
+                    label: "",
+                  },
+                };
+                const deployZoneColors = {
+                  A: "rgba(155,45,45,0.2)",
+                  B: "rgba(42,111,180,0.2)",
+                };
+
+                return React.createElement(
+                  "svg",
                   {
                     style: {
                       position: "absolute",
-                      top: "50%",
-                      left: "50%",
-                      transform: "translate(-50%, -50%)",
-                      fontSize: 12,
-                      color: "rgba(255,255,255,0.15)",
-                      fontFamily: "'Share Tech Mono', serif",
-                      letterSpacing: 4,
+                      inset: 0,
+                      width: BOARD_W * deployScale,
+                      height: BOARD_H * deployScale,
                       pointerEvents: "none",
-                      whiteSpace: "nowrap",
                     },
                   },
-                  "NO MAN'S LAND",
-                ),
-              );
-            })(),
-          missionType === "zm" &&
-            showZones &&
-            (() => {
-              const zm =
-                ZM_SECTION_TYPES[zmMission] || ZM_SECTION_TYPES.sector_sweep;
-              const zmObjs = ZM_OBJECTIVES[zmMission] || [];
-              const zmOffX = (BOARD_W - ZM_BOARD) / 2; // 12" offset on each side
-              const zmOffY = 0;
-              const S = ZM_SECTION * deployScale;
-              const OX = zmOffX * deployScale;
-              const OY = zmOffY * deployScale;
-
-              const sectionColors = {
-                alpha: {
-                  bg: "rgba(120,80,200,0.12)",
-                  border: "rgba(150,100,220,0.5)",
-                  label: "α CS(8)",
-                },
-                beta: {
-                  bg: "rgba(60,140,200,0.12)",
-                  border: "rgba(80,160,220,0.5)",
-                  label: "β CS(6)",
-                },
-                normal: {
-                  bg: "rgba(80,180,80,0.1)",
-                  border: "rgba(100,200,100,0.4)",
-                  label: "",
-                },
-              };
-              const deployZoneColors = {
-                A: "rgba(155,45,45,0.2)",
-                B: "rgba(42,111,180,0.2)",
-              };
-
-              return React.createElement(
-                "svg",
-                {
-                  style: {
-                    position: "absolute",
-                    inset: 0,
-                    width: BOARD_W * deployScale,
-                    height: BOARD_H * deployScale,
-                    pointerEvents: "none",
-                  },
-                },
-                React.createElement("rect", {
-                  x: OX,
-                  y: OY,
-                  width: ZM_BOARD * deployScale,
-                  height: ZM_BOARD * deployScale,
-                  fill: "none",
-                  stroke: "rgba(180,140,255,0.7)",
-                  strokeWidth: 2,
-                }),
-                React.createElement(
-                  "text",
-                  {
-                    x: OX + (ZM_BOARD * deployScale) / 2,
-                    y: OY - 6,
-                    textAnchor: "middle",
-                    fontSize: 9,
-                    fill: "rgba(180,140,255,0.8)",
-                    fontFamily: "'Share Tech Mono', serif",
-                    letterSpacing: 2,
-                  },
-                  "ZONE MORTALIS —",
-                  (ZM_MISSIONS_INFO[zmMission] || {}).config || "",
-                ),
-                zm.map((sec, idx) => {
-                  const col = idx % ZM_COLS;
-                  const row = Math.floor(idx / ZM_COLS);
-                  const sx = OX + col * S;
-                  const sy = OY + row * S;
-                  const colors =
-                    sectionColors[sec.type] || sectionColors.normal;
-                  const deployFill = sec.zone
-                    ? deployZoneColors[sec.zone]
-                    : null;
-                  const secStatus = zmSections[idx];
-                  const isAbyssal = secStatus && secStatus.abyssal;
-                  const dynConf = secStatus && secStatus.confinedX;
-                  return React.createElement(
-                    "g",
-                    { key: idx },
-                    deployFill &&
+                  React.createElement("rect", {
+                    x: OX,
+                    y: OY,
+                    width: ZM_BOARD * deployScale,
+                    height: ZM_BOARD * deployScale,
+                    fill: "none",
+                    stroke: "rgba(180,140,255,0.7)",
+                    strokeWidth: 2,
+                  }),
+                  React.createElement(
+                    "text",
+                    {
+                      x: OX + (ZM_BOARD * deployScale) / 2,
+                      y: OY - 6,
+                      textAnchor: "middle",
+                      fontSize: 9,
+                      fill: "rgba(180,140,255,0.8)",
+                      fontFamily: "'Share Tech Mono', serif",
+                      letterSpacing: 2,
+                    },
+                    "ZONE MORTALIS —",
+                    (ZM_MISSIONS_INFO[zmMission] || {}).config || "",
+                  ),
+                  zm.map((sec, idx) => {
+                    const col = idx % ZM_COLS;
+                    const row = Math.floor(idx / ZM_COLS);
+                    const sx = OX + col * S;
+                    const sy = OY + row * S;
+                    const colors =
+                      sectionColors[sec.type] || sectionColors.normal;
+                    const deployFill = sec.zone
+                      ? deployZoneColors[sec.zone]
+                      : null;
+                    const secStatus = zmSections[idx];
+                    const isAbyssal = secStatus && secStatus.abyssal;
+                    const dynConf = secStatus && secStatus.confinedX;
+                    return React.createElement(
+                      "g",
+                      { key: idx },
+                      deployFill &&
+                        React.createElement("rect", {
+                          x: sx,
+                          y: sy,
+                          width: S,
+                          height: S,
+                          fill: deployFill,
+                        }),
                       React.createElement("rect", {
                         x: sx,
                         y: sy,
                         width: S,
                         height: S,
-                        fill: deployFill,
+                        fill: isAbyssal ? "rgba(20,10,40,0.55)" : colors.bg,
+                        stroke: colors.border,
+                        strokeWidth: 1.2,
                       }),
-                    React.createElement("rect", {
-                      x: sx,
-                      y: sy,
-                      width: S,
-                      height: S,
-                      fill: isAbyssal ? "rgba(20,10,40,0.55)" : colors.bg,
-                      stroke: colors.border,
-                      strokeWidth: 1.2,
-                    }),
-                    sec.type !== "normal" &&
+                      sec.type !== "normal" &&
+                        React.createElement(
+                          "text",
+                          {
+                            x: sx + S / 2,
+                            y: sy + S / 2 - 4,
+                            textAnchor: "middle",
+                            fontSize: 10,
+                            fill: isAbyssal
+                              ? "rgba(180,80,255,0.9)"
+                              : "rgba(200,180,255,0.7)",
+                            fontFamily: "'Share Tech Mono', serif",
+                          },
+                          isAbyssal ? "DARK" : colors.label,
+                        ),
+                      dynConf &&
+                        React.createElement(
+                          "text",
+                          {
+                            x: sx + S / 2,
+                            y: sy + S / 2 + 8,
+                            textAnchor: "middle",
+                            fontSize: 8,
+                            fill: "rgba(255,200,80,0.8)",
+                            fontFamily: "'Share Tech Mono', serif",
+                          },
+                          "CS(",
+                          dynConf,
+                          ")",
+                        ),
+                      sec.zone &&
+                        React.createElement(
+                          "text",
+                          {
+                            x: sx + 4,
+                            y: sy + 10,
+                            fontSize: 8,
+                            fill:
+                              sec.zone === "A"
+                                ? "rgba(255,140,140,0.9)"
+                                : "rgba(120,180,255,0.9)",
+                            fontFamily: "'Share Tech Mono', serif",
+                          },
+                          "ZONE",
+                          sec.zone,
+                        ),
                       React.createElement(
                         "text",
                         {
-                          x: sx + S / 2,
-                          y: sy + S / 2 - 4,
-                          textAnchor: "middle",
-                          fontSize: 10,
-                          fill: isAbyssal
-                            ? "rgba(180,80,255,0.9)"
-                            : "rgba(200,180,255,0.7)",
+                          x: sx + S - 4,
+                          y: sy + S - 3,
+                          textAnchor: "end",
+                          fontSize: 7,
+                          fill: "rgba(255,255,255,0.2)",
                           fontFamily: "'Share Tech Mono', serif",
                         },
-                        isAbyssal ? "DARK" : colors.label,
+                        idx + 1,
                       ),
-                    dynConf &&
-                      React.createElement(
-                        "text",
-                        {
-                          x: sx + S / 2,
-                          y: sy + S / 2 + 8,
-                          textAnchor: "middle",
-                          fontSize: 8,
-                          fill: "rgba(255,200,80,0.8)",
-                          fontFamily: "'Share Tech Mono', serif",
-                        },
-                        "CS(",
-                        dynConf,
-                        ")",
-                      ),
-                    sec.zone &&
-                      React.createElement(
-                        "text",
-                        {
-                          x: sx + 4,
-                          y: sy + 10,
-                          fontSize: 8,
-                          fill:
-                            sec.zone === "A"
-                              ? "rgba(255,140,140,0.9)"
-                              : "rgba(120,180,255,0.9)",
-                          fontFamily: "'Share Tech Mono', serif",
-                        },
-                        "ZONE",
-                        sec.zone,
-                      ),
-                    React.createElement(
-                      "text",
-                      {
-                        x: sx + S - 4,
-                        y: sy + S - 3,
-                        textAnchor: "end",
-                        fontSize: 7,
-                        fill: "rgba(255,255,255,0.2)",
-                        fontFamily: "'Share Tech Mono', serif",
-                      },
-                      idx + 1,
-                    ),
-                  );
-                }),
-                zmObjs.map((obj, i) => {
-                  const ox = OX + obj.x * deployScale;
-                  const oy = OY + obj.y * deployScale;
-                  return React.createElement(
-                    "g",
-                    { key: i },
-                    React.createElement("circle", {
-                      cx: ox,
-                      cy: oy,
-                      r: 7,
-                      fill: "rgba(255,215,0,0.25)",
-                      stroke: "rgba(255,215,0,0.8)",
-                      strokeWidth: 1.5,
-                    }),
-                    React.createElement(
-                      "text",
-                      {
-                        x: ox,
-                        y: oy + 1,
-                        textAnchor: "middle",
-                        dominantBaseline: "middle",
-                        fontSize: 8,
-                        fill: "rgba(255,215,0,1)",
-                        fontFamily: "'Share Tech Mono', serif",
-                        fontWeight: "bold",
-                      },
-                      "⊕",
-                    ),
-                    React.createElement(
-                      "text",
-                      {
-                        x: ox,
-                        y: oy + 13,
-                        textAnchor: "middle",
-                        fontSize: 7,
-                        fill: "rgba(255,215,0,0.85)",
-                        fontFamily: "'Share Tech Mono', serif",
-                      },
-                      obj.label,
-                      obj.value > 0 ? " " + obj.value + "VP" : " ?VP",
-                    ),
-                  );
-                }),
-                Array.from({ length: ZM_COLS + 1 }, (_, i) =>
-                  React.createElement("line", {
-                    key: "v" + i,
-                    x1: OX + i * S,
-                    y1: OY,
-                    x2: OX + i * S,
-                    y2: OY + ZM_BOARD * deployScale,
-                    stroke: "rgba(180,140,255,0.3)",
-                    strokeWidth: 0.5,
+                    );
                   }),
-                ),
-                Array.from({ length: ZM_ROWS + 1 }, (_, i) =>
-                  React.createElement("line", {
-                    key: "h" + i,
-                    x1: OX,
-                    y1: OY + i * S,
-                    x2: OX + ZM_BOARD * deployScale,
-                    y2: OY + i * S,
-                    stroke: "rgba(180,140,255,0.3)",
-                    strokeWidth: 0.5,
+                  zmObjs.map((obj, i) => {
+                    const ox = OX + obj.x * deployScale;
+                    const oy = OY + obj.y * deployScale;
+                    return React.createElement(
+                      "g",
+                      { key: i },
+                      React.createElement("circle", {
+                        cx: ox,
+                        cy: oy,
+                        r: 7,
+                        fill: "rgba(255,215,0,0.25)",
+                        stroke: "rgba(255,215,0,0.8)",
+                        strokeWidth: 1.5,
+                      }),
+                      React.createElement(
+                        "text",
+                        {
+                          x: ox,
+                          y: oy + 1,
+                          textAnchor: "middle",
+                          dominantBaseline: "middle",
+                          fontSize: 8,
+                          fill: "rgba(255,215,0,1)",
+                          fontFamily: "'Share Tech Mono', serif",
+                          fontWeight: "bold",
+                        },
+                        "⊕",
+                      ),
+                      React.createElement(
+                        "text",
+                        {
+                          x: ox,
+                          y: oy + 13,
+                          textAnchor: "middle",
+                          fontSize: 7,
+                          fill: "rgba(255,215,0,0.85)",
+                          fontFamily: "'Share Tech Mono', serif",
+                        },
+                        obj.label,
+                        obj.value > 0 ? " " + obj.value + "VP" : " ?VP",
+                      ),
+                    );
                   }),
-                ),
-                Array.from({ length: ZM_COLS + 1 }, (_, i) =>
-                  React.createElement(
-                    "text",
-                    {
-                      key: "rl" + i,
-                      x: OX + i * S,
-                      y: OY + ZM_BOARD * deployScale + 10,
-                      textAnchor: "middle",
-                      fontSize: 7,
-                      fill: "rgba(180,140,255,0.5)",
-                      fontFamily: "'Share Tech Mono', serif",
-                    },
-                    i * 12,
-                    '"',
-                  ),
-                ),
-              );
-            })(),
-          missionType === "saturnine" &&
-            showZones &&
-            (() => {
-              const sc = deployScale;
-              const BW = BOARD_W; // 72
-              const BH = BOARD_H; // 48
-              const COL = 18;
-              const ROW = 12;
-              const SAT_OBJECTIVES = {
-                ignis_sector_assault: [
-                  { x: BW / 2, y: BH / 2, vp: 3 }, // centre 3VP
-                  { x: 18, y: BH / 2, vp: 2 }, // left flank 2VP
-                  { x: BW - 18, y: BH / 2, vp: 2 }, // right flank 2VP
-                ],
-                line_advance: [
-                  { x: 9, y: 6, vp: 1 },
-                  { x: 27, y: 6, vp: 1 },
-                  { x: 45, y: 6, vp: 1 },
-                  { x: 63, y: 6, vp: 1 },
-                ],
-                breakthrough: [
-                  { x: 9, y: 18, vp: 1 },
-                  { x: 63, y: 18, vp: 1 },
-                  { x: 9, y: 30, vp: 1 },
-                  { x: 63, y: 30, vp: 1 },
-                ],
-                dawn_raid: [
-                  { x: 9, y: 6, vp: 1 },
-                  { x: 27, y: 6, vp: 1 },
-                  { x: 63, y: 6, vp: 1 },
-                  { x: 63, y: 18, vp: 1 },
-                ],
-              };
-              const objs = SAT_OBJECTIVES[satMission] || [];
-              const isIgnis = satMission === "ignis_sector_assault";
-
-              return React.createElement(
-                "svg",
-                {
-                  style: {
-                    position: "absolute",
-                    inset: 0,
-                    width: BW * sc,
-                    height: BH * sc,
-                    pointerEvents: "none",
-                  },
-                },
-                isIgnis &&
-                  React.createElement(
-                    "g",
-                    null,
-                    React.createElement("rect", {
-                      x: 0,
-                      y: 0,
-                      width: BW * sc,
-                      height: 36 * sc,
-                      fill: "rgba(42,111,180,0.12)",
-                      stroke: "rgba(42,111,180,0.5)",
-                      strokeWidth: 1.5,
-                      strokeDasharray: "6,4",
-                    }),
-                    React.createElement(
-                      "text",
-                      {
-                        x: (BW * sc) / 2,
-                        y: 14,
-                        textAnchor: "middle",
-                        fontSize: Math.max(7, sc * 1.2),
-                        fill: "rgba(42,111,180,0.8)",
-                        fontFamily: "'Share Tech Mono',serif",
-                        letterSpacing: 2,
-                      },
-                      "P2 DEFENDER (TRAITOR)",
-                    ),
-                    React.createElement("polygon", {
-                      points: `0,${BH * sc} ${18 * sc},${BH * sc} ${9 * sc},${36 * sc}`,
-                      fill: "rgba(155,45,45,0.22)",
-                      stroke: "rgba(155,45,45,0.8)",
-                      strokeWidth: 1.5,
-                      strokeDasharray: "6,4",
-                    }),
-                    React.createElement(
-                      "text",
-                      {
-                        x: 9 * sc,
-                        y: BH * sc - 14,
-                        textAnchor: "middle",
-                        fontSize: Math.max(6, sc * 0.9),
-                        fill: "rgba(200,80,80,0.9)",
-                        fontFamily: "'Share Tech Mono',serif",
-                      },
-                      "SPEARHEAD",
-                    ),
-                    React.createElement(
-                      "text",
-                      {
-                        x: 9 * sc,
-                        y: BH * sc - 6,
-                        textAnchor: "middle",
-                        fontSize: Math.max(6, sc * 0.85),
-                        fill: "rgba(200,80,80,0.9)",
-                        fontFamily: "'Share Tech Mono',serif",
-                      },
-                      "P1",
-                    ),
-                    React.createElement("polygon", {
-                      points: `${(BW - 18) * sc},${BH * sc} ${BW * sc},${BH * sc} ${(BW - 9) * sc},${36 * sc}`,
-                      fill: "rgba(155,45,45,0.22)",
-                      stroke: "rgba(155,45,45,0.8)",
-                      strokeWidth: 1.5,
-                      strokeDasharray: "6,4",
-                    }),
-                    React.createElement(
-                      "text",
-                      {
-                        x: (BW - 9) * sc,
-                        y: BH * sc - 14,
-                        textAnchor: "middle",
-                        fontSize: Math.max(6, sc * 0.9),
-                        fill: "rgba(200,80,80,0.9)",
-                        fontFamily: "'Share Tech Mono',serif",
-                      },
-                      "SPEARHEAD",
-                    ),
-                    React.createElement(
-                      "text",
-                      {
-                        x: (BW - 9) * sc,
-                        y: BH * sc - 6,
-                        textAnchor: "middle",
-                        fontSize: Math.max(6, sc * 0.85),
-                        fill: "rgba(200,80,80,0.9)",
-                        fontFamily: "'Share Tech Mono',serif",
-                      },
-                      "P1",
-                    ),
+                  Array.from({ length: ZM_COLS + 1 }, (_, i) =>
                     React.createElement("line", {
-                      x1: 0,
-                      y1: 36 * sc,
-                      x2: BW * sc,
-                      y2: 36 * sc,
-                      stroke: "rgba(255,255,255,0.15)",
-                      strokeWidth: 1,
-                      strokeDasharray: "8,4",
+                      key: "v" + i,
+                      x1: OX + i * S,
+                      y1: OY,
+                      x2: OX + i * S,
+                      y2: OY + ZM_BOARD * deployScale,
+                      stroke: "rgba(180,140,255,0.3)",
+                      strokeWidth: 0.5,
                     }),
+                  ),
+                  Array.from({ length: ZM_ROWS + 1 }, (_, i) =>
+                    React.createElement("line", {
+                      key: "h" + i,
+                      x1: OX,
+                      y1: OY + i * S,
+                      x2: OX + ZM_BOARD * deployScale,
+                      y2: OY + i * S,
+                      stroke: "rgba(180,140,255,0.3)",
+                      strokeWidth: 0.5,
+                    }),
+                  ),
+                  Array.from({ length: ZM_COLS + 1 }, (_, i) =>
                     React.createElement(
                       "text",
                       {
-                        x: (BW * sc) / 2,
-                        y: BH * sc - 4,
+                        key: "rl" + i,
+                        x: OX + i * S,
+                        y: OY + ZM_BOARD * deployScale + 10,
                         textAnchor: "middle",
-                        fontSize: Math.max(6, sc * 0.85),
-                        fill: "rgba(200,80,80,0.7)",
-                        fontFamily: "'Share Tech Mono',serif",
-                        letterSpacing: 1,
+                        fontSize: 7,
+                        fill: "rgba(180,140,255,0.5)",
+                        fontFamily: "'Share Tech Mono', serif",
                       },
-                      "P1 ATTACKER (LOYALIST) — reserve Saturnine units deploy here Turn 1",
+                      i * 12,
+                      '"',
                     ),
                   ),
-                !isIgnis &&
-                  React.createElement(
-                    "g",
-                    null,
-                    React.createElement("rect", {
-                      x: 0,
-                      y: 36 * sc,
+                );
+              })(),
+            missionType === "saturnine" &&
+              showZones &&
+              (() => {
+                const sc = deployScale;
+                const BW = BOARD_W; // 72
+                const BH = BOARD_H; // 48
+                const COL = 18;
+                const ROW = 12;
+                const SAT_OBJECTIVES = {
+                  ignis_sector_assault: [
+                    { x: BW / 2, y: BH / 2, vp: 3 }, // centre 3VP
+                    { x: 18, y: BH / 2, vp: 2 }, // left flank 2VP
+                    { x: BW - 18, y: BH / 2, vp: 2 }, // right flank 2VP
+                  ],
+                  line_advance: [
+                    { x: 9, y: 6, vp: 1 },
+                    { x: 27, y: 6, vp: 1 },
+                    { x: 45, y: 6, vp: 1 },
+                    { x: 63, y: 6, vp: 1 },
+                  ],
+                  breakthrough: [
+                    { x: 9, y: 18, vp: 1 },
+                    { x: 63, y: 18, vp: 1 },
+                    { x: 9, y: 30, vp: 1 },
+                    { x: 63, y: 30, vp: 1 },
+                  ],
+                  dawn_raid: [
+                    { x: 9, y: 6, vp: 1 },
+                    { x: 27, y: 6, vp: 1 },
+                    { x: 63, y: 6, vp: 1 },
+                    { x: 63, y: 18, vp: 1 },
+                  ],
+                };
+                const objs = SAT_OBJECTIVES[satMission] || [];
+                const isIgnis = satMission === "ignis_sector_assault";
+
+                return React.createElement(
+                  "svg",
+                  {
+                    style: {
+                      position: "absolute",
+                      inset: 0,
                       width: BW * sc,
-                      height: 12 * sc,
-                      fill: "rgba(155,45,45,0.18)",
-                      stroke: "rgba(155,45,45,0.7)",
-                      strokeWidth: 1.5,
-                      strokeDasharray: "6,4",
-                    }),
+                      height: BH * sc,
+                      pointerEvents: "none",
+                    },
+                  },
+                  isIgnis &&
                     React.createElement(
-                      "text",
-                      {
-                        x: (BW * sc) / 2,
-                        y: 36 * sc + 10,
-                        textAnchor: "middle",
-                        fontSize: Math.max(6, sc * 0.9),
-                        fill: "rgba(200,80,80,0.9)",
-                        fontFamily: "'Share Tech Mono',serif",
-                        letterSpacing: 1,
-                      },
-                      'P1 ATTACKER ZONE (18"×12")',
-                    ),
-                    satMission === "breakthrough" &&
-                      React.createElement(
-                        "text",
-                        {
-                          x: 4,
-                          y: (BH * sc) / 2,
-                          fontSize: Math.max(12, sc * 2),
-                          fill: "rgba(42,111,180,0.6)",
-                          fontFamily: "sans-serif",
-                        },
-                        "↙",
-                      ),
-                    satMission === "breakthrough" &&
-                      React.createElement(
-                        "text",
-                        {
-                          x: BW * sc - 16,
-                          y: (BH * sc) / 2,
-                          fontSize: Math.max(12, sc * 2),
-                          fill: "rgba(42,111,180,0.6)",
-                          fontFamily: "sans-serif",
-                        },
-                        "↘",
-                      ),
-                    satMission === "breakthrough" &&
-                      React.createElement(
-                        "text",
-                        {
-                          x: (BW * sc) / 2 - 8,
-                          y: 14,
-                          fontSize: Math.max(12, sc * 2),
-                          fill: "rgba(42,111,180,0.6)",
-                          fontFamily: "sans-serif",
-                        },
-                        "↓",
-                      ),
-                    satMission === "breakthrough" &&
-                      React.createElement(
-                        "text",
-                        {
-                          x: (BW * sc) / 2 - 80,
-                          y: 12,
-                          fontSize: Math.max(6, sc * 0.85),
-                          fill: "rgba(42,111,180,0.7)",
-                          fontFamily: "'Share Tech Mono',serif",
-                        },
-                        "← P2 ENCIRCLING RESERVES →",
-                      ),
-                    satMission === "dawn_raid" &&
+                      "g",
+                      null,
                       React.createElement("rect", {
-                        x: (BW * sc) / 2 - 120,
-                        y: (BH * sc) / 2 - 10,
-                        width: 240,
-                        height: 18,
-                        fill: "rgba(200,60,0,0.18)",
-                        rx: 3,
+                        x: 0,
+                        y: 0,
+                        width: BW * sc,
+                        height: 36 * sc,
+                        fill: "rgba(42,111,180,0.12)",
+                        stroke: "rgba(42,111,180,0.5)",
+                        strokeWidth: 1.5,
+                        strokeDasharray: "6,4",
                       }),
-                    satMission === "dawn_raid" &&
                       React.createElement(
                         "text",
                         {
                           x: (BW * sc) / 2,
-                          y: (BH * sc) / 2 + 4,
+                          y: 14,
+                          textAnchor: "middle",
+                          fontSize: Math.max(7, sc * 1.2),
+                          fill: "rgba(42,111,180,0.8)",
+                          fontFamily: "'Share Tech Mono',serif",
+                          letterSpacing: 2,
+                        },
+                        "P2 DEFENDER (TRAITOR)",
+                      ),
+                      React.createElement("polygon", {
+                        points: `0,${BH * sc} ${18 * sc},${BH * sc} ${9 * sc},${36 * sc}`,
+                        fill: "rgba(155,45,45,0.22)",
+                        stroke: "rgba(155,45,45,0.8)",
+                        strokeWidth: 1.5,
+                        strokeDasharray: "6,4",
+                      }),
+                      React.createElement(
+                        "text",
+                        {
+                          x: 9 * sc,
+                          y: BH * sc - 14,
                           textAnchor: "middle",
                           fontSize: Math.max(6, sc * 0.9),
-                          fill: "rgba(240,100,30,1)",
+                          fill: "rgba(200,80,80,0.9)",
+                          fontFamily: "'Share Tech Mono',serif",
+                        },
+                        "SPEARHEAD",
+                      ),
+                      React.createElement(
+                        "text",
+                        {
+                          x: 9 * sc,
+                          y: BH * sc - 6,
+                          textAnchor: "middle",
+                          fontSize: Math.max(6, sc * 0.85),
+                          fill: "rgba(200,80,80,0.9)",
+                          fontFamily: "'Share Tech Mono',serif",
+                        },
+                        "P1",
+                      ),
+                      React.createElement("polygon", {
+                        points: `${(BW - 18) * sc},${BH * sc} ${BW * sc},${BH * sc} ${(BW - 9) * sc},${36 * sc}`,
+                        fill: "rgba(155,45,45,0.22)",
+                        stroke: "rgba(155,45,45,0.8)",
+                        strokeWidth: 1.5,
+                        strokeDasharray: "6,4",
+                      }),
+                      React.createElement(
+                        "text",
+                        {
+                          x: (BW - 9) * sc,
+                          y: BH * sc - 14,
+                          textAnchor: "middle",
+                          fontSize: Math.max(6, sc * 0.9),
+                          fill: "rgba(200,80,80,0.9)",
+                          fontFamily: "'Share Tech Mono',serif",
+                        },
+                        "SPEARHEAD",
+                      ),
+                      React.createElement(
+                        "text",
+                        {
+                          x: (BW - 9) * sc,
+                          y: BH * sc - 6,
+                          textAnchor: "middle",
+                          fontSize: Math.max(6, sc * 0.85),
+                          fill: "rgba(200,80,80,0.9)",
+                          fontFamily: "'Share Tech Mono',serif",
+                        },
+                        "P1",
+                      ),
+                      React.createElement("line", {
+                        x1: 0,
+                        y1: 36 * sc,
+                        x2: BW * sc,
+                        y2: 36 * sc,
+                        stroke: "rgba(255,255,255,0.15)",
+                        strokeWidth: 1,
+                        strokeDasharray: "8,4",
+                      }),
+                      React.createElement(
+                        "text",
+                        {
+                          x: (BW * sc) / 2,
+                          y: BH * sc - 4,
+                          textAnchor: "middle",
+                          fontSize: Math.max(6, sc * 0.85),
+                          fill: "rgba(200,80,80,0.7)",
+                          fontFamily: "'Share Tech Mono',serif",
+                          letterSpacing: 1,
+                        },
+                        "P1 ATTACKER (LOYALIST) — reserve Saturnine units deploy here Turn 1",
+                      ),
+                    ),
+                  !isIgnis &&
+                    React.createElement(
+                      "g",
+                      null,
+                      React.createElement("rect", {
+                        x: 0,
+                        y: 36 * sc,
+                        width: BW * sc,
+                        height: 12 * sc,
+                        fill: "rgba(155,45,45,0.18)",
+                        stroke: "rgba(155,45,45,0.7)",
+                        strokeWidth: 1.5,
+                        strokeDasharray: "6,4",
+                      }),
+                      React.createElement(
+                        "text",
+                        {
+                          x: (BW * sc) / 2,
+                          y: 36 * sc + 10,
+                          textAnchor: "middle",
+                          fontSize: Math.max(6, sc * 0.9),
+                          fill: "rgba(200,80,80,0.9)",
+                          fontFamily: "'Share Tech Mono',serif",
+                          letterSpacing: 1,
+                        },
+                        'P1 ATTACKER ZONE (18"×12")',
+                      ),
+                      satMission === "breakthrough" &&
+                        React.createElement(
+                          "text",
+                          {
+                            x: 4,
+                            y: (BH * sc) / 2,
+                            fontSize: Math.max(12, sc * 2),
+                            fill: "rgba(42,111,180,0.6)",
+                            fontFamily: "sans-serif",
+                          },
+                          "↙",
+                        ),
+                      satMission === "breakthrough" &&
+                        React.createElement(
+                          "text",
+                          {
+                            x: BW * sc - 16,
+                            y: (BH * sc) / 2,
+                            fontSize: Math.max(12, sc * 2),
+                            fill: "rgba(42,111,180,0.6)",
+                            fontFamily: "sans-serif",
+                          },
+                          "↘",
+                        ),
+                      satMission === "breakthrough" &&
+                        React.createElement(
+                          "text",
+                          {
+                            x: (BW * sc) / 2 - 8,
+                            y: 14,
+                            fontSize: Math.max(12, sc * 2),
+                            fill: "rgba(42,111,180,0.6)",
+                            fontFamily: "sans-serif",
+                          },
+                          "↓",
+                        ),
+                      satMission === "breakthrough" &&
+                        React.createElement(
+                          "text",
+                          {
+                            x: (BW * sc) / 2 - 80,
+                            y: 12,
+                            fontSize: Math.max(6, sc * 0.85),
+                            fill: "rgba(42,111,180,0.7)",
+                            fontFamily: "'Share Tech Mono',serif",
+                          },
+                          "← P2 ENCIRCLING RESERVES →",
+                        ),
+                      satMission === "dawn_raid" &&
+                        React.createElement("rect", {
+                          x: (BW * sc) / 2 - 120,
+                          y: (BH * sc) / 2 - 10,
+                          width: 240,
+                          height: 18,
+                          fill: "rgba(200,60,0,0.18)",
+                          rx: 3,
+                        }),
+                      satMission === "dawn_raid" &&
+                        React.createElement(
+                          "text",
+                          {
+                            x: (BW * sc) / 2,
+                            y: (BH * sc) / 2 + 4,
+                            textAnchor: "middle",
+                            fontSize: Math.max(6, sc * 0.9),
+                            fill: "rgba(240,100,30,1)",
+                            fontFamily: "'Share Tech Mono',serif",
+                            fontWeight: "bold",
+                          },
+                          "⚡ TURN 1: ALL SHOOTING = SNAP SHOTS",
+                        ),
+                      ...[1, 2, 3].map((c) =>
+                        React.createElement("line", {
+                          key: "sc" + c,
+                          x1: c * COL * sc,
+                          y1: 0,
+                          x2: c * COL * sc,
+                          y2: BH * sc,
+                          stroke: "rgba(255,255,255,0.15)",
+                          strokeWidth: 1,
+                        }),
+                      ),
+                      ...[1, 2, 3].map((r) =>
+                        React.createElement("line", {
+                          key: "sr" + r,
+                          x1: 0,
+                          y1: r * ROW * sc,
+                          x2: BW * sc,
+                          y2: r * ROW * sc,
+                          stroke: "rgba(255,255,255,0.15)",
+                          strokeWidth: 1,
+                        }),
+                      ),
+                      ...[0, 1, 2, 3]
+                        .map((r) =>
+                          [0, 1, 2, 3].map((c) =>
+                            r < 3
+                              ? React.createElement(
+                                  "text",
+                                  {
+                                    key: "sl" + r + c,
+                                    x: (c * COL + COL / 2) * sc,
+                                    y: (r * ROW + ROW / 2) * sc + 4,
+                                    textAnchor: "middle",
+                                    fontSize: Math.max(5, sc * 0.7),
+                                    fill: "rgba(255,255,255,0.2)",
+                                    fontFamily: "'Share Tech Mono',serif",
+                                  },
+                                  "R" + (r + 1) + "C" + (c + 1),
+                                )
+                              : null,
+                          ),
+                        )
+                        .flat(),
+                    ),
+                  ...objs.map((obj, i) =>
+                    React.createElement(
+                      "g",
+                      { key: "satobj" + i },
+                      React.createElement("circle", {
+                        cx: obj.x * sc,
+                        cy: obj.y * sc,
+                        r: (7 * sc) / 8,
+                        fill: "rgba(255,215,0,0.15)",
+                        stroke: "rgba(255,215,0,0.5)",
+                        strokeWidth: 1,
+                      }),
+                      React.createElement("circle", {
+                        cx: obj.x * sc,
+                        cy: obj.y * sc,
+                        r: (5 * sc) / 8,
+                        fill: "rgba(200,160,0,0.85)",
+                        stroke: "rgba(255,215,0,0.9)",
+                        strokeWidth: 1.5,
+                      }),
+                      React.createElement(
+                        "text",
+                        {
+                          x: obj.x * sc,
+                          y: obj.y * sc + 3,
+                          textAnchor: "middle",
+                          fontSize: Math.max(6, sc * 0.85),
+                          fill: "white",
                           fontFamily: "'Share Tech Mono',serif",
                           fontWeight: "bold",
                         },
-                        "⚡ TURN 1: ALL SHOOTING = SNAP SHOTS",
+                        obj.vp === 1 ? "1" : String(obj.vp),
                       ),
-                    ...[1, 2, 3].map((c) =>
+                      React.createElement(
+                        "text",
+                        {
+                          x: obj.x * sc,
+                          y: obj.y * sc + (5 * sc) / 8 + Math.max(7, sc),
+                          textAnchor: "middle",
+                          fontSize: Math.max(5, sc * 0.7),
+                          fill: "rgba(255,215,0,0.8)",
+                          fontFamily: "'Share Tech Mono',serif",
+                        },
+                        obj.vp + "VP",
+                      ),
+                    ),
+                  ),
+                  React.createElement(
+                    "text",
+                    {
+                      x: 4,
+                      y: BH * sc - 4,
+                      fontSize: Math.max(6, sc * 0.8),
+                      fill: "rgba(255,200,100,0.6)",
+                      fontFamily: "'Share Tech Mono',serif",
+                    },
+                    "SAT: " + (SATURNINE_MISSIONS_INFO[satMission] || {}).name,
+                  ),
+                );
+              })(),
+            missionType === "leviathan" &&
+              showZones &&
+              (() => {
+                const sc = deployScale;
+                const BW = BOARD_W; // 72
+                const BH = BOARD_H; // 48
+                const levInfo = LEVIATHAN_MISSIONS_INFO[levMission] || {};
+
+                const LEV_OBJECTIVES = {
+                  charge_khalekaorus: [
+                    { x: 27, y: 12, vp: 2, sector: "S1" },
+                    { x: 27, y: 36, vp: 2, sector: "S2" },
+                    { x: 45, y: 24, vp: 2, sector: "S3" },
+                  ],
+                  clash_behemoths: [
+                    { x: 9, y: 36, vp: 2, sector: "S1" },
+                    { x: 27, y: 36, vp: 2, sector: "S2" },
+                    { x: 45, y: 12, vp: 2, sector: "S3" },
+                    { x: 63, y: 9, vp: 2, sector: "S4" },
+                  ],
+                  rolling_bastions: [
+                    { x: 18, y: 18, vp: "?", sector: "S1" },
+                    { x: 54, y: 18, vp: "?", sector: "S2" },
+                    { x: 18, y: 30, vp: "?", sector: "S3" },
+                    { x: 54, y: 30, vp: "?", sector: "S4" },
+                  ],
+                  break_the_lines: [
+                    { x: 63, y: 6, vp: 1, sector: "S1" },
+                    { x: 9, y: 24, vp: 2, sector: "S2" },
+                    { x: 63, y: 24, vp: 3, sector: "S3" },
+                    { x: 18, y: 42, vp: 4, sector: "S4" },
+                  ],
+                };
+                const objs = LEV_OBJECTIVES[levMission] || [];
+
+                const sectorAlpha = "rgba(255,255,255,0.08)";
+                const LEV_SECTORS = {
+                  charge_khalekaorus: [
+                    {
+                      label: "S1",
+                      x: 18,
+                      y: 0,
+                      w: 18,
+                      h: 24,
+                      stroke: "rgba(255,255,255,0.25)",
+                    },
+                    {
+                      label: "S2",
+                      x: 18,
+                      y: 24,
+                      w: 18,
+                      h: 24,
+                      stroke: "rgba(255,255,255,0.25)",
+                    },
+                    {
+                      label: "S3",
+                      x: 36,
+                      y: 0,
+                      w: 18,
+                      h: 48,
+                      stroke: "rgba(255,255,255,0.25)",
+                    },
+                    {
+                      label: "S4 (ATTACKER)",
+                      x: 54,
+                      y: 0,
+                      w: 18,
+                      h: 48,
+                      stroke: "rgba(200,80,80,0.3)",
+                    },
+                  ],
+                  clash_behemoths: [
+                    {
+                      label: "S1",
+                      x: 0,
+                      y: 24,
+                      w: 18,
+                      h: 24,
+                      stroke: "rgba(255,255,255,0.25)",
+                    },
+                    {
+                      label: "S2",
+                      x: 18,
+                      y: 24,
+                      w: 18,
+                      h: 24,
+                      stroke: "rgba(255,255,255,0.25)",
+                    },
+                    {
+                      label: "S3",
+                      x: 36,
+                      y: 0,
+                      w: 18,
+                      h: 24,
+                      stroke: "rgba(255,255,255,0.25)",
+                    },
+                    {
+                      label: "S4",
+                      x: 54,
+                      y: 0,
+                      w: 18,
+                      h: 48,
+                      stroke: "rgba(255,255,255,0.25)",
+                    },
+                  ],
+                  rolling_bastions: [
+                    {
+                      label: "S1",
+                      x: 0,
+                      y: 12,
+                      w: 36,
+                      h: 12,
+                      stroke: "rgba(255,255,255,0.25)",
+                    },
+                    {
+                      label: "S2",
+                      x: 36,
+                      y: 12,
+                      w: 36,
+                      h: 12,
+                      stroke: "rgba(255,255,255,0.25)",
+                    },
+                    {
+                      label: "S3",
+                      x: 0,
+                      y: 24,
+                      w: 36,
+                      h: 12,
+                      stroke: "rgba(255,255,255,0.25)",
+                    },
+                    {
+                      label: "S4",
+                      x: 36,
+                      y: 24,
+                      w: 36,
+                      h: 12,
+                      stroke: "rgba(255,255,255,0.25)",
+                    },
+                  ],
+                  break_the_lines: [
+                    {
+                      label: "S1·1VP",
+                      x: 54,
+                      y: 0,
+                      w: 18,
+                      h: 12,
+                      stroke: "rgba(255,200,80,0.4)",
+                    },
+                    {
+                      label: "S2·2VP",
+                      x: 0,
+                      y: 12,
+                      w: 18,
+                      h: 24,
+                      stroke: "rgba(255,200,80,0.5)",
+                    },
+                    {
+                      label: "S3·3VP",
+                      x: 54,
+                      y: 12,
+                      w: 18,
+                      h: 24,
+                      stroke: "rgba(255,200,80,0.6)",
+                    },
+                    {
+                      label: "S4·4VP",
+                      x: 0,
+                      y: 36,
+                      w: 36,
+                      h: 12,
+                      stroke: "rgba(255,200,80,0.7)",
+                    },
+                  ],
+                };
+                const sectors = LEV_SECTORS[levMission] || [];
+
+                return React.createElement(
+                  "svg",
+                  {
+                    style: {
+                      position: "absolute",
+                      inset: 0,
+                      width: BW * sc,
+                      height: BH * sc,
+                      pointerEvents: "none",
+                    },
+                  },
+                  levMission === "charge_khalekaorus" &&
+                    React.createElement(
+                      "g",
+                      null,
+                      React.createElement("rect", {
+                        x: 54 * sc,
+                        y: 0,
+                        width: 18 * sc,
+                        height: BH * sc,
+                        fill: "rgba(155,45,45,0.08)",
+                        stroke: "none",
+                      }),
+                      React.createElement("rect", {
+                        x: 18 * sc,
+                        y: 17 * sc,
+                        width: 27 * sc,
+                        height: 14 * sc,
+                        fill: "rgba(42,111,180,0.18)",
+                        stroke: "rgba(42,111,180,0.7)",
+                        strokeWidth: 1.5,
+                        strokeDasharray: "6,3",
+                      }),
+                      React.createElement(
+                        "text",
+                        {
+                          x: 31.5 * sc,
+                          y: 24 * sc + 3,
+                          textAnchor: "middle",
+                          fontSize: Math.max(5, sc * 0.75),
+                          fill: "rgba(80,160,240,1)",
+                          fontFamily: "'Share Tech Mono',serif",
+                          fontWeight: "bold",
+                        },
+                        "P2 DEPLOY",
+                      ),
+                      React.createElement(
+                        "text",
+                        {
+                          x: 31.5 * sc,
+                          y: 24 * sc + Math.max(8, sc),
+                          textAnchor: "middle",
+                          fontSize: Math.max(5, sc * 0.65),
+                          fill: "rgba(80,140,220,0.8)",
+                          fontFamily: "'Share Tech Mono',serif",
+                        },
+                        '27"×14"',
+                      ),
                       React.createElement("line", {
-                        key: "sc" + c,
-                        x1: c * COL * sc,
+                        x1: 18 * sc,
                         y1: 0,
-                        x2: c * COL * sc,
+                        x2: 18 * sc,
                         y2: BH * sc,
                         stroke: "rgba(255,255,255,0.15)",
                         strokeWidth: 1,
+                        strokeDasharray: "6,4",
                       }),
-                    ),
-                    ...[1, 2, 3].map((r) =>
                       React.createElement("line", {
-                        key: "sr" + r,
-                        x1: 0,
-                        y1: r * ROW * sc,
-                        x2: BW * sc,
-                        y2: r * ROW * sc,
+                        x1: 36 * sc,
+                        y1: 0,
+                        x2: 36 * sc,
+                        y2: BH * sc,
                         stroke: "rgba(255,255,255,0.15)",
                         strokeWidth: 1,
+                        strokeDasharray: "6,4",
                       }),
+                      React.createElement("line", {
+                        x1: 54 * sc,
+                        y1: 0,
+                        x2: 54 * sc,
+                        y2: BH * sc,
+                        stroke: "rgba(255,255,255,0.15)",
+                        strokeWidth: 1,
+                        strokeDasharray: "6,4",
+                      }),
+                      React.createElement("line", {
+                        x1: 18 * sc,
+                        y1: 24 * sc,
+                        x2: 36 * sc,
+                        y2: 24 * sc,
+                        stroke: "rgba(255,255,255,0.15)",
+                        strokeWidth: 1,
+                        strokeDasharray: "6,4",
+                      }),
+                      React.createElement(
+                        "text",
+                        {
+                          x: BW * sc - 3,
+                          y: (BH * sc) / 2 + 30,
+                          textAnchor: "middle",
+                          fontSize: Math.max(5, sc * 0.75),
+                          fill: "rgba(200,80,80,0.7)",
+                          fontFamily: "'Share Tech Mono',serif",
+                          transform: `rotate(-90,${BW * sc - 3},${(BH * sc) / 2})`,
+                        },
+                        "P1 ATTACKER EDGE ▶",
+                      ),
+                      React.createElement(
+                        "text",
+                        {
+                          x: 3,
+                          y: (BH * sc) / 2 - 20,
+                          textAnchor: "middle",
+                          fontSize: Math.max(5, sc * 0.75),
+                          fill: "rgba(80,140,220,0.7)",
+                          fontFamily: "'Share Tech Mono',serif",
+                          transform: `rotate(-90,3,${(BH * sc) / 2})`,
+                        },
+                        "◀ P2 RESERVES ENTRY",
+                      ),
                     ),
-                    ...[0, 1, 2, 3]
-                      .map((r) =>
-                        [0, 1, 2, 3].map((c) =>
-                          r < 3
-                            ? React.createElement(
-                                "text",
-                                {
-                                  key: "sl" + r + c,
-                                  x: (c * COL + COL / 2) * sc,
-                                  y: (r * ROW + ROW / 2) * sc + 4,
-                                  textAnchor: "middle",
-                                  fontSize: Math.max(5, sc * 0.7),
-                                  fill: "rgba(255,255,255,0.2)",
-                                  fontFamily: "'Share Tech Mono',serif",
-                                },
-                                "R" + (r + 1) + "C" + (c + 1),
-                              )
-                            : null,
-                        ),
-                      )
-                      .flat(),
-                  ),
-                ...objs.map((obj, i) =>
-                  React.createElement(
-                    "g",
-                    { key: "satobj" + i },
-                    React.createElement("circle", {
-                      cx: obj.x * sc,
-                      cy: obj.y * sc,
-                      r: (7 * sc) / 8,
-                      fill: "rgba(255,215,0,0.15)",
-                      stroke: "rgba(255,215,0,0.5)",
-                      strokeWidth: 1,
-                    }),
-                    React.createElement("circle", {
-                      cx: obj.x * sc,
-                      cy: obj.y * sc,
-                      r: (5 * sc) / 8,
-                      fill: "rgba(200,160,0,0.85)",
-                      stroke: "rgba(255,215,0,0.9)",
-                      strokeWidth: 1.5,
-                    }),
+                  levMission === "clash_behemoths" &&
                     React.createElement(
-                      "text",
-                      {
-                        x: obj.x * sc,
-                        y: obj.y * sc + 3,
-                        textAnchor: "middle",
-                        fontSize: Math.max(6, sc * 0.85),
-                        fill: "white",
-                        fontFamily: "'Share Tech Mono',serif",
-                        fontWeight: "bold",
-                      },
-                      obj.vp === 1 ? "1" : String(obj.vp),
+                      "g",
+                      null,
+                      React.createElement("polygon", {
+                        points: `0,0 ${27 * sc},0 0,${24 * sc}`,
+                        fill: "rgba(155,45,45,0.2)",
+                        stroke: "rgba(200,80,80,0.7)",
+                        strokeWidth: 1.5,
+                        strokeDasharray: "6,3",
+                      }),
+                      React.createElement(
+                        "text",
+                        {
+                          x: 7 * sc,
+                          y: 10,
+                          textAnchor: "middle",
+                          fontSize: Math.max(5, sc * 0.75),
+                          fill: "rgba(220,100,100,1)",
+                          fontFamily: "'Share Tech Mono',serif",
+                          fontWeight: "bold",
+                        },
+                        "P1 DEPLOY",
+                      ),
+                      React.createElement(
+                        "text",
+                        {
+                          x: 7 * sc,
+                          y: 10 + Math.max(8, sc),
+                          textAnchor: "middle",
+                          fontSize: Math.max(5, sc * 0.65),
+                          fill: "rgba(200,80,80,0.8)",
+                          fontFamily: "'Share Tech Mono',serif",
+                        },
+                        '27"×24"',
+                      ),
+                      React.createElement("polygon", {
+                        points: `${45 * sc},${BH * sc} ${BW * sc},${BH * sc} ${BW * sc},${24 * sc}`,
+                        fill: "rgba(42,111,180,0.2)",
+                        stroke: "rgba(42,111,180,0.7)",
+                        strokeWidth: 1.5,
+                        strokeDasharray: "6,3",
+                      }),
+                      React.createElement(
+                        "text",
+                        {
+                          x: BW * sc - 7 * sc,
+                          y: BH * sc - 4,
+                          textAnchor: "middle",
+                          fontSize: Math.max(5, sc * 0.75),
+                          fill: "rgba(80,160,240,1)",
+                          fontFamily: "'Share Tech Mono',serif",
+                          fontWeight: "bold",
+                        },
+                        "P2 DEPLOY",
+                      ),
+                      React.createElement(
+                        "text",
+                        {
+                          x: BW * sc - 7 * sc,
+                          y: BH * sc - 4 - Math.max(8, sc),
+                          textAnchor: "middle",
+                          fontSize: Math.max(5, sc * 0.65),
+                          fill: "rgba(42,111,180,0.8)",
+                          fontFamily: "'Share Tech Mono',serif",
+                        },
+                        '27"×24"',
+                      ),
+                      React.createElement("line", {
+                        x1: 18 * sc,
+                        y1: BH * sc,
+                        x2: 18 * sc,
+                        y2: 24 * sc,
+                        stroke: "rgba(255,255,255,0.15)",
+                        strokeWidth: 1,
+                        strokeDasharray: "6,4",
+                      }),
+                      React.createElement("line", {
+                        x1: 0,
+                        y1: 24 * sc,
+                        x2: BW * sc,
+                        y2: 24 * sc,
+                        stroke: "rgba(255,255,255,0.15)",
+                        strokeWidth: 1,
+                        strokeDasharray: "6,4",
+                      }),
+                      React.createElement("line", {
+                        x1: 36 * sc,
+                        y1: 0,
+                        x2: 36 * sc,
+                        y2: 24 * sc,
+                        stroke: "rgba(255,255,255,0.15)",
+                        strokeWidth: 1,
+                        strokeDasharray: "6,4",
+                      }),
+                      React.createElement("line", {
+                        x1: 54 * sc,
+                        y1: 0,
+                        x2: 54 * sc,
+                        y2: BH * sc,
+                        stroke: "rgba(255,255,255,0.15)",
+                        strokeWidth: 1,
+                        strokeDasharray: "6,4",
+                      }),
+                      React.createElement(
+                        "text",
+                        {
+                          x: 3,
+                          y: (BH * sc) / 2 + 20,
+                          textAnchor: "middle",
+                          fontSize: Math.max(5, sc * 0.75),
+                          fill: "rgba(200,80,80,0.7)",
+                          fontFamily: "'Share Tech Mono',serif",
+                          transform: `rotate(-90,3,${(BH * sc) / 2})`,
+                        },
+                        "P1 ATTACKER EDGE ▶",
+                      ),
                     ),
+                  levMission === "rolling_bastions" &&
                     React.createElement(
-                      "text",
-                      {
-                        x: obj.x * sc,
-                        y: obj.y * sc + (5 * sc) / 8 + Math.max(7, sc),
-                        textAnchor: "middle",
-                        fontSize: Math.max(5, sc * 0.7),
-                        fill: "rgba(255,215,0,0.8)",
-                        fontFamily: "'Share Tech Mono',serif",
-                      },
-                      obj.vp + "VP",
+                      "g",
+                      null,
+                      React.createElement("rect", {
+                        x: 0,
+                        y: 0,
+                        width: BW * sc,
+                        height: 12 * sc,
+                        fill: "rgba(42,111,180,0.17)",
+                        stroke: "rgba(42,111,180,0.7)",
+                        strokeWidth: 1.5,
+                        strokeDasharray: "6,3",
+                      }),
+                      React.createElement(
+                        "text",
+                        {
+                          x: (BW * sc) / 2,
+                          y: 9,
+                          textAnchor: "middle",
+                          fontSize: Math.max(6, sc * 0.9),
+                          fill: "rgba(80,160,240,1)",
+                          fontFamily: "'Share Tech Mono',serif",
+                          fontWeight: "bold",
+                          letterSpacing: 1,
+                        },
+                        'P2 DEFENDER ZONE (12")',
+                      ),
+                      React.createElement("rect", {
+                        x: 0,
+                        y: 36 * sc,
+                        width: BW * sc,
+                        height: 12 * sc,
+                        fill: "rgba(155,45,45,0.17)",
+                        stroke: "rgba(200,80,80,0.7)",
+                        strokeWidth: 1.5,
+                        strokeDasharray: "6,3",
+                      }),
+                      React.createElement(
+                        "text",
+                        {
+                          x: (BW * sc) / 2,
+                          y: 36 * sc + 9,
+                          textAnchor: "middle",
+                          fontSize: Math.max(6, sc * 0.9),
+                          fill: "rgba(220,100,100,1)",
+                          fontFamily: "'Share Tech Mono',serif",
+                          fontWeight: "bold",
+                          letterSpacing: 1,
+                        },
+                        'P1 ATTACKER ZONE (12")',
+                      ),
+                      React.createElement("line", {
+                        x1: 0,
+                        y1: 24 * sc,
+                        x2: BW * sc,
+                        y2: 24 * sc,
+                        stroke: "rgba(255,255,255,0.2)",
+                        strokeWidth: 1,
+                        strokeDasharray: "8,4",
+                      }),
+                      React.createElement("line", {
+                        x1: 36 * sc,
+                        y1: 12 * sc,
+                        x2: 36 * sc,
+                        y2: 36 * sc,
+                        stroke: "rgba(255,255,255,0.2)",
+                        strokeWidth: 1,
+                        strokeDasharray: "8,4",
+                      }),
+                      React.createElement(
+                        "text",
+                        {
+                          x: (BW * sc) / 2,
+                          y: BH * sc - 3,
+                          textAnchor: "middle",
+                          fontSize: Math.max(5, sc * 0.7),
+                          fill: "rgba(200,80,80,0.5)",
+                          fontFamily: "'Share Tech Mono',serif",
+                        },
+                        "P1 ATTACKER BATTLEFIELD EDGE",
+                      ),
                     ),
-                  ),
-                ),
-                React.createElement(
-                  "text",
-                  {
-                    x: 4,
-                    y: BH * sc - 4,
-                    fontSize: Math.max(6, sc * 0.8),
-                    fill: "rgba(255,200,100,0.6)",
-                    fontFamily: "'Share Tech Mono',serif",
-                  },
-                  "SAT: " + (SATURNINE_MISSIONS_INFO[satMission] || {}).name,
-                ),
-              );
-            })(),
-          missionType === "leviathan" &&
-            showZones &&
-            (() => {
-              const sc = deployScale;
-              const BW = BOARD_W; // 72
-              const BH = BOARD_H; // 48
-              const levInfo = LEVIATHAN_MISSIONS_INFO[levMission] || {};
-
-              const LEV_OBJECTIVES = {
-                charge_khalekaorus: [
-                  { x: 27, y: 12, vp: 2, sector: "S1" },
-                  { x: 27, y: 36, vp: 2, sector: "S2" },
-                  { x: 45, y: 24, vp: 2, sector: "S3" },
-                ],
-                clash_behemoths: [
-                  { x: 9, y: 36, vp: 2, sector: "S1" },
-                  { x: 27, y: 36, vp: 2, sector: "S2" },
-                  { x: 45, y: 12, vp: 2, sector: "S3" },
-                  { x: 63, y: 9, vp: 2, sector: "S4" },
-                ],
-                rolling_bastions: [
-                  { x: 18, y: 18, vp: "?", sector: "S1" },
-                  { x: 54, y: 18, vp: "?", sector: "S2" },
-                  { x: 18, y: 30, vp: "?", sector: "S3" },
-                  { x: 54, y: 30, vp: "?", sector: "S4" },
-                ],
-                break_the_lines: [
-                  { x: 63, y: 6, vp: 1, sector: "S1" },
-                  { x: 9, y: 24, vp: 2, sector: "S2" },
-                  { x: 63, y: 24, vp: 3, sector: "S3" },
-                  { x: 18, y: 42, vp: 4, sector: "S4" },
-                ],
-              };
-              const objs = LEV_OBJECTIVES[levMission] || [];
-
-              const sectorAlpha = "rgba(255,255,255,0.08)";
-              const LEV_SECTORS = {
-                charge_khalekaorus: [
-                  {
-                    label: "S1",
-                    x: 18,
-                    y: 0,
-                    w: 18,
-                    h: 24,
-                    stroke: "rgba(255,255,255,0.25)",
-                  },
-                  {
-                    label: "S2",
-                    x: 18,
-                    y: 24,
-                    w: 18,
-                    h: 24,
-                    stroke: "rgba(255,255,255,0.25)",
-                  },
-                  {
-                    label: "S3",
-                    x: 36,
-                    y: 0,
-                    w: 18,
-                    h: 48,
-                    stroke: "rgba(255,255,255,0.25)",
-                  },
-                  {
-                    label: "S4 (ATTACKER)",
-                    x: 54,
-                    y: 0,
-                    w: 18,
-                    h: 48,
-                    stroke: "rgba(200,80,80,0.3)",
-                  },
-                ],
-                clash_behemoths: [
-                  {
-                    label: "S1",
-                    x: 0,
-                    y: 24,
-                    w: 18,
-                    h: 24,
-                    stroke: "rgba(255,255,255,0.25)",
-                  },
-                  {
-                    label: "S2",
-                    x: 18,
-                    y: 24,
-                    w: 18,
-                    h: 24,
-                    stroke: "rgba(255,255,255,0.25)",
-                  },
-                  {
-                    label: "S3",
-                    x: 36,
-                    y: 0,
-                    w: 18,
-                    h: 24,
-                    stroke: "rgba(255,255,255,0.25)",
-                  },
-                  {
-                    label: "S4",
-                    x: 54,
-                    y: 0,
-                    w: 18,
-                    h: 48,
-                    stroke: "rgba(255,255,255,0.25)",
-                  },
-                ],
-                rolling_bastions: [
-                  {
-                    label: "S1",
-                    x: 0,
-                    y: 12,
-                    w: 36,
-                    h: 12,
-                    stroke: "rgba(255,255,255,0.25)",
-                  },
-                  {
-                    label: "S2",
-                    x: 36,
-                    y: 12,
-                    w: 36,
-                    h: 12,
-                    stroke: "rgba(255,255,255,0.25)",
-                  },
-                  {
-                    label: "S3",
-                    x: 0,
-                    y: 24,
-                    w: 36,
-                    h: 12,
-                    stroke: "rgba(255,255,255,0.25)",
-                  },
-                  {
-                    label: "S4",
-                    x: 36,
-                    y: 24,
-                    w: 36,
-                    h: 12,
-                    stroke: "rgba(255,255,255,0.25)",
-                  },
-                ],
-                break_the_lines: [
-                  {
-                    label: "S1·1VP",
-                    x: 54,
-                    y: 0,
-                    w: 18,
-                    h: 12,
-                    stroke: "rgba(255,200,80,0.4)",
-                  },
-                  {
-                    label: "S2·2VP",
-                    x: 0,
-                    y: 12,
-                    w: 18,
-                    h: 24,
-                    stroke: "rgba(255,200,80,0.5)",
-                  },
-                  {
-                    label: "S3·3VP",
-                    x: 54,
-                    y: 12,
-                    w: 18,
-                    h: 24,
-                    stroke: "rgba(255,200,80,0.6)",
-                  },
-                  {
-                    label: "S4·4VP",
-                    x: 0,
-                    y: 36,
-                    w: 36,
-                    h: 12,
-                    stroke: "rgba(255,200,80,0.7)",
-                  },
-                ],
-              };
-              const sectors = LEV_SECTORS[levMission] || [];
-
-              return React.createElement(
-                "svg",
-                {
-                  style: {
-                    position: "absolute",
-                    inset: 0,
-                    width: BW * sc,
-                    height: BH * sc,
-                    pointerEvents: "none",
-                  },
-                },
-                levMission === "charge_khalekaorus" &&
-                  React.createElement(
-                    "g",
-                    null,
-                    React.createElement("rect", {
-                      x: 54 * sc,
-                      y: 0,
-                      width: 18 * sc,
-                      height: BH * sc,
-                      fill: "rgba(155,45,45,0.08)",
-                      stroke: "none",
-                    }),
-                    React.createElement("rect", {
-                      x: 18 * sc,
-                      y: 17 * sc,
-                      width: 27 * sc,
-                      height: 14 * sc,
-                      fill: "rgba(42,111,180,0.18)",
-                      stroke: "rgba(42,111,180,0.7)",
-                      strokeWidth: 1.5,
-                      strokeDasharray: "6,3",
-                    }),
+                  levMission === "break_the_lines" &&
                     React.createElement(
-                      "text",
-                      {
-                        x: 31.5 * sc,
-                        y: 24 * sc + 3,
-                        textAnchor: "middle",
-                        fontSize: Math.max(5, sc * 0.75),
-                        fill: "rgba(80,160,240,1)",
-                        fontFamily: "'Share Tech Mono',serif",
-                        fontWeight: "bold",
-                      },
-                      "P2 DEPLOY",
+                      "g",
+                      null,
+                      React.createElement("polygon", {
+                        points: `0,0 ${36 * sc},0 ${36 * sc},${9 * sc} 0,${20 * sc}`,
+                        fill: "rgba(42,111,180,0.18)",
+                        stroke: "rgba(42,111,180,0.7)",
+                        strokeWidth: 1.5,
+                        strokeDasharray: "6,3",
+                      }),
+                      React.createElement(
+                        "text",
+                        {
+                          x: 14 * sc,
+                          y: 8,
+                          textAnchor: "middle",
+                          fontSize: Math.max(5, sc * 0.75),
+                          fill: "rgba(80,160,240,1)",
+                          fontFamily: "'Share Tech Mono',serif",
+                          fontWeight: "bold",
+                        },
+                        "P2 DEFENDER",
+                      ),
+                      React.createElement(
+                        "text",
+                        {
+                          x: 14 * sc,
+                          y: 8 + Math.max(8, sc),
+                          textAnchor: "middle",
+                          fontSize: Math.max(5, sc * 0.65),
+                          fill: "rgba(42,111,180,0.8)",
+                          fontFamily: "'Share Tech Mono',serif",
+                        },
+                        '36"w · 20"deep',
+                      ),
+                      React.createElement("polygon", {
+                        points: `${BW * sc},${BH * sc} ${36 * sc},${BH * sc} ${36 * sc},${39 * sc} ${BW * sc},${28 * sc}`,
+                        fill: "rgba(155,45,45,0.18)",
+                        stroke: "rgba(200,80,80,0.7)",
+                        strokeWidth: 1.5,
+                        strokeDasharray: "6,3",
+                      }),
+                      React.createElement(
+                        "text",
+                        {
+                          x: BW * sc - 14 * sc,
+                          y: BH * sc - 8,
+                          textAnchor: "middle",
+                          fontSize: Math.max(5, sc * 0.75),
+                          fill: "rgba(220,100,100,1)",
+                          fontFamily: "'Share Tech Mono',serif",
+                          fontWeight: "bold",
+                        },
+                        "P1 ATTACKER",
+                      ),
+                      React.createElement(
+                        "text",
+                        {
+                          x: BW * sc - 14 * sc,
+                          y: BH * sc - 8 - Math.max(8, sc),
+                          textAnchor: "middle",
+                          fontSize: Math.max(5, sc * 0.65),
+                          fill: "rgba(200,80,80,0.8)",
+                          fontFamily: "'Share Tech Mono',serif",
+                        },
+                        '36"w · 20"deep',
+                      ),
+                      React.createElement("line", {
+                        x1: 54 * sc,
+                        y1: 0,
+                        x2: 54 * sc,
+                        y2: 12 * sc,
+                        stroke: "rgba(255,255,255,0.15)",
+                        strokeWidth: 1,
+                        strokeDasharray: "5,3",
+                      }),
+                      React.createElement("line", {
+                        x1: 0,
+                        y1: 12 * sc,
+                        x2: BW * sc,
+                        y2: 12 * sc,
+                        stroke: "rgba(255,255,255,0.15)",
+                        strokeWidth: 1,
+                        strokeDasharray: "5,3",
+                      }),
+                      React.createElement("line", {
+                        x1: 0,
+                        y1: 36 * sc,
+                        x2: BW * sc,
+                        y2: 36 * sc,
+                        stroke: "rgba(255,255,255,0.15)",
+                        strokeWidth: 1,
+                        strokeDasharray: "5,3",
+                      }),
+                      React.createElement(
+                        "text",
+                        {
+                          x: (BW * sc) / 2,
+                          y: BH * sc - 3,
+                          textAnchor: "middle",
+                          fontSize: Math.max(5, sc * 0.7),
+                          fill: "rgba(200,80,80,0.5)",
+                          fontFamily: "'Share Tech Mono',serif",
+                        },
+                        "P1 ATTACKER BATTLEFIELD EDGE",
+                      ),
                     ),
+                  ...sectors.map((s, i) =>
                     React.createElement(
-                      "text",
-                      {
-                        x: 31.5 * sc,
-                        y: 24 * sc + Math.max(8, sc),
-                        textAnchor: "middle",
-                        fontSize: Math.max(5, sc * 0.65),
-                        fill: "rgba(80,140,220,0.8)",
-                        fontFamily: "'Share Tech Mono',serif",
-                      },
-                      '27"×14"',
-                    ),
-                    React.createElement("line", {
-                      x1: 18 * sc,
-                      y1: 0,
-                      x2: 18 * sc,
-                      y2: BH * sc,
-                      stroke: "rgba(255,255,255,0.15)",
-                      strokeWidth: 1,
-                      strokeDasharray: "6,4",
-                    }),
-                    React.createElement("line", {
-                      x1: 36 * sc,
-                      y1: 0,
-                      x2: 36 * sc,
-                      y2: BH * sc,
-                      stroke: "rgba(255,255,255,0.15)",
-                      strokeWidth: 1,
-                      strokeDasharray: "6,4",
-                    }),
-                    React.createElement("line", {
-                      x1: 54 * sc,
-                      y1: 0,
-                      x2: 54 * sc,
-                      y2: BH * sc,
-                      stroke: "rgba(255,255,255,0.15)",
-                      strokeWidth: 1,
-                      strokeDasharray: "6,4",
-                    }),
-                    React.createElement("line", {
-                      x1: 18 * sc,
-                      y1: 24 * sc,
-                      x2: 36 * sc,
-                      y2: 24 * sc,
-                      stroke: "rgba(255,255,255,0.15)",
-                      strokeWidth: 1,
-                      strokeDasharray: "6,4",
-                    }),
-                    React.createElement(
-                      "text",
-                      {
-                        x: BW * sc - 3,
-                        y: (BH * sc) / 2 + 30,
-                        textAnchor: "middle",
-                        fontSize: Math.max(5, sc * 0.75),
-                        fill: "rgba(200,80,80,0.7)",
-                        fontFamily: "'Share Tech Mono',serif",
-                        transform: `rotate(-90,${BW * sc - 3},${(BH * sc) / 2})`,
-                      },
-                      "P1 ATTACKER EDGE ▶",
-                    ),
-                    React.createElement(
-                      "text",
-                      {
-                        x: 3,
-                        y: (BH * sc) / 2 - 20,
-                        textAnchor: "middle",
-                        fontSize: Math.max(5, sc * 0.75),
-                        fill: "rgba(80,140,220,0.7)",
-                        fontFamily: "'Share Tech Mono',serif",
-                        transform: `rotate(-90,3,${(BH * sc) / 2})`,
-                      },
-                      "◀ P2 RESERVES ENTRY",
-                    ),
-                  ),
-                levMission === "clash_behemoths" &&
-                  React.createElement(
-                    "g",
-                    null,
-                    React.createElement("polygon", {
-                      points: `0,0 ${27 * sc},0 0,${24 * sc}`,
-                      fill: "rgba(155,45,45,0.2)",
-                      stroke: "rgba(200,80,80,0.7)",
-                      strokeWidth: 1.5,
-                      strokeDasharray: "6,3",
-                    }),
-                    React.createElement(
-                      "text",
-                      {
-                        x: 7 * sc,
-                        y: 10,
-                        textAnchor: "middle",
-                        fontSize: Math.max(5, sc * 0.75),
-                        fill: "rgba(220,100,100,1)",
-                        fontFamily: "'Share Tech Mono',serif",
-                        fontWeight: "bold",
-                      },
-                      "P1 DEPLOY",
-                    ),
-                    React.createElement(
-                      "text",
-                      {
-                        x: 7 * sc,
-                        y: 10 + Math.max(8, sc),
-                        textAnchor: "middle",
-                        fontSize: Math.max(5, sc * 0.65),
-                        fill: "rgba(200,80,80,0.8)",
-                        fontFamily: "'Share Tech Mono',serif",
-                      },
-                      '27"×24"',
-                    ),
-                    React.createElement("polygon", {
-                      points: `${45 * sc},${BH * sc} ${BW * sc},${BH * sc} ${BW * sc},${24 * sc}`,
-                      fill: "rgba(42,111,180,0.2)",
-                      stroke: "rgba(42,111,180,0.7)",
-                      strokeWidth: 1.5,
-                      strokeDasharray: "6,3",
-                    }),
-                    React.createElement(
-                      "text",
-                      {
-                        x: BW * sc - 7 * sc,
-                        y: BH * sc - 4,
-                        textAnchor: "middle",
-                        fontSize: Math.max(5, sc * 0.75),
-                        fill: "rgba(80,160,240,1)",
-                        fontFamily: "'Share Tech Mono',serif",
-                        fontWeight: "bold",
-                      },
-                      "P2 DEPLOY",
-                    ),
-                    React.createElement(
-                      "text",
-                      {
-                        x: BW * sc - 7 * sc,
-                        y: BH * sc - 4 - Math.max(8, sc),
-                        textAnchor: "middle",
-                        fontSize: Math.max(5, sc * 0.65),
-                        fill: "rgba(42,111,180,0.8)",
-                        fontFamily: "'Share Tech Mono',serif",
-                      },
-                      '27"×24"',
-                    ),
-                    React.createElement("line", {
-                      x1: 18 * sc,
-                      y1: BH * sc,
-                      x2: 18 * sc,
-                      y2: 24 * sc,
-                      stroke: "rgba(255,255,255,0.15)",
-                      strokeWidth: 1,
-                      strokeDasharray: "6,4",
-                    }),
-                    React.createElement("line", {
-                      x1: 0,
-                      y1: 24 * sc,
-                      x2: BW * sc,
-                      y2: 24 * sc,
-                      stroke: "rgba(255,255,255,0.15)",
-                      strokeWidth: 1,
-                      strokeDasharray: "6,4",
-                    }),
-                    React.createElement("line", {
-                      x1: 36 * sc,
-                      y1: 0,
-                      x2: 36 * sc,
-                      y2: 24 * sc,
-                      stroke: "rgba(255,255,255,0.15)",
-                      strokeWidth: 1,
-                      strokeDasharray: "6,4",
-                    }),
-                    React.createElement("line", {
-                      x1: 54 * sc,
-                      y1: 0,
-                      x2: 54 * sc,
-                      y2: BH * sc,
-                      stroke: "rgba(255,255,255,0.15)",
-                      strokeWidth: 1,
-                      strokeDasharray: "6,4",
-                    }),
-                    React.createElement(
-                      "text",
-                      {
-                        x: 3,
-                        y: (BH * sc) / 2 + 20,
-                        textAnchor: "middle",
-                        fontSize: Math.max(5, sc * 0.75),
-                        fill: "rgba(200,80,80,0.7)",
-                        fontFamily: "'Share Tech Mono',serif",
-                        transform: `rotate(-90,3,${(BH * sc) / 2})`,
-                      },
-                      "P1 ATTACKER EDGE ▶",
+                      "g",
+                      { key: "levS" + i },
+                      React.createElement("rect", {
+                        x: s.x * sc,
+                        y: s.y * sc,
+                        width: s.w * sc,
+                        height: s.h * sc,
+                        fill: sectorAlpha,
+                        stroke: s.stroke,
+                        strokeWidth: 1.5,
+                        strokeDasharray: "5,3",
+                      }),
+                      React.createElement(
+                        "text",
+                        {
+                          x: (s.x + s.w / 2) * sc,
+                          y: (s.y + s.h / 2) * sc + 4,
+                          textAnchor: "middle",
+                          fontSize: Math.max(6, sc * 0.85),
+                          fill: "rgba(255,215,0,0.5)",
+                          fontFamily: "'Share Tech Mono',serif",
+                          fontWeight: "bold",
+                        },
+                        s.label,
+                      ),
                     ),
                   ),
-                levMission === "rolling_bastions" &&
-                  React.createElement(
-                    "g",
-                    null,
-                    React.createElement("rect", {
-                      x: 0,
-                      y: 0,
-                      width: BW * sc,
-                      height: 12 * sc,
-                      fill: "rgba(42,111,180,0.17)",
-                      stroke: "rgba(42,111,180,0.7)",
-                      strokeWidth: 1.5,
-                      strokeDasharray: "6,3",
-                    }),
+                  ...objs.map((obj, i) =>
                     React.createElement(
-                      "text",
-                      {
-                        x: (BW * sc) / 2,
-                        y: 9,
-                        textAnchor: "middle",
-                        fontSize: Math.max(6, sc * 0.9),
-                        fill: "rgba(80,160,240,1)",
-                        fontFamily: "'Share Tech Mono',serif",
-                        fontWeight: "bold",
-                        letterSpacing: 1,
-                      },
-                      'P2 DEFENDER ZONE (12")',
+                      "g",
+                      { key: "levobj" + i },
+                      React.createElement("circle", {
+                        cx: obj.x * sc,
+                        cy: obj.y * sc,
+                        r: (7 * sc) / 8,
+                        fill: "rgba(255,215,0,0.15)",
+                        stroke: "rgba(255,215,0,0.5)",
+                        strokeWidth: 1,
+                      }),
+                      React.createElement("circle", {
+                        cx: obj.x * sc,
+                        cy: obj.y * sc,
+                        r: (5 * sc) / 8,
+                        fill: "rgba(200,160,0,0.85)",
+                        stroke: "rgba(255,215,0,0.9)",
+                        strokeWidth: 1.5,
+                      }),
+                      React.createElement(
+                        "text",
+                        {
+                          x: obj.x * sc,
+                          y: obj.y * sc + 3,
+                          textAnchor: "middle",
+                          fontSize: Math.max(6, sc * 0.85),
+                          fill: "white",
+                          fontFamily: "'Share Tech Mono',serif",
+                          fontWeight: "bold",
+                        },
+                        String(obj.vp),
+                      ),
+                      React.createElement(
+                        "text",
+                        {
+                          x: obj.x * sc,
+                          y: obj.y * sc + (5 * sc) / 8 + Math.max(7, sc),
+                          textAnchor: "middle",
+                          fontSize: Math.max(5, sc * 0.7),
+                          fill: "rgba(255,215,0,0.8)",
+                          fontFamily: "'Share Tech Mono',serif",
+                        },
+                        obj.vp === "?" ? "1-3VP" : obj.vp + "VP",
+                      ),
                     ),
-                    React.createElement("rect", {
-                      x: 0,
-                      y: 36 * sc,
-                      width: BW * sc,
-                      height: 12 * sc,
-                      fill: "rgba(155,45,45,0.17)",
-                      stroke: "rgba(200,80,80,0.7)",
-                      strokeWidth: 1.5,
-                      strokeDasharray: "6,3",
-                    }),
-                    React.createElement(
-                      "text",
-                      {
-                        x: (BW * sc) / 2,
-                        y: 36 * sc + 9,
-                        textAnchor: "middle",
-                        fontSize: Math.max(6, sc * 0.9),
-                        fill: "rgba(220,100,100,1)",
-                        fontFamily: "'Share Tech Mono',serif",
-                        fontWeight: "bold",
-                        letterSpacing: 1,
-                      },
-                      'P1 ATTACKER ZONE (12")',
-                    ),
-                    React.createElement("line", {
-                      x1: 0,
-                      y1: 24 * sc,
-                      x2: BW * sc,
-                      y2: 24 * sc,
-                      stroke: "rgba(255,255,255,0.2)",
-                      strokeWidth: 1,
-                      strokeDasharray: "8,4",
-                    }),
-                    React.createElement("line", {
-                      x1: 36 * sc,
-                      y1: 12 * sc,
-                      x2: 36 * sc,
-                      y2: 36 * sc,
-                      stroke: "rgba(255,255,255,0.2)",
-                      strokeWidth: 1,
-                      strokeDasharray: "8,4",
-                    }),
-                    React.createElement(
-                      "text",
-                      {
-                        x: (BW * sc) / 2,
-                        y: BH * sc - 3,
-                        textAnchor: "middle",
-                        fontSize: Math.max(5, sc * 0.7),
-                        fill: "rgba(200,80,80,0.5)",
-                        fontFamily: "'Share Tech Mono',serif",
-                      },
-                      "P1 ATTACKER BATTLEFIELD EDGE",
-                    ),
-                  ),
-                levMission === "break_the_lines" &&
-                  React.createElement(
-                    "g",
-                    null,
-                    React.createElement("polygon", {
-                      points: `0,0 ${36 * sc},0 ${36 * sc},${9 * sc} 0,${20 * sc}`,
-                      fill: "rgba(42,111,180,0.18)",
-                      stroke: "rgba(42,111,180,0.7)",
-                      strokeWidth: 1.5,
-                      strokeDasharray: "6,3",
-                    }),
-                    React.createElement(
-                      "text",
-                      {
-                        x: 14 * sc,
-                        y: 8,
-                        textAnchor: "middle",
-                        fontSize: Math.max(5, sc * 0.75),
-                        fill: "rgba(80,160,240,1)",
-                        fontFamily: "'Share Tech Mono',serif",
-                        fontWeight: "bold",
-                      },
-                      "P2 DEFENDER",
-                    ),
-                    React.createElement(
-                      "text",
-                      {
-                        x: 14 * sc,
-                        y: 8 + Math.max(8, sc),
-                        textAnchor: "middle",
-                        fontSize: Math.max(5, sc * 0.65),
-                        fill: "rgba(42,111,180,0.8)",
-                        fontFamily: "'Share Tech Mono',serif",
-                      },
-                      '36"w · 20"deep',
-                    ),
-                    React.createElement("polygon", {
-                      points: `${BW * sc},${BH * sc} ${36 * sc},${BH * sc} ${36 * sc},${39 * sc} ${BW * sc},${28 * sc}`,
-                      fill: "rgba(155,45,45,0.18)",
-                      stroke: "rgba(200,80,80,0.7)",
-                      strokeWidth: 1.5,
-                      strokeDasharray: "6,3",
-                    }),
-                    React.createElement(
-                      "text",
-                      {
-                        x: BW * sc - 14 * sc,
-                        y: BH * sc - 8,
-                        textAnchor: "middle",
-                        fontSize: Math.max(5, sc * 0.75),
-                        fill: "rgba(220,100,100,1)",
-                        fontFamily: "'Share Tech Mono',serif",
-                        fontWeight: "bold",
-                      },
-                      "P1 ATTACKER",
-                    ),
-                    React.createElement(
-                      "text",
-                      {
-                        x: BW * sc - 14 * sc,
-                        y: BH * sc - 8 - Math.max(8, sc),
-                        textAnchor: "middle",
-                        fontSize: Math.max(5, sc * 0.65),
-                        fill: "rgba(200,80,80,0.8)",
-                        fontFamily: "'Share Tech Mono',serif",
-                      },
-                      '36"w · 20"deep',
-                    ),
-                    React.createElement("line", {
-                      x1: 54 * sc,
-                      y1: 0,
-                      x2: 54 * sc,
-                      y2: 12 * sc,
-                      stroke: "rgba(255,255,255,0.15)",
-                      strokeWidth: 1,
-                      strokeDasharray: "5,3",
-                    }),
-                    React.createElement("line", {
-                      x1: 0,
-                      y1: 12 * sc,
-                      x2: BW * sc,
-                      y2: 12 * sc,
-                      stroke: "rgba(255,255,255,0.15)",
-                      strokeWidth: 1,
-                      strokeDasharray: "5,3",
-                    }),
-                    React.createElement("line", {
-                      x1: 0,
-                      y1: 36 * sc,
-                      x2: BW * sc,
-                      y2: 36 * sc,
-                      stroke: "rgba(255,255,255,0.15)",
-                      strokeWidth: 1,
-                      strokeDasharray: "5,3",
-                    }),
-                    React.createElement(
-                      "text",
-                      {
-                        x: (BW * sc) / 2,
-                        y: BH * sc - 3,
-                        textAnchor: "middle",
-                        fontSize: Math.max(5, sc * 0.7),
-                        fill: "rgba(200,80,80,0.5)",
-                        fontFamily: "'Share Tech Mono',serif",
-                      },
-                      "P1 ATTACKER BATTLEFIELD EDGE",
-                    ),
-                  ),
-                ...sectors.map((s, i) =>
-                  React.createElement(
-                    "g",
-                    { key: "levS" + i },
-                    React.createElement("rect", {
-                      x: s.x * sc,
-                      y: s.y * sc,
-                      width: s.w * sc,
-                      height: s.h * sc,
-                      fill: sectorAlpha,
-                      stroke: s.stroke,
-                      strokeWidth: 1.5,
-                      strokeDasharray: "5,3",
-                    }),
-                    React.createElement(
-                      "text",
-                      {
-                        x: (s.x + s.w / 2) * sc,
-                        y: (s.y + s.h / 2) * sc + 4,
-                        textAnchor: "middle",
-                        fontSize: Math.max(6, sc * 0.85),
-                        fill: "rgba(255,215,0,0.5)",
-                        fontFamily: "'Share Tech Mono',serif",
-                        fontWeight: "bold",
-                      },
-                      s.label,
-                    ),
-                  ),
-                ),
-                ...objs.map((obj, i) =>
-                  React.createElement(
-                    "g",
-                    { key: "levobj" + i },
-                    React.createElement("circle", {
-                      cx: obj.x * sc,
-                      cy: obj.y * sc,
-                      r: (7 * sc) / 8,
-                      fill: "rgba(255,215,0,0.15)",
-                      stroke: "rgba(255,215,0,0.5)",
-                      strokeWidth: 1,
-                    }),
-                    React.createElement("circle", {
-                      cx: obj.x * sc,
-                      cy: obj.y * sc,
-                      r: (5 * sc) / 8,
-                      fill: "rgba(200,160,0,0.85)",
-                      stroke: "rgba(255,215,0,0.9)",
-                      strokeWidth: 1.5,
-                    }),
-                    React.createElement(
-                      "text",
-                      {
-                        x: obj.x * sc,
-                        y: obj.y * sc + 3,
-                        textAnchor: "middle",
-                        fontSize: Math.max(6, sc * 0.85),
-                        fill: "white",
-                        fontFamily: "'Share Tech Mono',serif",
-                        fontWeight: "bold",
-                      },
-                      String(obj.vp),
-                    ),
-                    React.createElement(
-                      "text",
-                      {
-                        x: obj.x * sc,
-                        y: obj.y * sc + (5 * sc) / 8 + Math.max(7, sc),
-                        textAnchor: "middle",
-                        fontSize: Math.max(5, sc * 0.7),
-                        fill: "rgba(255,215,0,0.8)",
-                        fontFamily: "'Share Tech Mono',serif",
-                      },
-                      obj.vp === "?" ? "1-3VP" : obj.vp + "VP",
-                    ),
-                  ),
-                ),
-                React.createElement(
-                  "text",
-                  {
-                    x: 4,
-                    y: BH * sc - 4,
-                    fontSize: Math.max(6, sc * 0.8),
-                    fill: "rgba(255,160,60,0.6)",
-                    fontFamily: "'Share Tech Mono',serif",
-                  },
-                  "LEV: " + levInfo.name,
-                ),
-              );
-            })(),
-          battlefieldAssets.length > 0 &&
-            React.createElement(
-              "svg",
-              {
-                style: {
-                  position: "absolute",
-                  inset: 0,
-                  width: BOARD_W * deployScale,
-                  height: BOARD_H * deployScale,
-                  pointerEvents: "none",
-                },
-              },
-              ...battlefieldAssets.map((asset) => {
-                const assetDef = BATTLEFIELD_ASSETS[asset.type] || {};
-                const cx = asset.x * deployScale;
-                const cy = asset.y * deployScale;
-                const r = Math.max(6, deployScale * 0.8);
-                return React.createElement(
-                  "g",
-                  {
-                    key: "bfa" + asset.id,
-                    style: { pointerEvents: "none" },
-                  },
-                  React.createElement("circle", {
-                    cx,
-                    cy,
-                    r: r + 2,
-                    fill: "rgba(0,0,0,0.5)",
-                    stroke: assetDef.color || "#888",
-                    strokeWidth: 1.5,
-                  }),
-                  React.createElement(
-                    "text",
-                    {
-                      x: cx,
-                      y: cy + 4,
-                      textAnchor: "middle",
-                      fontSize: Math.max(8, deployScale * 0.9),
-                      fill: assetDef.color || "#ccc",
-                      fontFamily: "sans-serif",
-                    },
-                    assetDef.symbol || "◆",
                   ),
                   React.createElement(
                     "text",
                     {
-                      x: cx,
-                      y: cy + r + Math.max(8, deployScale),
-                      textAnchor: "middle",
-                      fontSize: Math.max(5, deployScale * 0.65),
-                      fill: "rgba(255,255,255,0.7)",
+                      x: 4,
+                      y: BH * sc - 4,
+                      fontSize: Math.max(6, sc * 0.8),
+                      fill: "rgba(255,160,60,0.6)",
                       fontFamily: "'Share Tech Mono',serif",
                     },
-                    assetDef.name ? assetDef.name.split(" ")[0] : asset.type,
+                    "LEV: " + levInfo.name,
                   ),
                 );
-              }),
-            ),
-          showMoveRange &&
-            selectedMoveUnit &&
-            React.createElement("div", {
-              style: {
-                position: "absolute",
-                left: selectedMoveUnit.x * deployScale - moveMax * deployScale,
-                top: selectedMoveUnit.y * deployScale - moveMax * deployScale,
-                width: moveMax * 2 * deployScale,
-                height: moveMax * 2 * deployScale,
-                borderRadius: "50%",
-                border: "2px dashed rgba(255,220,80,0.5)",
-                background: "rgba(255,220,80,0.06)",
-                pointerEvents: "none",
-              },
-            }),
-          moveLog.length > 0 &&
-            React.createElement(
-              "svg",
-              {
-                style: {
-                  position: "absolute",
-                  inset: 0,
-                  width: BOARD_W * deployScale,
-                  height: BOARD_H * deployScale,
-                  pointerEvents: "none",
-                },
-              },
-              moveLog.map((m, i) =>
-                React.createElement(
-                  "g",
-                  { key: i },
-                  React.createElement("line", {
-                    x1: m.fromX * deployScale,
-                    y1: m.fromY * deployScale,
-                    x2: m.toX * deployScale,
-                    y2: m.toY * deployScale,
-                    stroke:
-                      m.player === "p1"
-                        ? "rgba(255,100,100,0.4)"
-                        : "rgba(100,160,255,0.4)",
-                    strokeWidth: 2,
-                    strokeDasharray: "4,3",
-                  }),
-                  React.createElement("circle", {
-                    cx: m.fromX * deployScale,
-                    cy: m.fromY * deployScale,
-                    r: 3,
-                    fill:
-                      m.player === "p1"
-                        ? "rgba(255,100,100,0.3)"
-                        : "rgba(100,160,255,0.3)",
-                  }),
-                ),
-              ),
-            ),
-          extraOverlays,
-          deepStrikePending &&
-            React.createElement(
-              "div",
-              {
-                style: {
-                  position: "absolute",
-                  left: deepStrikePending.intendedX * deployScale,
-                  top: deepStrikePending.intendedY * deployScale,
-                  width: 0,
-                  height: 0,
-                  pointerEvents: "none",
-                  zIndex: 30,
-                },
-              },
-              React.createElement("div", {
-                style: {
-                  position: "absolute",
-                  left: -6 * deployScale,
-                  top: -6 * deployScale,
-                  width: 12 * deployScale,
-                  height: 12 * deployScale,
-                  borderRadius: "50%",
-                  border: "1.5px dashed rgba(195,130,20,0.5)",
-                  background: "rgba(195,130,20,0.05)",
-                },
-              }),
-              React.createElement("div", {
-                style: {
-                  position: "absolute",
-                  left: -10,
-                  top: -1,
-                  width: 20,
-                  height: 2,
-                  background: "#c38214",
-                  boxShadow: "0 0 4px rgba(195,130,20,0.7)",
-                },
-              }),
-              React.createElement("div", {
-                style: {
-                  position: "absolute",
-                  left: -1,
-                  top: -10,
-                  width: 2,
-                  height: 20,
-                  background: "#c38214",
-                  boxShadow: "0 0 4px rgba(195,130,20,0.7)",
-                },
-              }),
+              })(),
+            battlefieldAssets.length > 0 &&
               React.createElement(
-                "div",
-                {
-                  style: {
-                    position: "absolute",
-                    left: 14,
-                    top: -8,
-                    fontSize: 10,
-                    color: "#c38214",
-                    textShadow: "0 0 3px rgba(0,0,0,0.7)",
-                    fontFamily: "'Share Tech Mono', serif",
-                    fontWeight: 700,
-                    letterSpacing: 1,
-                    whiteSpace: "nowrap",
-                  },
-                },
-                "⚡ DROP POINT",
-              ),
-            ),
-          weaponRange > 0 &&
-            weaponUnit &&
-            React.createElement("div", {
-              style: {
-                position: "absolute",
-                left: weaponUnit.x * deployScale - weaponRange * deployScale,
-                top: weaponUnit.y * deployScale - weaponRange * deployScale,
-                width: weaponRange * 2 * deployScale,
-                height: weaponRange * 2 * deployScale,
-                borderRadius: "50%",
-                border: "2px dashed rgba(255,140,40,0.5)",
-                background: "rgba(255,140,40,0.04)",
-                pointerEvents: "none",
-              },
-            }),
-          highlightAttacker &&
-            highlightTarget &&
-            (() => {
-              const au = deployedUnits.find((u) => u.id === highlightAttacker);
-              const tu = deployedUnits.find((u) => u.id === highlightTarget);
-              if (!au || !tu) return null;
-              const dist =
-                Math.round(
-                  Math.sqrt((au.x - tu.x) ** 2 + (au.y - tu.y) ** 2) * 10,
-                ) / 10;
-              const inRange = weaponRange > 0 ? dist <= weaponRange : true;
-              return React.createElement(
                 "svg",
                 {
                   style: {
@@ -7821,346 +10214,557 @@ var ShootingResolver = function () {
                     pointerEvents: "none",
                   },
                 },
-                React.createElement("line", {
-                  x1: au.x * deployScale,
-                  y1: au.y * deployScale,
-                  x2: tu.x * deployScale,
-                  y2: tu.y * deployScale,
-                  stroke: inRange
-                    ? "rgba(255,200,40,0.6)"
-                    : "rgba(255,60,60,0.5)",
-                  strokeWidth: 2,
-                  strokeDasharray: inRange ? "6,3" : "3,3",
-                }),
-                React.createElement(
-                  "text",
-                  {
-                    x: ((au.x + tu.x) / 2) * deployScale,
-                    y: ((au.y + tu.y) / 2) * deployScale - 6,
-                    fill: inRange
-                      ? "rgba(255,220,80,0.8)"
-                      : "rgba(255,80,80,0.8)",
-                    fontSize: 9,
-                    fontFamily: "'Share Tech Mono', serif",
-                    textAnchor: "middle",
-                  },
-                  dist,
-                  '"',
-                  !inRange ? "(OUT OF RANGE)" : "",
-                ),
-              );
-            })(),
-          terrainPieces.map((terrain) => {
-            const ttype = TERRAIN_TYPES.find((t) => t.id === terrain.type);
-            return React.createElement(
-              "div",
-              {
-                key: terrain.id,
-                title: `${terrain.label} — ${ttype?.desc || ""}`,
-                style: {
-                  position: "absolute",
-                  left: terrain.x * deployScale,
-                  top: terrain.y * deployScale,
-                  width: terrain.w * deployScale,
-                  height: terrain.h * deployScale,
-                  background: terrain.bg,
-                  border: `2px solid ${terrain.border}`,
-                  borderRadius: terrain.type === "fortification" ? 3 : 6,
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  pointerEvents: "none",
-                  zIndex: 2,
-                  boxShadow:
-                    terrain.type === "fortification"
-                      ? `inset 0 0 8px rgba(0,0,0,0.3), 0 0 4px ${terrain.border}`
-                      : "none",
-                },
-              },
-              React.createElement(
-                "div",
-                {
-                  style: {
-                    fontSize: Math.max(terrain.w * deployScale * 0.22, 10),
-                    color: terrain.color,
-                    lineHeight: 1,
-                  },
-                },
-                terrain.symbol,
-              ),
-              React.createElement(
-                "div",
-                {
-                  style: {
-                    fontSize: Math.max(
-                      Math.min(terrain.w * deployScale * 0.09, 9),
-                      6,
+                ...battlefieldAssets.map((asset) => {
+                  const assetDef = BATTLEFIELD_ASSETS[asset.type] || {};
+                  const cx = asset.x * deployScale;
+                  const cy = asset.y * deployScale;
+                  const r = Math.max(6, deployScale * 0.8);
+                  return React.createElement(
+                    "g",
+                    {
+                      key: "bfa" + asset.id,
+                      style: { pointerEvents: "none" },
+                    },
+                    React.createElement("circle", {
+                      cx,
+                      cy,
+                      r: r + 2,
+                      fill: "rgba(0,0,0,0.5)",
+                      stroke: assetDef.color || "#888",
+                      strokeWidth: 1.5,
+                    }),
+                    React.createElement(
+                      "text",
+                      {
+                        x: cx,
+                        y: cy + 4,
+                        textAnchor: "middle",
+                        fontSize: Math.max(8, deployScale * 0.9),
+                        fill: assetDef.color || "#ccc",
+                        fontFamily: "sans-serif",
+                      },
+                      assetDef.symbol || "◆",
                     ),
-                    color: terrain.color,
-                    fontFamily: "'Share Tech Mono', serif",
-                    fontWeight: 700,
-                    letterSpacing: 0.5,
-                    textAlign: "center",
-                    lineHeight: 1.2,
-                    marginTop: 2,
-                    textShadow: "0 1px 2px rgba(255,255,255,0.8)",
-                  },
-                },
-                terrain.w * deployScale > 50 ? terrain.label : "",
+                    React.createElement(
+                      "text",
+                      {
+                        x: cx,
+                        y: cy + r + Math.max(8, deployScale),
+                        textAnchor: "middle",
+                        fontSize: Math.max(5, deployScale * 0.65),
+                        fill: "rgba(255,255,255,0.7)",
+                        fontFamily: "'Share Tech Mono',serif",
+                      },
+                      assetDef.name ? assetDef.name.split(" ")[0] : asset.type,
+                    ),
+                  );
+                }),
               ),
-              React.createElement(
-                "div",
-                {
-                  style: {
-                    fontSize: 7,
-                    color: terrain.color,
-                    opacity: 0.7,
-                    fontFamily: "'Share Tech Mono', serif",
-                  },
-                },
-                terrain.w * deployScale > 40
-                  ? `${terrain.w}″×${terrain.h}″`
-                  : "",
-              ),
-            );
-          }),
-          objectiveMarkers.map((obj) => {
-            const sz = Math.max(deployScale * 2, 18);
-            const canInteract = activePhase === "deployment";
-            return React.createElement(
-              "div",
-              {
-                key: obj.id,
-                onClick: (e) => {
-                  e.stopPropagation();
-                  if (canInteract)
-                    setObjectiveMarkers((prev) =>
-                      prev.filter((o) => o.id !== obj.id),
-                    );
-                },
-                title: canInteract
-                  ? `${obj.label} — ${obj.value} VP (click to remove)`
-                  : `${obj.label} — ${obj.value} VP`,
+            showMoveRange &&
+              selectedMoveUnit &&
+              React.createElement("div", {
                 style: {
                   position: "absolute",
-                  left: obj.x * deployScale - sz / 2,
-                  top: obj.y * deployScale - sz / 2,
-                  width: sz,
-                  height: sz,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexDirection: "column",
+                  left:
+                    selectedMoveUnit.x * deployScale - moveMax * deployScale,
+                  top: selectedMoveUnit.y * deployScale - moveMax * deployScale,
+                  width: moveMax * 2 * deployScale,
+                  height: moveMax * 2 * deployScale,
                   borderRadius: "50%",
-                  background: "rgba(255,215,0,0.9)",
-                  border: "2.5px solid #ffd700",
-                  boxShadow: "0 0 8px rgba(255,215,0,0.6)",
-                  color: "#2a2418",
-                  fontSize: Math.max(sz * 0.4, 8),
-                  fontWeight: 900,
-                  fontFamily: "'Share Tech Mono', serif",
-                  cursor: canInteract ? "pointer" : "default",
-                  zIndex: 5,
-                  pointerEvents: canInteract ? "auto" : "none",
+                  border: "2px dashed rgba(255,220,80,0.5)",
+                  background: "rgba(255,220,80,0.06)",
+                  pointerEvents: "none",
                 },
-              },
-              "⊕",
+              }),
+            moveLog.length > 0 &&
+              React.createElement(
+                "svg",
+                {
+                  style: {
+                    position: "absolute",
+                    inset: 0,
+                    width: BOARD_W * deployScale,
+                    height: BOARD_H * deployScale,
+                    pointerEvents: "none",
+                  },
+                },
+                moveLog.map((m, i) =>
+                  React.createElement(
+                    "g",
+                    { key: i },
+                    React.createElement("line", {
+                      x1: m.fromX * deployScale,
+                      y1: m.fromY * deployScale,
+                      x2: m.toX * deployScale,
+                      y2: m.toY * deployScale,
+                      stroke:
+                        m.player === "p1"
+                          ? "rgba(255,100,100,0.4)"
+                          : "rgba(100,160,255,0.4)",
+                      strokeWidth: 2,
+                      strokeDasharray: "4,3",
+                    }),
+                    React.createElement("circle", {
+                      cx: m.fromX * deployScale,
+                      cy: m.fromY * deployScale,
+                      r: 3,
+                      fill:
+                        m.player === "p1"
+                          ? "rgba(255,100,100,0.3)"
+                          : "rgba(100,160,255,0.3)",
+                    }),
+                  ),
+                ),
+              ),
+            extraOverlays,
+            deepStrikePending &&
               React.createElement(
                 "div",
                 {
                   style: {
-                    fontSize: Math.max(sz * 0.28, 6),
-                    lineHeight: 1,
-                    color: "#6b4508",
+                    position: "absolute",
+                    left: deepStrikePending.intendedX * deployScale,
+                    top: deepStrikePending.intendedY * deployScale,
+                    width: 0,
+                    height: 0,
+                    pointerEvents: "none",
+                    zIndex: 30,
                   },
                 },
-                obj.value,
-                "VP",
-              ),
-            );
-          }),
-          deployedUnits.map((unit) => {
-            const isP1 = unit.player === "p1";
-            const col = isP1 ? "#e05555" : "#5599dd";
-            const bgCol = isP1
-              ? "rgba(200,60,60,0.85)"
-              : "rgba(50,120,200,0.85)";
-            const sz = getUnitMapSize(unit);
-            const isSelected = unit.id === moveRangeUnit;
-            const isAttacker = unit.id === highlightAttacker;
-            const isTarget = unit.id === highlightTarget;
-            const isRouted = routedUnits.has(unit.id);
-            const hasMoved = movedUnitIds.has(unit.id);
-            const facing = unitFacings[unit.id];
-            const canDragOnBoard = activePhase === "deployment";
-            const isHovered = mapHoveredUnitId === unit.id;
-            return React.createElement(
-              "div",
-              {
-                key: unit.id,
-                onMouseEnter: () => setMapHoveredUnitId(unit.id),
-                onMouseLeave: () =>
-                  setMapHoveredUnitId((cur) => (cur === unit.id ? null : cur)),
-                onMouseDown: (e) => {
-                  if (!canDragOnBoard) return;
-                  if (e.button !== 0) return; // left click only
-                  e.stopPropagation();
-                  deployDragRef.current = {
-                    unitId: unit.id,
-                    moved: false,
-                    startX: e.clientX,
-                    startY: e.clientY,
-                  };
-                },
-                onClick: (e) => {
-                  e.stopPropagation();
-                  // If the user actually dragged this unit, swallow the
-                  // click so it doesn't also remove / send-to-reserves.
-                  if (
-                    canDragOnBoard &&
-                    deployDragRef.current &&
-                    deployDragRef.current.moved &&
-                    deployDragRef.current.unitId === unit.id
-                  ) {
-                    deployDragRef.current = { unitId: null };
-                    return;
-                  }
-                  deployDragRef.current = { unitId: null };
-                  unitOnClick && unitOnClick(unit, e);
-                },
-                title: `${unit.label} (${unit.player.toUpperCase()}) — ${unit.x}", ${unit.y}"${isRouted ? " — ROUTED" : ""}${hasMoved ? " (moved)" : ""}${canDragOnBoard ? " — drag to reposition" : ""}`,
-                style: {
-                  position: "absolute",
-                  left: unit.x * deployScale - sz / 2,
-                  top: unit.y * deployScale - sz / 2,
-                  width: sz,
-                  height: sz,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius:
-                    unit.type === "tank" || unit.type === "transport"
-                      ? 3
-                      : unit.type === "objective"
-                        ? "50%"
-                        : 4,
-                  background: isRouted
-                    ? "rgba(100,100,100,0.7)"
-                    : unit.type === "objective"
-                      ? "rgba(255,215,0,0.85)"
-                      : bgCol,
-                  border: isAttacker
-                    ? "2.5px solid #ffd700"
-                    : isTarget
-                      ? "2.5px solid #ff4444"
-                      : isSelected
-                        ? "2px solid #ffd700"
-                        : `1.5px solid ${unit.type === "objective" ? "#ffd700" : col}`,
-                  color: unit.type === "objective" ? "#2a2418" : "#fff",
-                  fontSize: Math.max(sz * 0.55, 10),
-                  fontWeight: 700,
-                  cursor: canDragOnBoard ? "grab" : "pointer",
-                  boxShadow: isAttacker
-                    ? "0 0 14px rgba(255,215,0,0.6)"
-                    : isTarget
-                      ? "0 0 14px rgba(255,60,60,0.6)"
-                      : isSelected
-                        ? "0 0 12px rgba(255,215,0,0.5)"
-                        : hasMoved
-                          ? `0 0 6px rgba(${isP1 ? "255,100,100" : "100,160,255"},0.4)`
-                          : "0 1px 4px rgba(0,0,0,0.4)",
-                  transition: "all 0.15s ease",
-                  zIndex: isAttacker || isTarget ? 25 : isSelected ? 20 : 10,
-                  lineHeight: 1,
-                  opacity: isRouted ? 0.5 : hasMoved && !isSelected ? 0.7 : 1,
-                  userSelect: "none",
-                },
-              },
-              unit.symbol,
-              facing !== undefined &&
                 React.createElement("div", {
                   style: {
                     position: "absolute",
-                    left:
-                      sz / 2 +
-                      Math.cos((facing * Math.PI) / 180) * (sz / 2 + 4) -
-                      3,
-                    top:
-                      sz / 2 +
-                      Math.sin((facing * Math.PI) / 180) * (sz / 2 + 4) -
-                      3,
-                    width: 6,
-                    height: 6,
+                    left: -6 * deployScale,
+                    top: -6 * deployScale,
+                    width: 12 * deployScale,
+                    height: 12 * deployScale,
                     borderRadius: "50%",
-                    background: isRouted
-                      ? "#888"
-                      : isP1
-                        ? "#ff8888"
-                        : "#88bbff",
-                    border: "1px solid rgba(255,255,255,0.5)",
-                    pointerEvents: "none",
+                    border: "1.5px dashed rgba(195,130,20,0.5)",
+                    background: "rgba(195,130,20,0.05)",
                   },
                 }),
-              isRouted &&
+                React.createElement("div", {
+                  style: {
+                    position: "absolute",
+                    left: -10,
+                    top: -1,
+                    width: 20,
+                    height: 2,
+                    background: "#c38214",
+                    boxShadow: "0 0 4px rgba(195,130,20,0.7)",
+                  },
+                }),
+                React.createElement("div", {
+                  style: {
+                    position: "absolute",
+                    left: -1,
+                    top: -10,
+                    width: 2,
+                    height: 20,
+                    background: "#c38214",
+                    boxShadow: "0 0 4px rgba(195,130,20,0.7)",
+                  },
+                }),
                 React.createElement(
                   "div",
                   {
                     style: {
                       position: "absolute",
+                      left: 14,
                       top: -8,
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                      fontSize: 8,
-                      color: "#ff6666",
+                      fontSize: 10,
+                      color: "#c38214",
+                      textShadow: "0 0 3px rgba(0,0,0,0.7)",
                       fontFamily: "'Share Tech Mono', serif",
                       fontWeight: 700,
-                      pointerEvents: "none",
+                      letterSpacing: 1,
                       whiteSpace: "nowrap",
                     },
                   },
-                  "ROUTED",
+                  "⚡ DROP POINT",
                 ),
-              // Floating tooltip with the unit's name — visible on hover in
-              // every phase (deployment, movement, shooting, assault).
-              isHovered &&
+              ),
+            weaponRange > 0 &&
+              weaponUnit &&
+              React.createElement("div", {
+                style: {
+                  position: "absolute",
+                  left: weaponUnit.x * deployScale - weaponRange * deployScale,
+                  top: weaponUnit.y * deployScale - weaponRange * deployScale,
+                  width: weaponRange * 2 * deployScale,
+                  height: weaponRange * 2 * deployScale,
+                  borderRadius: "50%",
+                  border: "2px dashed rgba(255,140,40,0.5)",
+                  background: "rgba(255,140,40,0.04)",
+                  pointerEvents: "none",
+                },
+              }),
+            highlightAttacker &&
+              highlightTarget &&
+              (() => {
+                const au = deployedUnits.find(
+                  (u) => u.id === highlightAttacker,
+                );
+                const tu = deployedUnits.find((u) => u.id === highlightTarget);
+                if (!au || !tu) return null;
+                const dist =
+                  Math.round(
+                    Math.sqrt((au.x - tu.x) ** 2 + (au.y - tu.y) ** 2) * 10,
+                  ) / 10;
+                const inRange = weaponRange > 0 ? dist <= weaponRange : true;
+                return React.createElement(
+                  "svg",
+                  {
+                    style: {
+                      position: "absolute",
+                      inset: 0,
+                      width: BOARD_W * deployScale,
+                      height: BOARD_H * deployScale,
+                      pointerEvents: "none",
+                    },
+                  },
+                  React.createElement("line", {
+                    x1: au.x * deployScale,
+                    y1: au.y * deployScale,
+                    x2: tu.x * deployScale,
+                    y2: tu.y * deployScale,
+                    stroke: inRange
+                      ? "rgba(255,200,40,0.6)"
+                      : "rgba(255,60,60,0.5)",
+                    strokeWidth: 2,
+                    strokeDasharray: inRange ? "6,3" : "3,3",
+                  }),
+                  React.createElement(
+                    "text",
+                    {
+                      x: ((au.x + tu.x) / 2) * deployScale,
+                      y: ((au.y + tu.y) / 2) * deployScale - 6,
+                      fill: inRange
+                        ? "rgba(255,220,80,0.8)"
+                        : "rgba(255,80,80,0.8)",
+                      fontSize: 9,
+                      fontFamily: "'Share Tech Mono', serif",
+                      textAnchor: "middle",
+                    },
+                    dist,
+                    '"',
+                    !inRange ? "(OUT OF RANGE)" : "",
+                  ),
+                );
+              })(),
+            terrainPieces.map((terrain) => {
+              const ttype = TERRAIN_TYPES.find((t) => t.id === terrain.type);
+              return React.createElement(
+                "div",
+                {
+                  key: terrain.id,
+                  title: `${terrain.label} — ${ttype?.desc || ""}`,
+                  style: {
+                    position: "absolute",
+                    left: terrain.x * deployScale,
+                    top: terrain.y * deployScale,
+                    width: terrain.w * deployScale,
+                    height: terrain.h * deployScale,
+                    background: terrain.bg,
+                    border: `2px solid ${terrain.border}`,
+                    borderRadius: terrain.type === "fortification" ? 3 : 6,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    pointerEvents: "none",
+                    zIndex: 2,
+                    boxShadow:
+                      terrain.type === "fortification"
+                        ? `inset 0 0 8px rgba(0,0,0,0.3), 0 0 4px ${terrain.border}`
+                        : "none",
+                  },
+                },
                 React.createElement(
                   "div",
                   {
                     style: {
-                      position: "absolute",
-                      bottom: sz + 6,
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                      padding: "3px 8px",
-                      background: "rgba(20,24,34,0.95)",
-                      border: `1px solid ${isP1 ? "#e05555" : "#5599dd"}`,
-                      borderRadius: 3,
-                      color: "#f0e8d8",
-                      fontSize: 11,
-                      fontFamily: "'Share Tech Mono', serif",
-                      fontWeight: 600,
-                      whiteSpace: "nowrap",
-                      pointerEvents: "none",
-                      zIndex: 40,
-                      boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
+                      fontSize: Math.max(terrain.w * deployScale * 0.22, 10),
+                      color: terrain.color,
+                      lineHeight: 1,
                     },
                   },
-                  unit.label || unit.name || "—",
+                  terrain.symbol,
                 ),
-            );
-          }),
-          React.createElement("div", {
-            style: {
-              position: "absolute",
-              inset: 0,
-              border: "2px solid rgba(255,255,255,0.2)",
-              borderRadius: 2,
-              pointerEvents: "none",
-            },
-          }),
-        ), // close board div
-      ), // close stage div (contains bays + board)
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      fontSize: Math.max(
+                        Math.min(terrain.w * deployScale * 0.09, 9),
+                        6,
+                      ),
+                      color: terrain.color,
+                      fontFamily: "'Share Tech Mono', serif",
+                      fontWeight: 700,
+                      letterSpacing: 0.5,
+                      textAlign: "center",
+                      lineHeight: 1.2,
+                      marginTop: 2,
+                      textShadow: "0 1px 2px rgba(255,255,255,0.8)",
+                    },
+                  },
+                  terrain.w * deployScale > 50 ? terrain.label : "",
+                ),
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      fontSize: 7,
+                      color: terrain.color,
+                      opacity: 0.7,
+                      fontFamily: "'Share Tech Mono', serif",
+                    },
+                  },
+                  terrain.w * deployScale > 40
+                    ? `${terrain.w}″×${terrain.h}″`
+                    : "",
+                ),
+              );
+            }),
+            objectiveMarkers.map((obj) => {
+              const sz = Math.max(deployScale * 2, 18);
+              const canInteract = activePhase === "deployment";
+              return React.createElement(
+                "div",
+                {
+                  key: obj.id,
+                  onClick: (e) => {
+                    e.stopPropagation();
+                    if (canInteract)
+                      setObjectiveMarkers((prev) =>
+                        prev.filter((o) => o.id !== obj.id),
+                      );
+                  },
+                  title: canInteract
+                    ? `${obj.label} — ${obj.value} VP (click to remove)`
+                    : `${obj.label} — ${obj.value} VP`,
+                  style: {
+                    position: "absolute",
+                    left: obj.x * deployScale - sz / 2,
+                    top: obj.y * deployScale - sz / 2,
+                    width: sz,
+                    height: sz,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexDirection: "column",
+                    borderRadius: "50%",
+                    background: "rgba(255,215,0,0.9)",
+                    border: "2.5px solid #ffd700",
+                    boxShadow: "0 0 8px rgba(255,215,0,0.6)",
+                    color: "#2a2418",
+                    fontSize: Math.max(sz * 0.4, 8),
+                    fontWeight: 900,
+                    fontFamily: "'Share Tech Mono', serif",
+                    cursor: canInteract ? "pointer" : "default",
+                    zIndex: 5,
+                    pointerEvents: canInteract ? "auto" : "none",
+                  },
+                },
+                "⊕",
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      fontSize: Math.max(sz * 0.28, 6),
+                      lineHeight: 1,
+                      color: "#6b4508",
+                    },
+                  },
+                  obj.value,
+                  "VP",
+                ),
+              );
+            }),
+            deployedUnits.map((unit) => {
+              const isP1 = unit.player === "p1";
+              const col = isP1 ? "#e05555" : "#5599dd";
+              const bgCol = isP1
+                ? "rgba(200,60,60,0.85)"
+                : "rgba(50,120,200,0.85)";
+              const sz = getUnitMapSize(unit);
+              const isSelected = unit.id === moveRangeUnit;
+              const isAttacker = unit.id === highlightAttacker;
+              const isTarget = unit.id === highlightTarget;
+              const isRouted = routedUnits.has(unit.id);
+              const hasMoved = movedUnitIds.has(unit.id);
+              const facing = unitFacings[unit.id];
+              const canDragOnBoard = activePhase === "deployment";
+              const isHovered = mapHoveredUnitId === unit.id;
+              return React.createElement(
+                "div",
+                {
+                  key: unit.id,
+                  onMouseEnter: () => setMapHoveredUnitId(unit.id),
+                  onMouseLeave: () =>
+                    setMapHoveredUnitId((cur) =>
+                      cur === unit.id ? null : cur,
+                    ),
+                  onMouseDown: (e) => {
+                    if (!canDragOnBoard) return;
+                    if (e.button !== 0) return; // left click only
+                    e.stopPropagation();
+                    deployDragRef.current = {
+                      unitId: unit.id,
+                      moved: false,
+                      startX: e.clientX,
+                      startY: e.clientY,
+                    };
+                  },
+                  onClick: (e) => {
+                    e.stopPropagation();
+                    // If the user actually dragged this unit, swallow the
+                    // click so it doesn't also remove / send-to-reserves.
+                    if (
+                      canDragOnBoard &&
+                      deployDragRef.current &&
+                      deployDragRef.current.moved &&
+                      deployDragRef.current.unitId === unit.id
+                    ) {
+                      deployDragRef.current = { unitId: null };
+                      return;
+                    }
+                    deployDragRef.current = { unitId: null };
+                    unitOnClick && unitOnClick(unit, e);
+                  },
+                  title: `${unit.label} (${unit.player.toUpperCase()}) — ${unit.x}", ${unit.y}"${isRouted ? " — ROUTED" : ""}${hasMoved ? " (moved)" : ""}${canDragOnBoard ? " — drag to reposition" : ""}`,
+                  style: {
+                    position: "absolute",
+                    left: unit.x * deployScale - sz / 2,
+                    top: unit.y * deployScale - sz / 2,
+                    width: sz,
+                    height: sz,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius:
+                      unit.type === "tank" || unit.type === "transport"
+                        ? 3
+                        : unit.type === "objective"
+                          ? "50%"
+                          : 4,
+                    background: isRouted
+                      ? "rgba(100,100,100,0.7)"
+                      : unit.type === "objective"
+                        ? "rgba(255,215,0,0.85)"
+                        : bgCol,
+                    border: isAttacker
+                      ? "2.5px solid #ffd700"
+                      : isTarget
+                        ? "2.5px solid #ff4444"
+                        : isSelected
+                          ? "2px solid #ffd700"
+                          : `1.5px solid ${unit.type === "objective" ? "#ffd700" : col}`,
+                    color: unit.type === "objective" ? "#2a2418" : "#fff",
+                    fontSize: Math.max(sz * 0.55, 10),
+                    fontWeight: 700,
+                    cursor: canDragOnBoard ? "grab" : "pointer",
+                    boxShadow: isAttacker
+                      ? "0 0 14px rgba(255,215,0,0.6)"
+                      : isTarget
+                        ? "0 0 14px rgba(255,60,60,0.6)"
+                        : isSelected
+                          ? "0 0 12px rgba(255,215,0,0.5)"
+                          : hasMoved
+                            ? `0 0 6px rgba(${isP1 ? "255,100,100" : "100,160,255"},0.4)`
+                            : "0 1px 4px rgba(0,0,0,0.4)",
+                    transition: "all 0.15s ease",
+                    zIndex: isAttacker || isTarget ? 25 : isSelected ? 20 : 10,
+                    lineHeight: 1,
+                    opacity: isRouted ? 0.5 : hasMoved && !isSelected ? 0.7 : 1,
+                    userSelect: "none",
+                  },
+                },
+                unit.symbol,
+                facing !== undefined &&
+                  React.createElement("div", {
+                    style: {
+                      position: "absolute",
+                      left:
+                        sz / 2 +
+                        Math.cos((facing * Math.PI) / 180) * (sz / 2 + 4) -
+                        3,
+                      top:
+                        sz / 2 +
+                        Math.sin((facing * Math.PI) / 180) * (sz / 2 + 4) -
+                        3,
+                      width: 6,
+                      height: 6,
+                      borderRadius: "50%",
+                      background: isRouted
+                        ? "#888"
+                        : isP1
+                          ? "#ff8888"
+                          : "#88bbff",
+                      border: "1px solid rgba(255,255,255,0.5)",
+                      pointerEvents: "none",
+                    },
+                  }),
+                isRouted &&
+                  React.createElement(
+                    "div",
+                    {
+                      style: {
+                        position: "absolute",
+                        top: -8,
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        fontSize: 8,
+                        color: "#ff6666",
+                        fontFamily: "'Share Tech Mono', serif",
+                        fontWeight: 700,
+                        pointerEvents: "none",
+                        whiteSpace: "nowrap",
+                      },
+                    },
+                    "ROUTED",
+                  ),
+                // Floating tooltip with the unit's name — visible on hover in
+                // every phase (deployment, movement, shooting, assault).
+                isHovered &&
+                  React.createElement(
+                    "div",
+                    {
+                      style: {
+                        position: "absolute",
+                        bottom: sz + 6,
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        padding: "3px 8px",
+                        background: "rgba(20,24,34,0.95)",
+                        border: `1px solid ${isP1 ? "#e05555" : "#5599dd"}`,
+                        borderRadius: 3,
+                        color: "#f0e8d8",
+                        fontSize: 11,
+                        fontFamily: "'Share Tech Mono', serif",
+                        fontWeight: 600,
+                        whiteSpace: "nowrap",
+                        pointerEvents: "none",
+                        zIndex: 40,
+                        boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
+                      },
+                    },
+                    unit.label || unit.name || "—",
+                  ),
+              );
+            }),
+            React.createElement("div", {
+              style: {
+                position: "absolute",
+                inset: 0,
+                border: "2px solid rgba(255,255,255,0.2)",
+                borderRadius: 2,
+                pointerEvents: "none",
+              },
+            }),
+          ), // close board div
+        ), // close stage div (contains bays + board)
       ), // close overflow div
       (deployedUnits.length > 0 || aerialReserves.length > 0) &&
         React.createElement(
@@ -10258,7 +12862,7 @@ var ShootingResolver = function () {
                   letterSpacing: 3,
                 },
               },
-              "THE HORUS HERESY · AGE OF DARKNESS · 3RD EDITION · v1.87",
+              "THE HORUS HERESY · AGE OF DARKNESS · 3RD EDITION · v1.90",
             ),
           ),
         ),
@@ -10312,7 +12916,12 @@ var ShootingResolver = function () {
           null,
           React.createElement(
             "div",
-            { style: { ...panelStyle, marginBottom: 12 } },
+            {
+              ref: function (node) {
+                helpSectionRefs.current["overview"] = node;
+              },
+              style: { ...panelStyle, marginBottom: 12 },
+            },
             React.createElement(
               "div",
               {
@@ -10382,7 +12991,12 @@ var ShootingResolver = function () {
           ),
           React.createElement(
             "div",
-            { style: { ...panelStyle, marginBottom: 12 } },
+            {
+              ref: function (node) {
+                helpSectionRefs.current["phase-guide"] = node;
+              },
+              style: { ...panelStyle, marginBottom: 12 },
+            },
             React.createElement(
               "div",
               {
@@ -10531,15 +13145,10 @@ var ShootingResolver = function () {
                       maxWidth: 240,
                     },
                   },
-                  React.createElement(
-                    "option",
-                    { value: "" },
-                    "📋 PRESETS…",
-                  ),
+                  React.createElement("option", { value: "" }, "📋 PRESETS…"),
                   (typeof ARMY_PRESETS !== "undefined" ? ARMY_PRESETS : [])
                     .filter(
-                      (p) =>
-                        !p.allegiance || p.allegiance === armyBuilderSide,
+                      (p) => !p.allegiance || p.allegiance === armyBuilderSide,
                     )
                     .map((p) =>
                       React.createElement(
@@ -11701,7 +14310,7 @@ var ShootingResolver = function () {
                     lineHeight: 1.4,
                   },
                 },
-                'Units are sent to the reserves tray. Open the Deployment phase, click a reserved unit, then click anywhere on the map to place it. Deployed units can be dragged around the map to reposition.',
+                "Units are sent to the reserves tray. Open the Deployment phase, click a reserved unit, then click anywhere on the map to place it. Deployed units can be dragged around the map to reposition.",
               ),
               React.createElement(
                 "div",
@@ -13891,7 +16500,12 @@ var ShootingResolver = function () {
           null,
           React.createElement(
             "div",
-            { style: { ...panelStyle, marginBottom: 12 } },
+            {
+              ref: function (node) {
+                helpSectionRefs.current["army-tips"] = node;
+              },
+              style: { ...panelStyle, marginBottom: 12 },
+            },
             React.createElement(
               "div",
               {
@@ -13920,8 +16534,18 @@ var ShootingResolver = function () {
             ),
           ),
           React.createElement(
+            React.Fragment,
+            null,
+            renderHelpChatPanel({ marginBottom: 12 }),
+          ),
+          React.createElement(
             "div",
-            { style: { ...panelStyle, marginBottom: 12 } },
+            {
+              ref: function (node) {
+                helpSectionRefs.current["combat-tips"] = node;
+              },
+              style: { ...panelStyle, marginBottom: 12 },
+            },
             React.createElement(
               "div",
               {
@@ -13984,44 +16608,7 @@ var ShootingResolver = function () {
               },
               "🗂  PHASE GUIDE",
             ),
-            [
-              {
-                icon: "📋",
-                label: "ARMY BUILDER",
-                color: "#4a6741",
-                desc: "Build your Crusade Force. Select your legion and allegiance, set a points limit, then add units from each battlefield role. Configure wargear, weapons, and detachment slots. Export your list as JSON to save it, or import a saved list to continue.",
-              },
-              {
-                icon: "📍",
-                label: "DEPLOYMENT",
-                color: "#5b4a8a",
-                desc: "Place your units on the battlefield map. Drag units to their starting positions within your deployment zone. Supports standard and zone mortalis deployment types.",
-              },
-              {
-                icon: "🚶",
-                label: "MOVEMENT",
-                color: "#6b5b2e",
-                desc: "Move your units across the battlefield. Track unit positions and measure distances according to their movement values.",
-              },
-              {
-                icon: "⚔",
-                label: "SHOOTING",
-                color: "#b8860b",
-                desc: "Resolve ranged attacks. Select an attacking unit and target, then roll to hit (using BS), wound, and save. The resolver automatically applies special rules like Reaping Blow and Twin-linked.",
-              },
-              {
-                icon: "🗡",
-                label: "ASSAULT",
-                color: "#9b2d2d",
-                desc: "Resolve close combat. Includes charge moves, combat resolution, sweeping advances, and challenge sub-phases. Select attacker and defender to calculate Attacks, Strength, and AP automatically.",
-              },
-              {
-                icon: "🏛",
-                label: "END PHASE",
-                color: "#2e5e3e",
-                desc: "Handle end-of-turn bookkeeping: Morale checks, Reaction fire, regrouping, and objective scoring. Update unit statuses before moving to the next turn.",
-              },
-            ].map(function (phase) {
+            HELP_PHASE_GUIDE.map(function (phase) {
               return React.createElement(
                 "div",
                 {
@@ -14084,33 +16671,7 @@ var ShootingResolver = function () {
               },
               "📋  ARMY BUILDER TIPS",
             ),
-            [
-              {
-                tip: "Set your points limit first",
-                detail:
-                  "Click the points field at the top and enter your agreed game size (e.g. 3000). The builder tracks your running total and warns you if you go over.",
-              },
-              {
-                tip: "Detachments",
-                detail:
-                  "Units can be assigned to your Primary detachment or an Auxiliary/Apex detachment. Primary slots follow Force Organisation Chart restrictions. Auxiliary detachments are more flexible but may affect Ld.",
-              },
-              {
-                tip: "Warlord",
-                detail:
-                  "Designate one HQ unit as your Warlord using the crown toggle. Only one Warlord is allowed per army.",
-              },
-              {
-                tip: "Saving your army",
-                detail:
-                  "Use the Export button to download your army as a JSON file. Use Import to load a previously saved list. This is the only way to persist your army between sessions.",
-              },
-              {
-                tip: "Unit configuration",
-                detail:
-                  "Each unit row has controls for model count, sergeant weapon, secondary weapons, and wargear. Points update in real time as you make changes.",
-              },
-            ].map(function (item, i) {
+            HELP_ARMY_BUILDER_TIPS.map(function (item, i) {
               return React.createElement(
                 "div",
                 {
@@ -14173,33 +16734,7 @@ var ShootingResolver = function () {
               },
               "⚔  COMBAT RESOLVER TIPS",
             ),
-            [
-              {
-                tip: "Shooting — Select Attacker & Target",
-                detail:
-                  "Pick your firing unit and target unit from the dropdowns. The resolver loads their stats and available weapons automatically.",
-              },
-              {
-                tip: "Rolling dice",
-                detail:
-                  "Click ROLL to generate randomised results, or manually enter dice values. Results are colour-coded: green = success, red = fail.",
-              },
-              {
-                tip: "Special rules",
-                detail:
-                  "Rules like Pinning, Rending, Shred, and Concussive are applied automatically based on the weapon and unit profiles. Check the summary panel for active rules.",
-              },
-              {
-                tip: "Assault sequence",
-                detail:
-                  "The assault resolver walks you through charging, fight order, and combat result calculation step-by-step. Follow the numbered panels from top to bottom.",
-              },
-              {
-                tip: "Challenges",
-                detail:
-                  "If a Character is present in either unit, the Challenge sub-phase becomes available. Accept or decline to determine if the challenge is fought separately.",
-              },
-            ].map(function (item, i) {
+            HELP_COMBAT_TIPS.map(function (item, i) {
               return React.createElement(
                 "div",
                 {
@@ -14244,7 +16779,12 @@ var ShootingResolver = function () {
           ),
           React.createElement(
             "div",
-            { style: panelStyle },
+            {
+              ref: function (node) {
+                helpSectionRefs.current["faq"] = node;
+              },
+              style: { ...panelStyle, marginBottom: 12 },
+            },
             React.createElement(
               "div",
               {
@@ -14262,28 +16802,7 @@ var ShootingResolver = function () {
               },
               "❓  FREQUENTLY ASKED",
             ),
-            [
-              {
-                q: "My army went over the points limit — is that OK?",
-                a: "The builder will show a red warning but won't prevent you from continuing. Agree with your opponent before the game whether to trim the list or play as-is.",
-              },
-              {
-                q: "Can I use this for non-Legiones Astartes factions?",
-                a: "Yes — Sol Auxilia, Mechanicum, and Custodes are available in the legion selector alongside all 18 Space Marine Legions.",
-              },
-              {
-                q: "How do I undo a change to my army?",
-                a: "There is no undo function currently. Export your army list as JSON before making major changes so you can restore it if needed.",
-              },
-              {
-                q: "Does this tool enforce all special rules?",
-                a: "The combat resolvers cover the most common rules (BS tables, wound charts, AP/saves, Rending, Shred etc.). Some niche or campaign-specific rules may require manual adjudication.",
-              },
-              {
-                q: "Where is my army saved?",
-                a: "Armies are NOT saved automatically. Use the Export button in the Army Builder to download a JSON file. Store it somewhere safe and use Import to reload it next session.",
-              },
-            ].map(function (item, i) {
+            HELP_FAQ.map(function (item, i) {
               return React.createElement(
                 "div",
                 {
@@ -14317,6 +16836,317 @@ var ShootingResolver = function () {
                     },
                   },
                   item.a,
+                ),
+              );
+            }),
+          ),
+          React.createElement(
+            "div",
+            {
+              ref: function (node) {
+                helpSectionRefs.current["armoury-rules"] = node;
+              },
+              style: { ...panelStyle, marginBottom: 12 },
+            },
+            React.createElement(
+              "div",
+              {
+                style: {
+                  fontFamily: "'Share Tech Mono', serif",
+                  fontWeight: 700,
+                  fontSize: 12,
+                  color: "#4a3e2e",
+                  letterSpacing: 2,
+                  textTransform: "uppercase",
+                  marginBottom: 12,
+                  paddingBottom: 8,
+                  borderBottom: "1px solid #d8cdb8",
+                },
+              },
+              "🛡  ARMOURY RULES",
+            ),
+            HELP_ARMOURY_ENTRIES.map(function (item, i) {
+              return React.createElement(
+                "div",
+                {
+                  key: item.title + "_" + i,
+                  style: {
+                    display: "flex",
+                    gap: 12,
+                    alignItems: "flex-start",
+                    padding: "10px 0",
+                    borderBottom: "1px solid #ede5d8",
+                  },
+                },
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      minWidth: 180,
+                      fontFamily: "'Share Tech Mono', serif",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: "#5a7a9a",
+                      letterSpacing: 1,
+                      paddingTop: 2,
+                    },
+                  },
+                  "▸ " + item.title,
+                ),
+                React.createElement(
+                  "p",
+                  {
+                    style: {
+                      fontSize: 13,
+                      color: "#5a4e3e",
+                      lineHeight: 1.6,
+                      margin: 0,
+                    },
+                  },
+                  item.text,
+                ),
+              );
+            }),
+          ),
+          React.createElement(
+            "div",
+            {
+              ref: function (node) {
+                helpSectionRefs.current["astrates-reference"] = node;
+              },
+              style: { ...panelStyle, marginBottom: 12 },
+            },
+            React.createElement(
+              "div",
+              {
+                style: {
+                  fontFamily: "'Share Tech Mono', serif",
+                  fontWeight: 700,
+                  fontSize: 12,
+                  color: "#4a3e2e",
+                  letterSpacing: 2,
+                  textTransform: "uppercase",
+                  marginBottom: 12,
+                  paddingBottom: 8,
+                  borderBottom: "1px solid #d8cdb8",
+                },
+              },
+              "📗  LEGION ASTARTES REFERENCES",
+            ),
+            React.createElement(
+              "p",
+              {
+                style: {
+                  fontSize: 13,
+                  color: "#5a4e3e",
+                  lineHeight: 1.6,
+                  margin: "0 0 10px 0",
+                },
+              },
+              "The AI chatbot now includes searchable entries from the Legion Astrastes Weapon Armoury 3rd Ed. V2 workbook and the Liber Astrates 3rd Edition workbook.",
+            ),
+            React.createElement(
+              "p",
+              {
+                style: {
+                  fontSize: 13,
+                  color: "#5a4e3e",
+                  lineHeight: 1.6,
+                  margin: "0 0 10px 0",
+                },
+              },
+              "Coverage includes ",
+              String(HELP_WEAPON_ARMOURY_ENTRIES.length),
+              " weapon profiles and ",
+              String(HELP_LIBER_ASTARTES_ENTRIES.length),
+              " Liber Astartes unit/reference entries. Ask the chatbot about weapon stats, base points, wargear, unit special rules, or upgrade options by name.",
+            ),
+            React.createElement(
+              "div",
+              {
+                style: {
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                  gap: 10,
+                },
+              },
+              [
+                "What are the stats for a meltagun?",
+                "What can a Praetor take?",
+                "What does a Predator start with?",
+                "Tell me the Kratos battlecannon profile",
+              ].map(function (prompt) {
+                return React.createElement(
+                  "div",
+                  {
+                    key: prompt,
+                    style: {
+                      border: "1px solid #ede5d8",
+                      borderRadius: 8,
+                      padding: 10,
+                      background: "#fbf7f0",
+                    },
+                  },
+                  React.createElement(
+                    "div",
+                    {
+                      style: {
+                        fontFamily: "'Share Tech Mono', serif",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: "#5a7a9a",
+                        marginBottom: 4,
+                      },
+                    },
+                    "TRY ASKING",
+                  ),
+                  React.createElement(
+                    "div",
+                    {
+                      style: {
+                        fontSize: 13,
+                        color: "#5a4e3e",
+                        lineHeight: 1.5,
+                      },
+                    },
+                    prompt,
+                  ),
+                );
+              }),
+            ),
+          ),
+          React.createElement(
+            "div",
+            {
+              ref: function (node) {
+                helpSectionRefs.current["basic-principles"] = node;
+              },
+              style: { ...panelStyle, marginBottom: 12 },
+            },
+            React.createElement(
+              "div",
+              {
+                style: {
+                  fontFamily: "'Share Tech Mono', serif",
+                  fontWeight: 700,
+                  fontSize: 12,
+                  color: "#4a3e2e",
+                  letterSpacing: 2,
+                  textTransform: "uppercase",
+                  marginBottom: 12,
+                  paddingBottom: 8,
+                  borderBottom: "1px solid #d8cdb8",
+                },
+              },
+              "📘  BASIC PRINCIPLES",
+            ),
+            HELP_BASIC_PRINCIPLES_ENTRIES.map(function (item, i) {
+              return React.createElement(
+                "div",
+                {
+                  key: item.title + "_" + i,
+                  style: {
+                    display: "flex",
+                    gap: 12,
+                    alignItems: "flex-start",
+                    padding: "10px 0",
+                    borderBottom: "1px solid #ede5d8",
+                  },
+                },
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      minWidth: 180,
+                      fontFamily: "'Share Tech Mono', serif",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: "#5a7a9a",
+                      letterSpacing: 1,
+                      paddingTop: 2,
+                    },
+                  },
+                  "▸ " + item.title,
+                ),
+                React.createElement(
+                  "p",
+                  {
+                    style: {
+                      fontSize: 13,
+                      color: "#5a4e3e",
+                      lineHeight: 1.6,
+                      margin: 0,
+                    },
+                  },
+                  item.text,
+                ),
+              );
+            }),
+          ),
+          React.createElement(
+            "div",
+            {
+              ref: function (node) {
+                helpSectionRefs.current["reference-card"] = node;
+              },
+              style: panelStyle,
+            },
+            React.createElement(
+              "div",
+              {
+                style: {
+                  fontFamily: "'Share Tech Mono', serif",
+                  fontWeight: 700,
+                  fontSize: 12,
+                  color: "#4a3e2e",
+                  letterSpacing: 2,
+                  textTransform: "uppercase",
+                  marginBottom: 12,
+                  paddingBottom: 8,
+                  borderBottom: "1px solid #d8cdb8",
+                },
+              },
+              "📚  REFERENCE CARD RULES",
+            ),
+            HELP_REFERENCE_CARD_ENTRIES.map(function (item, i) {
+              return React.createElement(
+                "div",
+                {
+                  key: item.title + "_" + i,
+                  style: {
+                    display: "flex",
+                    gap: 12,
+                    alignItems: "flex-start",
+                    padding: "10px 0",
+                    borderBottom: "1px solid #ede5d8",
+                  },
+                },
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      minWidth: 180,
+                      fontFamily: "'Share Tech Mono', serif",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: "#5a7a9a",
+                      letterSpacing: 1,
+                      paddingTop: 2,
+                    },
+                  },
+                  "▸ " + item.title,
+                ),
+                React.createElement(
+                  "p",
+                  {
+                    style: {
+                      fontSize: 13,
+                      color: "#5a4e3e",
+                      lineHeight: 1.6,
+                      margin: 0,
+                    },
+                  },
+                  item.text,
                 ),
               );
             }),
@@ -25482,8 +28312,8 @@ var ShootingResolver = function () {
                                       .filter((r) => w.rules[r])
                                       .map(
                                         (r) =>
-                                          MELEE_SPECIAL_RULES_BY_ID[r]
-                                            ?.label || r,
+                                          MELEE_SPECIAL_RULES_BY_ID[r]?.label ||
+                                          r,
                                       )
                                       .join(", "),
                                   ),
@@ -33265,6 +36095,76 @@ var ShootingResolver = function () {
               ),
             ),
         ),
+      helpChatOpen &&
+        React.createElement(
+          "div",
+          {
+            onClick: function () {
+              setHelpChatOpen(false);
+            },
+            style: {
+              position: "fixed",
+              inset: 0,
+              zIndex: 3000,
+              background: "rgba(18,14,9,0.55)",
+              display: "flex",
+              alignItems: "flex-end",
+              justifyContent: "flex-end",
+              padding: 20,
+            },
+          },
+          React.createElement(
+            "div",
+            {
+              onClick: function (e) {
+                e.stopPropagation();
+              },
+              style: {
+                width: "min(760px, calc(100vw - 24px))",
+                maxHeight: "min(860px, calc(100vh - 24px))",
+                overflowY: "auto",
+              },
+            },
+            renderHelpChatPanel({ compact: true, marginBottom: 0 }),
+          ),
+        ),
+      React.createElement(
+        "button",
+        {
+          onClick: function () {
+            setHelpChatOpen(function (prev) {
+              return !prev;
+            });
+          },
+          title: helpChatOpen ? "Close AI help chat" : "Open AI help chat",
+          style: {
+            position: "fixed",
+            right: 20,
+            bottom: 20,
+            zIndex: 3001,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "12px 14px",
+            borderRadius: 999,
+            border: "1px solid #5a7a9a",
+            background: helpChatOpen
+              ? "linear-gradient(180deg, #8aa2bb 0%, #6f90b0 100%)"
+              : "linear-gradient(180deg, #6f90b0 0%, #5a7a9a 100%)",
+            color: "#fff",
+            fontSize: 12,
+            fontWeight: 700,
+            letterSpacing: 1,
+            boxShadow: "0 10px 24px rgba(0,0,0,0.18)",
+          },
+        },
+        React.createElement("span", { style: { fontSize: 16 } }, "🤖"),
+        React.createElement(
+          "span",
+          null,
+          helpChatOpen ? "AI CHAT OPEN" : "AI CHAT",
+        ),
+      ),
       React.createElement(
         "div",
         {
@@ -33281,7 +36181,7 @@ var ShootingResolver = function () {
         React.createElement("br", null),
         "All dice rolls are simulated. Use for quick resolution and statistical analysis.",
         React.createElement("br", null),
-        "Version 1.85 — Legio Custodes Faction Added, Faction Unit Filtering",
+        "Version 1.90 — All Factions Added 115_04_20, Faction Unit Filtering",
       ),
     ),
   );
