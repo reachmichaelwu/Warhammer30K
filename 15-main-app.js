@@ -2275,7 +2275,7 @@ function buildHelpChatReply(question, contextPhaseId) {
 function createHelpWelcomeMessage(contextPhaseId) {
   var phase = getHelpPhaseById(contextPhaseId || "army_builder");
   return (
-    "AI Help Chatbot online. Ask about rules, phase order, or how to use a tab.\n\n" +
+    "Silica Animus online. Ask about rules, phase order, or how to use a tab.\n\n" +
     "Current context: " +
     phase.label +
     ". Try 'Explain this phase', 'How do detachments work?', or 'Walk me through shooting.'"
@@ -2392,7 +2392,7 @@ var ShootingResolver = function () {
             React.createElement(
               "span",
               { style: { color: "#5a7a9a" } },
-              compact ? "AI CHAT" : "AI HELP CHATBOT",
+              compact ? "SILICA ANIMUS" : "SILICA ANIMUS",
             ),
           ),
           React.createElement(
@@ -2447,7 +2447,7 @@ var ShootingResolver = function () {
               marginBottom: 12,
             },
           },
-          "Ask about rules, tab flow, or how to use the toolkit. The chatbot uses the built-in phase guide and answers in the context of ",
+          "Ask about rules, tab flow, or how to use the toolkit. Silica Animus uses the built-in phase guide and answers in the context of ",
           getHelpPhaseById(helpChatContextPhase).label,
           ".",
         ),
@@ -16943,7 +16943,7 @@ var ShootingResolver = function () {
                   margin: "0 0 10px 0",
                 },
               },
-              "The AI chatbot now includes searchable entries from the Legion Astrastes Weapon Armoury 3rd Ed. V2 workbook and the Liber Astrates 3rd Edition workbook.",
+              "Silica Animus now includes searchable entries from the Legion Astrastes Weapon Armoury 3rd Ed. V2 workbook and the Liber Astrates 3rd Edition workbook.",
             ),
             React.createElement(
               "p",
@@ -16959,7 +16959,7 @@ var ShootingResolver = function () {
               String(HELP_WEAPON_ARMOURY_ENTRIES.length),
               " weapon profiles and ",
               String(HELP_LIBER_ASTARTES_ENTRIES.length),
-              " Liber Astartes unit/reference entries. Ask the chatbot about weapon stats, base points, wargear, unit special rules, or upgrade options by name.",
+              " Liber Astartes unit/reference entries. Ask Silica Animus about weapon stats, base points, wargear, unit special rules, or upgrade options by name.",
             ),
             React.createElement(
               "div",
@@ -36136,7 +36136,9 @@ var ShootingResolver = function () {
               return !prev;
             });
           },
-          title: helpChatOpen ? "Close AI help chat" : "Open AI help chat",
+          title: helpChatOpen
+            ? "Close Silica Animus"
+            : "Open Silica Animus",
           style: {
             position: "fixed",
             right: 20,
@@ -36162,7 +36164,7 @@ var ShootingResolver = function () {
         React.createElement(
           "span",
           null,
-          helpChatOpen ? "AI CHAT OPEN" : "AI CHAT",
+          helpChatOpen ? "SILICA ANIMUS OPEN" : "SILICA ANIMUS",
         ),
       ),
       React.createElement(

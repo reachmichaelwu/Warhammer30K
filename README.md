@@ -5,6 +5,7 @@ Browser-based toolkit for **Warhammer: The Horus Heresy — Age of Darkness (3rd
 ## Features
 
 - **Army Builder** — Crusade Force Organisation with detachment slots, legion factions, wargear, and points
+- **Silica Animus** — In-app assistant for explaining phase flow, common rules, and how to use each toolkit tab
 - **Shooting Resolver** — Full dice resolution with BS tables, wound charts, saves, special rules
 - **Return Fire** — Shooting phase reaction resolver
 - **Assault Resolver** — Initiative-step based combat with per-weapon-group dice tracking
@@ -24,3 +25,9 @@ Browser-based toolkit for **Warhammer: The Horus Heresy — Age of Darkness (3rd
 - React 18 loaded from CDN (unpkg.com)
 - 18 plain JS files, no bundler or transpiler needed at runtime
 - Works on any static file server including GitHub Pages
+
+## Node.js Version
+
+- Repo target: **Node.js 24.14.1 (LTS)**
+- Version files included: `.nvmrc` and `.node-version`
+- Note: Node is not required to run the app in production, but these files keep local tooling aligned if you use Node-based scripts or version managers
