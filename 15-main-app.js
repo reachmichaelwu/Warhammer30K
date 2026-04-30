@@ -12862,7 +12862,7 @@ var ShootingResolver = function () {
                   letterSpacing: 3,
                 },
               },
-              "THE HORUS HERESY · AGE OF DARKNESS · 3RD EDITION · v1.90",
+              "THE HORUS HERESY · AGE OF DARKNESS · 3RD EDITION · v1.91",
             ),
           ),
         ),
@@ -36136,9 +36136,7 @@ var ShootingResolver = function () {
               return !prev;
             });
           },
-          title: helpChatOpen
-            ? "Close Silica Animus"
-            : "Open Silica Animus",
+          title: helpChatOpen ? "Close Silica Animus" : "Open Silica Animus",
           style: {
             position: "fixed",
             right: 20,
@@ -36183,7 +36181,7 @@ var ShootingResolver = function () {
         React.createElement("br", null),
         "All dice rolls are simulated. Use for quick resolution and statistical analysis.",
         React.createElement("br", null),
-        "Version 1.90 — All Factions Added 115_04_20, Faction Unit Filtering",
+        "Version 1.91 — All Factions Added 115_04_20, Faction Unit Filtering",
       ),
     ),
   );
