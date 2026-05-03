@@ -44,6 +44,30 @@ var ARMY_PRESETS = [
 `,
   },
   {
+    id: "blood_angels_v1",
+    name: "Blood Angels — Dominion Zephon (3000pt)",
+    allegiance: "loyalist",
+    faction: "blood_angels",
+    pointsLimit: 3000,
+    csv: `"Army List","LOYALIST","Faction:","blood_angels","Points Limit:","3000"
+
+"#","Unit Name","Unit ID","Battlefield Role","Detachment","Detachment Type","Detachment Name","Models","Primary Weapon","Sgt Weapon","Equipment","Points","Warlord"
+"1","Dominion Zephon (IX - Cmd)","dom_zephon","command","primary","primary","Crusade Primary","1","—","—","—","190",""
+"2","Centurion (Terminator)","centurion_ta","command","primary","primary","Crusade Primary","1","Combi-Bolter","—","—","105",""
+"3","Tactical Squad","tactical","troops","primary","primary","Crusade Primary","10","Bolter","—","—","100",""
+"4","Assault Squad","assault","troops","primary","primary","Crusade Primary","10","Bolt Pistol","—","—","140",""
+"5","Fellblade Super-Heavy","fellblade","lord_of_war","add_1777782416542","lord_of_war_det","Lord of War Detachment","1","Fellblade Accelerator Cannon (HE)","—","—","650",""
+"6","Land Raider Carrier","land_raider","heavy_transport","aux_1777782416543","armoured_fist","Armoured Fist","1","Twin Lascannon x2 (sponsons)","—","—","265",""
+"7","Praetor (Saturnine)","praetor_sat","high_command","primary","primary","Crusade Primary","1","Plasma Blaster (Sustained)","—","—","210",""
+"8","Spartan","spartan","heavy_transport","aux_1777782416543","armoured_fist","Armoured Fist","1","Lascannon Array x2","—","—","400",""
+"9","Saturnine Dreadnought","saturnine_dread","war_engine","aux_1777782416545","heavy_support","Heavy Support","1","Heavy Plasma Bombard (Sustained)","—","—","340",""
+"10","Heavy Support Squad","heavy_support","support","aux_1777782416546","tactical_support","Tactical Support","5","Lascannon","—","—","175",""
+"11","Dawnbreaker Cohort (IX - Elite)","dawnbreaker_cohort","elites","aux_1777782416544","revelation_host","Revelation Host","5","Grenade Discharger (Frag)","—","—","150",""
+
+"","","","","","","","","","","TOTAL:","2725",""
+`,
+  },
+  {
     id: "luna_wolves_v3",
     name: "Sons of Horus — Luna Wolves (3000pt)",
     allegiance: "traitor",

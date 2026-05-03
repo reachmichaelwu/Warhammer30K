@@ -3111,6 +3111,11 @@ var ShootingResolver = function () {
             label: entry.unitName,
             symbol,
             type: iconType,
+            // Identity fields used by the Tactical Map's thumbnail renderer
+            // (getUnitArtwork → UNIT_ARTWORK_MAP / FACTION_MARINE_MAP).
+            unitId: entry.unitId,
+            factionId: army.faction,
+            allegiance: army.allegiance,
             player,
             x: player === "p1" ? 6 + (i % 8) * 4 : 66 - (i % 8) * 4,
             y:
@@ -3195,6 +3200,10 @@ var ShootingResolver = function () {
             label: entry.unitName,
             symbol,
             type: iconType,
+            // Identity fields for the Tactical Map thumbnail renderer.
+            unitId: entry.unitId,
+            factionId: army.faction,
+            allegiance: army.allegiance,
             player,
             x: 0,
             y: 0,
@@ -3625,8 +3634,11 @@ var ShootingResolver = function () {
     setMapAttackerId(unit.id);
     if (unit.unitData) {
       const ud = unit.unitData;
+      // Squad size as deployed (army builder count) — must win over any
+      // weapon-preset defaultModels override.
+      const deployedModels = ud.models || 1;
       applyUnitPreset(ud);
-      setNumModels(ud.models || 1);
+      setNumModels(deployedModels);
       setBs(ud.bs || 4);
       if (unit.rangedWeapon) {
         applyWeaponPreset(unit.rangedWeapon);
@@ -3640,8 +3652,13 @@ var ShootingResolver = function () {
       } else {
         setSecondaryWeapons([]);
       }
+      // Re-assert the deployed squad size AFTER applyUnitPreset / applyWeaponPreset,
+      // both of which may stomp numModels with a weapon's defaultModels (the
+      // special-weapon-carrier hint, e.g. Plasma Gun → 1).  The Tactical Map
+      // must always remember the squad size the user built in the army builder.
+      setNumModels(deployedModels);
       setAUnit(ud);
-      setAModels(ud.models || 1);
+      setAModels(deployedModels);
       setAT(ud.t || 4);
       setAW(ud.w || 1);
       setASv(ud.sv || "3");
@@ -3662,11 +3679,15 @@ var ShootingResolver = function () {
     setMapTargetId(unit.id);
     if (unit.unitData) {
       const ud = unit.unitData;
+      const deployedModels = ud.models || 1;
       applyTargetPreset(ud);
       setTargetHasVexilla(unit.equipment?.vexilla || false);
       setTargetHasNoxVox(unit.equipment?.noxVox || false);
+      // Re-assert deployed squad size so applyTargetPreset's preset-derived
+      // count never wins over the army-builder/deploy count.
+      setTargetModels(deployedModels);
       setDUnit(ud);
-      setDModels(ud.models || 1);
+      setDModels(deployedModels);
       setDT(ud.t || 4);
       setDW(ud.w || 1);
       setDSv(ud.sv || "3");
@@ -3873,6 +3894,14 @@ var ShootingResolver = function () {
         const glyph = isFlyerEntry
           ? "✈"
           : flyer.symbol || (flyer.unitData && flyer.unitData.symbol) || "◆";
+        const reserveArt =
+          typeof getUnitArtwork === "function"
+            ? getUnitArtwork(
+                flyer.unitId || (flyer.unitData && flyer.unitData.id),
+                flyer.factionId,
+                flyer.allegiance,
+              )
+            : null;
         const reserveLabel = isFlyerEntry
           ? `${flyer.name} — Reserve Target ${getFlyerReserveTarget(flyer)}+ ${flyer.mission ? "· " + FLYER_MISSIONS[flyer.mission].label : ""}`
           : `${flyer.name || flyer.label}${isDs ? " (DEEP STRIKE)" : " (RESERVE)"} — Target ${getFlyerReserveTarget(flyer)}+`;
@@ -3890,8 +3919,10 @@ var ShootingResolver = function () {
               width: flyerIconSize + 6,
               height: flyerIconSize + 6,
               borderRadius: isFlyerEntry ? 4 : 3,
-              background:
-                edgePlayer === "p1"
+              overflow: "hidden",
+              background: reserveArt
+                ? "#1e1a14"
+                : edgePlayer === "p1"
                   ? "rgba(155,45,45,0.85)"
                   : "rgba(42,111,180,0.85)",
               border: selected
@@ -3917,7 +3948,26 @@ var ShootingResolver = function () {
               flexShrink: 0,
             },
           },
-          glyph,
+          reserveArt
+            ? React.createElement("img", {
+                src: reserveArt,
+                alt: "",
+                draggable: false,
+                style: {
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  display: "block",
+                  pointerEvents: "none",
+                  boxShadow: `inset 0 0 0 9999px ${edgePlayer === "p1" ? "rgba(155,45,45,0.18)" : "rgba(42,111,180,0.18)"}`,
+                },
+                onError: function (e) {
+                  e.currentTarget.style.display = "none";
+                  const parent = e.currentTarget.parentNode;
+                  if (parent) parent.textContent = glyph;
+                },
+              })
+            : glyph,
           isDs &&
             React.createElement(
               "span",
@@ -4027,6 +4077,14 @@ var ShootingResolver = function () {
                 const isDs = u.deepStrike;
                 const glyph =
                   u.symbol || (u.unitData && u.unitData.symbol) || "◆";
+                const reserveArt =
+                  typeof getUnitArtwork === "function"
+                    ? getUnitArtwork(
+                        u.unitId || (u.unitData && u.unitData.id),
+                        u.factionId,
+                        u.allegiance,
+                      )
+                    : null;
                 const title = `${u.name || u.label}${isDs ? " (DEEP STRIKE)" : " (RESERVE)"} — ${activePhase === "deployment" ? "click, then click the map to place" : `Target ${getFlyerReserveTarget(u)}+`}`;
                 return React.createElement(
                   "div",
@@ -4055,8 +4113,10 @@ var ShootingResolver = function () {
                       width: iconSize + 6,
                       height: iconSize + 6,
                       borderRadius: 3,
-                      background:
-                        player === "p1"
+                      overflow: "hidden",
+                      background: reserveArt
+                        ? "#1e1a14"
+                        : player === "p1"
                           ? "rgba(155,45,45,0.85)"
                           : "rgba(42,111,180,0.85)",
                       border: selected
@@ -4083,7 +4143,26 @@ var ShootingResolver = function () {
                       cursor: "pointer",
                     },
                   },
-                  glyph,
+                  reserveArt
+                    ? React.createElement("img", {
+                        src: reserveArt,
+                        alt: "",
+                        draggable: false,
+                        style: {
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          display: "block",
+                          pointerEvents: "none",
+                          boxShadow: `inset 0 0 0 9999px ${player === "p1" ? "rgba(155,45,45,0.18)" : "rgba(42,111,180,0.18)"}`,
+                        },
+                        onError: function (e) {
+                          e.currentTarget.style.display = "none";
+                          const parent = e.currentTarget.parentNode;
+                          if (parent) parent.textContent = glyph;
+                        },
+                      })
+                    : glyph,
                   isDs &&
                     React.createElement(
                       "span",
@@ -6469,6 +6548,24 @@ var ShootingResolver = function () {
                   const isRouted = routedUnits.has(unit.id);
                   const facing = getUnitFacing(unit);
                   const isHovered = mapHoveredUnitId === unit.id;
+                  // Resolve a unit-art thumbnail for the token.  Objectives
+                  // keep their plain symbol — they aren't a unit.
+                  const tokenArt =
+                    unit.type !== "objective" &&
+                    typeof getUnitArtwork === "function"
+                      ? getUnitArtwork(
+                          unit.unitId ||
+                            (unit.unitData && unit.unitData.id),
+                          unit.factionId,
+                          unit.allegiance,
+                        )
+                      : null;
+                  const tokenShape =
+                    unit.type === "tank" || unit.type === "transport"
+                      ? 3
+                      : unit.type === "objective"
+                        ? "50%"
+                        : 4;
 
                   return React.createElement(
                     "div",
@@ -6540,17 +6637,15 @@ var ShootingResolver = function () {
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          borderRadius:
-                            unit.type === "tank" || unit.type === "transport"
-                              ? 3
-                              : unit.type === "objective"
-                                ? "50%"
-                                : 4,
+                          borderRadius: tokenShape,
+                          overflow: "hidden",
                           background: isRouted
                             ? "rgba(255,102,0,0.85)"
                             : unit.type === "objective"
                               ? "rgba(255,215,0,0.85)"
-                              : bgCol,
+                              : tokenArt
+                                ? "#1e1a14"
+                                : bgCol,
                           border: isAtk
                             ? "2.5px solid #ffd700"
                             : isDef
@@ -6570,7 +6665,34 @@ var ShootingResolver = function () {
                           opacity: isRouted ? 0.7 : 1,
                         },
                       },
-                      unit.symbol,
+                      tokenArt
+                        ? React.createElement("img", {
+                            src: tokenArt,
+                            alt: "",
+                            draggable: false,
+                            style: {
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                              display: "block",
+                              pointerEvents: "none",
+                              // Tint by player so red/blue allegiance is still
+                              // readable at a glance behind the artwork.
+                              boxShadow: `inset 0 0 0 9999px ${isP1 ? "rgba(200,60,60,0.18)" : "rgba(50,120,200,0.18)"}`,
+                            },
+                            onError: function (e) {
+                              // Fall back to the text symbol if the image
+                              // 404s — keeps the token from going blank.
+                              const parent = e.currentTarget.parentNode;
+                              e.currentTarget.style.display = "none";
+                              if (parent && !parent.dataset.fallback) {
+                                parent.dataset.fallback = "1";
+                                parent.style.background = bgCol;
+                                parent.textContent = unit.symbol || "●";
+                              }
+                            },
+                          })
+                        : unit.symbol,
                     ),
                   );
                 }),
@@ -8223,6 +8345,8 @@ var ShootingResolver = function () {
     if (deployBrushUnit) {
       const iconType = getUnitIconType(deployBrushUnit.name);
       const symbol = getSymbolForType(iconType);
+      const brushArmy =
+        deployPlayer === "p1" ? loyalistArmy : traitorArmy;
       setDeployedUnits((prev) => [
         ...prev,
         {
@@ -8234,6 +8358,10 @@ var ShootingResolver = function () {
           label: deployBrushUnit.name,
           symbol,
           name: deployBrushUnit.name,
+          // Identity fields for the Tactical Map thumbnail renderer.
+          unitId: deployBrushUnit.id,
+          factionId: brushArmy && brushArmy.faction,
+          allegiance: brushArmy && brushArmy.allegiance,
           unitData: { ...deployBrushUnit, models: deployBrushModels },
           rangedWeapon: deployBrushRangedWeapon,
           meleeWeapon: deployBrushMeleeWeapon,
@@ -10597,6 +10725,18 @@ var ShootingResolver = function () {
               const facing = unitFacings[unit.id];
               const canDragOnBoard = activePhase === "deployment";
               const isHovered = mapHoveredUnitId === unit.id;
+              // Resolve a unit-art thumbnail for the token (objectives keep
+              // their plain symbol).
+              const tokenArt =
+                unit.type !== "objective" &&
+                typeof getUnitArtwork === "function"
+                  ? getUnitArtwork(
+                      unit.unitId ||
+                        (unit.unitData && unit.unitData.id),
+                      unit.factionId,
+                      unit.allegiance,
+                    )
+                  : null;
               return React.createElement(
                 "div",
                 {
@@ -10643,6 +10783,7 @@ var ShootingResolver = function () {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
+                    overflow: "hidden",
                     borderRadius:
                       unit.type === "tank" || unit.type === "transport"
                         ? 3
@@ -10653,7 +10794,9 @@ var ShootingResolver = function () {
                       ? "rgba(100,100,100,0.7)"
                       : unit.type === "objective"
                         ? "rgba(255,215,0,0.85)"
-                        : bgCol,
+                        : tokenArt
+                          ? "#1e1a14"
+                          : bgCol,
                     border: isAttacker
                       ? "2.5px solid #ffd700"
                       : isTarget
@@ -10681,7 +10824,30 @@ var ShootingResolver = function () {
                     userSelect: "none",
                   },
                 },
-                unit.symbol,
+                tokenArt
+                  ? React.createElement("img", {
+                      src: tokenArt,
+                      alt: "",
+                      draggable: false,
+                      style: {
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        display: "block",
+                        pointerEvents: "none",
+                        boxShadow: `inset 0 0 0 9999px ${isP1 ? "rgba(200,60,60,0.18)" : "rgba(50,120,200,0.18)"}`,
+                      },
+                      onError: function (e) {
+                        const parent = e.currentTarget.parentNode;
+                        e.currentTarget.style.display = "none";
+                        if (parent && !parent.dataset.fallback) {
+                          parent.dataset.fallback = "1";
+                          parent.style.background = bgCol;
+                          parent.textContent = unit.symbol || "●";
+                        }
+                      },
+                    })
+                  : unit.symbol,
                 facing !== undefined &&
                   React.createElement("div", {
                     style: {
@@ -22669,6 +22835,13 @@ var ShootingResolver = function () {
             showMoveRange: !!moveSelectedId,
             moveRangeUnit: moveSelectedId,
             unitOnClick: (unit, e) => {
+              // Click the currently-selected unit again to unclick (deselect).
+              // Clicking a different unit while one is mid-move falls through
+              // so the map click still resolves the move placement.
+              if (moveSelectedId === unit.id) {
+                setMoveSelectedId(null);
+                return;
+              }
               if (moveSelectedId) return; // already moving, let map click handle
               setMoveSelectedId(unit.id);
             },

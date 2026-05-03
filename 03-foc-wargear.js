@@ -69,6 +69,7 @@ var UNIT_FOC_SLOT = {
   raldoron: "hq", dom_zephon: "hq", aster_crohne: "hq",  // High Cmd / Command → hq
   crimson_paladin: "elites",                     // Elite
   dawnbreaker: "fast",                           // Fast Attack
+  dawnbreaker_cohort: "elites",                  // Elite (Dawnbreaker Cohort, p.219)
   erelim: "troops",                              // Troops
   contemp_incaendius: "war_engine",              // War Engine
   // ── X Iron Hands ──

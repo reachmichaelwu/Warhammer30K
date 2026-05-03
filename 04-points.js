@@ -290,6 +290,7 @@ var POINTS_DATA = {
   aster_crohne: { base: 140, perModel: 0, minModels: 1 },
   crimson_paladin: { base: 175, perModel: 35, minModels: 5 },
   dawnbreaker: { base: 160, perModel: 30, minModels: 5 },
+  dawnbreaker_cohort: { base: 150, perModel: 25, minModels: 5 },
   erelim: { base: 100, perModel: 10, minModels: 10 },
   contemp_incaendius: { base: 195, perModel: 0, minModels: 1 },
   // ── IRON HANDS (X) ──

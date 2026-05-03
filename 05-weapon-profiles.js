@@ -47,6 +47,10 @@ var LEGION_WEAPON_PROFILES = {
   dawnbreaker: [
     { name: "Bolt Pistol", shots: 1, s: 4, ap: "5", damage: 1, type: "Pistol", rules: {} },
   ],
+  dawnbreaker_cohort: [
+    { name: "Grenade Discharger (Frag)", shots: 1, s: 4, ap: "6", damage: 1, type: "Assault", rules: { blast: true } },
+    { name: "Grenade Discharger (Krak)", shots: 1, s: 6, ap: "4", damage: 1, type: "Assault", rules: {} },
+  ],
   erelim: [
     { name: "Bolt Pistol", shots: 1, s: 4, ap: "5", damage: 1, type: "Pistol", rules: {} },
   ],

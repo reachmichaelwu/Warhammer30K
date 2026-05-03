@@ -58,6 +58,7 @@ var UNIT_ARTWORK_MAP = {
   "dreadwing_inter":   "Dreadwing.jpg",
   "inner_circle_knight": "Inner Circle.jpg",
   "dawnbreaker":       "Dawnbreaker.jpg",
+  "dawnbreaker_cohort":"Dawnbreaker.jpg",
   "hibou_khan":        "Hibou Khan.jpg",
   "stormseer":         "Stormseer.jpg",
   "geigor":            "Fell-Hand.jpg",

@@ -670,6 +670,9 @@ var MELEE_WEAPON_PROFILES = {
     { name: "Power Axe", ws: 4, s: 5, ap: "3", i: 4, a: 2, w: 2, t: 4, sv: "2", inv: "-", fnp: "-", ld: 8, rules: {} },
     { name: "Power Fist", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 2, t: 4, sv: "2", inv: "-", fnp: "-", ld: 8, rules: {} },
   ],
+  dawnbreaker_cohort: [
+    { name: "Falling-star Power Spear", ws: 5, s: 5, ap: "3", i: 5, a: 4, w: 2, t: 4, sv: "2", inv: "-", fnp: "-", ld: 8, rules: { m_breaching5: true } },
+  ],
   erelim: [
     { name: "Chainsword", ws: 4, s: 4, ap: "5", i: 4, a: 1, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", ld: 7, rules: { m_shred: true } },
     { name: "Power Weapon", ws: 4, s: 4, ap: "3", i: 4, a: 1, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", ld: 7, rules: { m_breaching6: true } },
