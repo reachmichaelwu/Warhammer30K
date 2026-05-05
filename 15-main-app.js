@@ -3631,85 +3631,104 @@ var ShootingResolver = function () {
   };
 
   const handleMapAttackerSelect = (unit) => {
-    setMapAttackerId(unit.id);
-    if (unit.unitData) {
-      const ud = unit.unitData;
-      // Squad size as deployed (army builder count) — must win over any
-      // weapon-preset defaultModels override.
-      const deployedModels = ud.models || 1;
-      applyUnitPreset(ud);
-      setNumModels(deployedModels);
-      setBs(ud.bs || 4);
-      if (unit.rangedWeapon) {
-        applyWeaponPreset(unit.rangedWeapon);
+    // Defensive guard: a stray click on a token without a unit object,
+    // or on an objective/terrain token, should not crash the shoot phase.
+    if (!unit || !unit.id) return;
+    try {
+      setMapAttackerId(unit.id);
+      if (unit.unitData) {
+        const ud = unit.unitData;
+        // Squad size as deployed (army builder count) — must win over any
+        // weapon-preset defaultModels override.
+        const deployedModels = ud.models || 1;
+        applyUnitPreset(ud);
+        setNumModels(deployedModels);
+        setBs(ud.bs || 4);
+        if (unit.rangedWeapon) {
+          applyWeaponPreset(unit.rangedWeapon);
+        }
+        if (unit.sgtEnabled && unit.sgtWeapon) {
+          setSgtEnabled(true);
+          setSgtWeapon(unit.sgtWeapon);
+        }
+        if (unit.secondaryWeapons && unit.secondaryWeapons.length > 0) {
+          setSecondaryWeapons(unit.secondaryWeapons.map((sw) => ({ ...sw })));
+        } else {
+          setSecondaryWeapons([]);
+        }
+        // Re-assert the deployed squad size AFTER applyUnitPreset / applyWeaponPreset,
+        // both of which may stomp numModels with a weapon's defaultModels (the
+        // special-weapon-carrier hint, e.g. Plasma Gun → 1).  The Tactical Map
+        // must always remember the squad size the user built in the army builder.
+        setNumModels(deployedModels);
+        setAUnit(ud);
+        setAModels(deployedModels);
+        setAT(ud.t || 4);
+        setAW(ud.w || 1);
+        setASv(ud.sv || "3");
+        setAInv(ud.inv || "-");
+        setAFnp(ud.fnp || "-");
+        setALd(ud.ld || 8);
+        if (unit.meleeWeapon) {
+          setAWS(unit.meleeWeapon.ws);
+          setAS(unit.meleeWeapon.s);
+          setAAP(unit.meleeWeapon.ap);
+          setAI(unit.meleeWeapon.i);
+          setAA(unit.meleeWeapon.a);
+        }
       }
-      if (unit.sgtEnabled && unit.sgtWeapon) {
-        setSgtEnabled(true);
-        setSgtWeapon(unit.sgtWeapon);
-      }
-      if (unit.secondaryWeapons && unit.secondaryWeapons.length > 0) {
-        setSecondaryWeapons(unit.secondaryWeapons.map((sw) => ({ ...sw })));
-      } else {
-        setSecondaryWeapons([]);
-      }
-      // Re-assert the deployed squad size AFTER applyUnitPreset / applyWeaponPreset,
-      // both of which may stomp numModels with a weapon's defaultModels (the
-      // special-weapon-carrier hint, e.g. Plasma Gun → 1).  The Tactical Map
-      // must always remember the squad size the user built in the army builder.
-      setNumModels(deployedModels);
-      setAUnit(ud);
-      setAModels(deployedModels);
-      setAT(ud.t || 4);
-      setAW(ud.w || 1);
-      setASv(ud.sv || "3");
-      setAInv(ud.inv || "-");
-      setAFnp(ud.fnp || "-");
-      setALd(ud.ld || 8);
-      if (unit.meleeWeapon) {
-        setAWS(unit.meleeWeapon.ws);
-        setAS(unit.meleeWeapon.s);
-        setAAP(unit.meleeWeapon.ap);
-        setAI(unit.meleeWeapon.i);
-        setAA(unit.meleeWeapon.a);
+    } catch (err) {
+      // Last-resort safety net: never propagate an exception out of the
+      // tactical-map click handler — a thrown error here would unmount
+      // the React tree and look like a hard crash to the user.
+      if (typeof console !== "undefined" && console.error) {
+        console.error("handleMapAttackerSelect failed:", err);
       }
     }
   };
 
   const handleMapTargetSelect = (unit) => {
-    setMapTargetId(unit.id);
-    if (unit.unitData) {
-      const ud = unit.unitData;
-      const deployedModels = ud.models || 1;
-      applyTargetPreset(ud);
-      setTargetHasVexilla(unit.equipment?.vexilla || false);
-      setTargetHasNoxVox(unit.equipment?.noxVox || false);
-      // Re-assert deployed squad size so applyTargetPreset's preset-derived
-      // count never wins over the army-builder/deploy count.
-      setTargetModels(deployedModels);
-      setDUnit(ud);
-      setDModels(deployedModels);
-      setDT(ud.t || 4);
-      setDW(ud.w || 1);
-      setDSv(ud.sv || "3");
-      setDInv(ud.inv || "-");
-      setDFnp(ud.fnp || "-");
-      setDLd(ud.ld || 8);
-      if (unit.meleeWeapon) {
-        setDWS(unit.meleeWeapon.ws);
-        setDS(unit.meleeWeapon.s);
-        setDAP(unit.meleeWeapon.ap);
-        setDI(unit.meleeWeapon.i);
-        setDA(unit.meleeWeapon.a);
+    if (!unit || !unit.id) return;
+    try {
+      setMapTargetId(unit.id);
+      if (unit.unitData) {
+        const ud = unit.unitData;
+        const deployedModels = ud.models || 1;
+        applyTargetPreset(ud);
+        setTargetHasVexilla(unit.equipment?.vexilla || false);
+        setTargetHasNoxVox(unit.equipment?.noxVox || false);
+        // Re-assert deployed squad size so applyTargetPreset's preset-derived
+        // count never wins over the army-builder/deploy count.
+        setTargetModels(deployedModels);
+        setDUnit(ud);
+        setDModels(deployedModels);
+        setDT(ud.t || 4);
+        setDW(ud.w || 1);
+        setDSv(ud.sv || "3");
+        setDInv(ud.inv || "-");
+        setDFnp(ud.fnp || "-");
+        setDLd(ud.ld || 8);
+        if (unit.meleeWeapon) {
+          setDWS(unit.meleeWeapon.ws);
+          setDS(unit.meleeWeapon.s);
+          setDAP(unit.meleeWeapon.ap);
+          setDI(unit.meleeWeapon.i);
+          setDA(unit.meleeWeapon.a);
+        }
       }
-    }
-    const atkUnit = deployedUnits.find((u) => u.id === mapAttackerId);
-    if (atkUnit) {
-      const dist = getDistanceBetween(atkUnit, unit);
-      if (dist !== null) {
-        setChargeDistance(Math.ceil(dist));
+      const atkUnit = deployedUnits.find((u) => u.id === mapAttackerId);
+      if (atkUnit) {
+        const dist = getDistanceBetween(atkUnit, unit);
+        if (dist !== null) {
+          setChargeDistance(Math.ceil(dist));
+        }
+        const angle = getAngleBetween(atkUnit, unit);
+        setUnitFacing(atkUnit.id, angle + 90);
       }
-      const angle = getAngleBetween(atkUnit, unit);
-      setUnitFacing(atkUnit.id, angle + 90);
+    } catch (err) {
+      if (typeof console !== "undefined" && console.error) {
+        console.error("handleMapTargetSelect failed:", err);
+      }
     }
   };
 
@@ -6630,7 +6649,7 @@ var ShootingResolver = function () {
                           e.stopPropagation();
                           onUnitClick && onUnitClick(unit);
                         },
-                        title: `${unit.label} (${unit.player.toUpperCase()}) ${unit.x}",${unit.y}"${isRouted ? " — ROUTED" : ""}`,
+                        title: `${unit.label || unit.name || "Unit"} (${(unit.player || "").toUpperCase() || "—"}) ${unit.x ?? "?"}",${unit.y ?? "?"}"${isRouted ? " — ROUTED" : ""}`,
                         style: {
                           width: sz,
                           height: sz,
@@ -10773,7 +10792,7 @@ var ShootingResolver = function () {
                     deployDragRef.current = { unitId: null };
                     unitOnClick && unitOnClick(unit, e);
                   },
-                  title: `${unit.label} (${unit.player.toUpperCase()}) — ${unit.x}", ${unit.y}"${isRouted ? " — ROUTED" : ""}${hasMoved ? " (moved)" : ""}${canDragOnBoard ? " — drag to reposition" : ""}`,
+                  title: `${unit.label || unit.name || "Unit"} (${(unit.player || "").toUpperCase() || "—"}) — ${unit.x ?? "?"}", ${unit.y ?? "?"}"${isRouted ? " — ROUTED" : ""}${hasMoved ? " (moved)" : ""}${canDragOnBoard ? " — drag to reposition" : ""}`,
                   style: {
                     position: "absolute",
                     left: unit.x * deployScale - sz / 2,
@@ -11593,28 +11612,33 @@ var ShootingResolver = function () {
   }, [targetUnit]);
 
   const applyUnitPreset = useCallback((unit) => {
+    // Guard against being called with no preset (would crash on
+    // `unit.models`, `unit.id`, etc. and unmount the React tree).
+    if (!unit) return;
     setSelectedUnit(unit);
-    setNumModels(unit.models);
-    setBs(unit.bs);
+    // Use sensible defaults so React inputs stay controlled even when
+    // a preset is missing some properties.
+    setNumModels(unit.models || 1);
+    setBs(unit.bs || 4);
     setShowAttackerPresets(false);
     setSecondaryWeapons([]); // Clear secondary weapons on unit change
     if (unit.hasSgt) {
       setSgtEnabled(false);
-      const cat = getSgtCategory(unit.id);
+      const cat = unit.id ? getSgtCategory(unit.id) : null;
       const sgtWeapons = cat ? SERGEANT_WEAPONS[cat] || [] : [];
       setSgtWeapon(sgtWeapons.length > 0 ? sgtWeapons[0] : null);
     } else {
       setSgtEnabled(false);
       setSgtWeapon(null);
     }
-    const weapons = getRangedWeapons(unit.id);
+    const weapons = unit.id ? getRangedWeapons(unit.id) : [];
     if (weapons.length > 0) {
       const w = weapons[0];
       setSelectedWeapon(w);
-      setNumShots(w.shots);
-      setStrength(w.s);
-      setAp(w.ap);
-      setWeaponType(w.type);
+      setNumShots(w.shots || 1);
+      setStrength(w.s || 4);
+      setAp(w.ap || "-");
+      setWeaponType(w.type || "Rapid Fire");
       setActiveRules(w.rules || {});
       if (w.defaultModels) setNumModels(w.defaultModels);
     } else {
@@ -11624,47 +11648,49 @@ var ShootingResolver = function () {
 
   const applyWeaponPreset = useCallback(
     (weapon) => {
+      if (!weapon) return;
       setSelectedWeapon(weapon);
-      setNumShots(weapon.shots);
-      setStrength(weapon.s);
-      setAp(weapon.ap);
-      setWeaponType(weapon.type);
+      setNumShots(weapon.shots || 1);
+      setStrength(weapon.s || 4);
+      setAp(weapon.ap || "-");
+      setWeaponType(weapon.type || "Rapid Fire");
       setActiveRules(weapon.rules || {});
       if (weapon.defaultModels) {
         setNumModels(weapon.defaultModels);
       } else if (selectedUnit) {
-        setNumModels(selectedUnit.models);
+        setNumModels(selectedUnit.models || 1);
       }
     },
     [selectedUnit],
   );
 
   const applyTargetPreset = useCallback((preset) => {
-    setToughness(preset.t);
+    if (!preset) return;
+    setToughness(preset.t || 4);
     setTargetW(preset.w || 1);
-    setArmourSave(preset.sv);
+    setArmourSave(preset.sv || "3");
     setIsVehicleTarget(preset.isVehicle || false);
     setTargetAVF(preset.avF || 12);
     setTargetAVS(preset.avS || 12);
     setTargetAVR(preset.avR || 10);
     setTargetHP(preset.hp || preset.w || 3);
     setTargetFacing("front"); // reset to front facing on unit change
-    setInvulnSave(preset.inv);
+    setInvulnSave(preset.inv || "-");
     setCoverSave(preset.cover || "-");
-    setFnp(preset.fnp);
+    setFnp(preset.fnp || "-");
     setLeadership(preset.ld || 8);
     setTargetModels(preset.models || preset.unitSize || 10);
-    setTargetPresetName(preset.name);
+    setTargetPresetName(preset.name || "");
     setTargetPresetId(preset.id || null);
     setTargetBS(preset.bs || 4);
     setShowTargetPresets(false);
     setTargetSecondaryWeapons([]); // Clear secondary weapons on unit change
-    const weapons = getRangedWeapons(preset.id);
+    const weapons = preset.id ? getRangedWeapons(preset.id) : [];
     if (weapons.length > 0) {
       setTargetSelectedWeapon(weapons[0]);
-      setReturnFireShots(weapons[0].shots);
-      setReturnFireS(weapons[0].s);
-      setReturnFireAP(weapons[0].ap);
+      setReturnFireShots(weapons[0].shots || 1);
+      setReturnFireS(weapons[0].s || 4);
+      setReturnFireAP(weapons[0].ap || "-");
       setSelectedReturnWeapon(weapons[0]);
     } else {
       setTargetSelectedWeapon(null);
@@ -11672,7 +11698,7 @@ var ShootingResolver = function () {
     }
     if (preset.hasSgt) {
       setTargetSgtEnabled(false);
-      const cat = getSgtCategory(preset.id);
+      const cat = preset.id ? getSgtCategory(preset.id) : null;
       const sgtWeapons = cat ? SERGEANT_WEAPONS[cat] || [] : [];
       setTargetSgtWeapon(sgtWeapons.length > 0 ? sgtWeapons[0] : null);
     } else {
@@ -23050,15 +23076,26 @@ var ShootingResolver = function () {
               refObj: shootMapRef,
               phase: "shooting",
               onUnitClick: (unit) => {
-                if (!mapAttackerId) {
-                  handleMapAttackerSelect(unit);
-                } else if (!mapTargetId && unit.id !== mapAttackerId) {
-                  handleMapTargetSelect(unit);
-                } else if (unit.id === mapAttackerId) {
-                  setMapAttackerId(null);
-                  setMapTargetId(null);
-                } else {
-                  handleMapTargetSelect(unit);
+                // Safety wrapper: any uncaught error inside the click
+                // handler chain would unmount the component and leave the
+                // user with a blank screen ("crash"). The handlers below
+                // already swallow their own errors; this is a final net.
+                try {
+                  if (!unit || !unit.id) return;
+                  if (!mapAttackerId) {
+                    handleMapAttackerSelect(unit);
+                  } else if (!mapTargetId && unit.id !== mapAttackerId) {
+                    handleMapTargetSelect(unit);
+                  } else if (unit.id === mapAttackerId) {
+                    setMapAttackerId(null);
+                    setMapTargetId(null);
+                  } else {
+                    handleMapTargetSelect(unit);
+                  }
+                } catch (err) {
+                  if (typeof console !== "undefined" && console.error) {
+                    console.error("shoot phase unit click failed:", err);
+                  }
                 }
               },
             }),
@@ -27928,15 +27965,24 @@ var ShootingResolver = function () {
               refObj: assaultMapRef,
               phase: "assault",
               onUnitClick: (unit) => {
-                if (!mapAttackerId) {
-                  handleMapAttackerSelect(unit);
-                } else if (!mapTargetId && unit.id !== mapAttackerId) {
-                  handleMapTargetSelect(unit);
-                } else if (unit.id === mapAttackerId) {
-                  setMapAttackerId(null);
-                  setMapTargetId(null);
-                } else {
-                  handleMapTargetSelect(unit);
+                // Safety wrapper to keep the assault-phase tactical map
+                // from unmounting if the click handler chain throws.
+                try {
+                  if (!unit || !unit.id) return;
+                  if (!mapAttackerId) {
+                    handleMapAttackerSelect(unit);
+                  } else if (!mapTargetId && unit.id !== mapAttackerId) {
+                    handleMapTargetSelect(unit);
+                  } else if (unit.id === mapAttackerId) {
+                    setMapAttackerId(null);
+                    setMapTargetId(null);
+                  } else {
+                    handleMapTargetSelect(unit);
+                  }
+                } catch (err) {
+                  if (typeof console !== "undefined" && console.error) {
+                    console.error("assault phase unit click failed:", err);
+                  }
                 }
               },
             }),

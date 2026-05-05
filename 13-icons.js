@@ -4,6 +4,9 @@
 // ━━━ UNIT ICON SYSTEM ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 function getUnitIconType(name) {
+  // Defensive: a missing/empty name (e.g. a deployed unit whose preset
+  // was renamed in a later release) must not crash the render tree.
+  if (!name || typeof name !== "string") return "infantry";
   const n = name.toLowerCase();
   if (n.includes("primarch") || n.includes("lion el") || n.includes("jaghatai") || n.includes("leman russ") || n.includes("rogal dorn") || n.includes("sanguinius") || n.includes("ferrus") || n.includes("guilliman") || n.includes("vulkan") || n.includes("corax") || n.includes("fulgrim") || n.includes("perturabo") || n.includes("curze") || n.includes("angron") || n.includes("lorgar") || n.includes("mortarion") || n.includes("magnus") || n.includes("horus") || n.includes("alpharius")) return "primarch";
   if (n.includes("daemon")) return "daemon";
