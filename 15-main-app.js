@@ -3607,10 +3607,64 @@ var ShootingResolver = function () {
   const [mapAttackerId, setMapAttackerId] = useState(null);
   const [mapTargetId, setMapTargetId] = useState(null);
   const [showTacticalMap, setShowTacticalMap] = useState(true);
+  const [fullSizeTacticalMapPhase, setFullSizeTacticalMapPhase] =
+    useState(null);
+  const [fullSizeMapResultModal, setFullSizeMapResultModal] = useState(null);
   const [unitFacings, setUnitFacings] = useState({}); // { unitId: degrees }
   const [routedUnits, setRoutedUnits] = useState(new Set());
   const shootMapRef = useRef(null);
   const assaultMapRef = useRef(null);
+  const fullSizeMapExitLockRef = useRef(0);
+  const fullSizeMapPreviousScaleRef = useRef(null);
+
+  function openFullSizeTacticalMap(phase) {
+    if (
+      !fullSizeTacticalMapPhase &&
+      fullSizeMapPreviousScaleRef.current === null
+    ) {
+      fullSizeMapPreviousScaleRef.current = deployScale;
+    }
+    setDeployScale((scale) => Math.max(scale, 14));
+    setFullSizeTacticalMapPhase(phase);
+  }
+
+  function closeFullSizeTacticalMap() {
+    setFullSizeMapResultModal(null);
+    setFullSizeTacticalMapPhase(null);
+    if (fullSizeMapPreviousScaleRef.current !== null) {
+      setDeployScale(fullSizeMapPreviousScaleRef.current);
+      fullSizeMapPreviousScaleRef.current = null;
+    }
+  }
+
+  useEffect(() => {
+    if (fullSizeTacticalMapPhase && activePhase !== fullSizeTacticalMapPhase) {
+      closeFullSizeTacticalMap();
+    }
+  }, [activePhase, fullSizeTacticalMapPhase]);
+
+  useEffect(() => {
+    if (!fullSizeTacticalMapPhase || typeof document === "undefined") return;
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (e) => {
+      if (e.key !== "Escape") return;
+      if (fullSizeMapResultModal) {
+        setFullSizeMapResultModal(null);
+      } else {
+        closeFullSizeTacticalMap();
+      }
+    };
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [fullSizeTacticalMapPhase, fullSizeMapResultModal]);
+
+  useEffect(() => {
+    if (!fullSizeTacticalMapPhase) setFullSizeMapResultModal(null);
+  }, [fullSizeTacticalMapPhase]);
 
   const getUnitFacing = (unit) =>
     unitFacings[unit.id] ?? (unit.player === "p1" ? 180 : 0);
@@ -3714,6 +3768,22 @@ var ShootingResolver = function () {
           setDAP(unit.meleeWeapon.ap);
           setDI(unit.meleeWeapon.i);
           setDA(unit.meleeWeapon.a);
+        }
+        if (unit.rangedWeapon) {
+          applyReturnWeapon(unit.rangedWeapon);
+        }
+        if (unit.sgtEnabled && unit.sgtWeapon) {
+          setTargetSgtEnabled(true);
+          setTargetSgtWeapon(unit.sgtWeapon);
+        } else {
+          setTargetSgtEnabled(false);
+        }
+        if (unit.secondaryWeapons && unit.secondaryWeapons.length > 0) {
+          setTargetSecondaryWeapons(
+            unit.secondaryWeapons.map((sw) => ({ ...sw })),
+          );
+        } else {
+          setTargetSecondaryWeapons([]);
         }
       }
       const atkUnit = deployedUnits.find((u) => u.id === mapAttackerId);
@@ -6003,21 +6073,1312 @@ var ShootingResolver = function () {
     );
   };
 
-  const renderTacticalMap = ({ refObj, phase, onUnitClick }) => {
-    const atkUnit = deployedUnits.find((u) => u.id === mapAttackerId);
-    const defUnit = deployedUnits.find((u) => u.id === mapTargetId);
-    const weaponRange =
-      phase === "shooting" && atkUnit?.rangedWeapon
-        ? getWeaponRange(atkUnit.rangedWeapon)
-        : 0;
-    const distance = getDistanceBetween(atkUnit, defUnit);
+  const renderFullSizeMapResultPopup = (phase) => {
+    const data = phase === "shooting" ? result : assaultResult;
+    const phaseColor = phase === "shooting" ? "#b8860b" : "#9b2d2d";
+    const title = phase === "shooting" ? "SHOOTING RESULTS" : "ASSAULT RESULTS";
+    const rollLabelStyle = {
+      fontSize: 11,
+      fontFamily: "'Share Tech Mono', serif",
+      fontWeight: 700,
+      letterSpacing: 1,
+      color: "#d8f7c8",
+      marginBottom: 4,
+    };
+    const statStyle = {
+      flex: "1 1 96px",
+      padding: "8px 10px",
+      borderRadius: 4,
+      background: "rgba(5,15,5,0.86)",
+      border: "1px solid rgba(143,207,145,0.45)",
+    };
+    const renderStat = (label, value, color = "#e8f4d8") =>
+      React.createElement(
+        "div",
+        { style: statStyle },
+        React.createElement(
+          "div",
+          {
+            style: {
+              fontSize: 8,
+              fontFamily: "'Share Tech Mono', serif",
+              color: "#8fcf91",
+              letterSpacing: 1,
+              textTransform: "uppercase",
+              marginBottom: 3,
+            },
+          },
+          label,
+        ),
+        React.createElement(
+          "div",
+          {
+            style: {
+              fontSize: 18,
+              fontFamily: "'Share Tech Mono', serif",
+              fontWeight: 900,
+              color,
+            },
+          },
+          value,
+        ),
+      );
+    const renderDiceRow = (label, rolls) => {
+      const list = rolls || [];
+      if (list.length === 0) return null;
+      return React.createElement(
+        "div",
+        { style: { marginBottom: 10 } },
+        React.createElement("div", { style: rollLabelStyle }, label),
+        React.createElement(
+          "div",
+          { style: { display: "flex", flexWrap: "wrap", gap: 3 } },
+          list.map((d, i) =>
+            React.createElement(DieIcon, {
+              key: `${label}-${i}`,
+              value: d.value,
+              success: d.success,
+              reroll: d.reroll,
+              small: false,
+            }),
+          ),
+        ),
+      );
+    };
+    const renderRollGroup = (group, i, mode) => {
+      const rolls = group.rolls || {};
+      const hit = rolls.hit || [];
+      const wound = rolls.wound || [];
+      const save = rolls.save || [];
+      const fnp = rolls.fnpRolls || rolls.fnp || [];
+      if (
+        hit.length === 0 &&
+        wound.length === 0 &&
+        save.length === 0 &&
+        fnp.length === 0
+      )
+        return null;
+      const isAtk = group.side === "Attacker";
+      const col =
+        mode === "shooting" ? "#f4d27a" : isAtk ? "#ff8888" : "#8bbcff";
+      return React.createElement(
+        "div",
+        {
+          key: i,
+          style: {
+            padding: "10px 12px",
+            borderRadius: 4,
+            background: "rgba(5,15,5,0.72)",
+            border: `1px solid ${col}`,
+            marginBottom: 10,
+          },
+        },
+        React.createElement(
+          "div",
+          {
+            style: {
+              display: "flex",
+              gap: 8,
+              alignItems: "baseline",
+              flexWrap: "wrap",
+              marginBottom: 8,
+            },
+          },
+          React.createElement(
+            "span",
+            {
+              style: {
+                fontSize: 13,
+                fontFamily: "'Share Tech Mono', serif",
+                fontWeight: 900,
+                color: col,
+                letterSpacing: 1,
+              },
+            },
+            mode === "shooting" ? group.name : `${group.side}: ${group.name}`,
+          ),
+          React.createElement(
+            "span",
+            {
+              style: {
+                fontSize: 11,
+                fontFamily: "'Share Tech Mono', serif",
+                color: "#9fd69b",
+              },
+            },
+            group.models,
+            " model",
+            group.models !== 1 ? "s" : "",
+            group.i !== undefined ? ` · I${group.i}` : "",
+          ),
+        ),
+        renderDiceRow("TO HIT", hit),
+        renderDiceRow("TO WOUND", wound),
+        renderDiceRow("SAVES", save),
+        renderDiceRow("FNP", fnp),
+      );
+    };
+    const logs = data?.log || [];
+    const groups =
+      phase === "shooting"
+        ? data?.rollsByWeapon && data.rollsByWeapon.length > 0
+          ? data.rollsByWeapon
+          : data
+            ? [{ name: "Primary", models: numModels, rolls: data.rolls || {} }]
+            : []
+        : data?.rollsByGroup || [];
+    const returnFireGroups =
+      returnFireResult?.rollsByWeapon &&
+      returnFireResult.rollsByWeapon.length > 0
+        ? returnFireResult.rollsByWeapon
+        : returnFireResult
+          ? [
+              {
+                name: "Return Fire",
+                models: targetModels,
+                rolls: returnFireResult.rolls || {},
+              },
+            ]
+          : [];
 
     return React.createElement(
       "div",
-      { style: { ...panelStyle, marginBottom: 12 } },
+      {
+        onClick: () => setFullSizeMapResultModal(null),
+        style: {
+          position: "fixed",
+          inset: 0,
+          zIndex: 9200,
+          background: "rgba(0,0,0,0.58)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 18,
+        },
+      },
       React.createElement(
         "div",
-        { style: { ...panelHeaderStyle, justifyContent: "space-between" } },
+        {
+          onClick: (e) => e.stopPropagation(),
+          style: {
+            width: "min(980px, calc(100vw - 28px))",
+            maxHeight: "min(820px, calc(100vh - 28px))",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+            background: "#050f05",
+            border: `2px solid ${phaseColor}`,
+            boxShadow: `0 0 32px rgba(${phase === "shooting" ? "184,134,11" : "155,45,45"},0.45)`,
+          },
+        },
+        React.createElement(
+          "div",
+          {
+            style: {
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              padding: "12px 14px",
+              borderBottom: `1px solid ${phaseColor}`,
+              background: "rgba(0,0,0,0.26)",
+              flexShrink: 0,
+            },
+          },
+          React.createElement(
+            "span",
+            {
+              style: {
+                fontFamily: "'Share Tech Mono', serif",
+                fontWeight: 900,
+                fontSize: 14,
+                letterSpacing: 2,
+                color: phaseColor,
+              },
+            },
+            title,
+          ),
+          React.createElement("div", { style: { flex: 1 } }),
+          React.createElement(
+            "button",
+            {
+              onClick: () => setFullSizeMapResultModal(null),
+              style: {
+                padding: "6px 10px",
+                borderRadius: 4,
+                fontSize: 11,
+                cursor: "pointer",
+                fontFamily: "'Share Tech Mono', serif",
+                fontWeight: 700,
+                background: "rgba(255,255,255,0.08)",
+                border: "1px solid rgba(216,247,200,0.45)",
+                color: "#d8f7c8",
+              },
+            },
+            "CLOSE",
+          ),
+        ),
+        React.createElement(
+          "div",
+          {
+            style: {
+              overflowY: "auto",
+              padding: 14,
+              color: "#d8f7c8",
+              fontFamily: "'Share Tech Mono', serif",
+            },
+          },
+          !data
+            ? React.createElement(
+                "div",
+                {
+                  style: {
+                    padding: 24,
+                    textAlign: "center",
+                    color: "#9fd69b",
+                    fontSize: 13,
+                  },
+                },
+                "No results yet. Resolve from the fullscreen map first.",
+              )
+            : React.createElement(
+                React.Fragment,
+                null,
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 8,
+                      marginBottom: 14,
+                    },
+                  },
+                  phase === "shooting"
+                    ? [
+                        renderStat("Shots", data.totalShots || 0),
+                        renderStat("Hits", data.hits || 0, "#f4d27a"),
+                        renderStat("Wounds", data.wounds || 0, "#ff8888"),
+                        renderStat("Unsaved", data.unsaved || 0, "#8bbcff"),
+                        renderStat(
+                          "Casualties",
+                          data.casualties || 0,
+                          data.casualties > 0 ? "#ff7777" : "#9ee68f",
+                        ),
+                      ]
+                    : [
+                        renderStat(
+                          "Winner",
+                          data.combatResult?.winner || "Draw",
+                          data.combatResult?.winner === "Defender"
+                            ? "#8bbcff"
+                            : data.combatResult?.winner === "Attacker"
+                              ? "#ff8888"
+                              : "#d8f7c8",
+                        ),
+                        renderStat("Margin", data.combatResult?.diff || 0),
+                        renderStat(
+                          "Def Kills",
+                          data.defenderCasualties || 0,
+                          "#ff8888",
+                        ),
+                        renderStat(
+                          "Atk Kills",
+                          data.attackerCasualties || 0,
+                          "#8bbcff",
+                        ),
+                        renderStat(
+                          "Survivors",
+                          `${data.remainingAttackers || 0}/${data.remainingDefenders || 0}`,
+                        ),
+                      ],
+                ),
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      fontSize: 12,
+                      fontWeight: 900,
+                      letterSpacing: 1,
+                      color: phaseColor,
+                      marginBottom: 8,
+                    },
+                  },
+                  "DICE ROLLS",
+                ),
+                groups.length > 0
+                  ? groups.map((g, i) => renderRollGroup(g, i, phase))
+                  : React.createElement(
+                      "div",
+                      {
+                        style: {
+                          padding: 12,
+                          border: "1px solid rgba(143,207,145,0.35)",
+                          color: "#9fd69b",
+                        },
+                      },
+                      "No dice rolls recorded for this result.",
+                    ),
+                logs.length > 0 &&
+                  React.createElement(
+                    "div",
+                    {
+                      style: {
+                        marginTop: 14,
+                        paddingTop: 12,
+                        borderTop: "1px solid rgba(143,207,145,0.35)",
+                      },
+                    },
+                    React.createElement(
+                      "div",
+                      {
+                        style: {
+                          fontSize: 12,
+                          fontWeight: 900,
+                          letterSpacing: 1,
+                          color: phaseColor,
+                          marginBottom: 8,
+                        },
+                      },
+                      "DETAILED LOG",
+                    ),
+                    logs.map((entry, i) =>
+                      React.createElement(
+                        "div",
+                        {
+                          key: i,
+                          style: {
+                            display: "grid",
+                            gridTemplateColumns: "92px 1fr",
+                            gap: 8,
+                            padding: "5px 0",
+                            borderBottom:
+                              i < logs.length - 1
+                                ? "1px solid rgba(143,207,145,0.12)"
+                                : "none",
+                            fontSize: 12,
+                            lineHeight: 1.35,
+                          },
+                        },
+                        React.createElement(
+                          "span",
+                          {
+                            style: {
+                              color: phaseColors[entry.phase] || phaseColor,
+                              fontWeight: 700,
+                              textTransform: "uppercase",
+                            },
+                          },
+                          entry.phase,
+                        ),
+                        React.createElement(
+                          "span",
+                          { style: { color: "#d8f7c8" } },
+                          entry.text,
+                        ),
+                      ),
+                    ),
+                  ),
+                phase === "shooting" &&
+                  returnFireResult &&
+                  React.createElement(
+                    "div",
+                    {
+                      style: {
+                        marginTop: 16,
+                        paddingTop: 14,
+                        borderTop: "1.5px solid rgba(196,106,27,0.55)",
+                      },
+                    },
+                    React.createElement(
+                      "div",
+                      {
+                        style: {
+                          fontSize: 13,
+                          fontWeight: 900,
+                          letterSpacing: 1,
+                          color: "#c46a1b",
+                          marginBottom: 10,
+                        },
+                      },
+                      "RETURN FIRE RESULTS",
+                    ),
+                    React.createElement(
+                      "div",
+                      {
+                        style: {
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: 8,
+                          marginBottom: 14,
+                        },
+                      },
+                      renderStat(
+                        "RF Shots",
+                        returnFireResult.totalShots || 0,
+                        "#ffd6a0",
+                      ),
+                      renderStat(
+                        "RF Hits",
+                        returnFireResult.hits || 0,
+                        "#ffd6a0",
+                      ),
+                      renderStat(
+                        "Atk Casualties",
+                        returnFireResult.casualties || 0,
+                        returnFireResult.casualties > 0 ? "#ffb26b" : "#9ee68f",
+                      ),
+                    ),
+                    React.createElement(
+                      "div",
+                      {
+                        style: {
+                          fontSize: 12,
+                          fontWeight: 900,
+                          letterSpacing: 1,
+                          color: "#c46a1b",
+                          marginBottom: 8,
+                        },
+                      },
+                      "RETURN FIRE DICE",
+                    ),
+                    returnFireGroups.length > 0
+                      ? returnFireGroups.map((g, i) =>
+                          renderRollGroup(g, `rf-${i}`, "shooting"),
+                        )
+                      : React.createElement(
+                          "div",
+                          {
+                            style: {
+                              padding: 12,
+                              border: "1px solid rgba(196,106,27,0.35)",
+                              color: "#ffd6a0",
+                            },
+                          },
+                          "No return fire dice recorded.",
+                        ),
+                    returnFireResult.log &&
+                      returnFireResult.log.length > 0 &&
+                      React.createElement(
+                        "div",
+                        {
+                          style: {
+                            marginTop: 14,
+                            paddingTop: 12,
+                            borderTop: "1px solid rgba(196,106,27,0.35)",
+                          },
+                        },
+                        React.createElement(
+                          "div",
+                          {
+                            style: {
+                              fontSize: 12,
+                              fontWeight: 900,
+                              letterSpacing: 1,
+                              color: "#c46a1b",
+                              marginBottom: 8,
+                            },
+                          },
+                          "RETURN FIRE LOG",
+                        ),
+                        returnFireResult.log.map((entry, i) =>
+                          React.createElement(
+                            "div",
+                            {
+                              key: i,
+                              style: {
+                                display: "grid",
+                                gridTemplateColumns: "92px 1fr",
+                                gap: 8,
+                                padding: "5px 0",
+                                borderBottom:
+                                  i < returnFireResult.log.length - 1
+                                    ? "1px solid rgba(196,106,27,0.12)"
+                                    : "none",
+                                fontSize: 12,
+                                lineHeight: 1.35,
+                              },
+                            },
+                            React.createElement(
+                              "span",
+                              {
+                                style: {
+                                  color: phaseColors[entry.phase] || "#c46a1b",
+                                  fontWeight: 700,
+                                  textTransform: "uppercase",
+                                },
+                              },
+                              entry.phase,
+                            ),
+                            React.createElement(
+                              "span",
+                              { style: { color: "#d8f7c8" } },
+                              entry.text,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ),
+              ),
+        ),
+      ),
+    );
+  };
+
+  const renderTacticalMapResolverDock = ({
+    phase,
+    atkUnit,
+    defUnit,
+    distance,
+    weaponRange,
+  }) => {
+    const phaseColor = phase === "shooting" ? "#b8860b" : "#9b2d2d";
+    const canUseSelection = !!atkUnit && !!defUnit;
+    const dockCardStyle = {
+      padding: "8px 10px",
+      borderRadius: 4,
+      background: "rgba(5,15,5,0.82)",
+      border: `1px solid ${phaseColor}`,
+      minWidth: 116,
+      flex: "1 1 116px",
+    };
+    const dockLabelStyle = {
+      fontSize: 8,
+      fontFamily: "'Share Tech Mono', serif",
+      color: "#8fcf91",
+      letterSpacing: 1,
+      textTransform: "uppercase",
+      marginBottom: 3,
+    };
+    const dockValueStyle = {
+      fontSize: 12,
+      fontFamily: "'Share Tech Mono', serif",
+      fontWeight: 700,
+      color: "#e8f4d8",
+      lineHeight: 1.25,
+    };
+    const renderDockStat = (label, value, color = "#e8f4d8") =>
+      React.createElement(
+        "div",
+        { style: dockCardStyle },
+        React.createElement("div", { style: dockLabelStyle }, label),
+        React.createElement(
+          "div",
+          { style: { ...dockValueStyle, color } },
+          value,
+        ),
+      );
+    const renderDockButton = (label, onClick, color, disabled) =>
+      React.createElement(
+        "button",
+        {
+          onClick: disabled ? undefined : onClick,
+          disabled: !!disabled,
+          style: {
+            padding: "8px 12px",
+            borderRadius: 4,
+            fontSize: 11,
+            cursor: disabled ? "default" : "pointer",
+            fontFamily: "'Share Tech Mono', serif",
+            fontWeight: 700,
+            letterSpacing: 1,
+            background: disabled
+              ? "rgba(120,120,120,0.12)"
+              : `rgba(${color === "#b8860b" ? "184,134,11" : color === "#9b2d2d" ? "155,45,45" : color === "#2e7d32" ? "46,125,50" : "199,64,64"},0.16)`,
+            border: `1.5px solid ${disabled ? "rgba(170,170,170,0.35)" : color}`,
+            color: disabled ? "rgba(220,220,220,0.42)" : color,
+            opacity: disabled ? 0.65 : 1,
+            whiteSpace: "nowrap",
+          },
+        },
+        label,
+      );
+    const renderDockWeaponChoice = ({
+      label,
+      weapons,
+      selectedName,
+      onSelect,
+      accent,
+      disabled,
+      emptyText,
+    }) =>
+      React.createElement(
+        "div",
+        {
+          style: {
+            padding: "9px 10px",
+            borderRadius: 4,
+            background: "rgba(5,15,5,0.78)",
+            border: `1px solid ${accent}`,
+            minWidth: 0,
+          },
+        },
+        React.createElement(
+          "div",
+          {
+            style: {
+              fontSize: 9,
+              fontFamily: "'Share Tech Mono', serif",
+              fontWeight: 900,
+              color: accent,
+              letterSpacing: 1,
+              marginBottom: 7,
+              textTransform: "uppercase",
+            },
+          },
+          label,
+        ),
+        disabled || !weapons || weapons.length === 0
+          ? React.createElement(
+              "div",
+              {
+                style: {
+                  fontSize: 11,
+                  fontFamily: "'Share Tech Mono', serif",
+                  color: "#9fd69b",
+                  lineHeight: 1.35,
+                },
+              },
+              emptyText,
+            )
+          : React.createElement(
+              "div",
+              {
+                style: {
+                  display: "flex",
+                  gap: 5,
+                  flexWrap: "wrap",
+                  alignItems: "stretch",
+                },
+              },
+              weapons.map((w) => {
+                const active = selectedName === w.name;
+                return React.createElement(
+                  "button",
+                  {
+                    key: w.name,
+                    onClick: () => onSelect(w),
+                    style: {
+                      padding: "6px 9px",
+                      borderRadius: 4,
+                      cursor: "pointer",
+                      fontSize: 10,
+                      fontFamily: "'Share Tech Mono', serif",
+                      fontWeight: active ? 900 : 600,
+                      lineHeight: 1.2,
+                      textAlign: "left",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 2,
+                      minWidth: 108,
+                      background: active
+                        ? `${accent}33`
+                        : "rgba(255,255,255,0.05)",
+                      border: `1px solid ${active ? accent : "rgba(143,207,145,0.28)"}`,
+                      color: active ? "#fff6d0" : "#d8f7c8",
+                      boxShadow: active ? `0 0 8px ${accent}55` : "none",
+                    },
+                  },
+                  React.createElement("span", null, w.name),
+                  React.createElement(
+                    "span",
+                    {
+                      style: {
+                        fontSize: 8,
+                        color: active ? "#fff6d0" : "#9fd69b",
+                        fontWeight: 500,
+                      },
+                    },
+                    w.type,
+                    w.shots,
+                    " · S",
+                    w.s,
+                    " AP",
+                    w.ap,
+                    " D",
+                    w.damage || 1,
+                  ),
+                );
+              }),
+            ),
+      );
+    const renderReturnFireControls = () =>
+      React.createElement(
+        "div",
+        {
+          style: {
+            padding: "9px 10px",
+            borderRadius: 4,
+            background: "rgba(20,10,4,0.78)",
+            border: "1px solid #8b4513",
+            minWidth: 0,
+          },
+        },
+        React.createElement(
+          "div",
+          {
+            style: {
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              flexWrap: "wrap",
+              marginBottom: doReturnFire ? 8 : 0,
+            },
+          },
+          React.createElement(
+            "span",
+            {
+              style: {
+                fontSize: 9,
+                fontFamily: "'Share Tech Mono', serif",
+                fontWeight: 900,
+                color: "#c46a1b",
+                letterSpacing: 1,
+                textTransform: "uppercase",
+              },
+            },
+            "Return Fire Reaction",
+          ),
+          React.createElement("div", { style: { flex: 1 } }),
+          React.createElement(
+            "button",
+            {
+              onClick: () => {
+                const next = !doReturnFire;
+                setDoReturnFire(next);
+                if (!next) setReturnFireResult(null);
+              },
+              disabled: !canUseSelection,
+              style: {
+                padding: "4px 9px",
+                borderRadius: 4,
+                cursor: canUseSelection ? "pointer" : "default",
+                fontSize: 9,
+                fontFamily: "'Share Tech Mono', serif",
+                fontWeight: 900,
+                letterSpacing: 1,
+                background: doReturnFire
+                  ? "rgba(139,69,19,0.28)"
+                  : "rgba(255,255,255,0.05)",
+                border: `1px solid ${doReturnFire ? "#c46a1b" : "rgba(143,207,145,0.28)"}`,
+                color: doReturnFire ? "#ffd6a0" : "#9fd69b",
+                opacity: canUseSelection ? 1 : 0.55,
+              },
+            },
+            doReturnFire ? "ON" : "OFF",
+          ),
+        ),
+        doReturnFire &&
+          React.createElement(
+            React.Fragment,
+            null,
+            React.createElement(
+              "div",
+              {
+                style: {
+                  display: "flex",
+                  gap: 8,
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  marginBottom: 8,
+                  fontSize: 10,
+                  fontFamily: "'Share Tech Mono', serif",
+                  color: "#ffd6a0",
+                },
+              },
+              React.createElement("span", null, "Defender BS"),
+              React.createElement("input", {
+                type: "number",
+                min: 1,
+                max: 6,
+                value: targetBS,
+                onChange: (e) =>
+                  setTargetBS(
+                    Math.max(1, Math.min(6, parseInt(e.target.value) || 1)),
+                  ),
+                style: {
+                  width: 46,
+                  padding: "4px 6px",
+                  borderRadius: 4,
+                  border: "1px solid rgba(196,106,27,0.65)",
+                  background: "#050f05",
+                  color: "#d8f7c8",
+                  fontFamily: "'Share Tech Mono', serif",
+                  fontSize: 11,
+                  textAlign: "center",
+                },
+              }),
+              React.createElement(
+                "span",
+                { style: { color: "#9fd69b" } },
+                BS_TO_HIT[targetBS] || 4,
+                "+ to hit",
+              ),
+            ),
+            renderDockWeaponChoice({
+              label: "Defender Weapon",
+              weapons: targetAvailableWeapons,
+              selectedName: targetSelectedWeapon?.name,
+              onSelect: applyReturnWeapon,
+              accent: "#c46a1b",
+              disabled: !defUnit,
+              emptyText: defUnit
+                ? "No defender ranged weapons available."
+                : "Select a target unit first.",
+            }),
+            targetUnit &&
+              targetUnit.hasSgt &&
+              targetAvailableSgtWeapons.length > 0 &&
+              React.createElement(
+                "div",
+                {
+                  style: {
+                    marginTop: 8,
+                    padding: "7px 8px",
+                    borderRadius: 4,
+                    border: "1px solid rgba(107,63,138,0.45)",
+                    background: "rgba(107,63,138,0.08)",
+                  },
+                },
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      flexWrap: "wrap",
+                      marginBottom: targetSgtEnabled ? 6 : 0,
+                    },
+                  },
+                  React.createElement(
+                    "span",
+                    {
+                      style: {
+                        fontSize: 9,
+                        fontFamily: "'Share Tech Mono', serif",
+                        color: "#d49dff",
+                        letterSpacing: 1,
+                        fontWeight: 900,
+                      },
+                    },
+                    "Target Sergeant",
+                  ),
+                  React.createElement("div", { style: { flex: 1 } }),
+                  React.createElement(
+                    "button",
+                    {
+                      onClick: () => setTargetSgtEnabled(!targetSgtEnabled),
+                      style: {
+                        padding: "3px 8px",
+                        borderRadius: 4,
+                        cursor: "pointer",
+                        fontSize: 8,
+                        fontFamily: "'Share Tech Mono', serif",
+                        fontWeight: 900,
+                        background: targetSgtEnabled
+                          ? "rgba(107,63,138,0.24)"
+                          : "rgba(255,255,255,0.05)",
+                        border: `1px solid ${targetSgtEnabled ? "#d49dff" : "rgba(143,207,145,0.28)"}`,
+                        color: targetSgtEnabled ? "#efd8ff" : "#9fd69b",
+                      },
+                    },
+                    targetSgtEnabled ? "ON" : "OFF",
+                  ),
+                ),
+                targetSgtEnabled &&
+                  React.createElement(
+                    "div",
+                    {
+                      style: {
+                        display: "flex",
+                        gap: 5,
+                        flexWrap: "wrap",
+                      },
+                    },
+                    targetAvailableSgtWeapons.map((w) => {
+                      const active = targetSgtWeapon?.name === w.name;
+                      return React.createElement(
+                        "button",
+                        {
+                          key: w.name,
+                          onClick: () => setTargetSgtWeapon(w),
+                          style: {
+                            padding: "4px 8px",
+                            borderRadius: 4,
+                            cursor: "pointer",
+                            fontSize: 9,
+                            fontFamily: "'Share Tech Mono', serif",
+                            fontWeight: active ? 900 : 600,
+                            background: active
+                              ? "rgba(107,63,138,0.24)"
+                              : "rgba(255,255,255,0.05)",
+                            border: `1px solid ${active ? "#d49dff" : "rgba(143,207,145,0.28)"}`,
+                            color: active ? "#efd8ff" : "#d8f7c8",
+                          },
+                        },
+                        w.name,
+                      );
+                    }),
+                  ),
+              ),
+            targetSecondaryWeapons.length > 0 &&
+              React.createElement(
+                "div",
+                {
+                  style: {
+                    marginTop: 8,
+                    fontSize: 10,
+                    fontFamily: "'Share Tech Mono', serif",
+                    color: "#ffd6a0",
+                  },
+                },
+                "Additional weapons configured: ",
+                targetSecondaryWeapons
+                  .map((sw) => `${sw.models}x ${sw.weapon?.name || "Weapon"}`)
+                  .join(", "),
+              ),
+            React.createElement(
+              "button",
+              {
+                onClick: () => {
+                  setDoReturnFire(true);
+                  handleReturnFire();
+                  setFullSizeMapResultModal(phase);
+                },
+                disabled: !result || !targetSelectedWeapon,
+                style: {
+                  width: "100%",
+                  marginTop: 8,
+                  padding: "8px 12px",
+                  borderRadius: 4,
+                  cursor:
+                    result && targetSelectedWeapon ? "pointer" : "default",
+                  fontSize: 11,
+                  fontFamily: "'Share Tech Mono', serif",
+                  fontWeight: 900,
+                  letterSpacing: 1,
+                  background:
+                    result && targetSelectedWeapon
+                      ? "rgba(139,69,19,0.32)"
+                      : "rgba(120,120,120,0.12)",
+                  border: `1.5px solid ${result && targetSelectedWeapon ? "#c46a1b" : "rgba(170,170,170,0.35)"}`,
+                  color:
+                    result && targetSelectedWeapon
+                      ? "#ffd6a0"
+                      : "rgba(220,220,220,0.42)",
+                },
+              },
+              result ? "RESOLVE RETURN FIRE" : "RESOLVE SHOOTING FIRST",
+            ),
+          ),
+      );
+    const prepMapCharge = () => {
+      if (!atkUnit || !defUnit) return;
+      const dist = getDistanceBetween(atkUnit, defUnit);
+      setShowCharge(true);
+      if (dist !== null) setChargeDistance(Math.ceil(dist));
+      if (atkUnit.meleeWeapon) {
+        setChargerWS(atkUnit.meleeWeapon.ws);
+        setChargerS_melee(atkUnit.meleeWeapon.s);
+        setChargerAP_melee(atkUnit.meleeWeapon.ap);
+        setChargerI(atkUnit.meleeWeapon.i);
+        setChargerA(atkUnit.meleeWeapon.a);
+      }
+      if (atkUnit.unitData) {
+        setChargerT_melee(atkUnit.unitData.t || 4);
+        setChargerSv(atkUnit.unitData.sv || "3");
+        setChargerInvSv(atkUnit.unitData.inv || "-");
+        setChargerFnpSv(atkUnit.unitData.fnp || "-");
+        setChargerW_melee(atkUnit.unitData.w || 1);
+      }
+      if (defUnit.meleeWeapon) {
+        setDefenderWS(defUnit.meleeWeapon.ws);
+        setDefenderS_melee(defUnit.meleeWeapon.s);
+        setDefenderAP_melee(defUnit.meleeWeapon.ap);
+        setDefenderI(defUnit.meleeWeapon.i);
+        setDefenderA(defUnit.meleeWeapon.a);
+      }
+      openFullSizeTacticalMap("assault");
+      setActivePhase("assault");
+    };
+    const resolveAndShowResults = () => {
+      if (phase === "shooting") handleResolve();
+      else handleAssaultResolve();
+      setFullSizeMapResultModal(phase);
+    };
+    const hasResult = phase === "shooting" ? !!result : !!assaultResult;
+    const heading =
+      phase === "shooting" ? "SHOOTING RESOLVER" : "ASSAULT RESOLVER";
+
+    return React.createElement(
+      "div",
+      {
+        style: {
+          flexShrink: 0,
+          marginTop: 8,
+          padding: "10px 12px",
+          borderRadius: 4,
+          background: "rgba(3,8,3,0.94)",
+          border: `1.5px solid ${phaseColor}`,
+          boxShadow: `0 0 18px rgba(${phase === "shooting" ? "184,134,11" : "155,45,45"},0.18)`,
+        },
+      },
+      React.createElement(
+        "div",
+        {
+          style: {
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            marginBottom: 8,
+            flexWrap: "wrap",
+          },
+        },
+        React.createElement(
+          "span",
+          {
+            style: {
+              fontFamily: "'Share Tech Mono', serif",
+              fontWeight: 700,
+              fontSize: 12,
+              letterSpacing: 2,
+              color: phaseColor,
+            },
+          },
+          heading,
+        ),
+        React.createElement("div", { style: { flex: 1 } }),
+        renderDockButton(
+          phase === "shooting" ? "RESOLVE SHOOTING" : "RESOLVE ASSAULT",
+          resolveAndShowResults,
+          phaseColor,
+          !canUseSelection,
+        ),
+        renderDockButton(
+          "ROLLS & RESULTS",
+          () => setFullSizeMapResultModal(phase),
+          "#2e7d32",
+          !hasResult,
+        ),
+        phase === "shooting" &&
+          renderDockButton(
+            "CHARGE -> ASSAULT",
+            prepMapCharge,
+            "#9b2d2d",
+            !canUseSelection,
+          ),
+        phase === "assault" &&
+          renderDockButton(
+            "CHARGE CONTACT",
+            () => applyChargeMovement({ chargeSucceeded: true }),
+            "#9b2d2d",
+            !canUseSelection,
+          ),
+        renderDockButton(
+          "ROUTE TARGET",
+          () => routUnit(mapTargetId),
+          "#c74040",
+          !mapTargetId,
+        ),
+        phase === "assault" &&
+          renderDockButton(
+            "ROUTE CHARGER",
+            () => routUnit(mapAttackerId),
+            "#c74040",
+            !mapAttackerId,
+          ),
+      ),
+      React.createElement(
+        "div",
+        {
+          style: {
+            display: "flex",
+            gap: 8,
+            alignItems: "stretch",
+            flexWrap: "wrap",
+          },
+        },
+        renderDockStat(
+          "Attacker",
+          phase === "shooting"
+            ? selectedUnit?.name || atkUnit?.label || "Select on map"
+            : aUnit?.name || atkUnit?.label || "Select on map",
+          "#ffd966",
+        ),
+        renderDockStat(
+          phase === "shooting" ? "Target" : "Defender",
+          phase === "shooting"
+            ? targetPresetName || defUnit?.label || "Select on map"
+            : dUnit?.name || defUnit?.label || "Select on map",
+          "#ff8888",
+        ),
+        phase === "shooting"
+          ? renderDockStat(
+              "Weapon",
+              selectedWeapon
+                ? `${selectedWeapon.name} (${numModels}x${numShots})`
+                : "No weapon",
+              "#f4d27a",
+            )
+          : renderDockStat(
+              "Melee",
+              `${aSelectedMelee?.name || "Primary"} vs ${dSelectedMelee?.name || "Primary"}`,
+              "#e07070",
+            ),
+        renderDockStat(
+          "Range",
+          distance !== null
+            ? `${distance}"${phase === "shooting" && weaponRange > 0 ? (distance <= weaponRange ? " in" : " out") : ""}`
+            : "--",
+          phase === "shooting" &&
+            weaponRange > 0 &&
+            distance !== null &&
+            distance > weaponRange
+            ? "#ff6b6b"
+            : "#9ee68f",
+        ),
+        phase === "shooting" &&
+          renderDockStat("Exp Hits", expected.expHits, "#f4d27a"),
+        phase === "shooting" &&
+          renderDockStat("Exp Wounds", expected.expWounds, "#ff8888"),
+        phase === "shooting" &&
+          result &&
+          renderDockStat(
+            "Latest",
+            `${result.hits || 0}H ${result.wounds || 0}W ${result.casualties || 0}K`,
+            result.casualties > 0 ? "#ff7777" : "#9ee68f",
+          ),
+        phase === "shooting" &&
+          returnFireResult &&
+          renderDockStat(
+            "Return Fire",
+            `${returnFireResult.hits || 0}H ${returnFireResult.casualties || 0}K`,
+            returnFireResult.casualties > 0 ? "#ffb26b" : "#9ee68f",
+          ),
+        phase === "assault" &&
+          renderDockStat(
+            "Models",
+            `${aModels} atk / ${dModels} def`,
+            "#e8f4d8",
+          ),
+        phase === "assault" &&
+          renderDockStat("Initiative", `I${aI} / I${dI}`, "#e8f4d8"),
+        phase === "assault" &&
+          assaultResult &&
+          renderDockStat(
+            "Latest",
+            assaultResult.combatResult?.winner === "Draw"
+              ? "Draw"
+              : `${assaultResult.combatResult?.winner || "Result"} +${assaultResult.combatResult?.diff || 0}`,
+            assaultResult.combatResult?.winner === "Defender"
+              ? "#8bbcff"
+              : "#ff8888",
+          ),
+      ),
+      phase === "shooting" &&
+        React.createElement(
+          "div",
+          {
+            style: {
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+              gap: 8,
+              marginTop: 8,
+              alignItems: "start",
+            },
+          },
+          renderDockWeaponChoice({
+            label: "Attacker Weapon",
+            weapons: availableWeapons,
+            selectedName: selectedWeapon?.name,
+            onSelect: applyWeaponPreset,
+            accent: "#b8860b",
+            disabled: !atkUnit,
+            emptyText: atkUnit
+              ? "No attacker ranged weapons available."
+              : "Select an attacker unit first.",
+          }),
+          renderReturnFireControls(),
+        ),
+      phase === "assault" &&
+        React.createElement(
+          "div",
+          {
+            style: {
+              display: "flex",
+              gap: 10,
+              marginTop: 8,
+              flexWrap: "wrap",
+              alignItems: "center",
+            },
+          },
+          React.createElement(CheckToggle, {
+            checked: assaultCharging,
+            label: "Charging",
+            onChange: setAssaultCharging,
+          }),
+          React.createElement(CheckToggle, {
+            checked: assaultDisordered,
+            label: "Disordered",
+            onChange: setAssaultDisordered,
+          }),
+          routedUnits.size > 0 &&
+            renderDockButton(
+              "CLEAR ROUTS",
+              () => setRoutedUnits(new Set()),
+              "#2e7d32",
+              false,
+            ),
+        ),
+    );
+  };
+
+  const renderTacticalMap = ({ refObj, phase, onUnitClick }) => {
+    const atkUnit = deployedUnits.find((u) => u.id === mapAttackerId);
+    const defUnit = deployedUnits.find((u) => u.id === mapTargetId);
+    const activeMapWeapon =
+      phase === "shooting" ? selectedWeapon || atkUnit?.rangedWeapon : null;
+    const weaponRange = activeMapWeapon ? getWeaponRange(activeMapWeapon) : 0;
+    const distance = getDistanceBetween(atkUnit, defUnit);
+    const isFullSize = fullSizeTacticalMapPhase === phase;
+    const phaseColor = phase === "shooting" ? "#b8860b" : "#9b2d2d";
+    const fullText = isFullSize ? "#d8f7c8" : "#6a5e4e";
+    const fullMuted = isFullSize ? "#9fd69b" : "#8a7e6e";
+    const fullPanelBg = isFullSize ? "rgba(5,15,5,0.86)" : "rgba(0,0,0,0.02)";
+    const fullPanelBorder = isFullSize ? "rgba(143,207,145,0.42)" : "#e0d8c8";
+
+    return React.createElement(
+      "div",
+      {
+        style: isFullSize
+          ? {
+              position: "fixed",
+              inset: 0,
+              zIndex: 9000,
+              display: "flex",
+              flexDirection: "column",
+              minHeight: 0,
+              padding: 12,
+              overflow: "hidden",
+              background: "#050f05",
+              border: `2px solid ${phaseColor}`,
+              boxShadow: `0 0 30px rgba(${phase === "shooting" ? "184,134,11" : "155,45,45"},0.35)`,
+            }
+          : { ...panelStyle, marginBottom: 12 },
+      },
+      React.createElement(
+        "div",
+        {
+          style: {
+            ...panelHeaderStyle,
+            justifyContent: "space-between",
+            flexShrink: 0,
+            borderBottom: isFullSize
+              ? "1px solid rgba(143,207,145,0.35)"
+              : panelHeaderStyle.borderBottom,
+            color: isFullSize ? fullText : panelHeaderStyle.color,
+          },
+        },
         React.createElement(
           "div",
           { style: { display: "flex", alignItems: "center", gap: 8 } },
@@ -6039,7 +7400,15 @@ var ShootingResolver = function () {
         ),
         React.createElement(
           "div",
-          { style: { display: "flex", gap: 8, alignItems: "center" } },
+          {
+            style: {
+              display: "flex",
+              gap: 8,
+              alignItems: "center",
+              flexWrap: "wrap",
+              justifyContent: "flex-end",
+            },
+          },
           distance !== null &&
             atkUnit &&
             defUnit &&
@@ -6049,7 +7418,10 @@ var ShootingResolver = function () {
                 style: {
                   fontSize: 12,
                   fontFamily: "'Share Tech Mono', serif",
-                  color: "#6a5e4e",
+                  color: fullText,
+                  textShadow: isFullSize
+                    ? "0 0 8px rgba(216,247,200,0.45)"
+                    : "none",
                 },
               },
               "Range:",
@@ -6082,12 +7454,12 @@ var ShootingResolver = function () {
               style: {
                 fontSize: 11,
                 fontFamily: "'Share Tech Mono', serif",
-                color: "#8a7e6e",
+                color: fullMuted,
               },
             },
             "Zoom:",
           ),
-          [6, 8, 10, 12].map((z) =>
+          [6, 8, 10, 12, 14, 16].map((z) =>
             React.createElement(
               "button",
               {
@@ -6101,14 +7473,63 @@ var ShootingResolver = function () {
                   fontFamily: "'Share Tech Mono', serif",
                   fontWeight: deployScale === z ? 700 : 400,
                   background:
-                    deployScale === z ? "rgba(0,0,0,0.08)" : "#f0ebe2",
-                  border: `1px solid ${deployScale === z ? "#8a7e6e" : "#d0c4aa"}`,
-                  color: deployScale === z ? "#2a2418" : "#8a7e6e",
+                    deployScale === z
+                      ? isFullSize
+                        ? "rgba(143,207,145,0.18)"
+                        : "rgba(0,0,0,0.08)"
+                      : isFullSize
+                        ? "rgba(5,15,5,0.72)"
+                        : "#f0ebe2",
+                  border: `1px solid ${deployScale === z ? (isFullSize ? "#8fcf91" : "#8a7e6e") : isFullSize ? "rgba(143,207,145,0.35)" : "#d0c4aa"}`,
+                  color:
+                    deployScale === z
+                      ? isFullSize
+                        ? "#d8f7c8"
+                        : "#2a2418"
+                      : fullMuted,
                 },
               },
               z,
               "px",
             ),
+          ),
+          React.createElement(
+            "button",
+            {
+              onMouseDown: (e) => {
+                if (!isFullSize) return;
+                e.stopPropagation();
+                fullSizeMapExitLockRef.current = Date.now();
+                closeFullSizeTacticalMap();
+              },
+              onClick: (e) => {
+                e.stopPropagation();
+                if (
+                  !isFullSize &&
+                  Date.now() - fullSizeMapExitLockRef.current > 300
+                )
+                  openFullSizeTacticalMap(phase);
+              },
+              title: isFullSize
+                ? "Exit full size tactical map"
+                : "Full size tactical map",
+              style: {
+                padding: "4px 10px",
+                borderRadius: 4,
+                fontSize: 9,
+                cursor: "pointer",
+                fontFamily: "'Share Tech Mono', serif",
+                fontWeight: 700,
+                letterSpacing: 1,
+                background: isFullSize
+                  ? `rgba(${phase === "shooting" ? "184,134,11" : "155,45,45"},0.22)`
+                  : "#f0ebe2",
+                border: `1.5px solid ${isFullSize ? phaseColor : "#d0c4aa"}`,
+                color: isFullSize ? "#fff6d0" : "#6a5e4e",
+                textShadow: isFullSize ? `0 0 8px ${phaseColor}` : "none",
+              },
+            },
+            isFullSize ? "EXIT FULL SIZE" : "FULL SIZE",
           ),
         ),
       ),
@@ -6132,7 +7553,9 @@ var ShootingResolver = function () {
             {
               style: {
                 overflow: "auto",
-                maxHeight: "65vh",
+                maxHeight: isFullSize ? "none" : "65vh",
+                flex: isFullSize ? 1 : undefined,
+                minHeight: isFullSize ? 0 : undefined,
                 background: "#2a2a20",
                 borderRadius: 4,
                 padding: 4,
@@ -6573,8 +7996,7 @@ var ShootingResolver = function () {
                     unit.type !== "objective" &&
                     typeof getUnitArtwork === "function"
                       ? getUnitArtwork(
-                          unit.unitId ||
-                            (unit.unitData && unit.unitData.id),
+                          unit.unitId || (unit.unitData && unit.unitData.id),
                           unit.factionId,
                           unit.allegiance,
                         )
@@ -6798,7 +8220,15 @@ var ShootingResolver = function () {
         renderGroundReservesStrip(deployScale),
       React.createElement(
         "div",
-        { style: { display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" } },
+        {
+          style: {
+            display: "flex",
+            gap: 8,
+            marginTop: 8,
+            flexWrap: "wrap",
+            flexShrink: 0,
+          },
+        },
         React.createElement(
           "div",
           {
@@ -6808,9 +8238,11 @@ var ShootingResolver = function () {
               borderRadius: 4,
               fontSize: 12,
               background: mapAttackerId
-                ? "rgba(255,215,0,0.08)"
-                : "rgba(0,0,0,0.02)",
-              border: `1px solid ${mapAttackerId ? "rgba(255,215,0,0.3)" : "#e0d8c8"}`,
+                ? isFullSize
+                  ? "rgba(255,215,0,0.16)"
+                  : "rgba(255,215,0,0.08)"
+                : fullPanelBg,
+              border: `1px solid ${mapAttackerId ? "rgba(255,215,0,0.55)" : fullPanelBorder}`,
             },
           },
           React.createElement(
@@ -6819,7 +8251,7 @@ var ShootingResolver = function () {
               style: {
                 fontFamily: "'Share Tech Mono', serif",
                 fontSize: 8,
-                color: "#b8860b",
+                color: isFullSize ? "#ffd966" : "#b8860b",
                 letterSpacing: 1,
               },
             },
@@ -6832,7 +8264,11 @@ var ShootingResolver = function () {
                 fontFamily: "'Share Tech Mono', serif",
                 fontWeight: 700,
                 fontSize: 12,
-                color: mapAttackerId ? "#2a2418" : "#a09888",
+                color: mapAttackerId
+                  ? isFullSize
+                    ? "#fff6d0"
+                    : "#2a2418"
+                  : fullMuted,
               },
             },
             atkUnit?.label || "Click a unit on the map",
@@ -6847,9 +8283,11 @@ var ShootingResolver = function () {
               borderRadius: 4,
               fontSize: 12,
               background: mapTargetId
-                ? "rgba(255,68,68,0.08)"
-                : "rgba(0,0,0,0.02)",
-              border: `1px solid ${mapTargetId ? "rgba(255,68,68,0.3)" : "#e0d8c8"}`,
+                ? isFullSize
+                  ? "rgba(255,68,68,0.18)"
+                  : "rgba(255,68,68,0.08)"
+                : fullPanelBg,
+              border: `1px solid ${mapTargetId ? "rgba(255,68,68,0.58)" : fullPanelBorder}`,
             },
           },
           React.createElement(
@@ -6858,7 +8296,7 @@ var ShootingResolver = function () {
               style: {
                 fontFamily: "'Share Tech Mono', serif",
                 fontSize: 8,
-                color: "#c74040",
+                color: isFullSize ? "#ff8888" : "#c74040",
                 letterSpacing: 1,
               },
             },
@@ -6871,7 +8309,11 @@ var ShootingResolver = function () {
                 fontFamily: "'Share Tech Mono', serif",
                 fontWeight: 700,
                 fontSize: 12,
-                color: mapTargetId ? "#2a2418" : "#a09888",
+                color: mapTargetId
+                  ? isFullSize
+                    ? "#ffe2e2"
+                    : "#2a2418"
+                  : fullMuted,
               },
             },
             defUnit?.label || "Click another unit",
@@ -6891,14 +8333,25 @@ var ShootingResolver = function () {
               cursor: "pointer",
               fontFamily: "'Share Tech Mono', serif",
               fontWeight: 600,
-              background: "#f0ebe2",
-              border: "1px solid #d0c4aa",
-              color: "#8a7e6e",
+              background: isFullSize ? "rgba(5,15,5,0.72)" : "#f0ebe2",
+              border: `1px solid ${isFullSize ? "rgba(143,207,145,0.35)" : "#d0c4aa"}`,
+              color: fullMuted,
             },
           },
           "CLEAR",
         ),
       ),
+      isFullSize &&
+        renderTacticalMapResolverDock({
+          phase,
+          atkUnit,
+          defUnit,
+          distance,
+          weaponRange,
+        }),
+      isFullSize &&
+        fullSizeMapResultModal === phase &&
+        renderFullSizeMapResultPopup(phase),
     );
   };
 
@@ -8364,8 +9817,7 @@ var ShootingResolver = function () {
     if (deployBrushUnit) {
       const iconType = getUnitIconType(deployBrushUnit.name);
       const symbol = getSymbolForType(iconType);
-      const brushArmy =
-        deployPlayer === "p1" ? loyalistArmy : traitorArmy;
+      const brushArmy = deployPlayer === "p1" ? loyalistArmy : traitorArmy;
       setDeployedUnits((prev) => [
         ...prev,
         {
@@ -8692,22 +10144,194 @@ var ShootingResolver = function () {
     const weaponUnit = weaponRangeUnit
       ? deployedUnits.find((u) => u.id === weaponRangeUnit)
       : null;
+    const isMovementBoard = activePhase === "movement";
+    const isFullSizeBoard =
+      isMovementBoard && fullSizeTacticalMapPhase === "movement";
+    const boardAccent = "#6b5b2e";
+    const boardFullText = isFullSizeBoard ? "#d8f7c8" : "#6a5e4e";
+    const boardFullMuted = isFullSizeBoard ? "#9fd69b" : "#8a7e6e";
     return React.createElement(
       "div",
       {
-        style: {
-          ...panelStyle,
-          marginBottom: 12,
-          padding: 0,
-          overflow: "hidden",
-        },
+        style: isFullSizeBoard
+          ? {
+              position: "fixed",
+              inset: 0,
+              zIndex: 9000,
+              display: "flex",
+              flexDirection: "column",
+              minHeight: 0,
+              padding: 12,
+              overflow: "hidden",
+              background: "#050f05",
+              border: `2px solid ${boardAccent}`,
+              boxShadow: "0 0 30px rgba(107,91,46,0.35)",
+            }
+          : {
+              ...panelStyle,
+              marginBottom: 12,
+              padding: 0,
+              overflow: "hidden",
+            },
       },
+      isMovementBoard &&
+        React.createElement(
+          "div",
+          {
+            style: {
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              padding: isFullSizeBoard ? "0 0 10px" : "10px 12px",
+              borderBottom: isFullSizeBoard
+                ? "1px solid rgba(143,207,145,0.35)"
+                : "1px solid #d8cdb8",
+              flexShrink: 0,
+              flexWrap: "wrap",
+            },
+          },
+          React.createElement(
+            "span",
+            {
+              style: {
+                fontSize: 13,
+                fontFamily: "'Share Tech Mono', serif",
+                fontWeight: 900,
+                letterSpacing: 2,
+                color: isFullSizeBoard ? "#d8f7c8" : boardAccent,
+                textShadow: isFullSizeBoard
+                  ? "0 0 8px rgba(216,247,200,0.45)"
+                  : "none",
+              },
+            },
+            "TACTICAL MAP - MOVEMENT",
+          ),
+          React.createElement(
+            "span",
+            {
+              style: {
+                fontSize: 11,
+                fontFamily: "'Share Tech Mono', serif",
+                color: boardFullMuted,
+              },
+            },
+            moveSelectedId && selectedMoveUnit
+              ? `Moving: ${selectedMoveUnit.label || selectedMoveUnit.name}`
+              : "Select a unit, then click the map",
+          ),
+          React.createElement("div", { style: { flex: 1 } }),
+          React.createElement(
+            "span",
+            {
+              style: {
+                padding: "5px 8px",
+                borderRadius: 4,
+                fontSize: 10,
+                fontFamily: "'Share Tech Mono', serif",
+                fontWeight: 700,
+                color: boardFullText,
+                background: isFullSizeBoard
+                  ? "rgba(5,15,5,0.78)"
+                  : "rgba(107,91,46,0.06)",
+                border: `1px solid ${isFullSizeBoard ? "rgba(143,207,145,0.35)" : "rgba(107,91,46,0.18)"}`,
+              },
+            },
+            moveLog.length,
+            " MOVES",
+          ),
+          React.createElement(
+            "button",
+            {
+              onClick: undoLastMove,
+              disabled: moveLog.length === 0,
+              style: {
+                padding: "5px 10px",
+                borderRadius: 4,
+                fontSize: 10,
+                cursor: moveLog.length ? "pointer" : "default",
+                fontFamily: "'Share Tech Mono', serif",
+                fontWeight: 700,
+                background: isFullSizeBoard ? "rgba(5,15,5,0.72)" : "#f0ebe2",
+                border: `1px solid ${isFullSizeBoard ? "rgba(143,207,145,0.35)" : "#d0c4aa"}`,
+                color: moveLog.length ? boardFullText : boardFullMuted,
+                opacity: moveLog.length ? 1 : 0.55,
+              },
+            },
+            "UNDO",
+          ),
+          React.createElement(
+            "button",
+            {
+              onClick: resetAllMoves,
+              disabled: moveLog.length === 0,
+              style: {
+                padding: "5px 10px",
+                borderRadius: 4,
+                fontSize: 10,
+                cursor: moveLog.length ? "pointer" : "default",
+                fontFamily: "'Share Tech Mono', serif",
+                fontWeight: 700,
+                background: isFullSizeBoard ? "rgba(5,15,5,0.72)" : "#f0ebe2",
+                border: `1px solid ${isFullSizeBoard ? "rgba(199,64,64,0.55)" : "#d0c4aa"}`,
+                color: moveLog.length
+                  ? isFullSizeBoard
+                    ? "#ff8888"
+                    : "#c74040"
+                  : boardFullMuted,
+                opacity: moveLog.length ? 1 : 0.55,
+              },
+            },
+            "RESET",
+          ),
+          React.createElement(
+            "button",
+            {
+              onMouseDown: (e) => {
+                if (!isFullSizeBoard) return;
+                e.stopPropagation();
+                fullSizeMapExitLockRef.current = Date.now();
+                closeFullSizeTacticalMap();
+              },
+              onClick: (e) => {
+                e.stopPropagation();
+                if (
+                  !isFullSizeBoard &&
+                  Date.now() - fullSizeMapExitLockRef.current > 300
+                )
+                  openFullSizeTacticalMap("movement");
+              },
+              title: isFullSizeBoard
+                ? "Exit full size movement map"
+                : "Full size movement map",
+              style: {
+                padding: "6px 12px",
+                borderRadius: 4,
+                fontSize: 10,
+                cursor: "pointer",
+                fontFamily: "'Share Tech Mono', serif",
+                fontWeight: 900,
+                letterSpacing: 1,
+                background: isFullSizeBoard
+                  ? "rgba(107,91,46,0.25)"
+                  : "rgba(107,91,46,0.08)",
+                border: `1.5px solid ${isFullSizeBoard ? "#d8f7c8" : boardAccent}`,
+                color: isFullSizeBoard ? "#d8f7c8" : boardAccent,
+                textShadow: isFullSizeBoard
+                  ? "0 0 8px rgba(216,247,200,0.45)"
+                  : "none",
+              },
+            },
+            isFullSizeBoard ? "EXIT FULL SIZE" : "FULL SIZE",
+          ),
+        ),
       React.createElement(
         "div",
         {
           style: {
             overflow: "auto",
-            maxHeight: "70vh",
+            maxHeight: isFullSizeBoard ? "none" : "70vh",
+            flex: isFullSizeBoard ? 1 : undefined,
+            minHeight: isFullSizeBoard ? 0 : undefined,
             background: "#2a2a20",
             padding: 4,
           },
@@ -10750,8 +12374,7 @@ var ShootingResolver = function () {
                 unit.type !== "objective" &&
                 typeof getUnitArtwork === "function"
                   ? getUnitArtwork(
-                      unit.unitId ||
-                        (unit.unitData && unit.unitData.id),
+                      unit.unitId || (unit.unitData && unit.unitData.id),
                       unit.factionId,
                       unit.allegiance,
                     )
@@ -13054,7 +14677,7 @@ var ShootingResolver = function () {
                   letterSpacing: 3,
                 },
               },
-              "THE HORUS HERESY · AGE OF DARKNESS · 3RD EDITION · v1.91",
+              "THE HORUS HERESY · AGE OF DARKNESS · 3RD EDITION · Verison 2.00",
             ),
           ),
         ),
@@ -36400,7 +38023,7 @@ var ShootingResolver = function () {
         React.createElement("br", null),
         "All dice rolls are simulated. Use for quick resolution and statistical analysis.",
         React.createElement("br", null),
-        "Version 1.91 — All Factions Added 115_04_20, Faction Unit Filtering",
+        "Version 2.00 — All Factions Added 115_04_20, Faction Unit Filtering",
       ),
     ),
   );

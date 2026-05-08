@@ -1,0 +1,398 @@
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   MODE TOGGLE BUTTON  (always visible, bottom-left corner)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.hh-mode-toggle {
+  position: fixed;
+  bottom: 12px;
+  left: 12px;
+  z-index: 99999;
+  background: #050f05;
+  color: #00ff41;
+  border: 1px solid #00aa2a;
+  padding: 6px 12px;
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  border-radius: 0;
+  text-transform: uppercase;
+  box-shadow: 0 0 8px rgba(0, 255, 65, 0.18);
+  transition: background 0.15s, box-shadow 0.15s, text-shadow 0.15s;
+  /* iOS safe-area in case it lands near a device edge */
+  bottom: max(12px, env(safe-area-inset-bottom, 12px));
+  left: max(12px, env(safe-area-inset-left, 12px));
+}
+.hh-mode-toggle:hover {
+  background: #0a200a;
+  box-shadow: 0 0 14px rgba(0, 255, 65, 0.45);
+  text-shadow: 0 0 6px #00ff41;
+}
+.hh-mode-toggle:active { transform: translateY(1px); }
+
+/* When the user has manually overridden auto-detect, mark the pill so they
+   know it's not following the device any more. Right-click to clear. */
+.hh-mode-toggle.hh-toggle-overridden {
+  border-color: #ccaa00;
+  color: #ffd84a;
+  box-shadow: 0 0 10px rgba(204, 170, 0, 0.35);
+}
+
+/* In iOS-frame preview the bezel takes the screen real estate, so we tuck
+   the pill into the dark surround area. */
+body.hh-show-frame .hh-mode-toggle {
+  bottom: 16px;
+  left: 16px;
+}
+
+/* On real mobile, keep the toggle small and out of the way of content. */
+body.hh-mobile .hh-mode-toggle {
+  font-size: 10px;
+  padding: 5px 10px;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   MOBILE / iOS-FRAME STYLESHEET  (mobile.css)
+   Two modes, driven by classes set in 18-mobile-detect.js:
+     body.hh-show-frame  → desktop preview, wraps #root in an iPhone bezel
+     body.hh-mobile      → real mobile (or narrow viewport), full-screen
+                           layout with iOS-style chrome.
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+/* ====================================================================
+   1.  iOS-FRAME PREVIEW (desktop only, wide viewport)
+   ==================================================================== */
+
+body.hh-show-frame {
+  background:
+    radial-gradient(ellipse at top, #1a2010 0%, #050805 70%) !important;
+  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 20px 60px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Dim the global CRT scanline overlay outside the phone */
+body.hh-show-frame::after {
+  opacity: 0.25;
+}
+
+/* The phone bezel — wraps #root */
+body.hh-show-frame #root {
+  position: relative;
+  width: 390px;
+  height: 844px;
+  background: #0a0a0a;
+  border-radius: 54px;
+  padding: 12px;
+  box-shadow:
+    0 0 0 2px #2a2a2a,
+    0 0 0 8px #1a1a1a,
+    0 30px 70px rgba(0, 0, 0, 0.7),
+    0 10px 30px rgba(0, 255, 65, 0.08);
+  overflow: hidden;
+  margin: 0 auto;
+  flex: 0 0 auto;
+}
+
+/* The phone screen (inside the bezel) */
+body.hh-show-frame #root::before {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border-radius: 44px;
+  background: #050f05;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Dynamic-island-style notch */
+body.hh-show-frame #root::after {
+  content: "";
+  position: absolute;
+  top: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 36px;
+  background: #000;
+  border-radius: 20px;
+  z-index: 100;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1px #1a1a1a;
+}
+
+/* Inner scrollable region — host of the actual app content.
+   The app's top-level div sets min-height:100vh inline, which would blow
+   out our 844px phone. We force it back to fit the frame. */
+body.hh-show-frame #root > * {
+  position: relative !important;
+  z-index: 1;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: 100% !important;
+  border-radius: 44px;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch;
+  /* leave room for notch (top) and home indicator (bottom) */
+  padding-top: 56px !important;
+  padding-bottom: 36px !important;
+}
+
+/* Home indicator bar */
+body.hh-show-frame #root > *::after {
+  /* can't easily inject — handled via body pseudo below */
+}
+
+body.hh-show-frame #root > div::before {
+  content: "";
+  position: fixed;
+  display: none; /* placeholder, real bar drawn on body */
+}
+
+/* Status bar (time + battery) at the very top of the screen */
+body.hh-show-frame #root > div:first-child {
+  position: relative;
+}
+
+body.hh-show-frame::before {
+  /* leave the existing CRT vignette */
+}
+
+/* Time / battery / signal — drawn as a fixed overlay positioned over the
+   phone frame. We compute position so it sits inside the bezel. */
+.hh-ios-statusbar {
+  display: none;
+}
+body.hh-show-frame .hh-ios-statusbar {
+  display: flex;
+  position: fixed;
+  top: 56px;                  /* body padding-top 40 + 16 inside bezel */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 346px;               /* phone (390) minus bezel padding/border */
+  z-index: 200;
+  justify-content: space-between;
+  align-items: center;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #e8ffe8;
+  pointer-events: none;
+  letter-spacing: 0.3px;
+}
+
+.hh-ios-statusbar .hh-clock {
+  margin-left: 10px;
+}
+
+.hh-ios-statusbar .hh-icons {
+  margin-right: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Tiny home-indicator pill at the bottom */
+.hh-home-indicator { display: none; }
+body.hh-show-frame .hh-home-indicator {
+  display: block;
+  position: fixed;
+  /* phone bottom = top(40) + height(844) = 884; indicator sits ~14px up */
+  top: 858px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 134px;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(232, 255, 232, 0.8);
+  z-index: 200;
+  pointer-events: none;
+}
+
+
+/* ====================================================================
+   2.  REAL MOBILE / NARROW VIEWPORT  (full-screen iOS-feel layout)
+   ==================================================================== */
+
+body.hh-mobile {
+  font-size: 13px;
+  -webkit-tap-highlight-color: rgba(0, 255, 65, 0.12);
+  -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
+}
+
+/* Disable heavy CRT vignette on small screens — eats too much real estate */
+body.hh-mobile::before {
+  background: radial-gradient(
+    ellipse at center,
+    transparent 70%,
+    rgba(0, 0, 0, 0.55) 100%
+  );
+}
+body.hh-mobile::after {
+  /* Keep faint scanlines but lighter */
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.04) 2px,
+    rgba(0, 0, 0, 0.04) 4px
+  );
+}
+
+/* Root takes full screen, scroll inside */
+body.hh-mobile #root {
+  width: 100vw;
+  min-height: 100vh;
+  /* leave room for an optional sticky bottom nav (handled where present) */
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  padding-top: env(safe-area-inset-top, 0);
+}
+
+/* When we are inside the iOS frame we ALSO want the same mobile rules to
+   apply to the inner content. Both selectors share the rest of the file. */
+body.hh-show-frame .hh-ios-mobile-scope,
+body.hh-mobile {
+  /* shared scope marker */
+}
+
+/* ---------- Generic adaptations -------------------------------------- */
+
+/* Big phase-nav bar usually has many buttons in a row — let it wrap and
+   collapse spacing on phones. */
+body.hh-mobile button,
+body.hh-show-frame #root button {
+  min-height: 38px;
+  padding: 8px 12px !important;
+  font-size: 12px !important;
+}
+
+/* Inputs & selects — chunkier, easier to tap, and disable iOS zoom-on-focus
+   by ensuring 16px minimum font-size. */
+body.hh-mobile input,
+body.hh-mobile select,
+body.hh-mobile textarea,
+body.hh-show-frame #root input,
+body.hh-show-frame #root select,
+body.hh-show-frame #root textarea {
+  font-size: 16px !important;
+  padding: 9px 10px !important;
+  min-height: 40px;
+}
+
+/* Panels that use inline padding=20 — tighten on phones */
+body.hh-mobile [style*="padding: 20px"],
+body.hh-mobile [style*="padding:20px"],
+body.hh-show-frame #root [style*="padding: 20px"],
+body.hh-show-frame #root [style*="padding:20px"] {
+  padding: 12px !important;
+}
+
+/* Anything that uses display:flex with gap and wraps poorly — allow wrap */
+body.hh-mobile [style*="display: flex"],
+body.hh-mobile [style*="display:flex"],
+body.hh-show-frame #root [style*="display: flex"],
+body.hh-show-frame #root [style*="display:flex"] {
+  flex-wrap: wrap;
+}
+
+/* Force two-column inline grids onto a single column on phones */
+body.hh-mobile [style*="grid-template-columns: 1fr 1fr"],
+body.hh-mobile [style*="gridTemplateColumns: 1fr 1fr"],
+body.hh-show-frame #root [style*="grid-template-columns: 1fr 1fr"],
+body.hh-show-frame #root [style*="gridTemplateColumns: 1fr 1fr"] {
+  grid-template-columns: 1fr !important;
+}
+
+/* Tables — wrap them in horizontal scroll if they overflow */
+body.hh-mobile table,
+body.hh-show-frame #root table {
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+  white-space: nowrap;
+}
+body.hh-mobile td,
+body.hh-mobile th,
+body.hh-show-frame #root td,
+body.hh-show-frame #root th {
+  font-size: 11px !important;
+  padding: 4px 6px !important;
+}
+
+/* Modals — turn into full-screen iOS sheets */
+body.hh-mobile [style*="position: fixed"][style*="z-index"],
+body.hh-show-frame #root [style*="position: fixed"][style*="z-index"] {
+  /* Don't blanket-override fixed elements, but if they're modal-shaped
+     give them safe constraints. */
+}
+
+/* Headings get a touch tighter */
+body.hh-mobile h1, body.hh-mobile h2, body.hh-mobile h3,
+body.hh-show-frame #root h1, body.hh-show-frame #root h2, body.hh-show-frame #root h3 {
+  font-size: 16px !important;
+  line-height: 1.25;
+  margin-bottom: 6px;
+}
+
+/* Scrollbar gets thinner on mobile */
+body.hh-mobile ::-webkit-scrollbar,
+body.hh-show-frame #root ::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+/* Hide the CRT scanline overlay INSIDE the iOS frame so it doesn't double
+   up with the global one */
+body.hh-show-frame #root [style*="repeating-linear-gradient"] {
+  /* leave alone — internal app effects */
+}
+
+/* ---------- Loading screen tweaks ------------------------------------ */
+
+body.hh-mobile #loading-screen .ld-bar-outer,
+body.hh-show-frame #loading-screen .ld-bar-outer {
+  width: min(280px, 70vw);
+}
+body.hh-mobile #loading-screen .ld-title,
+body.hh-show-frame #loading-screen .ld-title {
+  font-size: 16px;
+  text-align: center;
+  padding: 0 12px;
+}
+
+/* ---------- Phase nav: sticky bottom bar feel ------------------------ */
+/* Many top-level navs use buttons in a flex row; on real mobile we let the
+   first such row become a bottom-fixed iOS-tab-bar feel. The app emits a
+   container at the top of the page; on mobile that nav overflow-scrolls
+   horizontally instead. */
+body.hh-mobile .hh-phase-nav,
+body.hh-show-frame #root .hh-phase-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: #050f05;
+  padding: 6px 4px !important;
+  border-bottom: 1px solid #00aa2a;
+  overflow-x: auto;
+  white-space: nowrap;
+  display: flex;
+  flex-wrap: nowrap;
+}
+body.hh-mobile .hh-phase-nav button,
+body.hh-show-frame #root .hh-phase-nav button {
+  flex: 0 0 auto;
+}
+
+/* ---------- Touch-friendly dice & icons ------------------------------ */
+body.hh-mobile [class*="die-"],
+body.hh-show-frame #root [class*="die-"] {
+  transform-origin: center;
+}
