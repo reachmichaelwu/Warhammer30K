@@ -14632,94 +14632,101 @@ var ShootingResolver = function () {
     React.createElement(
       "div",
       {
+        className: "hh-phase-nav",
         style: {
-          borderBottom: "1px solid #d0c4aa",
-          padding: "20px 24px",
-          background:
-            "linear-gradient(180deg, rgba(184,134,11,0.08) 0%, transparent 100%)",
+          display: "flex",
+          alignItems: "stretch",
+          borderBottom: "1px solid #00aa2a",
+          background: "#020802",
+          position: "sticky",
+          top: 0,
+          zIndex: 50,
+          flexShrink: 0,
         },
       },
+      /* ⸢ HH ⸥ logotype */
       React.createElement(
         "div",
-        { style: { maxWidth: 960, margin: "0 auto" } },
-        React.createElement(
-          "div",
-          { style: { display: "flex", alignItems: "center", gap: 12 } },
-          React.createElement(
-            "div",
-            { style: { fontSize: 28, color: "#b8860b" } },
-            "⚔",
-          ),
-          React.createElement(
-            "div",
-            null,
-            React.createElement(
-              "h1",
-              {
-                style: {
-                  margin: 0,
-                  fontSize: 26,
-                  fontFamily: "'Share Tech Mono', serif",
-                  fontWeight: 700,
-                  color: "#7a5800",
-                  letterSpacing: 2,
-                },
-              },
-              "COMBAT PHASE RESOLVER",
-            ),
-            React.createElement(
-              "div",
-              {
-                style: {
-                  fontSize: 13,
-                  color: "#7a6e5e",
-                  fontFamily: "'Share Tech Mono', serif",
-                  letterSpacing: 3,
-                },
-              },
-              "THE HORUS HERESY · AGE OF DARKNESS · 3RD EDITION · Verison 2.00",
-            ),
-          ),
-        ),
-        React.createElement(
-          "div",
-          { style: { display: "flex", gap: 0, marginTop: 14 } },
-          [
-            { id: "help", label: "❓ HELP", color: "#5a7a9a" },
-            { id: "army_builder", label: "📋 ARMY", color: "#4a6741" },
-            { id: "deployment", label: "📍 DEPLOY", color: "#5b4a8a" },
-            { id: "movement", label: "🚶 MOVE", color: "#6b5b2e" },
-            { id: "shooting", label: "⚔ SHOOTING", color: "#b8860b" },
-            { id: "assault", label: "🗡 ASSAULT", color: "#9b2d2d" },
-            { id: "end", label: "🏛 END", color: "#2e5e3e" },
-          ].map((phase) => {
-            const active = activePhase === phase.id;
-            return React.createElement(
-              "button",
-              {
-                key: phase.id,
-                onClick: () => setActivePhase(phase.id),
-                style: {
-                  flex: 1,
-                  padding: "12px 16px",
-                  fontSize: 13,
-                  fontFamily: "'Share Tech Mono', serif",
-                  fontWeight: 700,
-                  letterSpacing: 1,
-                  cursor: "pointer",
-                  border: "none",
-                  borderBottom: active
-                    ? `3px solid ${phase.color}`
-                    : "3px solid transparent",
-                  background: active ? "rgba(255,255,255,0.6)" : "transparent",
-                  color: active ? phase.color : "#8a7e6e",
-                  transition: "all 0.2s ease",
-                },
-              },
-              phase.label,
-            );
-          }),
-        ),
+        {
+          style: {
+            fontFamily: "'VT323', monospace",
+            fontSize: 22,
+            letterSpacing: 4,
+            color: "#00ff41",
+            textShadow: "0 0 8px #00ff41, 0 0 20px rgba(0,255,65,0.3)",
+            padding: "10px 18px 8px",
+            borderRight: "1px solid #00aa2a",
+            display: "flex",
+            alignItems: "center",
+            flexShrink: 0,
+            userSelect: "none",
+          },
+        },
+        "⸢ HH ⸥",
+      ),
+      /* Phase tab buttons */
+      ...[
+        { id: "help",         icon: "❓", label: "HELP" },
+        { id: "army_builder", icon: "📋", label: "ARMY" },
+        { id: "deployment",   icon: "📍", label: "DEPLOY" },
+        { id: "movement",     icon: "🚶", label: "MOVE" },
+        { id: "shooting",     icon: "⚔",  label: "SHOOTING" },
+        { id: "assault",      icon: "🗡",  label: "ASSAULT" },
+        { id: "end",          icon: "🏛",  label: "END" },
+      ].map((phase) => {
+        const active = activePhase === phase.id;
+        return React.createElement(
+          "button",
+          {
+            key: phase.id,
+            onClick: () => setActivePhase(phase.id),
+            style: {
+              padding: "12px 14px",
+              background: active ? "rgba(0,255,65,0.05)" : "transparent",
+              border: "none",
+              borderBottom: active ? "2px solid #00ff41" : "2px solid transparent",
+              color: active ? "#00ff41" : "#00cc33",
+              textShadow: active ? "0 0 6px #00ff41" : "none",
+              fontFamily: "'Share Tech Mono', monospace",
+              fontSize: 12,
+              letterSpacing: 2,
+              cursor: "pointer",
+              transition: "all 0.08s ease",
+              whiteSpace: "nowrap",
+            },
+          },
+          `${phase.icon} ${phase.label}`,
+        );
+      }),
+      /* Spacer */
+      React.createElement("div", { style: { flex: 1 } }),
+      /* ● ONLINE status pill */
+      React.createElement(
+        "div",
+        {
+          style: {
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "0 16px",
+            fontSize: 11,
+            color: "#00cc33",
+            letterSpacing: 2,
+            fontFamily: "'Share Tech Mono', monospace",
+            flexShrink: 0,
+          },
+        },
+        React.createElement("span", {
+          style: {
+            display: "inline-block",
+            width: 6,
+            height: 6,
+            background: "#00ff41",
+            boxShadow: "0 0 6px #00ff41",
+            animation: "blink 1s steps(2) infinite",
+          },
+        }),
+        "ONLINE",
       ),
     ),
     React.createElement(
@@ -14837,7 +14844,7 @@ var ShootingResolver = function () {
                     style: {
                       width: 72,
                       height: 72,
-                      objectFit: "contain",
+                      objectFit: "cover",
                       background: "#1e1a14",
                       borderRadius: 8,
                       border: "2px solid rgba(184,134,11,0.4)",
@@ -15235,7 +15242,7 @@ var ShootingResolver = function () {
                           style: {
                             width: 120,
                             height: 120,
-                            objectFit: "contain",
+                            objectFit: "cover",
                             background: "#1e1a14",
                             borderRadius: 4,
                             flexShrink: 0,
@@ -15575,7 +15582,7 @@ var ShootingResolver = function () {
                             style: {
                               width: 120,
                               height: 120,
-                              objectFit: "contain",
+                              objectFit: "cover",
                               background: "#1e1a14",
                               borderRadius: 4,
                               flexShrink: 0,
@@ -15916,7 +15923,7 @@ var ShootingResolver = function () {
                             style: {
                               width: 120,
                               height: 120,
-                              objectFit: "contain",
+                              objectFit: "cover",
                               background: "#1e1a14",
                               borderRadius: 4,
                               flexShrink: 0,
@@ -16971,7 +16978,7 @@ var ShootingResolver = function () {
                                     style: {
                                       width: 120,
                                       height: 120,
-                                      objectFit: "contain",
+                                      objectFit: "cover",
                                       background: "#1e1a14",
                                       borderRadius: 5,
                                       flexShrink: 0,
@@ -20570,7 +20577,7 @@ var ShootingResolver = function () {
                                 style: {
                                   width: 120,
                                   height: 120,
-                                  objectFit: "contain",
+                                  objectFit: "cover",
                                   background: "#1e1a14",
                                   borderRadius: 4,
                                   flexShrink: 0,
@@ -20813,7 +20820,7 @@ var ShootingResolver = function () {
                                   style: {
                                     width: 120,
                                     height: 120,
-                                    objectFit: "contain",
+                                    objectFit: "cover",
                                     background: "#1e1a14",
                                     borderRadius: 4,
                                     flexShrink: 0,
@@ -23546,7 +23553,7 @@ var ShootingResolver = function () {
                     style: {
                       width: 120,
                       height: 120,
-                      objectFit: "contain",
+                      objectFit: "cover",
                       background: "#1e1a14",
                       borderRadius: 6,
                       flexShrink: 0,
@@ -24351,7 +24358,7 @@ var ShootingResolver = function () {
                           style: {
                             width: 120,
                             height: 120,
-                            objectFit: "contain",
+                            objectFit: "cover",
                             background: "#1e1a14",
                             borderRadius: 6,
                             flexShrink: 0,
@@ -24937,7 +24944,7 @@ var ShootingResolver = function () {
                             style: {
                               width: 120,
                               height: 120,
-                              objectFit: "contain",
+                              objectFit: "cover",
                               background: "#1e1a14",
                               borderRadius: 6,
                               flexShrink: 0,
@@ -25652,10 +25659,10 @@ var ShootingResolver = function () {
                 "div",
                 {
                   style: {
+                    ...STAT_GRID_STYLE,
                     display: "grid",
                     gridTemplateColumns: "1fr 1fr 1fr",
-                    gap: 12,
-                    marginBottom: 12,
+                    gap: 14,
                   },
                 },
                 React.createElement(NumberInput, {
@@ -25684,10 +25691,10 @@ var ShootingResolver = function () {
                 "div",
                 {
                   style: {
+                    ...STAT_GRID_STYLE,
                     display: "grid",
                     gridTemplateColumns: "1fr 1fr",
-                    gap: 12,
-                    marginBottom: 12,
+                    gap: 14,
                   },
                 },
                 React.createElement(NumberInput, {
@@ -25834,7 +25841,7 @@ var ShootingResolver = function () {
                             style: {
                               width: 120,
                               height: 120,
-                              objectFit: "contain",
+                              objectFit: "cover",
                               background: "#1e1a14",
                               borderRadius: 6,
                               flexShrink: 0,
@@ -25943,7 +25950,7 @@ var ShootingResolver = function () {
                 React.createElement(UnitSelectorModal, {
                   presets: UNIT_PRESETS,
                   faction: targetFaction,
-                  selectedId: targetPresetName,
+                  selectedId: targetPresetId,
                   title: "SELECT TARGET UNIT",
                   accentColor: "#2a6fb4",
                   onClose: () => setShowTargetPresets(false),
@@ -26076,10 +26083,10 @@ var ShootingResolver = function () {
                 "div",
                 {
                   style: {
+                    ...STAT_GRID_STYLE,
                     display: "grid",
                     gridTemplateColumns: "1fr 1fr 1fr 1fr",
-                    gap: 12,
-                    marginBottom: 12,
+                    gap: 14,
                   },
                 },
                 React.createElement(NumberInput, {
@@ -26114,9 +26121,10 @@ var ShootingResolver = function () {
                 "div",
                 {
                   style: {
+                    ...STAT_GRID_STYLE,
                     display: "grid",
                     gridTemplateColumns: "1fr 1fr 1fr 1fr",
-                    gap: 12,
+                    gap: 14,
                   },
                 },
                 React.createElement(SelectInput, {
@@ -26248,9 +26256,10 @@ var ShootingResolver = function () {
                     "div",
                     {
                       style: {
+                        ...STAT_GRID_STYLE,
                         display: "grid",
                         gridTemplateColumns: "1fr",
-                        gap: 4,
+                        gap: 8,
                         marginBottom: 8,
                       },
                     },
@@ -27158,7 +27167,7 @@ var ShootingResolver = function () {
                   style: {
                     width: 110,
                     height: 110,
-                    objectFit: "contain",
+                    objectFit: "cover",
                     background: "#1e1a14",
                     borderRadius: 8,
                     border: "2px solid rgba(184,134,11,0.6)",
@@ -27227,7 +27236,7 @@ var ShootingResolver = function () {
                   style: {
                     width: 110,
                     height: 110,
-                    objectFit: "contain",
+                    objectFit: "cover",
                     background: "#1e1a14",
                     borderRadius: 8,
                     border: "2px solid rgba(42,111,180,0.6)",
@@ -29882,7 +29891,7 @@ var ShootingResolver = function () {
                               style: {
                                 width: 120,
                                 height: 120,
-                                objectFit: "contain",
+                                objectFit: "cover",
                                 background: "#1e1a14",
                                 borderRadius: 6,
                                 flexShrink: 0,
@@ -30739,10 +30748,10 @@ var ShootingResolver = function () {
                   "div",
                   {
                     style: {
+                      ...STAT_GRID_STYLE,
                       display: "grid",
                       gridTemplateColumns: "1fr 1fr 1fr",
-                      gap: 12,
-                      marginBottom: 12,
+                      gap: 14,
                     },
                   },
                   React.createElement(NumberInput, {
@@ -30771,10 +30780,10 @@ var ShootingResolver = function () {
                   "div",
                   {
                     style: {
+                      ...STAT_GRID_STYLE,
                       display: "grid",
                       gridTemplateColumns: "1fr 1fr 1fr",
-                      gap: 12,
-                      marginBottom: 12,
+                      gap: 14,
                     },
                   },
                   React.createElement(SelectInput, {
@@ -30802,10 +30811,10 @@ var ShootingResolver = function () {
                   "div",
                   {
                     style: {
+                      ...STAT_GRID_STYLE,
                       display: "grid",
                       gridTemplateColumns: "1fr 1fr",
-                      gap: 12,
-                      marginBottom: 12,
+                      gap: 14,
                     },
                   },
                   React.createElement(NumberInput, {
@@ -30827,10 +30836,10 @@ var ShootingResolver = function () {
                   "div",
                   {
                     style: {
+                      ...STAT_GRID_STYLE,
                       display: "grid",
                       gridTemplateColumns: "1fr 1fr 1fr",
-                      gap: 12,
-                      marginBottom: 12,
+                      gap: 14,
                     },
                   },
                   React.createElement(SelectInput, {
@@ -30856,10 +30865,10 @@ var ShootingResolver = function () {
                   "div",
                   {
                     style: {
+                      ...STAT_GRID_STYLE,
                       display: "grid",
                       gridTemplateColumns: "1fr",
-                      gap: 12,
-                      marginBottom: 12,
+                      gap: 14,
                       maxWidth: "33%",
                     },
                   },
@@ -31096,9 +31105,10 @@ var ShootingResolver = function () {
                     "div",
                     {
                       style: {
+                        ...STAT_GRID_STYLE,
                         display: "grid",
                         gridTemplateColumns: "1fr 1fr auto 1fr",
-                        gap: 8,
+                        gap: 14,
                         alignItems: "end",
                       },
                     },
@@ -31202,10 +31212,10 @@ var ShootingResolver = function () {
                   "div",
                   {
                     style: {
+                      ...STAT_GRID_STYLE,
                       display: "grid",
                       gridTemplateColumns: "1fr 1fr 1fr",
-                      gap: 10,
-                      marginBottom: 12,
+                      gap: 14,
                     },
                   },
                   React.createElement(NumberInput, {
@@ -33910,10 +33920,10 @@ var ShootingResolver = function () {
                   "div",
                   {
                     style: {
+                      ...STAT_GRID_STYLE,
                       display: "grid",
                       gridTemplateColumns: "1fr 1fr",
-                      gap: 12,
-                      marginBottom: 12,
+                      gap: 14,
                     },
                   },
                   React.createElement(NumberInput, {
@@ -34962,7 +34972,7 @@ var ShootingResolver = function () {
                   style: {
                     width: 110,
                     height: 110,
-                    objectFit: "contain",
+                    objectFit: "cover",
                     background: "#1e1a14",
                     borderRadius: 8,
                     border: "2px solid rgba(155,45,45,0.7)",
@@ -35031,7 +35041,7 @@ var ShootingResolver = function () {
                   style: {
                     width: 110,
                     height: 110,
-                    objectFit: "contain",
+                    objectFit: "cover",
                     background: "#1e1a14",
                     borderRadius: 8,
                     border: "2px solid rgba(42,111,180,0.6)",

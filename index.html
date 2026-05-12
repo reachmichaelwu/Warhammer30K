@@ -24,14 +24,21 @@
       transition: opacity 0.5s ease;
     }
     #loading-screen.fade-out { opacity: 0; pointer-events: none; }
-    .ld-title {
-      font-size: 22px; letter-spacing: 4px;
+    .ld-logotype {
+      font-family: 'VT323', 'Share Tech Mono', monospace;
+      font-size: 52px; letter-spacing: 8px;
+      color: #00ff41;
       text-shadow: 0 0 12px #00ff41, 0 0 30px rgba(0,255,65,0.3);
-      margin-bottom: 24px;
       animation: ld-pulse 1.5s ease-in-out infinite;
+      line-height: 1;
+    }
+    .ld-subtitle {
+      font-size: 13px; letter-spacing: 4px;
+      color: #ccaa00; margin-top: 6px;
+      text-shadow: 0 0 8px #ccaa00;
     }
     .ld-bar-outer {
-      width: 320px; height: 14px;
+      width: 320px; height: 14px; margin-top: 28px;
       border: 1px solid #00aa2a; background: #020802; overflow: hidden;
     }
     .ld-bar-inner {
@@ -40,9 +47,10 @@
       box-shadow: 0 0 10px #00ff41; transition: width 0.15s ease;
     }
     .ld-status {
-      margin-top: 12px; font-size: 11px;
+      margin-top: 10px; font-size: 11px;
       color: #00aa2a; letter-spacing: 2px; text-transform: uppercase;
     }
+    .ld-status::before { content: "→ "; color: #00cc33; }
     #ld-error {
       margin-top: 16px; font-size: 12px; color: #cc2222;
       text-shadow: 0 0 8px #cc2222; max-width: 500px; text-align: center;
@@ -101,7 +109,8 @@
   </script>
 
   <div id="loading-screen">
-    <div class="ld-title">&#x2E22; HORUS HERESY TOOLKIT &#x2E25;</div>
+    <div class="ld-logotype">&#x2E22; HORUS HERESY &#x2E25;</div>
+    <div class="ld-subtitle">&#x2014; TOOLKIT &middot; M31 &#x2014;</div>
     <div class="ld-bar-outer"><div class="ld-bar-inner" id="ldBar"></div></div>
     <div class="ld-status" id="ldStatus">Initializing cogitator&#x2026;</div>
     <div id="ld-error"></div>

@@ -3,152 +3,317 @@
 
 // ━━━ UNIT SELECTOR MODAL ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+// UnitSelectorModal — army-builder-style vertical list with a
+// battlefield-role dropdown filter and a name search. Used by the shooting,
+// assault, deploy, and return-fire panels. Rendered through a portal so it
+// escapes the iOS-frame stacking context (see mobile.css `.hh-modal-overlay`).
 function UnitSelectorModal({ presets, onSelect, selectedId, onClose, accentColor = "#b8860b", title, isTarget = false, faction }) {
-  // Faction category prefix helpers (also match legacy unprefixed category names)
-  const isSACat            = (cat) => cat && (cat.startsWith("SA: ") || cat === "SOLAR AUXILIA");
-  const isMechCat          = (cat) => cat && cat.startsWith("MECH:");
-  const isCustodesCat      = (cat) => cat && (cat.startsWith("CUSTODES:") || cat === "CUSTODES");
-  // Legion-specific categories follow the pattern "NUMERAL: NAME" (e.g. "I: DARK ANGELS")
+  // ── Faction filtering: same rules as before so callers don't need to change.
+  //   sol_auxilia        → only "SA: *" categories
+  //   mechanicum         → only "MECH: *" categories
+  //   custodes           → only "CUSTODES: *" categories
+  //   specific legion    → generic categories + own legion category,
+  //                        then strip faction-mismatched units from generics
+  //   legiones_astartes  → all legion categories (exclude SA, MECH, CUSTODES)
+  const isSACat             = (cat) => cat && (cat.startsWith("SA: ") || cat === "SOLAR AUXILIA");
+  const isMechCat           = (cat) => cat && cat.startsWith("MECH:");
+  const isCustodesCat       = (cat) => cat && (cat.startsWith("CUSTODES:") || cat === "CUSTODES");
   const isLegionSpecificCat = (cat) => cat && /^[IVX]+: /.test(cat);
 
-  // For a specific legion faction (not legiones_astartes/SA/MECH/CUSTODES), look up
-  // the Roman numeral so we can match its own category (e.g. "I: " for dark_angels).
   const factionNumeral = (typeof LEGION_FACTION_BY_ID !== "undefined")
     ? ((LEGION_FACTION_BY_ID[faction] || {}).numeral || null)
     : null;
-  // A "specific legion" means a named legion (not the generic catch-all).
   const isSpecificLegion = faction
     && faction !== "legiones_astartes"
     && faction !== "sol_auxilia"
     && faction !== "mechanicum"
     && faction !== "custodes";
 
-  // Filter preset categories based on selected faction:
-  //   sol_auxilia        → only "SA: *" categories
-  //   mechanicum         → only "MECH: *" categories
-  //   custodes           → only "CUSTODES: *" categories
-  //   specific legion    → generic categories + own legion category (e.g. "I: DARK ANGELS"),
-  //                        then also strip faction-specific units from generic categories
-  //   legiones_astartes  → all legion categories (exclude SA, MECH, CUSTODES)
   const visiblePresets = useMemo(() => {
     if (!faction) return presets;
     if (faction === "sol_auxilia") return presets.filter(c => isSACat(c.category));
     if (faction === "mechanicum")  return presets.filter(c => isMechCat(c.category));
     if (faction === "custodes")    return presets.filter(c => isCustodesCat(c.category));
 
-    // Build the category list for any legion faction
     let categories = presets.filter(c => {
       if (isSACat(c.category) || isMechCat(c.category) || isCustodesCat(c.category)) return false;
       if (isLegionSpecificCat(c.category)) {
-        // For a specific legion show only its own category; for legiones_astartes show all
         if (isSpecificLegion && factionNumeral && factionNumeral !== "-") {
           return c.category.startsWith(factionNumeral + ": ");
         }
         return true;
       }
-      return true; // Generic category — always include
+      return true;
     });
 
-    // For a specific legion, remove units that belong to a different faction
-    // (e.g. hide non-matching Primarchs from the WARLORD categories)
     if (isSpecificLegion && typeof UNIT_SPECIFIC_FACTION !== "undefined") {
       categories = categories
         .map(c => ({
           ...c,
           units: c.units.filter(u => {
             const unitFaction = UNIT_SPECIFIC_FACTION[u.id];
-            // If the unit is tied to a specific faction it must match; generic units always pass
             return !unitFaction || unitFaction === faction;
           }),
         }))
-        .filter(c => c.units.length > 0); // Drop now-empty categories
+        .filter(c => c.units.length > 0);
     }
-
     return categories;
   }, [presets, faction]);
 
-  const [activeCategory, setActiveCategory] = useState(visiblePresets[0]?.category || "");
-  const [searchTerm, setSearchTerm] = useState("");
-
-  // Keep activeCategory valid when faction filter changes
-  useEffect(() => {
-    if (!visiblePresets.find(c => c.category === activeCategory)) {
-      setActiveCategory(visiblePresets[0]?.category || "");
-    }
+  // Flat list of all visible units, de-duplicated by id (a unit can appear in
+  // more than one legacy category — keep only the first occurrence).
+  const allUnits = useMemo(() => {
+    const seen = new Set();
+    const out  = [];
+    visiblePresets.forEach(c => c.units.forEach(u => {
+      const key = u.id || u.name;
+      if (!seen.has(key)) { seen.add(key); out.push(u); }
+    }));
+    return out;
   }, [visiblePresets]);
 
-  const filteredUnits = useMemo(() => {
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      return visiblePresets.flatMap(c => c.units).filter(u => u.name.toLowerCase().includes(term));
-    }
-    const activePreset = visiblePresets.find(c => c.category === activeCategory);
-    return activePreset ? activePreset.units : [];
-  }, [activeCategory, searchTerm, visiblePresets]);
+  // Roles that have at least one unit available — drives the dropdown options.
+  const availableRoles = useMemo(() => {
+    if (typeof BATTLEFIELD_ROLES === "undefined") return [];
+    const present = new Set();
+    allUnits.forEach(u => {
+      const r = (typeof UNIT_BATTLEFIELD_ROLE !== "undefined") ? UNIT_BATTLEFIELD_ROLE[u.id] : null;
+      if (r && BATTLEFIELD_ROLES[r]) present.add(r);
+    });
+    // Preserve BATTLEFIELD_ROLES key order (warlord → fast_attack)
+    return Object.keys(BATTLEFIELD_ROLES).filter(k => present.has(k));
+  }, [allUnits]);
 
-  return (
-    React.createElement("div", {"style": {
-      position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-      background: "rgba(0,0,0,0.4)", zIndex: 1000,
-      display: "flex", alignItems: "center", justifyContent: "center",
-      animation: "fadeIn 0.15s ease", padding: 16
-    }, "onClick": onClose}, React.createElement("div", {"style": {
-        background: "#ffffff", borderRadius: 12, width: "100%", maxWidth: 700,
-        maxHeight: "80vh", display: "flex", flexDirection: "column",
-        border: `2px solid ${accentColor}`, boxShadow: "0 8px 40px rgba(0,0,0,0.15)",
-        overflow: "hidden"
-      }, "onClick": e => e.stopPropagation()}, React.createElement("div", {"style": {
-          padding: "14px 18px", borderBottom: "1px solid #d0c4aa",
-          background: `linear-gradient(180deg, rgba(${accentColor === "#b8860b" ? "184,134,11" : "42,111,180"},0.08) 0%, transparent 100%)`,
-          display: "flex", justifyContent: "space-between", alignItems: "center"
-        }}, React.createElement("div", {"style": { fontFamily: "'Share Tech Mono', serif", fontWeight: 700, fontSize: 14, color: accentColor, letterSpacing: 2 }}, title), React.createElement("button", {"onClick": onClose, "style": {
-            background: "none", border: "none", fontSize: 20, color: "#8a7e6e", cursor: "pointer", padding: "2px 6px"
-          }}, "✕")), React.createElement("div", {"style": { padding: "10px 18px", borderBottom: "1px solid #050705" }}, React.createElement("input", {"type": "text", "placeholder": "Search units...", "value": searchTerm, "onChange": e => setSearchTerm(e.target.value), "style": {
-              width: "100%", padding: "8px 12px", borderRadius: 6, fontSize: 13,
-              border: "1px solid #d0c4aa", background: "#f9f6f0", color: "#2a2418",
-              fontFamily: "'Share Tech Mono', serif"
-            }})), !searchTerm && (
-          React.createElement("div", {"style": {
-            display: "flex", gap: 0, borderBottom: "1px solid #d0c4aa",
-            overflowX: "auto", flexShrink: 0
-          }}, visiblePresets.map(cat => (
-              React.createElement("button", {"key": cat.category, "onClick": () => setActiveCategory(cat.category), "style": {
-                padding: "10px 16px", fontSize: 11, cursor: "pointer",
-                fontFamily: "'Share Tech Mono', serif", fontWeight: activeCategory === cat.category ? 700 : 400,
-                letterSpacing: 1, whiteSpace: "nowrap", border: "none", borderBottom: activeCategory === cat.category ? `2px solid ${accentColor}` : "2px solid transparent",
-                background: activeCategory === cat.category ? `rgba(${accentColor === "#b8860b" ? "184,134,11" : "42,111,180"},0.08)` : "transparent",
-                color: activeCategory === cat.category ? accentColor : "#8a7e6e",
-                transition: "all 0.15s ease"
-              }}, cat.category)
-            )))
-        ), React.createElement("div", {"style": {
-          padding: 14, overflowY: "auto", flex: 1,
-          display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
-          gap: 8, alignContent: "start"
-        }}, filteredUnits.map(u => {
-            const iconType = getUnitIconType(u.name);
-            const uid = u.id || u.name;
+  const [roleFilter, setRoleFilter] = useState("");   // "" = All Roles
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Reset roleFilter if the active selection becomes empty after a faction change
+  useEffect(() => {
+    if (roleFilter && !availableRoles.includes(roleFilter)) setRoleFilter("");
+  }, [availableRoles]);
+
+  const filteredUnits = useMemo(() => {
+    let list = allUnits;
+    if (roleFilter) {
+      list = list.filter(u => {
+        const r = (typeof UNIT_BATTLEFIELD_ROLE !== "undefined") ? UNIT_BATTLEFIELD_ROLE[u.id] : null;
+        return r === roleFilter;
+      });
+    }
+    if (searchTerm) {
+      const t = searchTerm.toLowerCase();
+      list = list.filter(u => u.name.toLowerCase().includes(t));
+    }
+    return list;
+  }, [allUnits, roleFilter, searchTerm]);
+
+  const accentRgb = accentColor === "#b8860b" ? "184,134,11" : "42,111,180";
+
+  // Portal to document.body so the overlay escapes #root's stacking context.
+  // The mobile.css iOS-frame preview adds `position:relative; z-index:1; overflow:auto`
+  // to `#root > *`, which would otherwise trap a position:fixed modal beneath
+  // the bezel's notch ::after (z-index 100) and clip its layout, breaking
+  // both click targets and image placement.
+  return ReactDOM.createPortal(
+    React.createElement("div", {
+      className: "hh-modal-overlay",
+      style: {
+        position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+        background: "rgba(0,0,0,0.5)", zIndex: 1000,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        animation: "fadeIn 0.15s ease", padding: 16,
+      },
+      onClick: onClose,
+    },
+      React.createElement("div", {
+        style: {
+          background: "#faf8f4", borderRadius: 12, width: "100%", maxWidth: 600,
+          maxHeight: "85vh", display: "flex", flexDirection: "column",
+          border: `2px solid ${accentColor}`,
+          boxShadow: "0 8px 32px rgba(0,0,0,0.3)", overflow: "hidden",
+        },
+        onClick: e => e.stopPropagation(),
+      },
+        // ── Header ─────────────────────────────────────────────────────────
+        React.createElement("div", {
+          style: {
+            padding: "14px 18px", borderBottom: "1px solid #d0c4aa",
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+            background: `linear-gradient(180deg, rgba(${accentRgb},0.06) 0%, transparent 100%)`,
+          },
+        },
+          React.createElement("div", {
+            style: {
+              fontFamily: "'Share Tech Mono', monospace", fontWeight: 700,
+              fontSize: 13, color: accentColor, letterSpacing: 2, textTransform: "uppercase",
+            },
+          }, title),
+          React.createElement("button", {
+            onClick: onClose,
+            style: {
+              background: "none", border: "none", fontSize: 18, color: "#8a7e6e",
+              cursor: "pointer", padding: "2px 6px", lineHeight: 1,
+            },
+          }, "✕"),
+        ),
+        // ── Filter row: role dropdown + search ────────────────────────────
+        React.createElement("div", {
+          className: "hh-modal-filter",
+          style: {
+            padding: "10px 18px", borderBottom: "1px solid #e0dbd0", background: "#fffdf9",
+            display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap",
+          },
+        },
+          React.createElement("label", {
+            style: {
+              fontSize: 11, color: "#8a7e6e", letterSpacing: 1,
+              fontFamily: "'Share Tech Mono', serif",
+            },
+          }, "ROLE"),
+          React.createElement("select", {
+            value: roleFilter,
+            onChange: e => setRoleFilter(e.target.value),
+            style: {
+              padding: "7px 10px", borderRadius: 4, border: "1px solid #d0c4aa",
+              fontSize: 12, fontFamily: "'Share Tech Mono', serif",
+              background: "#fff", color: "#2a2418",
+              width: 180, flexShrink: 0,           // lock width; flex won't shrink past it
+              whiteSpace: "nowrap",                // belt-and-braces: no line wrap
+              cursor: "pointer",
+            },
+          },
+            // Plain-text options only — native <select> renders emoji glyphs at
+            // a taller metric than monospace text on macOS/Windows, which can
+            // cause the displayed option to wrap onto two lines. The role icon
+            // shows on each unit row's role badge instead.
+            React.createElement("option", { value: "" }, "All Roles"),
+            availableRoles.map(r => {
+              const role = (typeof BATTLEFIELD_ROLES !== "undefined") ? BATTLEFIELD_ROLES[r] : null;
+              return React.createElement("option", { key: r, value: r }, role?.label || r);
+            }),
+          ),
+          React.createElement("input", {
+            type: "text", placeholder: "Search units…", value: searchTerm,
+            onChange: e => setSearchTerm(e.target.value),
+            className: "hh-parchment-input",
+            style: {
+              flex: 1, minWidth: 140, padding: "7px 10px",
+              fontSize: 12, fontFamily: "'Share Tech Mono', monospace",
+              borderRadius: 4, border: "1px solid #d0c4aa", background: "#fff",
+              color: "#2a2418",
+            },
+          }),
+        ),
+        // ── Unit list (vertical, army-builder row style) ──────────────────
+        React.createElement("div", {
+          style: { padding: 14, overflowY: "auto", flex: 1 },
+        },
+          filteredUnits.length === 0 && React.createElement("div", {
+            style: {
+              padding: 24, textAlign: "center", color: "#b0a898",
+              fontSize: 13, fontFamily: "'Share Tech Mono', serif",
+            },
+          }, "No units match the current filter."),
+          filteredUnits.map(u => {
+            const uid        = u.id || u.name;
             const isSelected = selectedId === uid;
-            return (
-              React.createElement("button", {"key": uid, "onClick": () => onSelect(u), "style": {
-                display: "flex", flexDirection: "column", alignItems: "center",
-                padding: "8px 8px 8px", borderRadius: 8, cursor: "pointer", width: "100%",
-                background: isSelected ? `rgba(${accentColor === "#b8860b" ? "184,134,11" : "42,111,180"},0.12)` : "#f9f6f0",
-                border: `1.5px solid ${isSelected ? accentColor : "#e0dbd0"}`,
-                transition: "all 0.15s ease", textAlign: "center", overflow: "hidden",
-                boxShadow: isSelected ? `0 2px 8px rgba(${accentColor === "#b8860b" ? "184,134,11" : "42,111,180"},0.15)` : "none"
-              }}, typeof getUnitArtwork === "function" && getUnitArtwork(u.id, faction) ? React.createElement("img", { src: getUnitArtwork(u.id, faction), alt: "", style: { width: "100%", height: 80, objectFit: "contain", background: "#1e1a14", borderRadius: 5, marginBottom: 4, border: `1px solid ${isSelected ? accentColor : "#e0dbd0"}` }, onError: function(e) { e.currentTarget.style.display = "none"; } }) : React.createElement(UnitIcon, {"type": iconType, "size": 32, "color": isSelected ? accentColor : "#8a7e6e"}), React.createElement("div", {"style": {
-                  fontSize: 15, fontFamily: "'Share Tech Mono', serif", fontWeight: 600,
-                  color: isSelected ? "#2a2418" : "#4a4030", marginTop: 4, lineHeight: 1.2,
-                  minHeight: 26, display: "flex", alignItems: "center"
-                }}, u.name), React.createElement("div", {"style": {
-                  fontSize: 14, color: "#6a5e4e", fontFamily: "'Share Tech Mono', serif",
-                  marginTop: 4, letterSpacing: 0.5
-                }}, isTarget
-                    ? `T${u.t} ${u.w}W Sv${u.sv}+ ${u.inv !== "-" ? `Inv${u.inv}+` : ""} ${u.fnp !== "-" ? `FNP${u.fnp}+` : ""} Ld${u.ld || "?"}`
-                    : `${u.models} model${u.models > 1 ? "s" : ""} · BS${u.bs}`))
+            const roleId     = (typeof UNIT_BATTLEFIELD_ROLE !== "undefined") ? UNIT_BATTLEFIELD_ROLE[u.id] : null;
+            const role       = (roleId && typeof BATTLEFIELD_ROLES !== "undefined") ? BATTLEFIELD_ROLES[roleId] : null;
+            const pd         = (typeof POINTS_DATA !== "undefined") ? POINTS_DATA[u.id] : null;
+            const artSrc     = (typeof getUnitArtwork === "function") ? getUnitArtwork(u.id, faction) : null;
+            const iconType   = getUnitIconType(u.name);
+            const statsLine  = isTarget
+              ? `T${u.t} ${u.w}W Sv${u.sv}+${u.inv !== "-" ? ` Inv${u.inv}+` : ""}${u.fnp !== "-" ? ` FNP${u.fnp}+` : ""} Ld${u.ld || "?"}`
+              : `${u.models} model${u.models > 1 ? "s" : ""} · BS${u.bs} · T${u.t} · Sv${u.sv}+`;
+            return React.createElement("button", {
+              key: uid,
+              onClick: () => onSelect(u),
+              style: {
+                display: "flex", alignItems: "center", gap: 10, textAlign: "left",
+                width: "100%", padding: "8px 10px", marginBottom: 4,
+                borderRadius: 6, cursor: "pointer",
+                background: isSelected ? `rgba(${accentRgb},0.10)` : "#fff",
+                border: `1.5px solid ${isSelected ? accentColor : "#d0c4aa"}`,
+                boxShadow: isSelected ? `0 2px 8px rgba(${accentRgb},0.15)` : "none",
+                transition: "background 0.12s ease, border-color 0.12s ease",
+              },
+              onMouseEnter: e => {
+                if (!isSelected) e.currentTarget.style.background = `rgba(${accentRgb},0.05)`;
+              },
+              onMouseLeave: e => {
+                if (!isSelected) e.currentTarget.style.background = "#fff";
+              },
+            },
+              // ── Artwork plate (120×120) with UnitIcon fallback ───────────
+              React.createElement("div", {
+                style: {
+                  position: "relative", width: 120, height: 120,
+                  background: "#1e1a14", borderRadius: 5, flexShrink: 0,
+                  border: `1px solid ${isSelected ? accentColor : "rgba(184,134,11,0.25)"}`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  overflow: "hidden",
+                },
+              },
+                React.createElement(UnitIcon, {
+                  type: iconType, size: 56,
+                  color: isSelected ? accentColor : "#6a5040",
+                }),
+                artSrc ? React.createElement("img", {
+                  src: artSrc, alt: "",
+                  style: {
+                    position: "absolute", inset: 0, width: "100%", height: "100%",
+                    objectFit: "cover", objectPosition: "top center",
+                  },
+                  onError: function(e) { e.currentTarget.style.display = "none"; },
+                }) : null,
+              ),
+              // ── Centre column: role badge + name + stats ────────────────
+              React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+                role ? React.createElement("div", {
+                  style: {
+                    display: "inline-flex", alignItems: "center", gap: 4,
+                    padding: "2px 6px", borderRadius: 3, marginBottom: 4,
+                    background: "rgba(0,0,0,0.03)",
+                    border: `1px solid ${role.color}`,
+                    fontSize: 10, fontFamily: "'Share Tech Mono', serif",
+                    color: role.color, letterSpacing: 0.5, fontWeight: 700,
+                    textTransform: "uppercase",
+                  },
+                }, role.icon, " ", role.label) : null,
+                React.createElement("div", {
+                  style: {
+                    fontFamily: "'Share Tech Mono', serif", fontWeight: 600,
+                    fontSize: 15, color: isSelected ? "#2a2418" : "#1e1a12",
+                    lineHeight: 1.2, marginBottom: 3,
+                    overflow: "hidden", textOverflow: "ellipsis",
+                  },
+                }, u.name),
+                React.createElement("div", {
+                  style: {
+                    fontSize: 12, color: "#6a5e4e",
+                    fontFamily: "'Share Tech Mono', serif", letterSpacing: 0.3,
+                  },
+                }, statsLine),
+              ),
+              // ── Right column: points (if known) ─────────────────────────
+              pd?.base ? React.createElement("div", {
+                style: {
+                  fontFamily: "'Share Tech Mono', serif", fontWeight: 700,
+                  fontSize: 14, color: accentColor, flexShrink: 0,
+                  textAlign: "right", minWidth: 50,
+                },
+              },
+                pd.base,
+                React.createElement("span", {
+                  style: { fontSize: 10, color: "#8a7e6e", marginLeft: 2 },
+                }, "pts"),
+              ) : null,
             );
-          }))))
+          }),
+        ),
+      ),
+    ),
+    document.body,
   );
 }
 
@@ -238,9 +403,131 @@ function DieIcon({ value, success, reroll, small }) {
   );
 }
 
+// ━━━ STAT EXPLANATIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Looked up by the input's `label` string (case-insensitive). `sub` renders
+// as a small grey caption right under the label; `desc` is the full text shown
+// in the native `title` tooltip when the player hovers the label.
+// Add an entry here and every NumberInput/SelectInput across the app inherits it.
+var STAT_EXPLANATIONS = {
+  // ── Attacker / shooter ─────────────────────────────────────────────────
+  "models":         { sub: "Models firing this volley",
+                      desc: "Number of models in the firing unit. Each rolls Shots/Model to-hit dice." },
+  "shots/model":    { sub: "Shots each model fires",
+                      desc: "How many shots every model fires this turn (the weapon's Shots value, modified by Rapid Fire, Salvo, etc.)." },
+  "bs":             { sub: "Ballistic Skill — ranged to-hit",
+                      desc: "Ballistic Skill. Used for shooting to-hit rolls. Roll equal or over (7 − BS) on a d6 to hit. Higher BS = more accurate." },
+  "ws":             { sub: "Weapon Skill — melee to-hit",
+                      desc: "Weapon Skill. Used for melee to-hit rolls. Cross-reference attacker WS vs target WS on the to-hit chart." },
+  "strength":       { sub: "Strength — vs Toughness to wound",
+                      desc: "Attack Strength. Cross-reference with target Toughness on the to-wound chart: S = T wounds on 4+, S ≥ 2·T wounds on 2+, S < ½T cannot wound." },
+  "s":              { sub: "Strength — vs Toughness",
+                      desc: "Attack Strength. Cross-reference with target Toughness on the to-wound chart." },
+  "range strength": { sub: "Ranged Strength — vs Toughness",
+                      desc: "Ranged Strength of the firing weapon. Cross-reference with target Toughness on the to-wound chart." },
+  "ap":             { sub: "Armour Penetration",
+                      desc: "Armour Penetration. If AP ≤ target's armour save, the target gets NO armour save. AP1 ignores all armour saves; AP «−» allows the full save. Invulnerable & cover saves are never affected by AP." },
+  "i":              { sub: "Initiative — strike order",
+                      desc: "Initiative. The melee strike order — highest I strikes first; ties strike simultaneously. Charging models still strike at their own I (no bonus in HH 3rd Ed)." },
+  "a":              { sub: "Attacks per model",
+                      desc: "Base close-combat attacks per model. +1 for charging, +1 for two close-combat weapons. Sergeants/characters may have higher A." },
+  "d":              { sub: "Damage per failed save",
+                      desc: "Damage. Wounds inflicted on the target per unsaved hit." },
+
+  // ── Target ─────────────────────────────────────────────────────────────
+  "toughness":      { sub: "Toughness — wound resistance",
+                      desc: "Toughness. Cross-referenced with attacker Strength on the to-wound chart. Higher T = harder to wound." },
+  "t":              { sub: "Toughness",
+                      desc: "Toughness. Cross-referenced with attacker Strength on the to-wound chart." },
+  "w":              { sub: "Wounds per model",
+                      desc: "Wounds. A model is removed as a casualty when its Wounds reach 0. Multi-wound models suffer Instant Death if Strength ≥ 2·T." },
+  "w (wounds)":     { sub: "Wounds per model",
+                      desc: "Wounds. A model is removed as a casualty when its Wounds reach 0. Instant Death if attack Strength ≥ 2·T." },
+  "armour save":    { sub: "Save vs AP",
+                      desc: "Armour Save. Roll equal or over this on a d6 to negate a wound. No save allowed if the weapon's AP ≤ this value. Lower (2+) is better than higher (5+)." },
+  "sv":             { sub: "Armour Save",
+                      desc: "Armour Save. Roll equal or over this on a d6 to negate a wound, unless the weapon's AP is equal or lower." },
+  "invuln save":    { sub: "Invulnerable — ignores AP",
+                      desc: "Invulnerable Save. Taken instead of an armour save and never modified by AP. Only one save per wound." },
+  "inv":            { sub: "Invuln — ignores AP",
+                      desc: "Invulnerable Save. Taken instead of an armour save and never modified by AP." },
+  "cover save":     { sub: "Save from terrain",
+                      desc: "Cover Save granted by intervening terrain or special rules. Never modified by AP. Only one save per wound." },
+  "fnp":            { sub: "Feel No Pain — ignore the wound",
+                      desc: "Feel No Pain. After a wound is suffered (and not saved), roll equal or over this on a d6 to ignore it. Disallowed against weapons with sufficient AP, Instant Death, or specific FNP-ignoring rules." },
+  "leadership":     { sub: "Leadership — morale tests",
+                      desc: "Leadership. Used for Morale, Pinning, Fear and Psychic tests. Roll 2d6 equal or under Ld to pass." },
+  "ld":             { sub: "Leadership — morale tests",
+                      desc: "Leadership. Used for Morale, Pinning, Fear and Psychic tests. Roll 2d6 equal or under Ld to pass." },
+  "unit size":      { sub: "Models in the target unit",
+                      desc: "Number of models currently in the target unit. Affects wound allocation, Morale tests and certain weapon effects (Blast hits, etc.)." },
+
+  // ── Vehicles ───────────────────────────────────────────────────────────
+  "av front":       { sub: "Front Armour Value",
+                      desc: "Front Armour Value of the vehicle. Penetration roll = d6 + Strength vs AV. A roll equal to AV is a Glancing Hit; greater than AV is a Penetrating Hit." },
+  "av side":        { sub: "Side Armour Value",
+                      desc: "Side Armour Value of the vehicle. Penetration roll = d6 + Strength vs AV." },
+  "av rear":        { sub: "Rear Armour Value",
+                      desc: "Rear Armour Value of the vehicle. Penetration roll = d6 + Strength vs AV." },
+  "hull pts":       { sub: "Hull Points",
+                      desc: "Hull Points. Vehicles lose a Hull Point on every Glancing or Penetrating hit; reaching 0 wrecks the vehicle. Penetrating hits may also roll on the damage table." },
+
+  // ── Overwatch / interceptor ────────────────────────────────────────────
+  "target bs":      { sub: "Target's BS — for overwatch fire",
+                      desc: "Ballistic Skill of the target unit when it fires back (overwatch / interceptor / return fire). Affects their to-hit rolls against you." },
+
+  // ── Assault & charge ───────────────────────────────────────────────────
+  "initiative (i)": { sub: "Initiative — strike order",
+                      desc: "Initiative. Determines the order of strikes in melee — highest I strikes first; ties strike simultaneously." },
+  "movement (m)":   { sub: "Move distance in inches",
+                      desc: "Movement value in inches. Infantry typically 6\", Cavalry/Bikes 8–12\", Terminators 4\". Affects charge range and consolidation." },
+  "target distance (″)": { sub: "Distance to target (inches)",
+                      desc: "Straight-line distance from the closest charging model to the closest target model, in inches. Charge succeeds if 2d6 ≥ this distance." },
+  "atk support models":  { sub: "Supporting attackers (rear ranks)",
+                      desc: "Attacker models in supporting (rear) ranks that contribute attacks but aren't in base contact. In HH 3rd Ed, supporting models still strike at reduced effect per rules." },
+  "def support models":  { sub: "Supporting defenders (rear ranks)",
+                      desc: "Defender models in supporting (rear) ranks that contribute attacks but aren't in base contact." },
+};
+
+// Look up a help entry by an input's label (case-insensitive). Returns null
+// when no entry exists, so the caller renders the label exactly as before.
+function getStatHelp(label) {
+  if (!label) return null;
+  return STAT_EXPLANATIONS[String(label).toLowerCase()] || null;
+}
+
+// Shared label+subtitle renderer used by both NumberInput and SelectInput so
+// they stay visually identical (and look right in the parchment modal).
+function renderStatLabel(label) {
+  var help = getStatHelp(label);
+  return React.createElement(React.Fragment, null,
+    React.createElement("label", {
+      title: help ? help.desc : null,
+      style: {
+        fontSize: 13, color: "#6a5e4e", textTransform: "uppercase",
+        letterSpacing: 1, fontFamily: "'Share Tech Mono', serif",
+        cursor: help ? "help" : "default",
+        display: "inline-flex", alignItems: "center", gap: 4,
+      },
+    },
+      label,
+      help && React.createElement("span", {
+        "aria-hidden": "true",
+        style: { fontSize: 10, opacity: 0.55, color: "#8b6508" },
+      }, "ⓘ"),
+    ),
+    help && React.createElement("div", {
+      style: {
+        fontSize: 10, lineHeight: 1.25, color: "#8a7e6e",
+        fontFamily: "'Share Tech Mono', serif", letterSpacing: 0.2,
+        marginTop: -1, marginBottom: 1,
+      },
+    }, help.sub),
+  );
+}
+
 function NumberInput({ label, value, onChange, min = 0, max = 20, step = 1 }) {
   return (
-    React.createElement("div", {"style": { display: "flex", flexDirection: "column", gap: 4 }}, React.createElement("label", {"style": { fontSize: 13, color: "#6a5e4e", textTransform: "uppercase", letterSpacing: 1, fontFamily: "'Share Tech Mono', serif" }}, label), React.createElement("div", {"style": { display: "flex", alignItems: "center", gap: 4 }}, React.createElement("button", {"onClick": () => onChange(Math.max(min, value - step)), "style": stepBtnStyle}, "−"), React.createElement("input", {"type": "number", "value": value, "onChange": e => onChange(Math.max(min, Math.min(max, parseInt(e.target.value) || min))), "style": { width: 48, textAlign: "center", background: "#f0ebe2", border: "1px solid #c0b498", borderRadius: 4, color: "#2a2418", padding: "6px 4px", fontSize: 17, fontFamily: "'Share Tech Mono', serif" }}), React.createElement("button", {"onClick": () => onChange(Math.min(max, value + step)), "style": stepBtnStyle}, "+")))
+    React.createElement("div", {"style": { display: "flex", flexDirection: "column", gap: 4 }}, renderStatLabel(label), React.createElement("div", {"style": { display: "flex", alignItems: "center", gap: 4 }}, React.createElement("button", {"onClick": () => onChange(Math.max(min, value - step)), "style": stepBtnStyle}, "−"), React.createElement("input", {"type": "number", "value": value, "onChange": e => onChange(Math.max(min, Math.min(max, parseInt(e.target.value) || min))), "style": { width: 48, textAlign: "center", background: "#f0ebe2", border: "1px solid #c0b498", borderRadius: 4, color: "#2a2418", padding: "6px 4px", fontSize: 17, fontFamily: "'Share Tech Mono', serif" }}), React.createElement("button", {"onClick": () => onChange(Math.min(max, value + step)), "style": stepBtnStyle}, "+")))
   );
 }
 
@@ -250,9 +537,21 @@ var stepBtnStyle = {
   cursor: "pointer", fontSize: 17, fontFamily: "'Share Tech Mono', serif"
 };
 
+// Parchment surround for a grid of NumberInput/SelectInput stats — matches the
+// preview mockup (cream fill, muted brown border, generous padding). Spread it
+// into a grid's `style` before its grid-specific fields:
+//   style: { ...STAT_GRID_STYLE, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }
+var STAT_GRID_STYLE = {
+  background:   "#faf8f4",
+  border:       "1px solid #d0c4aa",
+  borderRadius: 8,
+  padding:      "14px 16px",
+  marginBottom: 12,
+};
+
 function SelectInput({ label, value, onChange, options }) {
   return (
-    React.createElement("div", {"style": { display: "flex", flexDirection: "column", gap: 4 }}, React.createElement("label", {"style": { fontSize: 13, color: "#6a5e4e", textTransform: "uppercase", letterSpacing: 1, fontFamily: "'Share Tech Mono', serif" }}, label), React.createElement("select", {"value": value, "onChange": e => onChange(e.target.value), "style": { background: "#f0ebe2", border: "1px solid #c0b498", borderRadius: 4, color: "#2a2418", padding: "6px 8px", fontSize: 13, fontFamily: "'Share Tech Mono', serif" }}, options.map(o => React.createElement("option", {"key": o.value, "value": o.value}, o.label))))
+    React.createElement("div", {"style": { display: "flex", flexDirection: "column", gap: 4 }}, renderStatLabel(label), React.createElement("select", {"value": value, "onChange": e => onChange(e.target.value), "style": { background: "#f0ebe2", border: "1px solid #c0b498", borderRadius: 4, color: "#2a2418", padding: "6px 8px", fontSize: 13, fontFamily: "'Share Tech Mono', serif" }}, options.map(o => React.createElement("option", {"key": o.value, "value": o.value}, o.label))))
   );
 }
 

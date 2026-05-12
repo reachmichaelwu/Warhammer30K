@@ -127,8 +127,11 @@ body.hh-show-frame #root::after {
 
 /* Inner scrollable region — host of the actual app content.
    The app's top-level div sets min-height:100vh inline, which would blow
-   out our 844px phone. We force it back to fit the frame. */
-body.hh-show-frame #root > * {
+   out our 844px phone. We force it back to fit the frame.
+   NB: the :not(.hh-modal-overlay) exclusion lets full-viewport modals
+       (UnitSelectorModal, etc.) escape this clipped/stacked region so
+       their position:fixed overlays render and accept clicks normally. */
+body.hh-show-frame #root > *:not(.hh-modal-overlay) {
   position: relative !important;
   z-index: 1;
   width: 100% !important;
@@ -142,6 +145,26 @@ body.hh-show-frame #root > * {
   /* leave room for notch (top) and home indicator (bottom) */
   padding-top: 56px !important;
   padding-bottom: 36px !important;
+}
+
+/* Full-viewport modal overlay (e.g. UnitSelectorModal).
+   Escapes the bezel/frame clipping so clicks land and layout is correct
+   in both the iOS-frame preview and real mobile viewports. */
+body.hh-show-frame .hh-modal-overlay,
+body.hh-mobile     .hh-modal-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  padding: 16px !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+  z-index: 10000 !important;
 }
 
 /* Home indicator bar */
