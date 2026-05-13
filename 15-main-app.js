@@ -3610,6 +3610,14 @@ var ShootingResolver = function () {
   const [fullSizeTacticalMapPhase, setFullSizeTacticalMapPhase] =
     useState(null);
   const [fullSizeMapResultModal, setFullSizeMapResultModal] = useState(null);
+  const [fullSizeMapResultMinimized, setFullSizeMapResultMinimized] =
+    useState(false);
+  const [fullSizeMapMinimizedControls, setFullSizeMapMinimizedControls] =
+    useState({
+      selection: false,
+      reserves: false,
+      resolver: false,
+    });
   const [unitFacings, setUnitFacings] = useState({}); // { unitId: degrees }
   const [routedUnits, setRoutedUnits] = useState(new Set());
   const shootMapRef = useRef(null);
@@ -3624,17 +3632,44 @@ var ShootingResolver = function () {
     ) {
       fullSizeMapPreviousScaleRef.current = deployScale;
     }
+    setFullSizeMapMinimizedControls({
+      selection: false,
+      reserves: false,
+      resolver: false,
+    });
     setDeployScale((scale) => Math.max(scale, 14));
     setFullSizeTacticalMapPhase(phase);
   }
 
   function closeFullSizeTacticalMap() {
-    setFullSizeMapResultModal(null);
+    closeFullSizeMapResults();
+    setFullSizeMapMinimizedControls({
+      selection: false,
+      reserves: false,
+      resolver: false,
+    });
     setFullSizeTacticalMapPhase(null);
     if (fullSizeMapPreviousScaleRef.current !== null) {
       setDeployScale(fullSizeMapPreviousScaleRef.current);
       fullSizeMapPreviousScaleRef.current = null;
     }
+  }
+
+  function setFullSizeMapControlMinimized(control, minimized) {
+    setFullSizeMapMinimizedControls((prev) => ({
+      ...prev,
+      [control]: minimized,
+    }));
+  }
+
+  function openFullSizeMapResults(phase) {
+    setFullSizeMapResultModal(phase);
+    setFullSizeMapResultMinimized(false);
+  }
+
+  function closeFullSizeMapResults() {
+    setFullSizeMapResultModal(null);
+    setFullSizeMapResultMinimized(false);
   }
 
   useEffect(() => {
@@ -3649,7 +3684,7 @@ var ShootingResolver = function () {
     const closeOnEscape = (e) => {
       if (e.key !== "Escape") return;
       if (fullSizeMapResultModal) {
-        setFullSizeMapResultModal(null);
+        closeFullSizeMapResults();
       } else {
         closeFullSizeTacticalMap();
       }
@@ -3663,7 +3698,7 @@ var ShootingResolver = function () {
   }, [fullSizeTacticalMapPhase, fullSizeMapResultModal]);
 
   useEffect(() => {
-    if (!fullSizeTacticalMapPhase) setFullSizeMapResultModal(null);
+    if (!fullSizeTacticalMapPhase) closeFullSizeMapResults();
   }, [fullSizeTacticalMapPhase]);
 
   const getUnitFacing = (unit) =>
@@ -6244,7 +6279,7 @@ var ShootingResolver = function () {
     return React.createElement(
       "div",
       {
-        onClick: () => setFullSizeMapResultModal(null),
+        onClick: closeFullSizeMapResults,
         style: {
           position: "fixed",
           inset: 0,
@@ -6301,7 +6336,25 @@ var ShootingResolver = function () {
           React.createElement(
             "button",
             {
-              onClick: () => setFullSizeMapResultModal(null),
+              onClick: () => setFullSizeMapResultMinimized(true),
+              style: {
+                padding: "6px 10px",
+                borderRadius: 4,
+                fontSize: 11,
+                cursor: "pointer",
+                fontFamily: "'Share Tech Mono', serif",
+                fontWeight: 700,
+                background: "rgba(255,255,255,0.08)",
+                border: "1px solid rgba(216,247,200,0.45)",
+                color: "#d8f7c8",
+              },
+            },
+            "MINIMIZE",
+          ),
+          React.createElement(
+            "button",
+            {
+              onClick: closeFullSizeMapResults,
               style: {
                 padding: "6px 10px",
                 borderRadius: 4,
@@ -7043,7 +7096,7 @@ var ShootingResolver = function () {
                 onClick: () => {
                   setDoReturnFire(true);
                   handleReturnFire();
-                  setFullSizeMapResultModal(phase);
+                  openFullSizeMapResults(phase);
                 },
                 disabled: !result || !targetSelectedWeapon,
                 style: {
@@ -7104,7 +7157,7 @@ var ShootingResolver = function () {
     const resolveAndShowResults = () => {
       if (phase === "shooting") handleResolve();
       else handleAssaultResolve();
-      setFullSizeMapResultModal(phase);
+      openFullSizeMapResults(phase);
     };
     const hasResult = phase === "shooting" ? !!result : !!assaultResult;
     const heading =
@@ -7156,7 +7209,7 @@ var ShootingResolver = function () {
         ),
         renderDockButton(
           "ROLLS & RESULTS",
-          () => setFullSizeMapResultModal(phase),
+          () => openFullSizeMapResults(phase),
           "#2e7d32",
           !hasResult,
         ),
@@ -7346,6 +7399,92 @@ var ShootingResolver = function () {
     const fullMuted = isFullSize ? "#9fd69b" : "#8a7e6e";
     const fullPanelBg = isFullSize ? "rgba(5,15,5,0.86)" : "rgba(0,0,0,0.02)";
     const fullPanelBorder = isFullSize ? "rgba(143,207,145,0.42)" : "#e0d8c8";
+    const hasGroundReserves = aerialReserves.some((f) => {
+      const isFlyer = f.isFlyer || (f.unitData && f.unitData.isFlyer);
+      return !isFlyer;
+    });
+    const renderFullSizeOverlayHeader = (label, control, color = phaseColor) =>
+      React.createElement(
+        "div",
+        {
+          style: {
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            width: "100%",
+            padding: "6px 8px",
+            marginBottom: 6,
+            borderRadius: 4,
+            background: "rgba(3,8,3,0.92)",
+            border: `1px solid ${color}`,
+            boxShadow: `0 0 10px ${color}33`,
+          },
+        },
+        React.createElement(
+          "span",
+          {
+            style: {
+              flex: 1,
+              fontSize: 10,
+              fontFamily: "'Share Tech Mono', serif",
+              fontWeight: 900,
+              color,
+              letterSpacing: 1,
+              textTransform: "uppercase",
+            },
+          },
+          label,
+        ),
+        React.createElement(
+          "button",
+          {
+            onClick: () => setFullSizeMapControlMinimized(control, true),
+            title: `Minimize ${label}`,
+            style: {
+              width: 26,
+              height: 22,
+              borderRadius: 4,
+              cursor: "pointer",
+              fontSize: 12,
+              lineHeight: 1,
+              fontFamily: "'Share Tech Mono', serif",
+              fontWeight: 900,
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(216,247,200,0.45)",
+              color: "#d8f7c8",
+            },
+          },
+          "–",
+        ),
+      );
+    const renderFullSizeRestoreButton = (
+      label,
+      control,
+      color = phaseColor,
+    ) =>
+      React.createElement(
+        "button",
+        {
+          onClick: () => setFullSizeMapControlMinimized(control, false),
+          title: `Restore ${label}`,
+          style: {
+            padding: "7px 10px",
+            borderRadius: 4,
+            cursor: "pointer",
+            fontSize: 10,
+            fontFamily: "'Share Tech Mono', serif",
+            fontWeight: 900,
+            letterSpacing: 1,
+            textTransform: "uppercase",
+            background: "rgba(3,8,3,0.94)",
+            border: `1.5px solid ${color}`,
+            color: "#d8f7c8",
+            boxShadow: `0 0 12px ${color}40`,
+          },
+        },
+        label,
+        " +",
+      );
 
     return React.createElement(
       "div",
@@ -7922,62 +8061,11 @@ var ShootingResolver = function () {
                     },
                     "⚔ CHARGING...",
                   ),
-                terrainPieces.map((terrain) => {
-                  const ttype = TERRAIN_TYPES.find(
-                    (t) => t.id === terrain.type,
-                  );
-                  return React.createElement(
-                    "div",
-                    {
-                      key: terrain.id,
-                      style: {
-                        position: "absolute",
-                        left: terrain.x * deployScale,
-                        top: terrain.y * deployScale,
-                        width: terrain.w * deployScale,
-                        height: terrain.h * deployScale,
-                        background: terrain.bg,
-                        border: `2px solid ${terrain.border}`,
-                        borderRadius: terrain.type === "fortification" ? 3 : 6,
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        pointerEvents: "none",
-                        zIndex: 2,
-                      },
-                    },
-                    React.createElement(
-                      "div",
-                      {
-                        style: {
-                          fontSize: Math.max(terrain.w * deployScale * 0.22, 8),
-                          color: terrain.color,
-                          lineHeight: 1,
-                        },
-                      },
-                      ttype?.symbol,
-                    ),
-                    terrain.w * deployScale > 40 &&
-                      React.createElement(
-                        "div",
-                        {
-                          style: {
-                            fontSize: 6,
-                            color: terrain.color,
-                            fontFamily: "'Share Tech Mono', serif",
-                            fontWeight: 700,
-                            textAlign: "center",
-                            textShadow: "0 1px 2px rgba(0,0,0,0.8)",
-                          },
-                        },
-                        terrain.w,
-                        "″×",
-                        terrain.h,
-                        "″",
-                      ),
-                  );
-                }),
+                terrainPieces.map((terrain) =>
+                  renderTerrainPiece(terrain, deployScale, {
+                    showName: false,
+                  }),
+                ),
                 deployedUnits.map((unit) => {
                   const isP1 = unit.player === "p1";
                   const col = isP1 ? "#e05555" : "#5599dd";
@@ -8216,19 +8304,77 @@ var ShootingResolver = function () {
               ),
             ),
           ),
-      (deployedUnits.length > 0 || aerialReserves.length > 0) &&
-        renderGroundReservesStrip(deployScale),
+      (isFullSize
+        ? hasGroundReserves
+        : deployedUnits.length > 0 || aerialReserves.length > 0) &&
+        (isFullSize
+          ? React.createElement(
+              "div",
+              {
+                style: {
+                  position: "absolute",
+                  left: 14,
+                  bottom: 14,
+                  zIndex: 9010,
+                  width: fullSizeMapMinimizedControls.reserves
+                    ? "auto"
+                    : "min(430px, calc(100vw - 28px))",
+                  maxHeight: "calc(100vh - 112px)",
+                  overflowY: "auto",
+                  pointerEvents: "auto",
+                },
+              },
+              fullSizeMapMinimizedControls.reserves
+                ? renderFullSizeRestoreButton("Reserves", "reserves", "#8fcf91")
+                : React.createElement(
+                    React.Fragment,
+                    null,
+                    renderFullSizeOverlayHeader(
+                      "Ground Reserves",
+                      "reserves",
+                      "#8fcf91",
+                    ),
+                    renderGroundReservesStrip(deployScale),
+                  ),
+            )
+          : renderGroundReservesStrip(deployScale)),
       React.createElement(
         "div",
         {
           style: {
-            display: "flex",
+            display:
+              isFullSize && fullSizeMapMinimizedControls.selection
+                ? "block"
+                : "flex",
             gap: 8,
-            marginTop: 8,
+            marginTop: isFullSize ? 0 : 8,
             flexWrap: "wrap",
             flexShrink: 0,
+            ...(isFullSize
+              ? {
+                  position: "absolute",
+                  left: 14,
+                  top: 64,
+                  zIndex: 9012,
+                  width: fullSizeMapMinimizedControls.selection
+                    ? "auto"
+                    : "min(520px, calc(100vw - 28px))",
+                  pointerEvents: "auto",
+                }
+              : {}),
           },
         },
+        isFullSize && fullSizeMapMinimizedControls.selection
+          ? renderFullSizeRestoreButton("Units", "selection", phaseColor)
+          : React.createElement(
+              React.Fragment,
+              null,
+              isFullSize &&
+                renderFullSizeOverlayHeader(
+                  "Unit Selection",
+                  "selection",
+                  phaseColor,
+                ),
         React.createElement(
           "div",
           {
@@ -8340,17 +8486,87 @@ var ShootingResolver = function () {
           },
           "CLEAR",
         ),
+            ),
       ),
       isFullSize &&
-        renderTacticalMapResolverDock({
-          phase,
-          atkUnit,
-          defUnit,
-          distance,
-          weaponRange,
-        }),
+        React.createElement(
+          "div",
+          {
+            style: {
+              position: "absolute",
+              right: 14,
+              bottom: 14,
+              zIndex: 9011,
+              width: fullSizeMapMinimizedControls.resolver
+                ? "auto"
+                : "min(660px, calc(100vw - 28px))",
+              maxHeight: "calc(100vh - 112px)",
+              overflowY: "auto",
+              pointerEvents: "auto",
+              scrollbarGutter: "stable",
+            },
+          },
+          fullSizeMapMinimizedControls.resolver
+            ? renderFullSizeRestoreButton("Resolver", "resolver", phaseColor)
+            : React.createElement(
+                React.Fragment,
+                null,
+                renderFullSizeOverlayHeader(
+                  phase === "shooting"
+                    ? "Shooting Resolver"
+                    : "Assault Resolver",
+                  "resolver",
+                  phaseColor,
+                ),
+                renderTacticalMapResolverDock({
+                  phase,
+                  atkUnit,
+                  defUnit,
+                  distance,
+                  weaponRange,
+                }),
+              ),
+        ),
       isFullSize &&
         fullSizeMapResultModal === phase &&
+        fullSizeMapResultMinimized &&
+        React.createElement(
+          "div",
+          {
+            style: {
+              position: "absolute",
+              right: 14,
+              top: 64,
+              zIndex: 9014,
+              pointerEvents: "auto",
+            },
+          },
+          React.createElement(
+            "button",
+            {
+              onClick: () => setFullSizeMapResultMinimized(false),
+              title: "Restore Rolls & Results",
+              style: {
+                padding: "7px 10px",
+                borderRadius: 4,
+                cursor: "pointer",
+                fontSize: 10,
+                fontFamily: "'Share Tech Mono', serif",
+                fontWeight: 900,
+                letterSpacing: 1,
+                textTransform: "uppercase",
+                background: "rgba(3,8,3,0.94)",
+                border: `1.5px solid ${phaseColor}`,
+                color: "#d8f7c8",
+                boxShadow: `0 0 12px ${phaseColor}40`,
+              },
+            },
+            "Rolls & Results +",
+          ),
+        ),
+      isFullSize &&
+        fullSizeMapResultModal === phase &&
+        !fullSizeMapResultMinimized &&
         renderFullSizeMapResultPopup(phase),
     );
   };
@@ -9940,35 +10156,336 @@ var ShootingResolver = function () {
     { label: 'Wall (10"×2")', w: 10, h: 2 },
   ];
 
+  const createTerrainPiece = (typeId, centerX, centerY, size, labelNumber) => {
+    const ttype =
+      TERRAIN_TYPES.find((t) => t.id === typeId) || TERRAIN_TYPES[0];
+    const w = size.w;
+    const h = size.h;
+    return {
+      id: Date.now() + labelNumber + Math.floor(Math.random() * 1000),
+      type: ttype.id,
+      x: Math.max(0, Math.min(centerX - w / 2, BOARD_W - w)),
+      y: Math.max(0, Math.min(centerY - h / 2, BOARD_H - h)),
+      w,
+      h,
+      label: `${ttype.label} ${labelNumber}`,
+      color: ttype.color,
+      bg: ttype.bg,
+      border: ttype.border,
+      symbol: ttype.symbol,
+      variant: Math.floor(Math.random() * 7),
+    };
+  };
+
   const addTerrainPiece = (x, y) => {
-    const ttype = TERRAIN_TYPES.find((t) => t.id === selectedTerrainType);
     setTerrainPieces((prev) => [
       ...prev,
-      {
-        id: Date.now(),
-        type: selectedTerrainType,
-        x: Math.max(
-          0,
-          Math.min(x - terrainSize.w / 2, BOARD_W - terrainSize.w),
-        ),
-        y: Math.max(
-          0,
-          Math.min(y - terrainSize.h / 2, BOARD_H - terrainSize.h),
-        ),
-        w: terrainSize.w,
-        h: terrainSize.h,
-        label: `${ttype.label} ${terrainCounter}`,
-        color: ttype.color,
-        bg: ttype.bg,
-        border: ttype.border,
-        symbol: ttype.symbol,
-      },
+      createTerrainPiece(selectedTerrainType, x, y, terrainSize, terrainCounter),
     ]);
     setTerrainCounter((c) => c + 1);
   };
 
   const removeTerrainPiece = (id) => {
     setTerrainPieces((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  const terrainRectsOverlap = (a, b, pad = 1.5) =>
+    !(
+      a.x + a.w + pad <= b.x ||
+      b.x + b.w + pad <= a.x ||
+      a.y + a.h + pad <= b.y ||
+      b.y + b.h + pad <= a.y
+    );
+
+  const generateRandomTerrain = () => {
+    if (
+      terrainPieces.length > 0 &&
+      typeof window !== "undefined" &&
+      !window.confirm("Replace current terrain with a random battlefield?")
+    ) {
+      return;
+    }
+
+    const blueprints = [
+      { type: "cover", size: { w: 8, h: 6 } },
+      { type: "cover", size: { w: 10, h: 2 } },
+      { type: "difficult", size: { w: 8, h: 6 } },
+      { type: "difficult", size: { w: 6, h: 6 } },
+      { type: "dangerous", size: { w: 6, h: 6 } },
+      { type: "impassable", size: { w: 4, h: 4 } },
+      { type: "fortification", size: { w: 6, h: 6 } },
+      { type: "fortification", size: { w: 3, h: 3 } },
+    ];
+    const targetCount = 8 + Math.floor(Math.random() * 4);
+    const nextPieces = [];
+    let labelNumber = 1;
+
+    for (let i = 0; i < targetCount; i++) {
+      const blueprint =
+        blueprints[Math.floor(Math.random() * blueprints.length)];
+      const size = blueprint.size;
+      let placed = null;
+      for (let attempt = 0; attempt < 80 && !placed; attempt++) {
+        const candidate = createTerrainPiece(
+          blueprint.type,
+          size.w / 2 + 2 + Math.random() * Math.max(1, BOARD_W - size.w - 4),
+          size.h / 2 + 2 + Math.random() * Math.max(1, BOARD_H - size.h - 4),
+          size,
+          labelNumber,
+        );
+        const nearCenter =
+          candidate.x < BOARD_W / 2 + 3 &&
+          candidate.x + candidate.w > BOARD_W / 2 - 3 &&
+          candidate.y < BOARD_H / 2 + 3 &&
+          candidate.y + candidate.h > BOARD_H / 2 - 3;
+        if (
+          !nearCenter &&
+          nextPieces.every((piece) => !terrainRectsOverlap(candidate, piece))
+        ) {
+          placed = candidate;
+        }
+      }
+      if (placed) {
+        nextPieces.push(placed);
+        labelNumber++;
+      }
+    }
+
+    setTerrainPieces(nextPieces);
+    setTerrainCounter(labelNumber);
+    setPlacingTerrain(false);
+  };
+
+  const getTerrainTexture = (terrain) => {
+    switch (terrain.type) {
+      case "difficult":
+        return {
+          background:
+            "radial-gradient(circle at 20% 25%, rgba(140,190,85,0.55) 0 8%, transparent 10%), radial-gradient(circle at 72% 66%, rgba(60,100,42,0.45) 0 10%, transparent 12%), repeating-linear-gradient(135deg, rgba(255,255,255,0.10) 0 2px, transparent 2px 12px)",
+        };
+      case "dangerous":
+        return {
+          background:
+            "radial-gradient(circle at 45% 45%, rgba(255,120,20,0.50) 0 16%, rgba(60,20,10,0.25) 17%, transparent 28%), repeating-linear-gradient(45deg, rgba(255,180,40,0.20) 0 4px, transparent 4px 12px)",
+        };
+      case "impassable":
+        return {
+          background:
+            "linear-gradient(145deg, rgba(35,22,22,0.35), transparent 42%), repeating-linear-gradient(120deg, rgba(40,20,20,0.45) 0 5px, rgba(150,60,60,0.22) 5px 10px)",
+        };
+      case "cover":
+        return {
+          background:
+            "repeating-linear-gradient(0deg, rgba(220,235,245,0.12) 0 4px, transparent 4px 13px), repeating-linear-gradient(90deg, rgba(35,70,100,0.22) 0 8px, transparent 8px 18px)",
+        };
+      case "fortification":
+        return {
+          background:
+            "linear-gradient(180deg, rgba(210,190,100,0.22), rgba(40,34,18,0.15)), repeating-linear-gradient(90deg, rgba(255,235,130,0.18) 0 8px, rgba(40,34,18,0.12) 8px 16px)",
+        };
+      default:
+        return { background: "rgba(255,255,255,0.08)" };
+    }
+  };
+
+  const renderTerrainDetails = (terrain, scale) => {
+    const detailCount = Math.max(2, Math.min(7, Math.floor(terrain.w)));
+    const seed = terrain.variant || 0;
+    const pos = (i, mult, min = 10, span = 72) =>
+      `${min + ((i * mult + seed * 17) % span)}%`;
+
+    if (terrain.type === "cover") {
+      return Array.from({ length: detailCount }, (_, i) =>
+        React.createElement("div", {
+          key: `wall-${i}`,
+          style: {
+            position: "absolute",
+            left: pos(i, 23, 6, 74),
+            top: pos(i, 31, 12, 62),
+            width: `${14 + ((i + seed) % 3) * 8}%`,
+            height: Math.max(2, scale * 0.45),
+            background: "rgba(210,230,240,0.52)",
+            border: "1px solid rgba(20,55,80,0.38)",
+            transform: `rotate(${i % 2 ? -12 : 9}deg)`,
+            boxShadow: "0 1px 2px rgba(0,0,0,0.35)",
+          },
+        }),
+      );
+    }
+
+    if (terrain.type === "fortification") {
+      return [
+        React.createElement("div", {
+          key: "bunker-line",
+          style: {
+            position: "absolute",
+            left: "10%",
+            right: "10%",
+            top: "42%",
+            height: Math.max(3, scale * 0.45),
+            background: "rgba(40,34,18,0.52)",
+            border: "1px solid rgba(255,235,130,0.35)",
+          },
+        }),
+        ...Array.from({ length: 4 }, (_, i) =>
+          React.createElement("div", {
+            key: `slit-${i}`,
+            style: {
+              position: "absolute",
+              left: `${16 + i * 18}%`,
+              top: "24%",
+              width: "10%",
+              height: "10%",
+              background: "rgba(10,8,5,0.62)",
+              border: "1px solid rgba(255,235,130,0.28)",
+            },
+          }),
+        ),
+      ];
+    }
+
+    if (terrain.type === "impassable") {
+      return Array.from({ length: detailCount }, (_, i) =>
+        React.createElement("div", {
+          key: `rock-${i}`,
+          style: {
+            position: "absolute",
+            left: pos(i, 19, 8, 70),
+            top: pos(i, 29, 12, 58),
+            width: 0,
+            height: 0,
+            borderLeft: `${Math.max(4, scale * 0.45)}px solid transparent`,
+            borderRight: `${Math.max(4, scale * 0.45)}px solid transparent`,
+            borderBottom: `${Math.max(7, scale * 0.85)}px solid rgba(150,70,70,0.72)`,
+            filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.45))",
+          },
+        }),
+      );
+    }
+
+    return Array.from({ length: detailCount }, (_, i) =>
+      React.createElement("div", {
+        key: `spot-${i}`,
+        style: {
+          position: "absolute",
+          left: pos(i, 27, 8, 76),
+          top: pos(i, 37, 10, 68),
+          width: Math.max(4, scale * (terrain.type === "dangerous" ? 0.9 : 0.55)),
+          height: Math.max(4, scale * (terrain.type === "dangerous" ? 0.9 : 0.55)),
+          borderRadius: "50%",
+          background:
+            terrain.type === "dangerous"
+              ? "rgba(255,120,20,0.58)"
+              : "rgba(40,80,34,0.55)",
+          border: `1px solid ${terrain.type === "dangerous" ? "rgba(255,210,80,0.5)" : "rgba(170,220,120,0.35)"}`,
+          boxShadow:
+            terrain.type === "dangerous"
+              ? "0 0 8px rgba(255,100,20,0.55)"
+              : "0 1px 2px rgba(0,0,0,0.25)",
+        },
+      }),
+    );
+  };
+
+  const renderTerrainPiece = (terrain, scale, options = {}) => {
+    const ttype = TERRAIN_TYPES.find((t) => t.id === terrain.type);
+    const showName = options.showName !== false;
+    const interactive = !!options.interactive;
+    const visual = getTerrainTexture(terrain);
+    return React.createElement(
+      "div",
+      {
+        key: terrain.id,
+        title: `${terrain.label} — ${ttype?.desc || ""}`,
+        onClick: interactive
+          ? (e) => {
+              e.stopPropagation();
+              removeTerrainPiece(terrain.id);
+            }
+          : undefined,
+        style: {
+          position: "absolute",
+          left: terrain.x * scale,
+          top: terrain.y * scale,
+          width: terrain.w * scale,
+          height: terrain.h * scale,
+          background: terrain.bg,
+          border: `2px solid ${terrain.border}`,
+          borderRadius: terrain.type === "fortification" ? 3 : 6,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          pointerEvents: interactive ? "auto" : "none",
+          cursor: interactive ? "pointer" : "default",
+          zIndex: 2,
+          overflow: "hidden",
+          boxShadow:
+            terrain.type === "fortification"
+              ? `inset 0 0 10px rgba(0,0,0,0.32), 0 0 5px ${terrain.border}`
+              : `inset 0 0 10px rgba(0,0,0,0.18), 0 0 4px ${terrain.border}`,
+        },
+      },
+      React.createElement("div", {
+        style: {
+          position: "absolute",
+          inset: 0,
+          ...visual,
+          opacity: 0.92,
+          pointerEvents: "none",
+        },
+      }),
+      renderTerrainDetails(terrain, scale),
+      React.createElement(
+        "div",
+        {
+          style: {
+            position: "relative",
+            zIndex: 2,
+            fontSize: Math.max(terrain.w * scale * 0.22, 10),
+            color: terrain.color,
+            lineHeight: 1,
+            textShadow: "0 1px 2px rgba(0,0,0,0.65)",
+          },
+        },
+        terrain.symbol,
+      ),
+      showName &&
+        React.createElement(
+          "div",
+          {
+            style: {
+              position: "relative",
+              zIndex: 2,
+              fontSize: Math.max(Math.min(terrain.w * scale * 0.09, 9), 6),
+              color: terrain.color,
+              fontFamily: "'Share Tech Mono', serif",
+              fontWeight: 700,
+              letterSpacing: 0.5,
+              textAlign: "center",
+              lineHeight: 1.2,
+              marginTop: 2,
+              textShadow: "0 1px 2px rgba(0,0,0,0.82)",
+            },
+          },
+          terrain.w * scale > 50 ? terrain.label : "",
+        ),
+      React.createElement(
+        "div",
+        {
+          style: {
+            position: "relative",
+            zIndex: 2,
+            fontSize: 7,
+            color: terrain.color,
+            opacity: 0.85,
+            fontFamily: "'Share Tech Mono', serif",
+            textShadow: "0 1px 2px rgba(0,0,0,0.82)",
+          },
+        },
+        terrain.w * scale > 40 ? `${terrain.w}″×${terrain.h}″` : "",
+      ),
+    );
   };
 
   const MOVE_VALUES = {
@@ -12223,81 +12740,11 @@ var ShootingResolver = function () {
                   ),
                 );
               })(),
-            terrainPieces.map((terrain) => {
-              const ttype = TERRAIN_TYPES.find((t) => t.id === terrain.type);
-              return React.createElement(
-                "div",
-                {
-                  key: terrain.id,
-                  title: `${terrain.label} — ${ttype?.desc || ""}`,
-                  style: {
-                    position: "absolute",
-                    left: terrain.x * deployScale,
-                    top: terrain.y * deployScale,
-                    width: terrain.w * deployScale,
-                    height: terrain.h * deployScale,
-                    background: terrain.bg,
-                    border: `2px solid ${terrain.border}`,
-                    borderRadius: terrain.type === "fortification" ? 3 : 6,
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    pointerEvents: "none",
-                    zIndex: 2,
-                    boxShadow:
-                      terrain.type === "fortification"
-                        ? `inset 0 0 8px rgba(0,0,0,0.3), 0 0 4px ${terrain.border}`
-                        : "none",
-                  },
-                },
-                React.createElement(
-                  "div",
-                  {
-                    style: {
-                      fontSize: Math.max(terrain.w * deployScale * 0.22, 10),
-                      color: terrain.color,
-                      lineHeight: 1,
-                    },
-                  },
-                  terrain.symbol,
-                ),
-                React.createElement(
-                  "div",
-                  {
-                    style: {
-                      fontSize: Math.max(
-                        Math.min(terrain.w * deployScale * 0.09, 9),
-                        6,
-                      ),
-                      color: terrain.color,
-                      fontFamily: "'Share Tech Mono', serif",
-                      fontWeight: 700,
-                      letterSpacing: 0.5,
-                      textAlign: "center",
-                      lineHeight: 1.2,
-                      marginTop: 2,
-                      textShadow: "0 1px 2px rgba(255,255,255,0.8)",
-                    },
-                  },
-                  terrain.w * deployScale > 50 ? terrain.label : "",
-                ),
-                React.createElement(
-                  "div",
-                  {
-                    style: {
-                      fontSize: 7,
-                      color: terrain.color,
-                      opacity: 0.7,
-                      fontFamily: "'Share Tech Mono', serif",
-                    },
-                  },
-                  terrain.w * deployScale > 40
-                    ? `${terrain.w}″×${terrain.h}″`
-                    : "",
-                ),
-              );
-            }),
+            terrainPieces.map((terrain) =>
+              renderTerrainPiece(terrain, deployScale, {
+                interactive: activePhase === "deployment",
+              }),
+            ),
             objectiveMarkers.map((obj) => {
               const sz = Math.max(deployScale * 2, 18);
               const canInteract = activePhase === "deployment";
@@ -20170,6 +20617,27 @@ var ShootingResolver = function () {
                   placingTerrain
                     ? `${TERRAIN_TYPES.find((t) => t.id === selectedTerrainType)?.symbol} CLICK MAP TO PLACE...`
                     : `${TERRAIN_TYPES.find((t) => t.id === selectedTerrainType)?.symbol} PLACE TERRAIN`,
+                ),
+                React.createElement(
+                  "button",
+                  {
+                    onClick: generateRandomTerrain,
+                    title:
+                      "Generate a balanced random battlefield. Replaces current terrain.",
+                    style: {
+                      padding: "5px 14px",
+                      borderRadius: 4,
+                      fontSize: 12,
+                      cursor: "pointer",
+                      fontFamily: "'Share Tech Mono', serif",
+                      fontWeight: 700,
+                      letterSpacing: 1,
+                      background: "rgba(90,122,154,0.1)",
+                      border: "1.5px solid #5a7a9a",
+                      color: "#3e5a78",
+                    },
+                  },
+                  "🎲 RANDOM TERRAIN",
                 ),
                 terrainPieces.length > 0 &&
                   React.createElement(

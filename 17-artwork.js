@@ -22,6 +22,12 @@ var UNIT_ARTWORK_MAP = {
   "veteran_assault":   "Veteran Assualt.jpg",
   // ── Custodes ──────────────────────────────────────────────────
   "custodian_guard":   "custodian_guard.jpg",
+  "caladius":          "CustodesCaladiusGravTank1.jpg",
+  "caladius_c":        "CustodesCaladiusGravTank1.jpg",
+  "pallas_c":          "CustodesCaladiusGravTank1.jpg",
+  "contemptor_achillus_c": "CustodesCustodianDreadnought1.jpg",
+  "contemptor_galatus_c":  "CustodesCustodianDreadnought1.jpg",
+  "telemon_c":         "CustodesCustodianDreadnought1.jpg",
   // ── Terminators ───────────────────────────────────────────────
   "cataphractii":      "Cataphractii Terminator.jpg",
   "cataphractii_cmd":  "Cataphractii Terminator.jpg",
@@ -62,6 +68,10 @@ var UNIT_ARTWORK_MAP = {
   "hibou_khan":        "Hibou Khan.jpg",
   "stormseer":         "Stormseer.jpg",
   "geigor":            "Fell-Hand.jpg",
+  "varagyr":           "Wolf Terminator.jpg",
+  "deathsworn":        "Wolf Terminator.jpg",
+  "scimitar_jetbike":  "SkyHunter_scimatar.jpg",
+  "keshig_rider":      "SkyHunter_scimatar.jpg",
   // ── Loyalist Primarchs ────────────────────────────────────────
   "lion":              "Lion.jpg",
   "khan":              "Khan.jpg",
@@ -119,13 +129,18 @@ var UNIT_ARTWORK_MAP = {
   "evander_garrius":   "Praevian.jpg",
   // ── Blood Angels Named Characters ────────────────────────────
   "aster_crohne":      "Dom_Zephon.jpg",
+  // ── Daemons ───────────────────────────────────────────────────
+  "daemon_greater":    "Daemons.jpg",
+  "daemon_lesser":     "Daemons.jpg",
   // ── Drop Pods ─────────────────────────────────────────────────
   "drop_pod":               "droppod.jpg",
   "dreadnought_drop_pod":   "droppod.jpg",
   "dreadclaw":              "droppod.jpg",
   // ── Vehicles ──────────────────────────────────────────────────
-  "kratos":            "kratos.jpg",
-  "predator":          "kratos.jpg",
+  "vindicator":        "VindicatorSiegeTank.jpg",
+  "arquitor":          "HHArquitorBombardMorbusBombard.jpg",
+  "kratos":            "Kratos.jpg",
+  "predator":          "Predator.jpg",
   "leviathan":         "Leviathan Dreadnaught.jpg",
   "contemptor":        "Contemptor Dreadnaught.jpg",
   "deredeo":           "Contemptor Dreadnaught.jpg",
@@ -134,14 +149,17 @@ var UNIT_ARTWORK_MAP = {
   "damocles_rhino":    "Rhino.jpg",
   "land_raider":       "Rhino.jpg",
   "land_raider_exp":   "Rhino.jpg",
-  "spartan":           "Rhino.jpg",
-  "sicaran":           "Sicarian.jpg",
-  "sicaran_venator":   "Sicarian.jpg",
-  "scorpius":          "Sicarian.jpg",
+  "land_speeder":      "LSTankHull.jpg",
+  "javelin":           "LSTankHull.jpg",
+  "spartan":           "Spartan.jpg",
+  "sicaran":           "Sicaran.jpg",
+  "sicaran_venator":   "Sicaran.jpg",
+  "scorpius":          "HHWhirlwind_Scorpius.jpg",
   // ── Flyers ────────────────────────────────────────────────────
   "storm_eagle":       "StormEagle.jpg",
   "fire_raptor":       "Fireraptor.jpg",
   "xiphon":            "Xiphon.jpg",
+  "thunderhawk":       "Thunderhawk.jpg",
   // ── Super-Heavies ─────────────────────────────────────────────
   "cerberus":          "Cerberus.jpg",
   "typhon":            "Typhon.jpg",
