@@ -1,6 +1,60 @@
 // UI sub-components (modals, selectors, inputs, die icons)
 // Lines 5952-6228 from shooting-resolver165.jsx
 
+// ━━━ ERROR BOUNDARY ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Catches render-time exceptions in any descendant so a buggy modal/component
+// no longer unmounts the entire React tree (which previously left the screen
+// blank with no on-screen diagnostics). Shows the error message + stack so the
+// real cause is visible to the user, instead of a silent white screen.
+class HHErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null, info: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { error: error };
+  }
+  componentDidCatch(error, info) {
+    this.setState({ info: info });
+    try { console.error("[HH-TOOLKIT] Render error:", error, info); } catch (e) {}
+  }
+  reset = () => this.setState({ error: null, info: null });
+  render() {
+    if (!this.state.error) return this.props.children;
+    const err = this.state.error;
+    const stack = (err && err.stack) ? String(err.stack) : "";
+    const compStack = (this.state.info && this.state.info.componentStack) ? String(this.state.info.componentStack) : "";
+    return React.createElement("div", {
+      style: {
+        position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+        background: "#1a0808", color: "#ff8a8a", zIndex: 100000,
+        padding: 20, overflow: "auto",
+        fontFamily: "'Share Tech Mono', monospace", fontSize: 12,
+      },
+    },
+      React.createElement("div", {
+        style: { fontSize: 16, fontWeight: 700, marginBottom: 8, color: "#ff5555" },
+      }, "⚠ Render error caught"),
+      React.createElement("div", { style: { marginBottom: 6 } },
+        (err && err.message) || String(err)),
+      React.createElement("pre", {
+        style: { whiteSpace: "pre-wrap", fontSize: 10, color: "#cc8888", margin: 0 },
+      }, stack),
+      compStack ? React.createElement("pre", {
+        style: { whiteSpace: "pre-wrap", fontSize: 10, color: "#aa6666", marginTop: 8 },
+      }, compStack) : null,
+      React.createElement("button", {
+        onClick: this.reset,
+        style: {
+          marginTop: 14, padding: "8px 14px", background: "#330",
+          color: "#ffcc00", border: "1px solid #aa8800", borderRadius: 4,
+          fontFamily: "'Share Tech Mono', monospace", cursor: "pointer",
+        },
+      }, "↻ DISMISS & RETRY"),
+    );
+  }
+}
+
 // ━━━ UNIT SELECTOR MODAL ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 // UnitSelectorModal — army-builder-style vertical list with a
@@ -8,6 +62,13 @@
 // assault, deploy, and return-fire panels. Rendered through a portal so it
 // escapes the iOS-frame stacking context (see mobile.css `.hh-modal-overlay`).
 function UnitSelectorModal({ presets, onSelect, selectedId, onClose, accentColor = "#b8860b", title, isTarget = false, faction }) {
+  // Defensive: if the caller passed a non-array (undefined, null, or a single
+  // category object), coerce so the .filter / .forEach chains below cannot
+  // throw and unmount the tree.
+  if (!Array.isArray(presets)) {
+    try { console.warn("[HH] UnitSelectorModal: presets is not an array, got", typeof presets); } catch (e) {}
+    presets = [];
+  }
   // ── Faction filtering: same rules as before so callers don't need to change.
   //   sol_auxilia        → only "SA: *" categories
   //   mechanicum         → only "MECH: *" categories
@@ -65,10 +126,15 @@ function UnitSelectorModal({ presets, onSelect, selectedId, onClose, accentColor
   const allUnits = useMemo(() => {
     const seen = new Set();
     const out  = [];
-    visiblePresets.forEach(c => c.units.forEach(u => {
-      const key = u.id || u.name;
-      if (!seen.has(key)) { seen.add(key); out.push(u); }
-    }));
+    visiblePresets.forEach(c => {
+      if (!c || !Array.isArray(c.units)) return;          // skip malformed category
+      c.units.forEach(u => {
+        if (!u) return;                                    // skip null entry
+        const key = u.id || u.name;
+        if (key == null) return;                           // skip entry with no id/name
+        if (!seen.has(key)) { seen.add(key); out.push(u); }
+      });
+    });
     return out;
   }, [visiblePresets]);
 
@@ -102,7 +168,7 @@ function UnitSelectorModal({ presets, onSelect, selectedId, onClose, accentColor
     }
     if (searchTerm) {
       const t = searchTerm.toLowerCase();
-      list = list.filter(u => u.name.toLowerCase().includes(t));
+      list = list.filter(u => typeof u.name === "string" && u.name.toLowerCase().includes(t));
     }
     return list;
   }, [allUnits, roleFilter, searchTerm]);
@@ -222,6 +288,8 @@ function UnitSelectorModal({ presets, onSelect, selectedId, onClose, accentColor
             const pd         = (typeof POINTS_DATA !== "undefined") ? POINTS_DATA[u.id] : null;
             const artSrc     = (typeof getUnitArtwork === "function") ? getUnitArtwork(u.id, faction) : null;
             const iconType   = getUnitIconType(u.name);
+            const legacyRules = u.legacyRules || ((typeof UNIT_LEGACY_RULES !== "undefined") ? UNIT_LEGACY_RULES[u.id] : null) || [];
+            const rulesLine = legacyRules.slice(0, 4).join(" · ");
             const statsLine  = isTarget
               ? `T${u.t} ${u.w}W Sv${u.sv}+${u.inv !== "-" ? ` Inv${u.inv}+` : ""}${u.fnp !== "-" ? ` FNP${u.fnp}+` : ""} Ld${u.ld || "?"}`
               : `${u.models} model${u.models > 1 ? "s" : ""} · BS${u.bs} · T${u.t} · Sv${u.sv}+`;
@@ -294,6 +362,13 @@ function UnitSelectorModal({ presets, onSelect, selectedId, onClose, accentColor
                     fontFamily: "'Share Tech Mono', serif", letterSpacing: 0.3,
                   },
                 }, statsLine),
+                rulesLine ? React.createElement("div", {
+                  style: {
+                    fontSize: 11, color: "#7a6a52", marginTop: 3,
+                    fontFamily: "'Share Tech Mono', serif", lineHeight: 1.25,
+                    whiteSpace: "normal",
+                  },
+                }, rulesLine) : null,
               ),
               // ── Right column: points (if known) ─────────────────────────
               pd?.base ? React.createElement("div", {
@@ -400,6 +475,86 @@ function DieIcon({ value, success, reroll, small }) {
       opacity: reroll ? 0.7 : 1,
       position: "relative"
     }, "title": `${value}${reroll ? " (re-roll)" : ""}`}, faces[value], reroll && React.createElement("span", {"style": { position: "absolute", top: -3, right: -3, fontSize: 8, color: "#b8860b" }}, "↻"))
+  );
+}
+
+// ━━━ DICE ROLL LOG ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Renders a separate, numeric breakdown of every dice group in a resolver
+// result.  The DieIcon row above is the visual; this is the *audit trail* —
+// raw values like `[3, 5*, 1, 6, 4, 2]` (a `*` marks a re-roll), so the
+// player can verify what the resolver did.  Pass any `rolls` object that
+// matches `{ hit: [{value,success,reroll?}], wound: [...], save: [...],
+// fnpRolls: [...] }`.  Categories with no rolls are skipped.
+function DiceRollLog({ rolls, title }) {
+  if (!rolls) return null;
+  const groups = [
+    { key: "hit",      label: "To Hit",       data: rolls.hit },
+    { key: "wound",    label: "To Wound",     data: rolls.wound },
+    { key: "save",     label: "Saves",        data: rolls.save },
+    { key: "fnpRolls", label: "Feel No Pain", data: rolls.fnpRolls },
+    // Assault/melee resolvers store these under different keys
+    { key: "saves",    label: "Saves",        data: rolls.saves },
+    { key: "fnp",      label: "Feel No Pain", data: rolls.fnp },
+  ].filter(g => Array.isArray(g.data) && g.data.length > 0);
+  if (groups.length === 0) return null;
+
+  const formatGroup = (data) => {
+    // Build "[3, 5*, 1, 6]" with green for success and red for fail.
+    // Asterisk marks a re-roll so the player can audit Twin-linked / Shred.
+    return data.map((r, i) => {
+      const v = (typeof r === "object" && r !== null) ? r.value : r;
+      const success = (typeof r === "object" && r !== null) ? r.success : null;
+      const reroll  = (typeof r === "object" && r !== null) ? r.reroll  : false;
+      const color   = success === true ? "#2e7d32" : success === false ? "#c74040" : "#4a4030";
+      return React.createElement("span", {
+        key: i,
+        style: {
+          color, fontWeight: reroll ? 700 : 500,
+          marginRight: 6, fontFamily: "'Share Tech Mono', monospace",
+        },
+        title: reroll ? `${v} (re-roll)` : String(v),
+      }, v, reroll ? "*" : "");
+    });
+  };
+
+  return React.createElement("div", {
+    style: {
+      marginTop: 12, padding: "10px 14px",
+      background: "#f9f6f0", border: "1px solid #d0c4aa", borderRadius: 6,
+    },
+  },
+    React.createElement("div", {
+      style: {
+        fontSize: 13, color: "#5a4e3e", marginBottom: 8,
+        fontFamily: "'Share Tech Mono', serif",
+        letterSpacing: 1, textTransform: "uppercase",
+      },
+    }, "🎲 ", title || "Dice Rolls"),
+    groups.map(g => {
+      const successCount = g.data.filter(r => (typeof r === "object" && r !== null) ? r.success : false).length;
+      return React.createElement("div", {
+        key: g.key,
+        style: {
+          display: "flex", alignItems: "baseline", gap: 8,
+          marginBottom: 4, fontSize: 12, flexWrap: "wrap",
+        },
+      },
+        React.createElement("span", {
+          style: {
+            minWidth: 90, color: "#6a5e4e",
+            fontFamily: "'Share Tech Mono', serif",
+            fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5,
+          },
+        }, g.label),
+        React.createElement("span", { style: { flex: 1, lineHeight: 1.6 } }, formatGroup(g.data)),
+        React.createElement("span", {
+          style: { color: "#8a7e6e", fontSize: 11, fontFamily: "'Share Tech Mono', serif" },
+        }, `${successCount}/${g.data.length} ✓`),
+      );
+    }),
+    React.createElement("div", {
+      style: { fontSize: 10, color: "#9a8e7e", marginTop: 4, fontStyle: "italic" },
+    }, "* = re-rolled die (Twin-linked, Shred, Poison, etc.)"),
   );
 }
 

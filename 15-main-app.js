@@ -2283,6 +2283,8 @@ function createHelpWelcomeMessage(contextPhaseId) {
 }
 
 var ShootingResolver = function () {
+  // Default landing tab is Army Builder now that the Warroom has been
+  // removed. (Was "warroom" prior to 2026-05-24.)
   const [activePhase, setActivePhase] = useState("army_builder");
   const [lastNonHelpPhase, setLastNonHelpPhase] = useState("army_builder");
   const [helpChatOpen, setHelpChatOpen] = useState(false);
@@ -2762,7 +2764,7 @@ var ShootingResolver = function () {
         const isAlliedCatUnit =
           isSACategory(unitCat) ||
           isMechCategory(unitCat) ||
-          unitCat === "CUSTODES";
+          (unitCat && unitCat.startsWith("CUSTODES"));
 
         if (isAllied) {
           if (role === "command" || role === "high_command") {
@@ -2783,6 +2785,14 @@ var ShootingResolver = function () {
           if (!unitCat || !unitCat.startsWith("CUSTODES:")) return false;
         } else {
           if (isAlliedCatUnit) return false;
+          const unitFaction = UNIT_SPECIFIC_FACTION[u.id];
+          if (
+            army.faction !== "legiones_astartes" &&
+            unitFaction &&
+            unitFaction !== army.faction
+          ) {
+            return false;
+          }
         }
 
         const loyalistOnly = ALLEGIANCE_UNITS.loyalist.includes(u.id);
@@ -15089,6 +15099,7 @@ var ShootingResolver = function () {
           top: 0,
           zIndex: 50,
           flexShrink: 0,
+          overflowX: "auto",
         },
       },
       /* ⸢ HH ⸥ logotype */
@@ -15111,7 +15122,7 @@ var ShootingResolver = function () {
         },
         "⸢ HH ⸥",
       ),
-      /* Phase tab buttons */
+      /* Phase tab buttons (warroom removed 2026-05-24) */
       ...[
         { id: "help",         icon: "❓", label: "HELP" },
         { id: "army_builder", icon: "📋", label: "ARMY" },
@@ -15178,7 +15189,13 @@ var ShootingResolver = function () {
     ),
     React.createElement(
       "div",
-      { style: { maxWidth: 960, margin: "0 auto", padding: "20px 16px" } },
+      {
+        style: {
+          maxWidth: 960,
+          margin: "0 auto",
+          padding: "20px 16px",
+        },
+      },
       activePhase === "army_builder" &&
         React.createElement(
           React.Fragment,
@@ -15462,6 +15479,46 @@ var ShootingResolver = function () {
                     },
                   },
                   "📤 IMPORT",
+                ),
+                // ── CLEAR ARMY — single-button wipe of the current side's
+                //    roster + detachments so the player can start over.
+                //    Preserves the chosen faction / allegiance / points
+                //    limit (those live on the army object too, but it's
+                //    cheaper to keep them than force the player to re-pick).
+                //    Confirms before wiping if there are any entries — no
+                //    confirm prompt for an already-empty list.
+                React.createElement(
+                  "button",
+                  {
+                    onClick: () => {
+                      const army = getArmy();
+                      const count = (army.entries || []).length;
+                      if (count > 0) {
+                        const ok = window.confirm(
+                          `Clear all ${count} unit${count === 1 ? "" : "s"} from the ${armyBuilderSide} army? This cannot be undone — EXPORT first if you want to keep it.`,
+                        );
+                        if (!ok) return;
+                      }
+                      setArmy((prev) => ({
+                        ...prev,
+                        entries: [],
+                        detachments: [],
+                      }));
+                    },
+                    title: "Wipe this army's units & detachments — keeps faction/points limit",
+                    style: {
+                      padding: "5px 10px",
+                      borderRadius: 4,
+                      fontSize: 11,
+                      cursor: "pointer",
+                      fontFamily: "'Share Tech Mono', serif",
+                      fontWeight: 600,
+                      background: "#fbeaea",
+                      border: "1px solid #c74040",
+                      color: "#9b2d2d",
+                    },
+                  },
+                  "🗑 CLEAR",
                 ),
                 React.createElement("input", {
                   ref: abFileInputRef,
@@ -17383,6 +17440,13 @@ var ShootingResolver = function () {
                         getAvailableUnitsForRole(abAddSlotRole, abAddDetId).map(
                           (unit) => {
                             const pd = POINTS_DATA[unit.id];
+                            const legacyRules =
+                              unit.legacyRules ||
+                              (typeof UNIT_LEGACY_RULES !== "undefined"
+                                ? UNIT_LEGACY_RULES[unit.id]
+                                : null) ||
+                              [];
+                            const rulesLine = legacyRules.slice(0, 4).join(" · ");
                             return React.createElement(
                               "button",
                               {
@@ -17478,6 +17542,19 @@ var ShootingResolver = function () {
                                   unit.sv,
                                   "+",
                                 ),
+                                rulesLine &&
+                                  React.createElement(
+                                    "div",
+                                    {
+                                      style: {
+                                        fontSize: 11,
+                                        color: "#7a6a52",
+                                        marginTop: 3,
+                                        lineHeight: 1.25,
+                                      },
+                                    },
+                                    rulesLine,
+                                  ),
                               ),
                               React.createElement(
                                 "span",
@@ -17541,6 +17618,24 @@ var ShootingResolver = function () {
                           BATTLEFIELD_ROLES[abEditEntry.slotRole]?.icon,
                           BATTLEFIELD_ROLES[abEditEntry.slotRole]?.label,
                         ),
+                      ),
+                      (
+                        (typeof UNIT_LEGACY_RULES !== "undefined" &&
+                          UNIT_LEGACY_RULES[abEditEntry.unitId] &&
+                          UNIT_LEGACY_RULES[abEditEntry.unitId].length > 0) &&
+                        React.createElement(
+                          "div",
+                          {
+                            style: {
+                              fontSize: 11,
+                              color: "#7a6a52",
+                              fontFamily: "'Share Tech Mono', serif",
+                              lineHeight: 1.35,
+                              margin: "-4px 0 10px",
+                            },
+                          },
+                          UNIT_LEGACY_RULES[abEditEntry.unitId].join(" · "),
+                        )
                       ),
                       React.createElement(
                         "div",
@@ -28915,6 +29010,14 @@ var ShootingResolver = function () {
                         ),
                       ),
                   ),
+              // ── Dice roll log: separate numeric audit trail of every
+              //    die rolled in this resolution.  Visual dice are above;
+              //    this block surfaces the raw values so the player can see
+              //    EXACTLY what came up on each die.
+              React.createElement(DiceRollLog, {
+                rolls: result.rolls,
+                title: "Dice Roll Log — Shooting",
+              }),
               React.createElement(
                 "div",
                 {
@@ -29975,7 +30078,12 @@ var ShootingResolver = function () {
                 React.createElement("span", null, "📊"),
                 React.createElement("span", null, "TO WOUND TABLE"),
               ),
-              React.createElement(
+              (() => {
+                // Wound table axes — Strength × Toughness 1..10 (covers
+                // everything from Conscripts at S/T3 to Primarchs at S/T6, and
+                // up to Lord of War weapons / titanic creatures at S/T10).
+                const STAT_AXIS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+                return React.createElement(
                 "table",
                 {
                   style: {
@@ -29991,7 +30099,7 @@ var ShootingResolver = function () {
                     "tr",
                     null,
                     React.createElement("td", { style: refCellStyle }),
-                    [1, 2, 3, 4, 5, 6, 7, 8].map((t2) =>
+                    STAT_AXIS.map((t2) =>
                       React.createElement(
                         "td",
                         {
@@ -30010,7 +30118,7 @@ var ShootingResolver = function () {
                 React.createElement(
                   "tbody",
                   null,
-                  [1, 2, 3, 4, 5, 6, 7, 8].map((s2) =>
+                  STAT_AXIS.map((s2) =>
                     React.createElement(
                       "tr",
                       { key: s2 },
@@ -30025,7 +30133,7 @@ var ShootingResolver = function () {
                         "S",
                         s2,
                       ),
-                      [1, 2, 3, 4, 5, 6, 7, 8].map((t2) => {
+                      STAT_AXIS.map((t2) => {
                         const wr = getWoundRoll(s2, t2);
                         const active = strength === s2 && toughness === t2;
                         return React.createElement(
@@ -30052,7 +30160,8 @@ var ShootingResolver = function () {
                     ),
                   ),
                 ),
-              ),
+              );
+              })(),
             ),
           ),
         ),
@@ -36511,6 +36620,21 @@ var ShootingResolver = function () {
                     );
                   }),
                 ),
+              // ── Dice roll log: separate numeric audit trail for the
+              //    assault.  assaultResult.rolls has attacker + defender
+              //    sub-objects so we render two DiceRollLog blocks.
+              assaultResult.rolls && React.createElement(
+                React.Fragment,
+                null,
+                React.createElement(DiceRollLog, {
+                  rolls: assaultResult.rolls.attacker,
+                  title: "Dice Roll Log — Attacker",
+                }),
+                React.createElement(DiceRollLog, {
+                  rolls: assaultResult.rolls.defender,
+                  title: "Dice Roll Log — Defender",
+                }),
+              ),
               React.createElement(
                 "div",
                 { style: { marginTop: 8 } },

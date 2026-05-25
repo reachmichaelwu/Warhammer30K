@@ -129,7 +129,7 @@
 
   <!-- Global error handler to catch script load/exec failures -->
   <script>
-    var _ld = 0, _ldTotal = 19;
+    var _ld = 0, _ldTotal = 20;
     var _ldMsg = [
       'Loading machine spirit...', 'Parsing unit manifests...',
       'Calibrating bolter trajectories...', 'Compiling FOC slot data...',
@@ -140,7 +140,8 @@
       'Preparing challenge protocols...', 'Loading assault phase...',
       'Charging melee engine...', 'Rendering unit icons...',
       'Assembling UI components...', 'Compiling main cogitator...',
-      'Initializing visual effects...', 'Loading unit artwork...'
+      'Initializing visual effects...', 'Loading unit artwork...',
+      'Loading legacy manifests...'
     ];
     function _ldUp() {
       _ld++;
@@ -180,6 +181,8 @@
   <script src="15-main-app.js"           onerror="_ldErr('Failed to load 15-main-app.js')"           onload="_ldUp()"></script>
   <script src="16-graphics.js"           onerror="_ldErr('Failed to load 16-graphics.js')"           onload="_ldUp()"></script>
   <script src="17-artwork.js"            onerror="_ldErr('Failed to load 17-artwork.js')"            onload="_ldUp()"></script>
+  <!-- 19-warroom-game.js removed 2026-05-24 — Warroom feature retired. -->
+  <script src="20-legacy-units.js"       onerror="_ldErr('Failed to load 20-legacy-units.js')"       onload="_ldUp()"></script>
 
   <!-- Mount with diagnostics -->
   <script>
@@ -200,7 +203,16 @@
 
       try {
         var root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(React.createElement(ShootingResolver));
+        // Wrap the app in HHErrorBoundary (defined in 14-ui-components.js) so a
+        // render exception in any descendant (e.g. UnitSelectorModal) shows an
+        // on-screen error panel instead of silently unmounting the tree to a
+        // blank white screen. Falls back to bare render if the boundary class
+        // somehow didn't load.
+        var rootEl = (typeof HHErrorBoundary !== 'undefined')
+          ? React.createElement(HHErrorBoundary, null,
+              React.createElement(ShootingResolver))
+          : React.createElement(ShootingResolver);
+        root.render(rootEl);
         setTimeout(function() {
           var ls = document.getElementById('loading-screen');
           if (ls) {

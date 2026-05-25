@@ -24,13 +24,23 @@ DieIcon = function AnimatedDieIcon({ value, success, reroll, small }) {
   // Random stagger so dice within a roll group feel organic
   const stagger = React.useRef(Math.floor(Math.random() * 120));
 
-  const [display, setDisplay] = React.useState(Math.ceil(Math.random() * 6));
+  // `display` is initialised to `value` so the first paint already matches
+  // the real roll — preventing a brief frame of the wrong face when the dice
+  // first mount.  The roll animation below then drives it through a few
+  // random faces before snapping back to `value`.
+  const [display, setDisplay] = React.useState(value);
   const [phase,   setPhase  ] = React.useState("pre"); // pre | rolling | settle | done
 
+  // Re-animate whenever `value` changes (e.g. user clicks RESOLVE again).
+  // Previously the effect had `[]` deps, so a re-render with a new roll left
+  // the dice frozen on the OLD value — that's the cause of "dice graphics
+  // don't match the results."  Now we tear down any in-flight timer and
+  // re-roll from scratch every time the underlying value changes.
   React.useEffect(() => {
     let step  = 0;
     const steps = 7 + Math.floor(Math.random() * 4); // 7–10 random ticks
     let timer;
+    let settleTimer;
 
     const tick = () => {
       step++;
@@ -40,15 +50,21 @@ DieIcon = function AnimatedDieIcon({ value, success, reroll, small }) {
         // Ease out: each step a bit longer than the last
         timer = setTimeout(tick, 38 + step * 13);
       } else {
-        setDisplay(value);
+        setDisplay(value);                                // ← snap to real value
         setPhase("settle");
-        setTimeout(() => setPhase("done"), 420);
+        settleTimer = setTimeout(() => setPhase("done"), 420);
       }
     };
 
     timer = setTimeout(tick, stagger.current);
-    return () => clearTimeout(timer);
-  }, []); // intentionally [] — fires once on mount
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(settleTimer);
+      // Safety: if the component unmounts mid-roll, ensure no future tick
+      // leaves a stale face on screen by syncing display to current value.
+      setDisplay(value);
+    };
+  }, [value]);
 
   const rolling  = phase === "rolling";
   const settling = phase === "settle";
