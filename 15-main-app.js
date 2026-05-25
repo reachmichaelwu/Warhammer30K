@@ -1,3 +1,17 @@
+function getShootingSpecialRuleById(ruleId) {
+  var byId =
+    typeof SPECIAL_RULES_BY_ID !== "undefined" ? SPECIAL_RULES_BY_ID : null;
+  if (byId && byId[ruleId]) return byId[ruleId];
+
+  if (typeof SPECIAL_RULES !== "undefined" && Array.isArray(SPECIAL_RULES)) {
+    for (var i = 0; i < SPECIAL_RULES.length; i++) {
+      if (SPECIAL_RULES[i].id === ruleId) return SPECIAL_RULES[i];
+    }
+  }
+
+  return null;
+}
+
 var HELP_PHASE_GUIDE = [
   {
     id: "army_builder",
@@ -25670,7 +25684,7 @@ var ShootingResolver = function () {
                   Object.keys(selectedWeapon.rules || {})
                     .filter((k) => selectedWeapon.rules[k])
                     .map((k) => {
-                      const rule = SPECIAL_RULES_BY_ID[k];
+                      const rule = getShootingSpecialRuleById(k);
                       return rule
                         ? React.createElement(
                             "span",
@@ -25875,7 +25889,7 @@ var ShootingResolver = function () {
                           Object.keys(sgtWeapon.rules || {})
                             .filter((k) => sgtWeapon.rules[k])
                             .map((k) => {
-                              const rule = SPECIAL_RULES_BY_ID[k];
+                              const rule = getShootingSpecialRuleById(k);
                               return rule
                                 ? React.createElement(
                                     "span",
@@ -26154,7 +26168,7 @@ var ShootingResolver = function () {
                         Object.keys(sw.weapon.rules || {})
                           .filter((k) => sw.weapon.rules[k])
                           .map((k) => {
-                            const rule = SPECIAL_RULES_BY_ID[k];
+                            const rule = getShootingSpecialRuleById(k);
                             return rule
                               ? React.createElement(
                                   "span",
