@@ -11,6 +11,7 @@
   var MOBILE_MAX_WIDTH = 820;       // tablet / phone breakpoint (px)
   var FRAME_MIN_WIDTH  = 900;       // iOS frame preview only on wide desktop
   var STORAGE_KEY      = "hh-mode-override"; // "mobile" | "desktop"
+  var FRAME_STORAGE_KEY = "hh-frame-preview"; // "on" | unset
 
   // ---------- Detection ----------------------------------------------------
   function detectUserAgent() {
@@ -61,6 +62,20 @@
     } catch (e) {}
   }
 
+  function getStoredFramePreview() {
+    try {
+      return localStorage.getItem(FRAME_STORAGE_KEY) === "on";
+    } catch (e) {}
+    return false;
+  }
+
+  function setStoredFramePreview(enabled) {
+    try {
+      if (enabled) localStorage.setItem(FRAME_STORAGE_KEY, "on");
+      else localStorage.removeItem(FRAME_STORAGE_KEY);
+    } catch (e) {}
+  }
+
   // ---------- Compute current state ---------------------------------------
   function compute() {
     var ua     = detectUserAgent();
@@ -74,9 +89,9 @@
       isMobile = ua.isMobileUA || vp.width <= MOBILE_MAX_WIDTH;
     }
 
-    // iOS frame preview only when running in desktop mode AND on a non-mobile
-    // UA AND there's enough horizontal room to draw the bezel.
-    var showFrame = !isMobile && !ua.isMobileUA && vp.width >= FRAME_MIN_WIDTH;
+    // iOS frame preview is opt-in. It is useful for screenshots, but the
+    // tactics game needs the full desktop playfield by default.
+    var showFrame = !isMobile && !ua.isMobileUA && vp.width >= FRAME_MIN_WIDTH && getStoredFramePreview();
 
     return {
       isIOS:          ua.isIOS,
@@ -186,6 +201,13 @@
     } else {
       setStoredOverride(!!forceMobile);
     }
+    return refresh();
+  };
+
+  // Programmatic screenshot/dev preview toggle. The default desktop
+  // experience remains full-width and playable.
+  window.HHForceFramePreview = function (enabled) {
+    setStoredFramePreview(!!enabled);
     return refresh();
   };
 })();

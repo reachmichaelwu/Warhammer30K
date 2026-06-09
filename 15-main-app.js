@@ -14,6 +14,18 @@ function getShootingSpecialRuleById(ruleId) {
 
 var HELP_PHASE_GUIDE = [
   {
+    id: "warroom",
+    icon: "🗺",
+    label: "FULL TACTICAL",
+    shortLabel: "Tactical",
+    color: "#b8860b",
+    desc: "Open the combined tactical tabletop view: deploy, move, shoot, assault, and score from one large interactive battlefield map.",
+    howTo:
+      "Use the mode buttons to swap the map between Deploy, Move, Shoot, Assault, and End controls. Select units directly on the battlefield and use the command rail for the current phase.",
+    rules:
+      "The combined map reuses the phase engines: deployment placement, movement ranges, shooting resolution, return fire, charge contact, assault resolution, routing, scoring, and combat log tracking.",
+  },
+  {
     id: "army_builder",
     icon: "📋",
     label: "ARMY BUILDER",
@@ -2012,6 +2024,15 @@ function detectHelpPhase(question, contextPhaseId) {
     return getHelpPhaseById(contextPhaseId);
   }
   if (
+    q.includes("warroom") ||
+    q.includes("game") ||
+    q.includes("tactics") ||
+    q.includes("objective") ||
+    q.includes("victory point")
+  ) {
+    return getHelpPhaseById("warroom");
+  }
+  if (
     q.includes("army") ||
     q.includes("warlord") ||
     q.includes("detachment") ||
@@ -2281,13 +2302,13 @@ function buildHelpChatReply(question, contextPhaseId) {
   }
 
   return makeHelpChatResponse(
-    "I could not match that to one specific phase, but I can help with Army Builder, Deployment, Movement, Shooting, Assault, End Phase, detachments, Warlords, reactions, challenges, scoring, Basic Principles topics like modifiers and characteristics, armoury lookups such as power glaives and sonic shriekers, and Legion Astartes spreadsheet lookups like meltagun stats or Praetor options. Try asking in a short form like 'explain shooting', 'what does a power glaive do?', or 'what are the stats for a meltagun?'.",
+    "I could not match that to one specific phase, but I can help with the full tactical map, Army Builder, Deployment, Movement, Shooting, Assault, End Phase, detachments, Warlords, reactions, challenges, scoring, Basic Principles topics like modifiers and characteristics, armoury lookups such as power glaives and sonic shriekers, and Legion Astartes spreadsheet lookups like meltagun stats or Praetor options. Try asking in a short form like 'explain tactical', 'what does a power glaive do?', or 'what are the stats for a meltagun?'.",
     "overview",
   );
 }
 
 function createHelpWelcomeMessage(contextPhaseId) {
-  var phase = getHelpPhaseById(contextPhaseId || "army_builder");
+  var phase = getHelpPhaseById(contextPhaseId || "warroom");
   return (
     "Silica Animus online. Ask about rules, phase order, or how to use a tab.\n\n" +
     "Current context: " +
@@ -2297,15 +2318,18 @@ function createHelpWelcomeMessage(contextPhaseId) {
 }
 
 var ShootingResolver = function () {
-  // Default landing tab is Army Builder now that the Warroom has been
-  // removed. (Was "warroom" prior to 2026-05-24.)
-  const [activePhase, setActivePhase] = useState("army_builder");
-  const [lastNonHelpPhase, setLastNonHelpPhase] = useState("army_builder");
+  // Tactical is the first screen; the other tabs are supporting toolkit
+  // surfaces for list building and detailed phase resolution.
+  const [activePhase, setActivePhase] = useState("warroom");
+  const [warroomTacticalMode, setWarroomTacticalMode] = useState("movement");
+  const activeMapPhase =
+    activePhase === "warroom" ? warroomTacticalMode : activePhase;
+  const [lastNonHelpPhase, setLastNonHelpPhase] = useState("warroom");
   const [helpChatOpen, setHelpChatOpen] = useState(false);
   const [helpChatInput, setHelpChatInput] = useState("");
   const helpSectionRefs = useRef({});
   const [helpChatMessages, setHelpChatMessages] = useState(() => [
-    { role: "assistant", text: createHelpWelcomeMessage("army_builder") },
+    { role: "assistant", text: createHelpWelcomeMessage("warroom") },
   ]);
 
   const emptyArmy = () => ({
@@ -3697,10 +3721,10 @@ var ShootingResolver = function () {
   }
 
   useEffect(() => {
-    if (fullSizeTacticalMapPhase && activePhase !== fullSizeTacticalMapPhase) {
+    if (fullSizeTacticalMapPhase && activeMapPhase !== fullSizeTacticalMapPhase) {
       closeFullSizeTacticalMap();
     }
-  }, [activePhase, fullSizeTacticalMapPhase]);
+  }, [activeMapPhase, fullSizeTacticalMapPhase]);
 
   useEffect(() => {
     if (!fullSizeTacticalMapPhase || typeof document === "undefined") return;
@@ -4233,7 +4257,7 @@ var ShootingResolver = function () {
                         u.allegiance,
                       )
                     : null;
-                const title = `${u.name || u.label}${isDs ? " (DEEP STRIKE)" : " (RESERVE)"} — ${activePhase === "deployment" ? "click, then click the map to place" : `Target ${getFlyerReserveTarget(u)}+`}`;
+                const title = `${u.name || u.label}${isDs ? " (DEEP STRIKE)" : " (RESERVE)"} — ${activeMapPhase === "deployment" ? "click, then click the map to place" : `Target ${getFlyerReserveTarget(u)}+`}`;
                 return React.createElement(
                   "div",
                   {
@@ -4244,7 +4268,7 @@ var ShootingResolver = function () {
                       // In the deployment phase, selecting a reserve unit
                       // also arms it for placement — the next click on the
                       // map will drop it at those coordinates.
-                      if (activePhase === "deployment") {
+                      if (activeMapPhase === "deployment") {
                         setFlyerBringOnId(
                           flyerBringOnId === u.id ? null : u.id,
                         );
@@ -6415,7 +6439,7 @@ var ShootingResolver = function () {
                     fontSize: 13,
                   },
                 },
-                "No results yet. Resolve from the fullscreen map first.",
+                "No results yet. Resolve from the tactical map first.",
               )
             : React.createElement(
                 React.Fragment,
@@ -7175,8 +7199,13 @@ var ShootingResolver = function () {
         setDefenderI(defUnit.meleeWeapon.i);
         setDefenderA(defUnit.meleeWeapon.a);
       }
-      openFullSizeTacticalMap("assault");
-      setActivePhase("assault");
+      if (activePhase === "warroom") {
+        setWarroomTacticalMode("assault");
+        openFullSizeTacticalMap("assault");
+      } else {
+        openFullSizeTacticalMap("assault");
+        setActivePhase("assault");
+      }
     };
     const resolveAndShowResults = () => {
       if (phase === "shooting") handleResolve();
@@ -10685,7 +10714,7 @@ var ShootingResolver = function () {
     const weaponUnit = weaponRangeUnit
       ? deployedUnits.find((u) => u.id === weaponRangeUnit)
       : null;
-    const isMovementBoard = activePhase === "movement";
+    const isMovementBoard = activeMapPhase === "movement";
     const isFullSizeBoard =
       isMovementBoard && fullSizeTacticalMapPhase === "movement";
     const boardAccent = "#6b5b2e";
@@ -10897,7 +10926,7 @@ var ShootingResolver = function () {
               onClick: (e) => {
                 if (
                   flyerBringOnId &&
-                  (activePhase === "movement" || activePhase === "deployment")
+                  (activeMapPhase === "movement" || activeMapPhase === "deployment")
                 ) {
                   const rect = e.currentTarget.getBoundingClientRect();
                   const bx = (e.clientX - rect.left) / deployScale;
@@ -10910,7 +10939,7 @@ var ShootingResolver = function () {
                     (pending.isFlyer ||
                       (pending.unitData && pending.unitData.isFlyer));
                   if (
-                    activePhase === "deployment" &&
+                    activeMapPhase === "deployment" &&
                     pending &&
                     !pendingIsFlyer
                   ) {
@@ -10955,7 +10984,7 @@ var ShootingResolver = function () {
                 if (
                   deployDragRef.current &&
                   deployDragRef.current.unitId &&
-                  activePhase === "deployment"
+                  activeMapPhase === "deployment"
                 ) {
                   const rect = e.currentTarget.getBoundingClientRect();
                   const bx = (e.clientX - rect.left) / deployScale;
@@ -11008,7 +11037,7 @@ var ShootingResolver = function () {
                 background: "#3a3a2e",
                 cursor:
                   flyerBringOnId &&
-                  (activePhase === "movement" || activePhase === "deployment")
+                  (activeMapPhase === "movement" || activeMapPhase === "deployment")
                     ? "crosshair"
                     : cursorMode || "default",
               },
@@ -12766,12 +12795,12 @@ var ShootingResolver = function () {
               })(),
             terrainPieces.map((terrain) =>
               renderTerrainPiece(terrain, deployScale, {
-                interactive: activePhase === "deployment",
+                interactive: activeMapPhase === "deployment",
               }),
             ),
             objectiveMarkers.map((obj) => {
               const sz = Math.max(deployScale * 2, 18);
-              const canInteract = activePhase === "deployment";
+              const canInteract = activeMapPhase === "deployment";
               return React.createElement(
                 "div",
                 {
@@ -12837,7 +12866,7 @@ var ShootingResolver = function () {
               const isRouted = routedUnits.has(unit.id);
               const hasMoved = movedUnitIds.has(unit.id);
               const facing = unitFacings[unit.id];
-              const canDragOnBoard = activePhase === "deployment";
+              const canDragOnBoard = activeMapPhase === "deployment";
               const isHovered = mapHoveredUnitId === unit.id;
               // Resolve a unit-art thumbnail for the token (objectives keep
               // their plain symbol).
@@ -15087,6 +15116,579 @@ var ShootingResolver = function () {
     );
   };
 
+  const renderWarroomTacticalSection = () => {
+    const modes = [
+      { id: "deployment", icon: "📍", label: "Deploy", color: "#5b4a8a" },
+      { id: "movement", icon: "🚶", label: "Move", color: "#6b5b2e" },
+      { id: "shooting", icon: "⚔", label: "Shoot", color: "#b8860b" },
+      { id: "assault", icon: "🗡", label: "Assault", color: "#9b2d2d" },
+      { id: "end", icon: "🏛", label: "End", color: "#2e5e3e" },
+    ];
+    const mode =
+      modes.find((m) => m.id === warroomTacticalMode) || modes[1];
+    const attacker = deployedUnits.find((u) => u.id === mapAttackerId);
+    const target = deployedUnits.find((u) => u.id === mapTargetId);
+    const selectedMoveUnit = moveSelectedId
+      ? deployedUnits.find((u) => u.id === moveSelectedId)
+      : null;
+    const selectedDistance = getDistanceBetween(attacker, target);
+
+    const selectCombatMapUnit = (unit, phaseLabel) => {
+      try {
+        if (!unit || !unit.id) return;
+        if (!mapAttackerId) {
+          handleMapAttackerSelect(unit);
+        } else if (!mapTargetId && unit.id !== mapAttackerId) {
+          handleMapTargetSelect(unit);
+        } else if (unit.id === mapAttackerId) {
+          setMapAttackerId(null);
+          setMapTargetId(null);
+        } else {
+          handleMapTargetSelect(unit);
+        }
+      } catch (err) {
+        if (typeof console !== "undefined" && console.error) {
+          console.error(phaseLabel + " tactical unit click failed:", err);
+        }
+      }
+    };
+
+    const prepWarroomCharge = () => {
+      if (!attacker || !target) return;
+      const dist = getDistanceBetween(attacker, target);
+      setShowCharge(true);
+      if (dist !== null) setChargeDistance(Math.ceil(dist));
+      if (attacker.meleeWeapon) {
+        setChargerWS(attacker.meleeWeapon.ws);
+        setChargerS_melee(attacker.meleeWeapon.s);
+        setChargerAP_melee(attacker.meleeWeapon.ap);
+        setChargerI(attacker.meleeWeapon.i);
+        setChargerA(attacker.meleeWeapon.a);
+      }
+      if (attacker.unitData) {
+        setChargerT_melee(attacker.unitData.t || 4);
+        setChargerSv(attacker.unitData.sv || "3");
+        setChargerInvSv(attacker.unitData.inv || "-");
+        setChargerFnpSv(attacker.unitData.fnp || "-");
+        setChargerW_melee(attacker.unitData.w || 1);
+      }
+      if (target.meleeWeapon) {
+        setDefenderWS(target.meleeWeapon.ws);
+        setDefenderS_melee(target.meleeWeapon.s);
+        setDefenderAP_melee(target.meleeWeapon.ap);
+        setDefenderI(target.meleeWeapon.i);
+        setDefenderA(target.meleeWeapon.a);
+      }
+      setWarroomTacticalMode("assault");
+    };
+
+    const resolveWarroomShooting = () => {
+      handleResolve();
+      openFullSizeMapResults("shooting");
+    };
+
+    const resolveWarroomReturnFire = () => {
+      setDoReturnFire(true);
+      handleReturnFire();
+      openFullSizeMapResults("shooting");
+    };
+
+    const resolveWarroomAssault = () => {
+      handleAssaultResolve();
+      openFullSizeMapResults("assault");
+    };
+
+    const renderWarroomButton = (label, onClick, color, disabled) =>
+      React.createElement(
+        "button",
+        {
+          onClick: disabled ? undefined : onClick,
+          disabled: !!disabled,
+          style: {
+            padding: "8px 10px",
+            borderRadius: 4,
+            cursor: disabled ? "default" : "pointer",
+            fontSize: 10,
+            fontFamily: "'Share Tech Mono', serif",
+            fontWeight: 900,
+            letterSpacing: 1,
+            textTransform: "uppercase",
+            background: disabled ? "rgba(255,255,255,0.04)" : `${color}22`,
+            border: `1.5px solid ${disabled ? "rgba(216,247,200,0.20)" : color}`,
+            color: disabled ? "rgba(216,247,200,0.38)" : "#fff6d0",
+            opacity: disabled ? 0.6 : 1,
+          },
+        },
+        label,
+      );
+
+    const renderWarroomStat = (label, value, color = "#d8f7c8") =>
+      React.createElement(
+        "div",
+        {
+          style: {
+            padding: "8px 9px",
+            borderRadius: 4,
+            background: "rgba(255,255,255,0.045)",
+            border: "1px solid rgba(143,207,145,0.20)",
+            minWidth: 0,
+          },
+        },
+        React.createElement(
+          "div",
+          {
+            style: {
+              fontSize: 8,
+              color: "#8fcf91",
+              letterSpacing: 1,
+              textTransform: "uppercase",
+              marginBottom: 3,
+            },
+          },
+          label,
+        ),
+        React.createElement(
+          "div",
+          {
+            style: {
+              fontSize: 12,
+              color,
+              fontWeight: 900,
+              lineHeight: 1.2,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            },
+          },
+          value,
+        ),
+      );
+
+    const renderWarroomMap = () => {
+      if (warroomTacticalMode === "deployment") {
+        return renderBoard({
+          refObj: boardRef,
+          onClick: handleBoardClick,
+          cursorMode: sendToReservesMode
+            ? "cell"
+            : deployBrushUnit || deploySelectedUnit || placingObjective || placingTerrain || bfaBrush
+              ? "crosshair"
+              : "default",
+          showZones: deployShowZones,
+          showMoveRange: false,
+          moveRangeUnit: null,
+          unitOnClick: (unit, e) => {
+            if (e && e.shiftKey) removeDeployedUnit(unit.id);
+            else sendUnitToReserves(unit.id);
+          },
+        });
+      }
+      if (warroomTacticalMode === "movement") {
+        return renderBoard({
+          refObj: moveBoardRef,
+          onClick: handleMoveMapClick,
+          cursorMode: moveSelectedId ? "crosshair" : "pointer",
+          showZones: deployShowZones,
+          showMoveRange: !!moveSelectedId,
+          moveRangeUnit: moveSelectedId,
+          unitOnClick: (unit) => {
+            if (moveSelectedId === unit.id) {
+              setMoveSelectedId(null);
+              return;
+            }
+            if (moveSelectedId) return;
+            setMoveSelectedId(unit.id);
+          },
+        });
+      }
+      if (warroomTacticalMode === "assault") {
+        return renderTacticalMap({
+          refObj: assaultMapRef,
+          phase: "assault",
+          onUnitClick: (unit) => selectCombatMapUnit(unit, "assault"),
+        });
+      }
+      if (warroomTacticalMode === "end") {
+        return renderBoard({
+          refObj: boardRef,
+          onClick: null,
+          cursorMode: "pointer",
+          showZones: deployShowZones,
+          showMoveRange: false,
+          moveRangeUnit: null,
+          highlightAttacker: mapAttackerId,
+          highlightTarget: mapTargetId,
+          unitOnClick: (unit) => selectCombatMapUnit(unit, "end"),
+        });
+      }
+      return renderTacticalMap({
+        refObj: shootMapRef,
+        phase: "shooting",
+        onUnitClick: (unit) => selectCombatMapUnit(unit, "shooting"),
+      });
+    };
+
+    const renderCommandPanel = () => {
+      if (warroomTacticalMode === "deployment") {
+        return React.createElement(
+          React.Fragment,
+          null,
+          renderWarroomButton(
+            deployBrushUnit ? "Change Unit" : "Select Unit",
+            () => setDeployModalOpen(true),
+            "#5b4a8a",
+            false,
+          ),
+          React.createElement(
+            "div",
+            { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 } },
+            ["p1", "p2"].map((p) =>
+              renderWarroomButton(
+                p === "p1" ? "Loyalist" : "Traitor",
+                () => setDeployPlayer(p),
+                p === "p1" ? "#9b2d2d" : "#2a6fb4",
+                false,
+              ),
+            ),
+          ),
+          renderWarroomButton(
+            placingObjective ? "Stop Objective" : "Place Objective",
+            () => setPlacingObjective((v) => !v),
+            "#b8860b",
+            false,
+          ),
+          renderWarroomButton(
+            placingTerrain ? "Stop Terrain" : "Place Terrain",
+            () => setPlacingTerrain((v) => !v),
+            "#5a8a3a",
+            false,
+          ),
+          renderWarroomButton(
+            deployShowZones ? "Hide Zones" : "Show Zones",
+            () => setDeployShowZones((v) => !v),
+            "#8fcf91",
+            false,
+          ),
+          renderWarroomButton("Open Deploy Tab", () => setActivePhase("deployment"), "#5b4a8a", false),
+          deployBrushUnit &&
+            renderWarroomStat(
+              "Armed To Place",
+              `${deployBrushUnit.name} (${deployBrushModels})`,
+              "#d8c0ff",
+            ),
+        );
+      }
+      if (warroomTacticalMode === "movement") {
+        return React.createElement(
+          React.Fragment,
+          null,
+          renderWarroomStat(
+            "Moving",
+            selectedMoveUnit?.label || selectedMoveUnit?.name || "Click a unit",
+            selectedMoveUnit ? "#fff6d0" : "#9fd69b",
+          ),
+          renderWarroomButton("Undo Move", undoLastMove, "#6b5b2e", moveLog.length === 0),
+          renderWarroomButton("Reset Moves", resetAllMoves, "#c74040", moveLog.length === 0),
+          renderWarroomButton(
+            "Clear Moved",
+            () => {
+              setMovedUnitIds(new Set());
+              setMoveLog([]);
+            },
+            "#8fcf91",
+            moveLog.length === 0 && movedUnitIds.size === 0,
+          ),
+          renderWarroomButton("Open Move Tab", () => setActivePhase("movement"), "#6b5b2e", false),
+        );
+      }
+      if (warroomTacticalMode === "shooting") {
+        return React.createElement(
+          React.Fragment,
+          null,
+          renderWarroomStat("Attacker", attacker?.label || "Click unit", "#ffd966"),
+          renderWarroomStat("Target", target?.label || "Click target", "#ff8888"),
+          renderWarroomStat(
+            "Range",
+            selectedDistance !== null ? `${selectedDistance}"` : "--",
+            "#9ee68f",
+          ),
+          renderWarroomStat(
+            "Weapon",
+            selectedWeapon?.name || "Auto-selected",
+            "#f4d27a",
+          ),
+          renderWarroomButton("Resolve Shooting", resolveWarroomShooting, "#b8860b", !attacker || !target),
+          renderWarroomButton(
+            "Return Fire",
+            resolveWarroomReturnFire,
+            "#c46a1b",
+            !result || !targetSelectedWeapon,
+          ),
+          renderWarroomButton("Charge Mode", prepWarroomCharge, "#9b2d2d", !attacker || !target),
+          renderWarroomButton("Full Resolver", () => openFullSizeTacticalMap("shooting"), "#8fcf91", false),
+          renderWarroomButton("Open Shooting Tab", () => setActivePhase("shooting"), "#b8860b", false),
+        );
+      }
+      if (warroomTacticalMode === "assault") {
+        return React.createElement(
+          React.Fragment,
+          null,
+          renderWarroomStat("Attacker", attacker?.label || "Click unit", "#ffd966"),
+          renderWarroomStat("Defender", target?.label || "Click target", "#ff8888"),
+          renderWarroomStat(
+            "Charge",
+            selectedDistance !== null ? `${Math.ceil(selectedDistance)}"` : "--",
+            "#ffb0b0",
+          ),
+          renderWarroomButton("Resolve Assault", resolveWarroomAssault, "#9b2d2d", !attacker || !target),
+          renderWarroomButton("Charge Contact", () => applyChargeMovement({ chargeSucceeded: true }), "#9b2d2d", !attacker || !target),
+          renderWarroomButton("Route Target", () => routUnit(mapTargetId), "#c74040", !target),
+          renderWarroomButton("Full Resolver", () => openFullSizeTacticalMap("assault"), "#8fcf91", false),
+          renderWarroomButton("Open Assault Tab", () => setActivePhase("assault"), "#9b2d2d", false),
+        );
+      }
+      return React.createElement(
+        React.Fragment,
+        null,
+        renderWarroomStat("Round", currentRound, "#d8f7c8"),
+        renderWarroomStat("Loyalist VP", p1TotalVP + calcSecondaryVP(p1Secondaries), "#ff8888"),
+        renderWarroomStat("Traitor VP", p2TotalVP + calcSecondaryVP(p2Secondaries), "#8bbcff"),
+        renderWarroomButton("Score Round", scoreRound, "#2e5e3e", false),
+        renderWarroomButton(
+          "Next Round",
+          () => {
+            setCurrentRound((prev) => prev + 1);
+            setTrackerRound((prev) => prev + 1);
+            setMovedUnitIds(new Set());
+            setMoveLog([]);
+          },
+          "#8fcf91",
+          false,
+        ),
+        renderWarroomButton("Open End Tab", () => setActivePhase("end"), "#2e5e3e", false),
+      );
+    };
+
+    return React.createElement(
+      "div",
+      {
+        style: {
+          minHeight: "calc(100vh - 82px)",
+          margin: "-8px -4px 0",
+          padding: 12,
+          borderRadius: 6,
+          background: "#050f05",
+          border: "1.5px solid rgba(143,207,145,0.35)",
+          boxShadow: "0 0 28px rgba(0,80,20,0.20)",
+          color: "#d8f7c8",
+        },
+      },
+      React.createElement(
+        "div",
+        {
+          style: {
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            flexWrap: "wrap",
+            marginBottom: 10,
+          },
+        },
+        React.createElement(
+          "div",
+          { style: { flex: "1 1 260px", minWidth: 220 } },
+          React.createElement(
+            "div",
+            {
+              style: {
+                fontSize: 10,
+                color: "#8fcf91",
+                letterSpacing: 2,
+                textTransform: "uppercase",
+                marginBottom: 2,
+              },
+            },
+            "Wargame Tactical Map",
+          ),
+          React.createElement(
+            "div",
+            {
+              style: {
+                fontSize: 19,
+                fontWeight: 900,
+                color: mode.color,
+                letterSpacing: 1,
+              },
+            },
+            mode.icon,
+            " ",
+            mode.label,
+            " Mode",
+          ),
+        ),
+        React.createElement(
+          "div",
+          {
+            style: {
+              display: "flex",
+              gap: 6,
+              flexWrap: "wrap",
+              justifyContent: "flex-end",
+            },
+          },
+          modes.map((m) =>
+            React.createElement(
+              "button",
+              {
+                key: m.id,
+                onClick: () => {
+                  closeFullSizeTacticalMap();
+                  setWarroomTacticalMode(m.id);
+                  if (m.id !== "movement") setMoveSelectedId(null);
+                },
+                style: {
+                  padding: "8px 10px",
+                  borderRadius: 4,
+                  cursor: "pointer",
+                  fontSize: 10,
+                  fontFamily: "'Share Tech Mono', serif",
+                  fontWeight: warroomTacticalMode === m.id ? 900 : 600,
+                  letterSpacing: 1,
+                  textTransform: "uppercase",
+                  background:
+                    warroomTacticalMode === m.id
+                      ? `${m.color}33`
+                      : "rgba(255,255,255,0.04)",
+                  border: `1.5px solid ${warroomTacticalMode === m.id ? m.color : "rgba(143,207,145,0.22)"}`,
+                  color:
+                    warroomTacticalMode === m.id ? "#fff6d0" : "#9fd69b",
+                },
+              },
+              m.icon,
+              " ",
+              m.label,
+            ),
+          ),
+        ),
+      ),
+      React.createElement(
+        "div",
+        {
+          style: {
+            display: "grid",
+            gridTemplateColumns: "minmax(0, 1fr) minmax(280px, 350px)",
+            gap: 12,
+            alignItems: "start",
+          },
+        },
+        React.createElement(
+          "div",
+          {
+            style: {
+              minWidth: 0,
+            },
+          },
+          renderWarroomMap(),
+        ),
+        React.createElement(
+          "aside",
+          {
+            style: {
+              position: "sticky",
+              top: 62,
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+              maxHeight: "calc(100vh - 110px)",
+              overflowY: "auto",
+              padding: 10,
+              borderRadius: 4,
+              background: "rgba(3,8,3,0.94)",
+              border: `1.5px solid ${mode.color}`,
+              boxShadow: `0 0 18px ${mode.color}33`,
+            },
+          },
+          React.createElement(
+            "div",
+            {
+              style: {
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 6,
+              },
+            },
+            renderWarroomStat("Units", deployedUnits.length, "#d8f7c8"),
+            renderWarroomStat("Moved", movedUnitIds.size, "#ffd966"),
+          ),
+          renderCommandPanel(),
+          React.createElement(
+            "div",
+            {
+              style: {
+                marginTop: 4,
+                paddingTop: 8,
+                borderTop: "1px solid rgba(143,207,145,0.20)",
+                fontSize: 10,
+                color: "#9fd69b",
+                lineHeight: 1.45,
+              },
+            },
+            warroomTacticalMode === "deployment"
+              ? "Select a unit, marker, objective, or terrain tool, then click the map."
+              : warroomTacticalMode === "movement"
+                ? "Click a unit, then click a legal destination inside its movement range."
+                : warroomTacticalMode === "shooting"
+                  ? "Click attacker, click target, then resolve or open the full resolver dock."
+                  : warroomTacticalMode === "assault"
+                    ? "Use the same selected units to resolve charge contact and melee."
+                    : "Score objectives, clear movement state, and advance the round.",
+          ),
+        ),
+      ),
+      !fullSizeTacticalMapPhase &&
+        (fullSizeMapResultModal === "shooting" ||
+          fullSizeMapResultModal === "assault") &&
+        fullSizeMapResultMinimized &&
+        React.createElement(
+          "button",
+          {
+            onClick: () => setFullSizeMapResultMinimized(false),
+            title: "Restore dice rolls and results",
+            style: {
+              position: "fixed",
+              right: 24,
+              bottom: 24,
+              zIndex: 9100,
+              padding: "9px 12px",
+              borderRadius: 4,
+              cursor: "pointer",
+              fontSize: 11,
+              fontFamily: "'Share Tech Mono', serif",
+              fontWeight: 900,
+              letterSpacing: 1,
+              textTransform: "uppercase",
+              background: "rgba(3,8,3,0.96)",
+              border: `1.5px solid ${fullSizeMapResultModal === "shooting" ? "#b8860b" : "#9b2d2d"}`,
+              color: "#d8f7c8",
+              boxShadow: "0 0 14px rgba(143,207,145,0.35)",
+            },
+          },
+          "Dice & Results +",
+        ),
+      !fullSizeTacticalMapPhase &&
+        (fullSizeMapResultModal === "shooting" ||
+          fullSizeMapResultModal === "assault") &&
+        !fullSizeMapResultMinimized &&
+        renderFullSizeMapResultPopup(fullSizeMapResultModal),
+      combatLog.length > 0 &&
+        React.createElement(
+          "div",
+          { style: { marginTop: 12 } },
+          renderResultsTracker(["shooting", "returnFire", "charge", "assault"]),
+        ),
+    );
+  };
+
   return React.createElement(
     "div",
     {
@@ -15136,8 +15738,9 @@ var ShootingResolver = function () {
         },
         "⸢ HH ⸥",
       ),
-      /* Phase tab buttons (warroom removed 2026-05-24) */
+      /* Phase tab buttons */
       ...[
+        { id: "warroom",      icon: "🗺", label: "TACTICAL" },
         { id: "help",         icon: "❓", label: "HELP" },
         { id: "army_builder", icon: "📋", label: "ARMY" },
         { id: "deployment",   icon: "📍", label: "DEPLOY" },
@@ -15205,11 +15808,12 @@ var ShootingResolver = function () {
       "div",
       {
         style: {
-          maxWidth: 960,
+          maxWidth: activePhase === "warroom" ? 1440 : 960,
           margin: "0 auto",
-          padding: "20px 16px",
+          padding: activePhase === "warroom" ? "12px 12px" : "20px 16px",
         },
       },
+      activePhase === "warroom" && renderWarroomTacticalSection(),
       activePhase === "army_builder" &&
         React.createElement(
           React.Fragment,
@@ -18951,7 +19555,7 @@ var ShootingResolver = function () {
                   margin: "0 0 8px 0",
                 },
               },
-              "Welcome to the Horus Heresy (30K) Combat Toolkit. This tool helps you build armies and resolve all phases of a game — from deploying your forces to the final assault.",
+              "Welcome to the Horus Heresy (30K) Combat Toolkit. This now opens on the full tactical tabletop map, with the army builder and phase resolvers available when you want deeper control.",
             ),
             React.createElement(
               "p",
@@ -18963,7 +19567,7 @@ var ShootingResolver = function () {
                   margin: 0,
                 },
               },
-              "Use the tabs at the top to move between phases. Start with 📋 ARMY to build your force, then work through DEPLOY → MOVE → SHOOTING → ASSAULT → END.",
+              "Use 🗺 TACTICAL for the large combined map: deploy, move, shoot, assault, and score from one battle surface. Use 📋 ARMY to build forces, or the individual phase tabs when you want the longer setup panels.",
             ),
           ),
           React.createElement(
@@ -25278,136 +25882,8 @@ var ShootingResolver = function () {
         React.createElement(
           React.Fragment,
           null,
-          deployedUnits.length > 0 &&
-            renderTacticalMap({
-              refObj: shootMapRef,
-              phase: "shooting",
-              onUnitClick: (unit) => {
-                // Safety wrapper: any uncaught error inside the click
-                // handler chain would unmount the component and leave the
-                // user with a blank screen ("crash"). The handlers below
-                // already swallow their own errors; this is a final net.
-                try {
-                  if (!unit || !unit.id) return;
-                  if (!mapAttackerId) {
-                    handleMapAttackerSelect(unit);
-                  } else if (!mapTargetId && unit.id !== mapAttackerId) {
-                    handleMapTargetSelect(unit);
-                  } else if (unit.id === mapAttackerId) {
-                    setMapAttackerId(null);
-                    setMapTargetId(null);
-                  } else {
-                    handleMapTargetSelect(unit);
-                  }
-                } catch (err) {
-                  if (typeof console !== "undefined" && console.error) {
-                    console.error("shoot phase unit click failed:", err);
-                  }
-                }
-              },
-            }),
           renderFlyerShootingBanner(),
           renderCombatAirPatrolPanel(),
-          mapAttackerId &&
-            mapTargetId &&
-            React.createElement(
-              "div",
-              {
-                style: {
-                  ...panelStyle,
-                  marginBottom: 12,
-                  display: "flex",
-                  gap: 6,
-                  flexWrap: "wrap",
-                  padding: "8px 14px",
-                  alignItems: "center",
-                },
-              },
-              React.createElement(
-                "button",
-                {
-                  onClick: () => {
-                    const atkUnit = deployedUnits.find(
-                      (u) => u.id === mapAttackerId,
-                    );
-                    const defUnit = deployedUnits.find(
-                      (u) => u.id === mapTargetId,
-                    );
-                    if (!atkUnit || !defUnit) return;
-                    const dist = getDistanceBetween(atkUnit, defUnit);
-                    setShowCharge(true);
-                    if (dist !== null) setChargeDistance(Math.ceil(dist));
-                    if (atkUnit.meleeWeapon) {
-                      setChargerWS(atkUnit.meleeWeapon.ws);
-                      setChargerS_melee(atkUnit.meleeWeapon.s);
-                      setChargerAP_melee(atkUnit.meleeWeapon.ap);
-                      setChargerI(atkUnit.meleeWeapon.i);
-                      setChargerA(atkUnit.meleeWeapon.a);
-                    }
-                    if (atkUnit.unitData) {
-                      setChargerT_melee(atkUnit.unitData.t || 4);
-                      setChargerSv(atkUnit.unitData.sv || "3");
-                      setChargerInvSv(atkUnit.unitData.inv || "-");
-                      setChargerFnpSv(atkUnit.unitData.fnp || "-");
-                      setChargerW_melee(atkUnit.unitData.w || 1);
-                    }
-                    if (defUnit.meleeWeapon) {
-                      setDefenderWS(defUnit.meleeWeapon.ws);
-                      setDefenderS_melee(defUnit.meleeWeapon.s);
-                      setDefenderAP_melee(defUnit.meleeWeapon.ap);
-                      setDefenderI(defUnit.meleeWeapon.i);
-                      setDefenderA(defUnit.meleeWeapon.a);
-                    }
-                    setActivePhase("assault"); // Switch to assault for charge
-                  },
-                  style: {
-                    padding: "6px 14px",
-                    borderRadius: 4,
-                    fontSize: 12,
-                    cursor: "pointer",
-                    fontFamily: "'Share Tech Mono', serif",
-                    fontWeight: 600,
-                    letterSpacing: 1,
-                    background: "rgba(155,45,45,0.1)",
-                    border: "1.5px solid #9b2d2d",
-                    color: "#9b2d2d",
-                  },
-                },
-                "⚔ CHARGE → ASSAULT",
-              ),
-              React.createElement(
-                "button",
-                {
-                  onClick: () => routUnit(mapTargetId),
-                  style: {
-                    padding: "6px 14px",
-                    borderRadius: 4,
-                    fontSize: 12,
-                    cursor: "pointer",
-                    fontFamily: "'Share Tech Mono', serif",
-                    fontWeight: 600,
-                    letterSpacing: 1,
-                    background: "rgba(200,50,50,0.08)",
-                    border: "1.5px solid #c74040",
-                    color: "#c74040",
-                  },
-                },
-                "💨 ROUTE TARGET",
-              ),
-              React.createElement("div", { style: { flex: 1 } }),
-              React.createElement(
-                "span",
-                {
-                  style: {
-                    fontSize: 11,
-                    fontFamily: "'Share Tech Mono', serif",
-                    color: "#8a7e6e",
-                    fontStyle: "italic",
-                  },
-                },
-                "Map selection auto-fills attacker & target stats below",
-              ),
-            ),
           React.createElement(
             "div",
             {
@@ -30183,146 +30659,6 @@ var ShootingResolver = function () {
         React.createElement(
           React.Fragment,
           null,
-          deployedUnits.length > 0 &&
-            renderTacticalMap({
-              refObj: assaultMapRef,
-              phase: "assault",
-              onUnitClick: (unit) => {
-                // Safety wrapper to keep the assault-phase tactical map
-                // from unmounting if the click handler chain throws.
-                try {
-                  if (!unit || !unit.id) return;
-                  if (!mapAttackerId) {
-                    handleMapAttackerSelect(unit);
-                  } else if (!mapTargetId && unit.id !== mapAttackerId) {
-                    handleMapTargetSelect(unit);
-                  } else if (unit.id === mapAttackerId) {
-                    setMapAttackerId(null);
-                    setMapTargetId(null);
-                  } else {
-                    handleMapTargetSelect(unit);
-                  }
-                } catch (err) {
-                  if (typeof console !== "undefined" && console.error) {
-                    console.error("assault phase unit click failed:", err);
-                  }
-                }
-              },
-            }),
-          mapAttackerId &&
-            mapTargetId &&
-            React.createElement(
-              "div",
-              {
-                style: {
-                  ...panelStyle,
-                  marginBottom: 12,
-                  display: "flex",
-                  gap: 6,
-                  flexWrap: "wrap",
-                  padding: "8px 14px",
-                  alignItems: "center",
-                },
-              },
-              React.createElement(
-                "button",
-                {
-                  onClick: () => {
-                    const atkU = deployedUnits.find(
-                      (u) => u.id === mapAttackerId,
-                    );
-                    const defU = deployedUnits.find(
-                      (u) => u.id === mapTargetId,
-                    );
-                    if (atkU && defU)
-                      applyChargeMovement({ chargeSucceeded: true });
-                  },
-                  style: {
-                    padding: "6px 14px",
-                    borderRadius: 4,
-                    fontSize: 12,
-                    cursor: "pointer",
-                    fontFamily: "'Share Tech Mono', serif",
-                    fontWeight: 600,
-                    letterSpacing: 1,
-                    background: "rgba(155,45,45,0.1)",
-                    border: "1.5px solid #9b2d2d",
-                    color: "#9b2d2d",
-                  },
-                },
-                "⚔ CHARGE INTO CONTACT",
-              ),
-              React.createElement(
-                "button",
-                {
-                  onClick: () => routUnit(mapTargetId),
-                  style: {
-                    padding: "6px 14px",
-                    borderRadius: 4,
-                    fontSize: 12,
-                    cursor: "pointer",
-                    fontFamily: "'Share Tech Mono', serif",
-                    fontWeight: 600,
-                    letterSpacing: 1,
-                    background: "rgba(200,50,50,0.08)",
-                    border: "1.5px solid #c74040",
-                    color: "#c74040",
-                  },
-                },
-                "💨 ROUTE TARGET",
-              ),
-              React.createElement(
-                "button",
-                {
-                  onClick: () => routUnit(mapAttackerId),
-                  style: {
-                    padding: "6px 14px",
-                    borderRadius: 4,
-                    fontSize: 12,
-                    cursor: "pointer",
-                    fontFamily: "'Share Tech Mono', serif",
-                    fontWeight: 600,
-                    letterSpacing: 1,
-                    background: "rgba(100,100,200,0.08)",
-                    border: "1.5px solid #6666aa",
-                    color: "#6666aa",
-                  },
-                },
-                "💨 ROUTE CHARGER",
-              ),
-              routedUnits.size > 0 &&
-                React.createElement(
-                  "button",
-                  {
-                    onClick: () => setRoutedUnits(new Set()),
-                    style: {
-                      padding: "6px 14px",
-                      borderRadius: 4,
-                      fontSize: 12,
-                      cursor: "pointer",
-                      fontFamily: "'Share Tech Mono', serif",
-                      fontWeight: 600,
-                      background: "#f0ebe2",
-                      border: "1.5px solid #d0c4aa",
-                      color: "#8a7e6e",
-                    },
-                  },
-                  "CLEAR ROUTS",
-                ),
-              React.createElement("div", { style: { flex: 1 } }),
-              React.createElement(
-                "span",
-                {
-                  style: {
-                    fontSize: 11,
-                    fontFamily: "'Share Tech Mono', serif",
-                    color: "#8a7e6e",
-                    fontStyle: "italic",
-                  },
-                },
-                "Map selection auto-fills attacker & defender stats below",
-              ),
-            ),
           React.createElement(
             "div",
             {

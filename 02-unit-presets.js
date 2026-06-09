@@ -3452,7 +3452,7 @@ var UNIT_PRESETS = [
       },
       {
         id: "garviel_loken",
-        name: "Garviel Loken (XVI - Cmd)",
+        name: "Garviel Loken (XVI - High Cmd)",
         models: 1,
         bs: 5,
         t: 4,
