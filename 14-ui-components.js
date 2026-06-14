@@ -152,6 +152,9 @@ function UnitSelectorModal({ presets, onSelect, selectedId, onClose, accentColor
 
   const [roleFilter, setRoleFilter] = useState("");   // "" = All Roles
   const [searchTerm, setSearchTerm] = useState("");
+  const deferredSearchTerm = React.useDeferredValue
+    ? React.useDeferredValue(searchTerm)
+    : searchTerm;
 
   // Reset roleFilter if the active selection becomes empty after a faction change
   useEffect(() => {
@@ -166,12 +169,12 @@ function UnitSelectorModal({ presets, onSelect, selectedId, onClose, accentColor
         return r === roleFilter;
       });
     }
-    if (searchTerm) {
-      const t = searchTerm.toLowerCase();
+    if (deferredSearchTerm) {
+      const t = deferredSearchTerm.toLowerCase();
       list = list.filter(u => typeof u.name === "string" && u.name.toLowerCase().includes(t));
     }
     return list;
-  }, [allUnits, roleFilter, searchTerm]);
+  }, [allUnits, roleFilter, deferredSearchTerm]);
 
   const accentRgb = accentColor === "#b8860b" ? "184,134,11" : "42,111,180";
 
@@ -306,6 +309,8 @@ function UnitSelectorModal({ presets, onSelect, selectedId, onClose, accentColor
                 border: `1.5px solid ${isSelected ? accentColor : "#d0c4aa"}`,
                 boxShadow: isSelected ? `0 2px 8px rgba(${accentRgb},0.15)` : "none",
                 transition: "background 0.12s ease, border-color 0.12s ease",
+                contentVisibility: "auto",
+                containIntrinsicSize: "138px",
               },
               onMouseEnter: e => {
                 if (!isSelected) e.currentTarget.style.background = `rgba(${accentRgb},0.05)`;
@@ -330,6 +335,8 @@ function UnitSelectorModal({ presets, onSelect, selectedId, onClose, accentColor
                 }),
                 artSrc ? React.createElement("img", {
                   src: artSrc, alt: "",
+                  loading: "lazy",
+                  decoding: "async",
                   style: {
                     position: "absolute", inset: 0, width: "100%", height: "100%",
                     objectFit: "cover", objectPosition: "top center",

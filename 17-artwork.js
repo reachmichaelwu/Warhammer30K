@@ -310,6 +310,13 @@ var ROLE_ARTWORK_FALLBACK_MAP = {
   "fortification":   "Rapier.jpg",
 };
 
+var UNIT_ARTWORK_RESOLVE_CACHE = Object.create(null);
+
+function _rememberArtwork(cacheKey, value) {
+  UNIT_ARTWORK_RESOLVE_CACHE[cacheKey] = value;
+  return value;
+}
+
 // ━━━ HELPER: resolve artwork path ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // Files in artwork/legions/ were moved to legions/ at the root level.
 // Paths starting with "legions/" are served as-is; everything else gets "artwork/" prepended.
@@ -424,34 +431,43 @@ function _inferArtworkByRole(unitId) {
 }
 
 function getUnitArtwork(unitId, factionId, allegiance) {
+  var cacheKey = [
+    unitId || "",
+    factionId || "",
+    allegiance || "",
+  ].join("|");
+  if (Object.prototype.hasOwnProperty.call(UNIT_ARTWORK_RESOLVE_CACHE, cacheKey)) {
+    return UNIT_ARTWORK_RESOLVE_CACHE[cacheKey];
+  }
+
   // 1. Faction-specific marine art for troop units
   if (unitId && factionId && TROOP_UNIT_IDS.has(unitId) && FACTION_MARINE_MAP[factionId]) {
-    return _artPath(FACTION_MARINE_MAP[factionId]);
+    return _rememberArtwork(cacheKey, _artPath(FACTION_MARINE_MAP[factionId]));
   }
   // 2. Unit-specific art
   if (unitId && UNIT_ARTWORK_MAP[unitId]) {
-    return _artPath(UNIT_ARTWORK_MAP[unitId]);
+    return _rememberArtwork(cacheKey, _artPath(UNIT_ARTWORK_MAP[unitId]));
   }
   // 3. Closest available thumbnail by unit family.
   var familyArt = _inferArtworkByUnitFamily(unitId);
   if (familyArt) {
-    return _artPath(familyArt);
+    return _rememberArtwork(cacheKey, _artPath(familyArt));
   }
   // 4. Faction banner/fallback art, using either caller faction or category.
   var inferredFaction = unitId ? _inferFactionForArtwork(unitId) : null;
   var fallbackFaction = (factionId && FACTION_ARTWORK_MAP[factionId]) ? factionId : inferredFaction;
   if (fallbackFaction && FACTION_ARTWORK_MAP[fallbackFaction]) {
-    return _artPath(FACTION_ARTWORK_MAP[fallbackFaction]);
+    return _rememberArtwork(cacheKey, _artPath(FACTION_ARTWORK_MAP[fallbackFaction]));
   }
   // 5. Battlefield-role fallback for generic units.
   var roleArt = _inferArtworkByRole(unitId);
   if (roleArt) {
-    return _artPath(roleArt);
+    return _rememberArtwork(cacheKey, _artPath(roleArt));
   }
   // 6. Allegiance generic fallback
-  if (allegiance === "traitor")  return "artwork/Traitor.jpg";
-  if (allegiance === "loyalist") return "artwork/Loyalist.jpg";
-  return null;
+  if (allegiance === "traitor")  return _rememberArtwork(cacheKey, "artwork/Traitor.jpg");
+  if (allegiance === "loyalist") return _rememberArtwork(cacheKey, "artwork/Loyalist.jpg");
+  return _rememberArtwork(cacheKey, null);
 }
 
 // ━━━ REACT COMPONENT: small artwork thumbnail ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -462,6 +478,8 @@ function UnitArtworkThumb({ unitId, factionId, allegiance, size, borderColor }) 
   return React.createElement("img", {
     src: src,
     alt: "",
+    loading: "lazy",
+    decoding: "async",
     style: {
       width: size,
       height: size,

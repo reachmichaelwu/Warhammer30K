@@ -20,6 +20,11 @@
 DieIcon = function AnimatedDieIcon({ value, success, reroll, small }) {
   const sz    = small ? 22 : 28;
   const FACES = { 1: "⚀", 2: "⚁", 3: "⚂", 4: "⚃", 5: "⚄", 6: "⚅" };
+  const reduceMotion =
+    typeof window !== "undefined" &&
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const shouldAnimate = !small && !reduceMotion;
 
   // Random stagger so dice within a roll group feel organic
   const stagger = React.useRef(Math.floor(Math.random() * 120));
@@ -37,6 +42,12 @@ DieIcon = function AnimatedDieIcon({ value, success, reroll, small }) {
   // don't match the results."  Now we tear down any in-flight timer and
   // re-roll from scratch every time the underlying value changes.
   React.useEffect(() => {
+    if (!shouldAnimate) {
+      setDisplay(value);
+      setPhase("done");
+      return;
+    }
+
     let step  = 0;
     const steps = 7 + Math.floor(Math.random() * 4); // 7–10 random ticks
     let timer;
@@ -60,11 +71,8 @@ DieIcon = function AnimatedDieIcon({ value, success, reroll, small }) {
     return () => {
       clearTimeout(timer);
       clearTimeout(settleTimer);
-      // Safety: if the component unmounts mid-roll, ensure no future tick
-      // leaves a stale face on screen by syncing display to current value.
-      setDisplay(value);
     };
-  }, [value]);
+  }, [value, shouldAnimate]);
 
   const rolling  = phase === "rolling";
   const settling = phase === "settle";

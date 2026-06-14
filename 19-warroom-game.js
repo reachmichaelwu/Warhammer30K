@@ -1374,6 +1374,7 @@
     });
     var game = gameState[0];
     var setGame = gameState[1];
+    var latestSaveRef = useRef({ game: game, gameMode: gameMode });
     var undoStackState = useState([]);
     var undoStack = undoStackState[0];
     var setUndoStack = undoStackState[1];
@@ -1426,7 +1427,39 @@
     }, [game, selectedId, targetLockId, mode, hover, drawTick, camera]);
 
     useEffect(function () {
-      writeSavedPayload(game, gameMode);
+      latestSaveRef.current = { game: game, gameMode: gameMode };
+    }, [game, gameMode]);
+
+    useEffect(function () {
+      function flushLatestSave() {
+        var latest = latestSaveRef.current;
+        if (latest) writeSavedPayload(latest.game, latest.gameMode);
+      }
+      window.addEventListener("pagehide", flushLatestSave);
+      return function () {
+        window.removeEventListener("pagehide", flushLatestSave);
+      };
+    }, []);
+
+    useEffect(function () {
+      var cancelled = false;
+      var hasIdleCallback =
+        typeof window !== "undefined" &&
+        typeof window.requestIdleCallback === "function";
+      var write = function () {
+        if (!cancelled) writeSavedPayload(game, gameMode);
+      };
+      var handle = hasIdleCallback
+        ? window.requestIdleCallback(write, { timeout: 500 })
+        : setTimeout(write, 120);
+      return function () {
+        cancelled = true;
+        if (hasIdleCallback && typeof window.cancelIdleCallback === "function") {
+          window.cancelIdleCallback(handle);
+        } else {
+          clearTimeout(handle);
+        }
+      };
     }, [game, gameMode]);
 
     useEffect(function () {
@@ -1699,7 +1732,11 @@
 
     function handleCanvasMove(event) {
       var tile = tileFromEvent(canvasRef.current, event, camera);
-      setHover(tile);
+      setHover(function (prev) {
+        if (!prev && !tile) return prev;
+        if (prev && tile && prev.x === tile.x && prev.y === tile.y) return prev;
+        return tile;
+      });
     }
 
     function handleCanvasWheel(event) {
@@ -2171,7 +2208,9 @@
             className: "hh-game-canvas",
             onClick: handleCanvasClick,
             onMouseMove: handleCanvasMove,
-            onMouseLeave: function () { setHover(null); },
+            onMouseLeave: function () {
+              setHover(function (prev) { return prev ? null : prev; });
+            },
             onWheel: handleCanvasWheel,
             role: "img",
             "aria-label": "Horus Heresy tactical warroom battlefield",

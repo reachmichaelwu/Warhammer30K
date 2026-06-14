@@ -4384,6 +4384,8 @@ var ShootingResolver = function () {
             ? React.createElement("img", {
                 src: reserveArt,
                 alt: "",
+                loading: "lazy",
+                decoding: "async",
                 draggable: false,
                 style: {
                   width: "100%",
@@ -4579,6 +4581,8 @@ var ShootingResolver = function () {
                     ? React.createElement("img", {
                         src: reserveArt,
                         alt: "",
+                        loading: "lazy",
+                        decoding: "async",
                         draggable: false,
                         style: {
                           width: "100%",
@@ -9279,6 +9283,8 @@ var ShootingResolver = function () {
                         ? React.createElement("img", {
                             src: tokenArt,
                             alt: "",
+                            loading: "lazy",
+                            decoding: "async",
                             draggable: false,
                             style: {
                               width: "100%",
@@ -10328,6 +10334,44 @@ var ShootingResolver = function () {
   // map during the deployment phase.  Using a ref avoids re-renders on every
   // mousemove — only the deployedUnits state update does.
   const deployDragRef = useRef({ unitId: null });
+  const deployDragFrameRef = useRef(0);
+  const deployDragPendingRef = useRef(null);
+
+  const flushDeployDragFrame = useCallback(() => {
+    deployDragFrameRef.current = 0;
+    const pending = deployDragPendingRef.current;
+    deployDragPendingRef.current = null;
+    if (!pending) return;
+
+    setDeployedUnits((prev) => {
+      let changed = false;
+      const next = prev.map((u) => {
+        if (u.id !== pending.id) return u;
+        if (u.x === pending.x && u.y === pending.y) return u;
+        changed = true;
+        return { ...u, x: pending.x, y: pending.y };
+      });
+      return changed ? next : prev;
+    });
+  }, []);
+
+  const scheduleDeployDragUpdate = useCallback(
+    (id, x, y) => {
+      deployDragPendingRef.current = { id, x, y };
+      if (deployDragFrameRef.current) return;
+      deployDragFrameRef.current = requestAnimationFrame(flushDeployDragFrame);
+    },
+    [flushDeployDragFrame],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (deployDragFrameRef.current) {
+        cancelAnimationFrame(deployDragFrameRef.current);
+        deployDragFrameRef.current = 0;
+      }
+    };
+  }, []);
 
   const [aerialReserves, setAerialReserves] = useState([]);
   const [reserveRollLog, setReserveRollLog] = useState([]);
@@ -12407,22 +12451,25 @@ var ShootingResolver = function () {
                 if (onClick) onClick(e);
               },
               onMouseMove: (e) => {
+                const drag = deployDragRef.current;
                 if (
-                  deployDragRef.current &&
-                  deployDragRef.current.unitId &&
+                  drag &&
+                  drag.unitId &&
                   activeMapPhase === "deployment"
                 ) {
-                  const rect = e.currentTarget.getBoundingClientRect();
+                  const rect =
+                    drag.rect ||
+                    (drag.rect = e.currentTarget.getBoundingClientRect());
                   const bx = (e.clientX - rect.left) / deployScale;
                   const by = (e.clientY - rect.top) / deployScale;
-                  const dx = e.clientX - (deployDragRef.current.startX || 0);
-                  const dy = e.clientY - (deployDragRef.current.startY || 0);
+                  const dx = e.clientX - (drag.startX || 0);
+                  const dy = e.clientY - (drag.startY || 0);
                   // Treat a move as an actual drag once the cursor has traveled
                   // more than 3 pixels — keeps short-click-to-remove working.
-                  if (!deployDragRef.current.moved && dx * dx + dy * dy > 9) {
-                    deployDragRef.current.moved = true;
+                  if (!drag.moved && dx * dx + dy * dy > 9) {
+                    drag.moved = true;
                   }
-                  if (!deployDragRef.current.moved) return;
+                  if (!drag.moved) return;
                   const snapX = Math.max(
                     0,
                     Math.min(BOARD_W, Math.round(bx * 2) / 2),
@@ -12431,15 +12478,16 @@ var ShootingResolver = function () {
                     0,
                     Math.min(BOARD_H, Math.round(by * 2) / 2),
                   );
-                  const id = deployDragRef.current.unitId;
-                  setDeployedUnits((prev) =>
-                    prev.map((u) =>
-                      u.id === id ? { ...u, x: snapX, y: snapY } : u,
-                    ),
-                  );
+                  scheduleDeployDragUpdate(drag.unitId, snapX, snapY);
                 }
               },
               onMouseUp: () => {
+                if (deployDragPendingRef.current) {
+                  if (deployDragFrameRef.current) {
+                    cancelAnimationFrame(deployDragFrameRef.current);
+                  }
+                  flushDeployDragFrame();
+                }
                 // Keep `moved` set so the follow-up click handler knows to
                 // suppress; the click handler itself will clear the ref.
                 if (
@@ -12451,6 +12499,12 @@ var ShootingResolver = function () {
                 }
               },
               onMouseLeave: () => {
+                if (deployDragPendingRef.current) {
+                  if (deployDragFrameRef.current) {
+                    cancelAnimationFrame(deployDragFrameRef.current);
+                  }
+                  flushDeployDragFrame();
+                }
                 if (deployDragRef.current)
                   deployDragRef.current = { unitId: null };
               },
@@ -14396,6 +14450,8 @@ var ShootingResolver = function () {
                   ? React.createElement("img", {
                       src: tokenArt,
                       alt: "",
+                      loading: "lazy",
+                      decoding: "async",
                       draggable: false,
                       style: {
                         width: "100%",
@@ -17466,6 +17522,8 @@ var ShootingResolver = function () {
                     key: "faction-thumb",
                     src: artSrc,
                     alt: "",
+                    loading: "lazy",
+                    decoding: "async",
                     style: {
                       width: 72,
                       height: 72,
@@ -17904,6 +17962,8 @@ var ShootingResolver = function () {
                       ? React.createElement("img", {
                           src: getUnitArtwork(entry.unitId, getArmy().faction),
                           alt: "",
+                          loading: "lazy",
+                          decoding: "async",
                           style: {
                             width: 120,
                             height: 120,
@@ -18244,6 +18304,8 @@ var ShootingResolver = function () {
                         ? React.createElement("img", {
                             src: getUnitArtwork(be.unitId, getArmy().faction),
                             alt: "",
+                            loading: "lazy",
+                            decoding: "async",
                             style: {
                               width: 120,
                               height: 120,
@@ -18585,6 +18647,8 @@ var ShootingResolver = function () {
                               getArmy().faction,
                             ),
                             alt: "",
+                            loading: "lazy",
+                            decoding: "async",
                             style: {
                               width: 120,
                               height: 120,
@@ -19686,6 +19750,8 @@ var ShootingResolver = function () {
                                       unit.id,
                                       getArmy().faction,
                                     ),
+                                    loading: "lazy",
+                                    decoding: "async",
                                     alt: "",
                                     style: {
                                       width: 120,
@@ -23337,6 +23403,8 @@ var ShootingResolver = function () {
                                   entry.unitId,
                                   sideArmy.faction,
                                 ),
+                                loading: "lazy",
+                                decoding: "async",
                                 alt: "",
                                 style: {
                                   width: 120,
@@ -23580,6 +23648,8 @@ var ShootingResolver = function () {
                                     entry.unitId,
                                     sideArmy.faction,
                                   ),
+                                  loading: "lazy",
+                                  decoding: "async",
                                   alt: "",
                                   style: {
                                     width: 120,
@@ -26291,6 +26361,8 @@ var ShootingResolver = function () {
                 ? React.createElement("img", {
                     src: getUnitArtwork(deployBrushUnit.id, deployFaction),
                     alt: "",
+                    loading: "lazy",
+                    decoding: "async",
                     style: {
                       width: 120,
                       height: 120,
@@ -27096,6 +27168,8 @@ var ShootingResolver = function () {
                             isP1 ? "loyalist" : "traitor",
                           ),
                           alt: "",
+                          loading: "lazy",
+                          decoding: "async",
                           style: {
                             width: 120,
                             height: 120,
@@ -27554,6 +27628,8 @@ var ShootingResolver = function () {
                         ? React.createElement("img", {
                             src: getUnitArtwork(selectedUnit.id, shootFaction),
                             alt: "",
+                            loading: "lazy",
+                            decoding: "async",
                             style: {
                               width: 120,
                               height: 120,
@@ -28451,6 +28527,8 @@ var ShootingResolver = function () {
                         ? React.createElement("img", {
                             src: getUnitArtwork(targetPresetId, targetFaction),
                             alt: "",
+                            loading: "lazy",
+                            decoding: "async",
                             style: {
                               width: 120,
                               height: 120,
@@ -29777,6 +29855,8 @@ var ShootingResolver = function () {
                 React.createElement("img", {
                   src: getUnitArtwork(selectedUnit.id, shootFaction),
                   alt: "",
+                  loading: "lazy",
+                  decoding: "async",
                   style: {
                     width: 110,
                     height: 110,
@@ -29846,6 +29926,8 @@ var ShootingResolver = function () {
                 React.createElement("img", {
                   src: getUnitArtwork(targetUnit.id, targetFaction),
                   alt: "",
+                  loading: "lazy",
+                  decoding: "async",
                   style: {
                     width: 110,
                     height: 110,
@@ -32375,6 +32457,8 @@ var ShootingResolver = function () {
                           ? React.createElement("img", {
                               src: getUnitArtwork(unit.id, factionV),
                               alt: "",
+                              loading: "lazy",
+                              decoding: "async",
                               style: {
                                 width: 120,
                                 height: 120,
@@ -37456,6 +37540,8 @@ var ShootingResolver = function () {
                 React.createElement("img", {
                   src: getUnitArtwork(aUnit.id, aFaction),
                   alt: "",
+                  loading: "lazy",
+                  decoding: "async",
                   style: {
                     width: 110,
                     height: 110,
@@ -37525,6 +37611,8 @@ var ShootingResolver = function () {
                 React.createElement("img", {
                   src: getUnitArtwork(dUnit.id, dFaction),
                   alt: "",
+                  loading: "lazy",
+                  decoding: "async",
                   style: {
                     width: 110,
                     height: 110,
