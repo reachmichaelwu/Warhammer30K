@@ -31,6 +31,8 @@ var MELEE_SPECIAL_RULES = [
   { id: "m_aflame", label: "Aflame", desc: "Unsaved wounds force a Leadership check; model is 'Aflame' until End Phase, -X to Ld" },
   { id: "m_armourbane", label: "Armourbane", desc: "Glancing hits are treated as Penetrating hits against Vehicles" },
   { id: "m_breaching", label: "Breaching (4+)", desc: "To Wound of 4+ — if a wound is inflicted it becomes a Breaching Wound (AP 2, ignores saves)" },
+  { id: "m_breaching5", label: "Breaching (5+)", desc: "To Wound of 5+ — if a wound is inflicted it becomes a Breaching Wound (AP 2, ignores saves)" },
+  { id: "m_breaching6", label: "Breaching (6+)", desc: "To Wound of 6 — if a wound is inflicted it becomes a Breaching Wound (AP 2, ignores saves)" },
   { id: "m_criticalHit", label: "Critical Hit (6+)", desc: "To Hit roll of 6 = auto-wound (no Wound roll) and inflicts +1 Damage" },
   { id: "m_deflagrate", label: "Deflagrate", desc: "Unsaved wounds generate additional hits equal to the number of unsaved wounds (S equal to Deflagrate X, AP '-', D1)" },
   { id: "m_eternalWarrior", label: "Eternal Warrior (X)", desc: "Reduces the Damage of each Unsaved Wound allocated to this model by X (minimum 1)" },
@@ -671,7 +673,7 @@ var MELEE_WEAPON_PROFILES = {
     { name: "Power Fist", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 2, t: 4, sv: "2", inv: "-", fnp: "-", ld: 8, rules: {} },
   ],
   dawnbreaker_cohort: [
-    { name: "Falling-star Power Spear", ws: 5, s: 5, ap: "3", i: 5, a: 4, w: 2, t: 4, sv: "2", inv: "-", fnp: "-", ld: 8, rules: { m_breaching5: true } },
+    { name: "Falling-star Power Spear", ws: 5, s: 5, ap: "3", i: 5, a: 4, w: 2, t: 4, sv: "2", inv: "-", fnp: "-", ld: 8, rules: { m_breaching5: true, m_impact: true }, traits: "Power" },
   ],
   erelim: [
     { name: "Chainsword", ws: 4, s: 4, ap: "5", i: 4, a: 1, w: 1, t: 4, sv: "3", inv: "-", fnp: "-", ld: 7, rules: { m_shred: true } },
