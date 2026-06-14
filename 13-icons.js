@@ -8,18 +8,21 @@ function getUnitIconType(name) {
   // was renamed in a later release) must not crash the render tree.
   if (!name || typeof name !== "string") return "infantry";
   const n = name.toLowerCase();
-  if (n.includes("primarch") || n.includes("lion el") || n.includes("jaghatai") || n.includes("leman russ") || n.includes("rogal dorn") || n.includes("sanguinius") || n.includes("ferrus") || n.includes("guilliman") || n.includes("vulkan") || n.includes("corax") || n.includes("fulgrim") || n.includes("perturabo") || n.includes("curze") || n.includes("angron") || n.includes("lorgar") || n.includes("mortarion") || n.includes("magnus") || n.includes("horus") || n.includes("alpharius")) return "primarch";
+  if (n.includes("primarch") || n.includes("lion el") || n.includes("jaghatai") || (n.includes("leman russ") && !n.includes("tank")) || n.includes("rogal dorn") || n.includes("sanguinius") || n.includes("ferrus") || n.includes("guilliman") || n.includes("vulkan") || n.includes("corax") || n.includes("fulgrim") || n.includes("perturabo") || n.includes("curze") || n.includes("angron") || n.includes("lorgar") || n.includes("mortarion") || n.includes("magnus") || n.includes("horus") || n.includes("alpharius")) return "primarch";
   if (n.includes("daemon")) return "daemon";
   if (n.includes("saturnine") && n.includes("dread")) return "dreadnought";
   // HQ characters - must check before terminator matching
   if (n.includes("praetor") || n.includes("centurion") || n.includes("magos") || n.includes("commander") || n.includes("champion") || n.includes("chaplain") || n.includes("librarian") || n.includes("moritat") || n.includes("herald") || n.includes("vigilator") || n.includes("forge lord") || n.includes("siege breaker") || n.includes("master of signal") || n.includes("apothecary")) return "commander";
   if (n.includes("cataphractii") || n.includes("tartaros") || n.includes("fulmentarus") || n.includes("aquilon") || n.includes("saturnine") || n.includes("terminator")) return "terminator";
   if (n.includes("contemptor") || n.includes("leviathan") || n.includes("deredeo") || n.includes("castra ferrum")) return "dreadnought";
-  if (n.includes("predator") || n.includes("sicaran") || n.includes("land raider") || n.includes("spartan") || n.includes("proteus") || n.includes("leman russ") || n.includes("malcador") || n.includes("vindicator") || n.includes("araknae")) return "tank";
-  if (n.includes("whirlwind") || n.includes("basilisk") || n.includes("medusa") || n.includes("rapier") || n.includes("thanatar")) return "artillery";
+  // Transports — checked before tanks so "Rhino" etc. never falls through
+  // to infantry (transport move = 12", pods are immobile via overrides).
+  if (n.includes("rhino") || n.includes("termite") || n.includes("drop pod") || n.includes("dreadclaw") || n.includes("kharybdis") || n.includes("dracosan") || n.includes("triaros") || n.includes("coronus")) return "transport";
+  if (n.includes("predator") || n.includes("sicaran") || n.includes("land raider") || n.includes("spartan") || n.includes("proteus") || n.includes("leman russ") || n.includes("malcador") || n.includes("vindicator") || n.includes("araknae") || n.includes("kratos") || n.includes("cerberus") || n.includes("valdor tank") || n.includes("typhon heavy") || n.includes("glaive") || n.includes("fellblade") || n.includes("falchion") || n.includes("stormhammer") || n.includes("sabre")) return "tank";
+  if (n.includes("whirlwind") || n.includes("basilisk") || n.includes("medusa") || n.includes("rapier") || n.includes("thanatar") || n.includes("scorpius") || n.includes("arquitor") || n.includes("tarantula")) return "artillery";
   if (n.includes("caladius") || n.includes("pallas")) return "grav_tank";
-  if (n.includes("agamatus") || n.includes("jetbike") || n.includes("scimitar")) return "jetbike";
-  if (n.includes("xiphon") || n.includes("storm eagle") || n.includes("fire raptor")) return "flyer";
+  if (n.includes("agamatus") || n.includes("jetbike") || n.includes("scimitar") || n.includes("outrider")) return "jetbike";
+  if (n.includes("xiphon") || n.includes("storm eagle") || n.includes("fire raptor") || n.includes("thunderhawk") || n.includes("orion assault dropship") || n.includes("arvus") || n.includes("ares gunship")) return "flyer";
   if (n.includes("javelin") || n.includes("land speeder")) return "grav_tank";
   if (n.includes("telemon")) return "heavy_dread";
   if (n.includes("castellax") || n.includes("vorax") || n.includes("thallax") || n.includes("krios") || n.includes("scyllax") || n.includes("automata")) return "automata";

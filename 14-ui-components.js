@@ -185,7 +185,9 @@ function UnitSelectorModal({ presets, onSelect, selectedId, onClose, accentColor
       className: "hh-modal-overlay",
       style: {
         position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-        background: "rgba(0,0,0,0.5)", zIndex: 1000,
+        // 9600 keeps the selector above the full-size Tactical Map overlay
+        // (zIndex 9000) so units can be armed without leaving the map.
+        background: "rgba(0,0,0,0.5)", zIndex: 9600,
         display: "flex", alignItems: "center", justifyContent: "center",
         animation: "fadeIn 0.15s ease", padding: 16,
       },

@@ -3133,11 +3133,32 @@ var ShootingResolver = function () {
     [armyBuilderSide],
   );
 
+  const [missionType, setMissionType] = useState("search"); // "search" | "hammer" | "dawn" | "zm"
+
   const deployArmyToBoard = useCallback(
     (side) => {
       const army = side === "loyalist" ? loyalistArmy : traitorArmy;
       const player = side === "loyalist" ? "p1" : "p2";
       const flyerEntries = [];
+      // Grid placement inside the active mission's deployment zone.
+      const autoPlace = (i) => {
+        if (missionType === "hammer") {
+          // 24"-wide zones on opposite short edges
+          return player === "p1"
+            ? { x: 4 + (i % 5) * 4, y: 4 + Math.floor(i / 5) * 4 }
+            : { x: 68 - (i % 5) * 4, y: 44 - Math.floor(i / 5) * 4 };
+        }
+        if (missionType === "dawn") {
+          // 12"-deep strips along opposite long edges
+          return player === "p1"
+            ? { x: 4 + (i % 16) * 4, y: 4 + Math.floor(i / 16) * 4 }
+            : { x: 68 - (i % 16) * 4, y: 44 - Math.floor(i / 16) * 4 };
+        }
+        // Search and Destroy (36"×24" corners) and fallback for ZM/Saturnine
+        return player === "p1"
+          ? { x: 6 + (i % 8) * 4, y: 6 + Math.floor(i / 8) * 4 }
+          : { x: 66 - (i % 8) * 4, y: 42 - Math.floor(i / 8) * 4 };
+      };
       const newUnits = army.entries
         .map((entry, i) => {
           const unitPreset = UNIT_PRESET_BY_ID[entry.unitId];
@@ -3165,11 +3186,7 @@ var ShootingResolver = function () {
             factionId: army.faction,
             allegiance: army.allegiance,
             player,
-            x: player === "p1" ? 6 + (i % 8) * 4 : 66 - (i % 8) * 4,
-            y:
-              player === "p1"
-                ? 6 + Math.floor(i / 8) * 4
-                : 42 - Math.floor(i / 8) * 4,
+            ...autoPlace(i),
             unitData: { ...unitPreset, models: entry.models },
             rangedWeapon,
             secondaryWeapons:
@@ -3217,7 +3234,7 @@ var ShootingResolver = function () {
         ...flyerEntries,
       ]);
     },
-    [loyalistArmy, traitorArmy],
+    [loyalistArmy, traitorArmy, missionType],
   );
 
   // Deploy an entire army from the Army Builder into the reserves pool
@@ -3673,6 +3690,247 @@ var ShootingResolver = function () {
   const fullSizeMapExitLockRef = useRef(0);
   const fullSizeMapPreviousScaleRef = useRef(null);
 
+  // ── Tactical Map phase metadata — every game phase is playable on the map ──
+  const TAC_PHASE_META = {
+    deployment: { color: "#5b4a8a", rgb: "91,74,138", icon: "📍", title: "DEPLOYMENT" },
+    movement: { color: "#6b5b2e", rgb: "107,91,46", icon: "🚶", title: "MOVEMENT" },
+    shooting: { color: "#b8860b", rgb: "184,134,11", icon: "⚔", title: "SHOOTING" },
+    assault: { color: "#9b2d2d", rgb: "155,45,45", icon: "🗡", title: "ASSAULT" },
+    end: { color: "#2e5e3e", rgb: "46,94,62", icon: "🏛", title: "END PHASE" },
+  };
+
+  // ── Per-unit resolution highlights shown on Tactical Map tokens ──
+  // { [unitId]: { text, color, destroyed?, ts } }
+  const [unitResultFx, setUnitResultFx] = useState({});
+  const recordUnitResultFx = (entries) =>
+    setUnitResultFx((prev) => ({ ...prev, ...entries }));
+  const clearUnitResultFx = () => setUnitResultFx({});
+
+  // ── Persistent unit statuses (Pinned, Suppressed, …) shown as chips on
+  //    Tactical Map tokens. Auto-applied from resolver Leadership checks,
+  //    toggleable from the docks, cleared per-chip or via End Phase recovery ──
+  const UNIT_STATUS_META = {
+    Pinned: { icon: "📌", color: "#ffd966" },
+    Suppressed: { icon: "🔻", color: "#ff9f6b" },
+    Stunned: { icon: "⚡", color: "#9fd0ff" },
+    Panicked: { icon: "😱", color: "#ff8888" },
+    "Falling Back": { icon: "🏳", color: "#ffb0b0" },
+    Routed: { icon: "🏃", color: "#ff6600" },
+  };
+  const [unitStatuses, setUnitStatuses] = useState({}); // { unitId: ["Pinned", ...] }
+  const applyUnitStatuses = (unitId, statuses) => {
+    if (!unitId || !Array.isArray(statuses) || statuses.length === 0) return;
+    setUnitStatuses((prev) => {
+      const cur = prev[unitId] || [];
+      const next = [...cur];
+      for (const s of statuses) if (!next.includes(s)) next.push(s);
+      return { ...prev, [unitId]: next };
+    });
+  };
+  const clearUnitStatus = (unitId, status) =>
+    setUnitStatuses((prev) => {
+      const cur = prev[unitId] || [];
+      const next = cur.filter((s) => s !== status);
+      const out = { ...prev };
+      if (next.length === 0) delete out[unitId];
+      else out[unitId] = next;
+      return out;
+    });
+  const toggleUnitStatus = (unitId, status) => {
+    if (!unitId) return;
+    if (status === "Routed") {
+      setRoutedUnits((prev) => {
+        const next = new Set(prev);
+        if (next.has(unitId)) next.delete(unitId);
+        else next.add(unitId);
+        return next;
+      });
+      return;
+    }
+    setUnitStatuses((prev) => {
+      const cur = prev[unitId] || [];
+      const has = cur.includes(status);
+      const next = has ? cur.filter((s) => s !== status) : [...cur, status];
+      const out = { ...prev };
+      if (next.length === 0) delete out[unitId];
+      else out[unitId] = next;
+      return out;
+    });
+  };
+  const unitHasStatus = (unitId, status) =>
+    status === "Routed"
+      ? routedUnits.has(unitId)
+      : (unitStatuses[unitId] || []).includes(status);
+  const clearAllUnitStatuses = () => {
+    setUnitStatuses({});
+    setRoutedUnits(new Set());
+  };
+
+  // Compact row of status toggle buttons for a unit — used in the Tactical
+  // Map resolver docks and War Room command panels.
+  const renderUnitStatusToggles = (unit, accent = "#8fcf91") => {
+    if (!unit || !unit.id) return null;
+    return React.createElement(
+      "div",
+      {
+        key: `status-${unit.id}`,
+        style: {
+          padding: "7px 8px",
+          borderRadius: 4,
+          border: `1px solid ${accent}`,
+          background: "rgba(5,15,5,0.6)",
+        },
+      },
+      React.createElement(
+        "div",
+        {
+          style: {
+            fontSize: 8,
+            fontFamily: "'Share Tech Mono', serif",
+            fontWeight: 900,
+            color: accent,
+            letterSpacing: 1,
+            textTransform: "uppercase",
+            marginBottom: 5,
+          },
+        },
+        `Status — ${unit.label || unit.name || "Unit"}`,
+      ),
+      React.createElement(
+        "div",
+        { style: { display: "flex", gap: 4, flexWrap: "wrap" } },
+        Object.keys(UNIT_STATUS_META).map((s) => {
+          const active = unitHasStatus(unit.id, s);
+          const m = UNIT_STATUS_META[s];
+          return React.createElement(
+            "button",
+            {
+              key: s,
+              onClick: () => toggleUnitStatus(unit.id, s),
+              title: active ? `Clear ${s}` : `Mark ${s}`,
+              style: {
+                padding: "3px 6px",
+                borderRadius: 3,
+                cursor: "pointer",
+                fontSize: 8,
+                fontFamily: "'Share Tech Mono', serif",
+                fontWeight: active ? 900 : 600,
+                letterSpacing: 0.5,
+                background: active ? `${m.color}33` : "rgba(255,255,255,0.05)",
+                border: `1px solid ${active ? m.color : "rgba(143,207,145,0.28)"}`,
+                color: active ? m.color : "#9fd69b",
+              },
+            },
+            `${m.icon} ${s.toUpperCase()}`,
+          );
+        }),
+      ),
+    );
+  };
+  const getUnitModelCount = (u) =>
+    (u && u.models) || (u && u.unitData && u.unitData.models) || null;
+
+  // Record map highlights for the units involved in a resolved action.
+  const recordCombatFx = (kind, res) => {
+    if (!res) return;
+    const atk = deployedUnits.find((u) => u.id === mapAttackerId);
+    const def = deployedUnits.find((u) => u.id === mapTargetId);
+    const fx = {};
+    const ts = Date.now();
+    const plural = (n) => (n === 1 ? "" : "S");
+    if (kind === "shooting") {
+      const kills = res.casualties || 0;
+      const defModels = getUnitModelCount(def);
+      const destroyed = defModels !== null && kills >= defModels;
+      if (atk)
+        fx[atk.id] = { text: `⚔ ${kills} KILL${plural(kills)}`, color: "#ffd966", ts };
+      if (def)
+        fx[def.id] = destroyed
+          ? { text: "💀 DESTROYED", color: "#ff5555", destroyed: true, ts }
+          : {
+              text: `-${kills} MODEL${plural(kills)}`,
+              color: kills > 0 ? "#ff8888" : "#9ee68f",
+              ts,
+            };
+      // Failed Leadership checks (Pinned, Suppressed, Stunned, Panicked,
+      // Falling Back) stick to the target as persistent status chips.
+      if (def) applyUnitStatuses(def.id, res.statusEffects);
+    } else if (kind === "returnFire") {
+      const kills = res.casualties || 0;
+      if (def)
+        fx[def.id] = { text: `↩ ${kills} KILL${plural(kills)}`, color: "#ffd6a0", ts };
+      if (atk) {
+        const atkModels = getUnitModelCount(atk);
+        const destroyed = atkModels !== null && kills >= atkModels;
+        fx[atk.id] = destroyed
+          ? { text: "💀 DESTROYED", color: "#ff5555", destroyed: true, ts }
+          : {
+              text: `-${kills} MODEL${plural(kills)}`,
+              color: kills > 0 ? "#ffb26b" : "#9ee68f",
+              ts,
+            };
+        // Return fire shoots back at the original attacker — any failed
+        // Leadership checks land on it.
+        applyUnitStatuses(atk.id, res.statusEffects);
+      }
+    } else if (kind === "assault") {
+      const defKills = res.defenderCasualties || 0;
+      const atkKills = res.attackerCasualties || 0;
+      const winner = (res.combatResult && res.combatResult.winner) || "Draw";
+      const diff = (res.combatResult && res.combatResult.diff) || 0;
+      const defDestroyed =
+        getUnitModelCount(def) !== null && defKills >= getUnitModelCount(def);
+      const atkDestroyed =
+        getUnitModelCount(atk) !== null && atkKills >= getUnitModelCount(atk);
+      if (atk)
+        fx[atk.id] = atkDestroyed
+          ? { text: "💀 DESTROYED", color: "#ff5555", destroyed: true, ts }
+          : {
+              text:
+                winner === "Attacker"
+                  ? `🗡 WON +${diff} · ${defKills} KILL${plural(defKills)}`
+                  : winner === "Defender"
+                    ? `LOST -${diff} · ${defKills} KILL${plural(defKills)}`
+                    : `DRAW · ${defKills} KILL${plural(defKills)}`,
+              color:
+                winner === "Attacker"
+                  ? "#9ee68f"
+                  : winner === "Defender"
+                    ? "#ff8888"
+                    : "#d8f7c8",
+              ts,
+            };
+      if (def)
+        fx[def.id] = defDestroyed
+          ? { text: "💀 DESTROYED", color: "#ff5555", destroyed: true, ts }
+          : {
+              text:
+                winner === "Defender"
+                  ? `🛡 WON +${diff} · ${atkKills} KILL${plural(atkKills)}`
+                  : winner === "Attacker"
+                    ? `LOST -${diff} · ${atkKills} KILL${plural(atkKills)}`
+                    : `DRAW · ${atkKills} KILL${plural(atkKills)}`,
+              color:
+                winner === "Defender"
+                  ? "#9ee68f"
+                  : winner === "Attacker"
+                    ? "#ff8888"
+                    : "#d8f7c8",
+              ts,
+            };
+    } else if (kind === "charge") {
+      if (atk)
+        fx[atk.id] = {
+          text: res.chargeSucceeded
+            ? `⚔ CHARGED${res.chargeRoll ? ` (${res.chargeRoll})` : ""}`
+            : "✗ CHARGE FAILED",
+          color: res.chargeSucceeded ? "#9ee68f" : "#ff8888",
+          ts,
+        };
+    }
+    if (Object.keys(fx).length > 0) recordUnitResultFx(fx);
+  };
+
   function openFullSizeTacticalMap(phase) {
     if (
       !fullSizeTacticalMapPhase &&
@@ -3807,6 +4065,7 @@ var ShootingResolver = function () {
         setAFnp(ud.fnp || "-");
         setALd(ud.ld || 8);
         if (unit.meleeWeapon) {
+          setASelectedMelee(unit.meleeWeapon);
           setAWS(unit.meleeWeapon.ws);
           setAS(unit.meleeWeapon.s);
           setAAP(unit.meleeWeapon.ap);
@@ -3846,6 +4105,7 @@ var ShootingResolver = function () {
         setDFnp(ud.fnp || "-");
         setDLd(ud.ld || 8);
         if (unit.meleeWeapon) {
+          setDSelectedMelee(unit.meleeWeapon);
           setDWS(unit.meleeWeapon.ws);
           setDS(unit.meleeWeapon.s);
           setDAP(unit.meleeWeapon.ap);
@@ -6157,9 +6417,23 @@ var ShootingResolver = function () {
   };
 
   const renderFullSizeMapResultPopup = (phase) => {
-    const data = phase === "shooting" ? result : assaultResult;
-    const phaseColor = phase === "shooting" ? "#b8860b" : "#9b2d2d";
-    const title = phase === "shooting" ? "SHOOTING RESULTS" : "ASSAULT RESULTS";
+    const popupPhaseMeta = TAC_PHASE_META[phase] || TAC_PHASE_META.shooting;
+    const data =
+      phase === "shooting"
+        ? result
+        : phase === "assault"
+          ? assaultResult
+          : phase === "movement"
+            ? moveLog.length > 0
+              ? { moves: moveLog }
+              : null
+            : phase === "end"
+              ? vpLog.length > 0
+                ? { vp: vpLog }
+                : null
+              : null;
+    const phaseColor = popupPhaseMeta.color;
+    const title = `${popupPhaseMeta.title} RESULTS`;
     const rollLabelStyle = {
       fontSize: 11,
       fontFamily: "'Share Tech Mono', serif",
@@ -6178,7 +6452,7 @@ var ShootingResolver = function () {
     const renderStat = (label, value, color = "#e8f4d8") =>
       React.createElement(
         "div",
-        { style: statStyle },
+        { key: label, style: statStyle },
         React.createElement(
           "div",
           {
@@ -6351,7 +6625,7 @@ var ShootingResolver = function () {
             overflow: "hidden",
             background: "#050f05",
             border: `2px solid ${phaseColor}`,
-            boxShadow: `0 0 32px rgba(${phase === "shooting" ? "184,134,11" : "155,45,45"},0.45)`,
+            boxShadow: `0 0 32px rgba(${popupPhaseMeta.rgb},0.45)`,
           },
         },
         React.createElement(
@@ -6441,7 +6715,149 @@ var ShootingResolver = function () {
                 },
                 "No results yet. Resolve from the tactical map first.",
               )
-            : React.createElement(
+            : phase === "movement"
+              ? React.createElement(
+                  React.Fragment,
+                  null,
+                  React.createElement(
+                    "div",
+                    {
+                      style: {
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: 8,
+                        marginBottom: 14,
+                      },
+                    },
+                    renderStat("Moves Made", moveLog.length),
+                    renderStat("Units Moved", movedUnitIds.size, "#ffd966"),
+                  ),
+                  React.createElement(
+                    "div",
+                    {
+                      style: {
+                        fontSize: 12,
+                        fontWeight: 900,
+                        letterSpacing: 1,
+                        color: phaseColor,
+                        marginBottom: 8,
+                      },
+                    },
+                    "MOVE LOG",
+                  ),
+                  moveLog.map((m, i) =>
+                    React.createElement(
+                      "div",
+                      {
+                        key: i,
+                        style: {
+                          display: "grid",
+                          gridTemplateColumns: "92px 1fr",
+                          gap: 8,
+                          padding: "5px 0",
+                          borderBottom:
+                            i < moveLog.length - 1
+                              ? "1px solid rgba(143,207,145,0.12)"
+                              : "none",
+                          fontSize: 12,
+                          lineHeight: 1.35,
+                        },
+                      },
+                      React.createElement(
+                        "span",
+                        {
+                          style: {
+                            color: m.player === "p1" ? "#ff8888" : "#8bbcff",
+                            fontWeight: 700,
+                            textTransform: "uppercase",
+                          },
+                        },
+                        m.player === "p1" ? "LOYALIST" : "TRAITOR",
+                      ),
+                      React.createElement(
+                        "span",
+                        { style: { color: "#d8f7c8" } },
+                        `${m.symbol || ""} ${m.label || ""} moved ${m.distance}" (max ${m.maxMove}") to ${m.toX}", ${m.toY}"`,
+                      ),
+                    ),
+                  ),
+                )
+              : phase === "end"
+                ? React.createElement(
+                    React.Fragment,
+                    null,
+                    React.createElement(
+                      "div",
+                      {
+                        style: {
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: 8,
+                          marginBottom: 14,
+                        },
+                      },
+                      renderStat("Round", currentRound),
+                      renderStat(
+                        "Loyalist VP",
+                        p1TotalVP + calcSecondaryVP(p1Secondaries),
+                        "#ff8888",
+                      ),
+                      renderStat(
+                        "Traitor VP",
+                        p2TotalVP + calcSecondaryVP(p2Secondaries),
+                        "#8bbcff",
+                      ),
+                    ),
+                    React.createElement(
+                      "div",
+                      {
+                        style: {
+                          fontSize: 12,
+                          fontWeight: 900,
+                          letterSpacing: 1,
+                          color: phaseColor,
+                          marginBottom: 8,
+                        },
+                      },
+                      "ROUND LOG",
+                    ),
+                    vpLog.map((entry, i) =>
+                      React.createElement(
+                        "div",
+                        {
+                          key: i,
+                          style: {
+                            padding: "8px 0",
+                            borderBottom:
+                              i < vpLog.length - 1
+                                ? "1px solid rgba(143,207,145,0.12)"
+                                : "none",
+                            fontSize: 12,
+                            lineHeight: 1.4,
+                          },
+                        },
+                        React.createElement(
+                          "div",
+                          {
+                            style: {
+                              fontWeight: 900,
+                              color: "#d8f7c8",
+                              marginBottom: 3,
+                            },
+                          },
+                          `ROUND ${entry.round} — Loyalist +${entry.p1} VP · Traitor +${entry.p2} VP`,
+                        ),
+                        (entry.log || []).map((line, j) =>
+                          React.createElement(
+                            "div",
+                            { key: j, style: { color: "#9fd69b" } },
+                            line,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                : React.createElement(
                 React.Fragment,
                 null,
                 React.createElement(
@@ -6732,7 +7148,8 @@ var ShootingResolver = function () {
     distance,
     weaponRange,
   }) => {
-    const phaseColor = phase === "shooting" ? "#b8860b" : "#9b2d2d";
+    const dockPhaseMeta = TAC_PHASE_META[phase] || TAC_PHASE_META.shooting;
+    const phaseColor = dockPhaseMeta.color;
     const canUseSelection = !!atkUnit && !!defUnit;
     const dockCardStyle = {
       padding: "8px 10px",
@@ -7143,7 +7560,7 @@ var ShootingResolver = function () {
               {
                 onClick: () => {
                   setDoReturnFire(true);
-                  handleReturnFire();
+                  recordCombatFx("returnFire", handleReturnFire());
                   openFullSizeMapResults(phase);
                 },
                 disabled: !result || !targetSelectedWeapon,
@@ -7208,13 +7625,241 @@ var ShootingResolver = function () {
       }
     };
     const resolveAndShowResults = () => {
-      if (phase === "shooting") handleResolve();
-      else handleAssaultResolve();
+      if (phase === "shooting") recordCombatFx("shooting", handleResolve());
+      else recordCombatFx("assault", handleAssaultResolve());
       openFullSizeMapResults(phase);
     };
     const hasResult = phase === "shooting" ? !!result : !!assaultResult;
-    const heading =
-      phase === "shooting" ? "SHOOTING RESOLVER" : "ASSAULT RESOLVER";
+    const heading = `${dockPhaseMeta.title} ${phase === "shooting" || phase === "assault" ? "RESOLVER" : "CONTROLS"}`;
+
+    // ── Non-combat phases get a command dock so the whole phase can be
+    //    played without leaving the map ──
+    if (
+      phase === "deployment" ||
+      phase === "movement" ||
+      phase === "end"
+    ) {
+      const dockMoveUnit = deployedUnits.find((u) => u.id === moveSelectedId);
+      const lastMove =
+        moveLog.length > 0 ? moveLog[moveLog.length - 1] : null;
+      const stats =
+        phase === "deployment"
+          ? [
+              renderDockStat(
+                "Armed To Place",
+                deployBrushUnit
+                  ? `${deployBrushUnit.name} (${deployBrushModels})`
+                  : "None",
+                "#d8c0ff",
+              ),
+              renderDockStat(
+                "Deploying As",
+                deployPlayer === "p1" ? "Loyalist" : "Traitor",
+                deployPlayer === "p1" ? "#ff8888" : "#8bbcff",
+              ),
+              renderDockStat("Units On Board", deployedUnits.length),
+              renderDockStat("Objectives", objectiveMarkers.length, "#ffd966"),
+            ]
+          : phase === "movement"
+            ? [
+                renderDockStat(
+                  "Moving",
+                  dockMoveUnit
+                    ? dockMoveUnit.label || dockMoveUnit.name
+                    : "Click a unit",
+                  dockMoveUnit ? "#fff6d0" : "#9fd69b",
+                ),
+                renderDockStat("Units Moved", movedUnitIds.size, "#ffd966"),
+                renderDockStat(
+                  "Last Move",
+                  lastMove
+                    ? `${lastMove.label || ""} ${lastMove.distance}"`
+                    : "--",
+                ),
+              ]
+            : [
+                renderDockStat("Round", currentRound),
+                renderDockStat(
+                  "Loyalist VP",
+                  p1TotalVP + calcSecondaryVP(p1Secondaries),
+                  "#ff8888",
+                ),
+                renderDockStat(
+                  "Traitor VP",
+                  p2TotalVP + calcSecondaryVP(p2Secondaries),
+                  "#8bbcff",
+                ),
+              ];
+      const buttons =
+        phase === "deployment"
+          ? [
+              renderDockButton(
+                deployBrushUnit ? "CHANGE UNIT" : "SELECT UNIT",
+                () => setDeployModalOpen(true),
+                "#5b4a8a",
+                false,
+              ),
+              renderDockButton(
+                deployPlayer === "p1" ? "SWITCH TO TRAITOR" : "SWITCH TO LOYALIST",
+                () => setDeployPlayer(deployPlayer === "p1" ? "p2" : "p1"),
+                deployPlayer === "p1" ? "#2a6fb4" : "#9b2d2d",
+                false,
+              ),
+              renderDockButton(
+                placingObjective ? "STOP OBJECTIVE" : "PLACE OBJECTIVE",
+                () => setPlacingObjective((v) => !v),
+                "#b8860b",
+                false,
+              ),
+              renderDockButton(
+                placingTerrain ? "STOP TERRAIN" : "PLACE TERRAIN",
+                () => setPlacingTerrain((v) => !v),
+                "#5a8a3a",
+                false,
+              ),
+              renderDockButton(
+                deployShowZones ? "HIDE ZONES" : "SHOW ZONES",
+                () => setDeployShowZones((v) => !v),
+                "#8fcf91",
+                false,
+              ),
+            ]
+          : phase === "movement"
+            ? [
+                renderDockButton(
+                  "UNDO MOVE",
+                  undoLastMove,
+                  "#6b5b2e",
+                  moveLog.length === 0,
+                ),
+                renderDockButton(
+                  "RESET MOVES",
+                  resetAllMoves,
+                  "#c74040",
+                  moveLog.length === 0,
+                ),
+                renderDockButton(
+                  "CLEAR MOVED",
+                  () => {
+                    setMovedUnitIds(new Set());
+                    setMoveLog([]);
+                  },
+                  "#8fcf91",
+                  moveLog.length === 0 && movedUnitIds.size === 0,
+                ),
+                renderDockButton(
+                  "MOVE LOG",
+                  () => openFullSizeMapResults("movement"),
+                  "#2e7d32",
+                  moveLog.length === 0,
+                ),
+              ]
+            : [
+                renderDockButton(
+                  "SCORE ROUND",
+                  () => {
+                    scoreRound();
+                    openFullSizeMapResults("end");
+                  },
+                  "#2e5e3e",
+                  false,
+                ),
+                renderDockButton(
+                  "NEXT ROUND",
+                  () => {
+                    setCurrentRound((prev) => prev + 1);
+                    setTrackerRound((prev) => prev + 1);
+                    setMovedUnitIds(new Set());
+                    setMoveLog([]);
+                    clearUnitResultFx();
+                  },
+                  "#8fcf91",
+                  false,
+                ),
+                renderDockButton(
+                  "ROUND LOG",
+                  () => openFullSizeMapResults("end"),
+                  "#2e7d32",
+                  vpLog.length === 0,
+                ),
+                renderDockButton(
+                  "RECOVER STATUSES",
+                  clearAllUnitStatuses,
+                  "#b8860b",
+                  Object.keys(unitStatuses).length === 0 &&
+                    routedUnits.size === 0,
+                ),
+              ];
+      return React.createElement(
+        "div",
+        {
+          style: {
+            flexShrink: 0,
+            marginTop: 8,
+            padding: "10px 12px",
+            borderRadius: 4,
+            background: "rgba(3,8,3,0.94)",
+            border: `1.5px solid ${phaseColor}`,
+            boxShadow: `0 0 18px rgba(${dockPhaseMeta.rgb},0.18)`,
+          },
+        },
+        React.createElement(
+          "div",
+          {
+            style: {
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              marginBottom: 8,
+              flexWrap: "wrap",
+            },
+          },
+          React.createElement(
+            "span",
+            {
+              style: {
+                fontFamily: "'Share Tech Mono', serif",
+                fontWeight: 700,
+                fontSize: 12,
+                letterSpacing: 2,
+                color: phaseColor,
+              },
+            },
+            heading,
+          ),
+          React.createElement("div", { style: { flex: 1 } }),
+          ...buttons,
+        ),
+        React.createElement(
+          "div",
+          {
+            style: {
+              display: "flex",
+              gap: 8,
+              flexWrap: "wrap",
+            },
+          },
+          ...stats,
+        ),
+        React.createElement(
+          "div",
+          {
+            style: {
+              marginTop: 8,
+              fontSize: 10,
+              fontFamily: "'Share Tech Mono', serif",
+              color: "#9fd69b",
+              lineHeight: 1.45,
+            },
+          },
+          phase === "deployment"
+            ? "Arm a unit, marker, objective, or terrain tool, then click the map to place it. Click a placed unit to send it to reserves; shift-click removes it."
+            : phase === "movement"
+              ? "Click a unit, then click a legal destination inside its highlighted movement range. Moved units are ticked on the map."
+              : "Score objectives and advance the round. Scoring opens the round log; Next Round clears moved markers and result highlights.",
+        ),
+      );
+    }
 
     return React.createElement(
       "div",
@@ -7226,7 +7871,7 @@ var ShootingResolver = function () {
           borderRadius: 4,
           background: "rgba(3,8,3,0.94)",
           border: `1.5px solid ${phaseColor}`,
-          boxShadow: `0 0 18px rgba(${phase === "shooting" ? "184,134,11" : "155,45,45"},0.18)`,
+          boxShadow: `0 0 18px rgba(${dockPhaseMeta.rgb},0.18)`,
         },
       },
       React.createElement(
@@ -7381,6 +8026,23 @@ var ShootingResolver = function () {
               : "#ff8888",
           ),
       ),
+      /* Unit status toggles — mark or clear Pinned/Suppressed/etc. for the
+         units selected on the map */
+      (atkUnit || defUnit) &&
+        React.createElement(
+          "div",
+          {
+            style: {
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+              gap: 8,
+              marginTop: 8,
+              alignItems: "start",
+            },
+          },
+          atkUnit && renderUnitStatusToggles(atkUnit, "#ffd966"),
+          defUnit && renderUnitStatusToggles(defUnit, "#ff8888"),
+        ),
       phase === "shooting" &&
         React.createElement(
           "div",
@@ -7405,6 +8067,41 @@ var ShootingResolver = function () {
               : "Select an attacker unit first.",
           }),
           renderReturnFireControls(),
+        ),
+      phase === "assault" &&
+        React.createElement(
+          "div",
+          {
+            style: {
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+              gap: 8,
+              marginTop: 8,
+              alignItems: "start",
+            },
+          },
+          renderDockWeaponChoice({
+            label: "Attacker Melee Weapon",
+            weapons: aMeleeWeapons,
+            selectedName: aSelectedMelee?.name,
+            onSelect: (w) => applyAssaultMelee(w, "attacker"),
+            accent: "#9b2d2d",
+            disabled: !atkUnit,
+            emptyText: atkUnit
+              ? "No attacker melee weapons available."
+              : "Select an attacker unit first.",
+          }),
+          renderDockWeaponChoice({
+            label: "Defender Melee Weapon",
+            weapons: dMeleeWeapons,
+            selectedName: dSelectedMelee?.name,
+            onSelect: (w) => applyAssaultMelee(w, "defender"),
+            accent: "#2a6fb4",
+            disabled: !defUnit,
+            emptyText: defUnit
+              ? "No defender melee weapons available."
+              : "Select a defender unit first.",
+          }),
         ),
       phase === "assault" &&
         React.createElement(
@@ -7447,7 +8144,17 @@ var ShootingResolver = function () {
     const weaponRange = activeMapWeapon ? getWeaponRange(activeMapWeapon) : 0;
     const distance = getDistanceBetween(atkUnit, defUnit);
     const isFullSize = fullSizeTacticalMapPhase === phase;
-    const phaseColor = phase === "shooting" ? "#b8860b" : "#9b2d2d";
+    const phaseMeta = TAC_PHASE_META[phase] || TAC_PHASE_META.shooting;
+    const phaseColor = phaseMeta.color;
+    const phaseRgb = phaseMeta.rgb;
+    const isCombatPhase = phase === "shooting" || phase === "assault";
+    const moveSelUnit =
+      phase === "movement"
+        ? deployedUnits.find((u) => u.id === moveSelectedId)
+        : null;
+    const lastMoveByUnit = {};
+    if (phase === "movement")
+      for (const m of moveLog) lastMoveByUnit[m.id] = m;
     const fullText = isFullSize ? "#d8f7c8" : "#6a5e4e";
     const fullMuted = isFullSize ? "#9fd69b" : "#8a7e6e";
     const fullPanelBg = isFullSize ? "rgba(5,15,5,0.86)" : "rgba(0,0,0,0.02)";
@@ -7554,7 +8261,7 @@ var ShootingResolver = function () {
               overflow: "hidden",
               background: "#050f05",
               border: `2px solid ${phaseColor}`,
-              boxShadow: `0 0 30px rgba(${phase === "shooting" ? "184,134,11" : "155,45,45"},0.35)`,
+              boxShadow: `0 0 30px rgba(${phaseRgb},0.35)`,
             }
           : { ...panelStyle, marginBottom: 12 },
       },
@@ -7578,7 +8285,7 @@ var ShootingResolver = function () {
             "span",
             {
               style: {
-                color: phase === "shooting" ? "#b8860b" : "#9b2d2d",
+                color: phaseColor,
                 fontSize: 16,
               },
             },
@@ -7586,8 +8293,8 @@ var ShootingResolver = function () {
           ),
           React.createElement(
             "span",
-            { style: { color: phase === "shooting" ? "#b8860b" : "#9b2d2d" } },
-            "TACTICAL MAP",
+            { style: { color: phaseColor } },
+            `TACTICAL MAP · ${phaseMeta.icon} ${phaseMeta.title}`,
           ),
         ),
         React.createElement(
@@ -7621,7 +8328,7 @@ var ShootingResolver = function () {
                 "strong",
                 {
                   style: {
-                    color: phase === "shooting" ? "#b8860b" : "#9b2d2d",
+                    color: phaseColor,
                   },
                 },
                 distance,
@@ -7714,7 +8421,7 @@ var ShootingResolver = function () {
                 fontWeight: 700,
                 letterSpacing: 1,
                 background: isFullSize
-                  ? `rgba(${phase === "shooting" ? "184,134,11" : "155,45,45"},0.22)`
+                  ? `rgba(${phaseRgb},0.22)`
                   : "#f0ebe2",
                 border: `1.5px solid ${isFullSize ? phaseColor : "#d0c4aa"}`,
                 color: isFullSize ? "#fff6d0" : "#6a5e4e",
@@ -7725,7 +8432,9 @@ var ShootingResolver = function () {
           ),
         ),
       ),
-      deployedUnits.length === 0 && aerialReserves.length === 0
+      deployedUnits.length === 0 &&
+      aerialReserves.length === 0 &&
+      phase !== "deployment"
         ? React.createElement(
             "div",
             {
@@ -7738,7 +8447,7 @@ var ShootingResolver = function () {
                 fontStyle: "italic",
               },
             },
-            "No units on board. Deploy units in the Deployment Phase first.",
+            "No units on board. Switch to Deployment to place units on the map.",
           )
         : React.createElement(
             "div",
@@ -7802,6 +8511,10 @@ var ShootingResolver = function () {
                       } else {
                         bringReserveUnitIntoPlay(flyerBringOnId, bx, by);
                       }
+                    } else if (phase === "movement" && moveSelectedId) {
+                      handleMoveMapClick(e);
+                    } else if (phase === "deployment") {
+                      handleBoardClick(e);
                     }
                   },
                   style: {
@@ -7814,9 +8527,17 @@ var ShootingResolver = function () {
                     cursor:
                       phase === "shooting" && activeRules && activeRules.barrage
                         ? "crosshair"
-                        : phase === "movement" && flyerBringOnId
+                        : phase === "movement" &&
+                            (flyerBringOnId || moveSelectedId)
                           ? "crosshair"
-                          : "default",
+                          : phase === "deployment" &&
+                              (deployBrushUnit ||
+                                deploySelectedUnit ||
+                                placingObjective ||
+                                placingTerrain ||
+                                bfaBrush)
+                            ? "crosshair"
+                            : "default",
                   },
                 },
                 React.createElement("div", {
@@ -7874,6 +8595,154 @@ var ShootingResolver = function () {
                       pointerEvents: "none",
                     },
                   }),
+                /* Movement phase — show the selected unit's move range */
+                phase === "movement" &&
+                  moveSelUnit &&
+                  (() => {
+                    const isFly =
+                      moveSelUnit.isFlyer ||
+                      (moveSelUnit.unitData && moveSelUnit.unitData.isFlyer);
+                    const maxMove = isFly
+                      ? (moveSelUnit.unitData && moveSelUnit.unitData.move) ||
+                        24
+                      : getUnitMaxMove(moveSelUnit);
+                    if (maxMove <= 0) return null;
+                    return React.createElement("div", {
+                      style: {
+                        position: "absolute",
+                        left: (moveSelUnit.x - maxMove) * deployScale,
+                        top: (moveSelUnit.y - maxMove) * deployScale,
+                        width: maxMove * 2 * deployScale,
+                        height: maxMove * 2 * deployScale,
+                        borderRadius: "50%",
+                        border: "1.5px dashed rgba(255,215,0,0.45)",
+                        background: "rgba(255,215,0,0.05)",
+                        pointerEvents: "none",
+                        zIndex: 4,
+                      },
+                    });
+                  })(),
+                /* Deployment phase — show mission deployment zones */
+                phase === "deployment" &&
+                  deployShowZones &&
+                  (() => {
+                    const mission = MISSIONS[missionType];
+                    if (!mission) return null;
+                    const zones = mission.renderZones(deployScale);
+                    return React.createElement(
+                      React.Fragment,
+                      null,
+                      zones.map((z, i) =>
+                        React.createElement(
+                          "div",
+                          {
+                            key: `tmz${i}`,
+                            style: {
+                              position: "absolute",
+                              left: z.left,
+                              top: z.top,
+                              width: z.width,
+                              height: z.height,
+                              background: z.color,
+                              border: z.border,
+                              pointerEvents: "none",
+                            },
+                          },
+                          React.createElement(
+                            "div",
+                            {
+                              style: {
+                                position: "absolute",
+                                fontSize: 11,
+                                fontFamily: "'Share Tech Mono', serif",
+                                letterSpacing: 1,
+                                ...z.labelStyle,
+                              },
+                            },
+                            z.label,
+                          ),
+                        ),
+                      ),
+                      mission.exclusionCircle &&
+                        React.createElement(
+                          "svg",
+                          {
+                            style: {
+                              position: "absolute",
+                              inset: 0,
+                              width: BOARD_W * deployScale,
+                              height: BOARD_H * deployScale,
+                              pointerEvents: "none",
+                            },
+                          },
+                          React.createElement("circle", {
+                            cx: (BOARD_W / 2) * deployScale,
+                            cy: (BOARD_H / 2) * deployScale,
+                            r: 9 * deployScale,
+                            fill: "none",
+                            stroke: "rgba(255,255,255,0.18)",
+                            strokeWidth: 1.5,
+                            strokeDasharray: "6,4",
+                          }),
+                        ),
+                    );
+                  })(),
+                /* Objective markers — visible in every phase */
+                objectiveMarkers.map((obj) => {
+                  const osz = Math.max(deployScale * 2, 18);
+                  const canInteract = phase === "deployment";
+                  return React.createElement(
+                    "div",
+                    {
+                      key: `tmobj${obj.id}`,
+                      onClick: (e) => {
+                        e.stopPropagation();
+                        if (canInteract)
+                          setObjectiveMarkers((prev) =>
+                            prev.filter((o) => o.id !== obj.id),
+                          );
+                      },
+                      title: canInteract
+                        ? `${obj.label} — ${obj.value} VP (click to remove)`
+                        : `${obj.label} — ${obj.value} VP`,
+                      style: {
+                        position: "absolute",
+                        left: obj.x * deployScale - osz / 2,
+                        top: obj.y * deployScale - osz / 2,
+                        width: osz,
+                        height: osz,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexDirection: "column",
+                        borderRadius: "50%",
+                        background: "rgba(255,215,0,0.9)",
+                        border: "2.5px solid #ffd700",
+                        boxShadow: "0 0 8px rgba(255,215,0,0.6)",
+                        color: "#2a2418",
+                        fontSize: Math.max(osz * 0.4, 8),
+                        fontWeight: 900,
+                        fontFamily: "'Share Tech Mono', serif",
+                        cursor: canInteract ? "pointer" : "default",
+                        zIndex: 5,
+                        pointerEvents: canInteract ? "auto" : "none",
+                      },
+                    },
+                    "⊕",
+                    React.createElement(
+                      "div",
+                      {
+                        style: {
+                          fontSize: Math.max(osz * 0.28, 6),
+                          lineHeight: 1,
+                          color: "#6b4508",
+                        },
+                      },
+                      obj.value,
+                      "VP",
+                    ),
+                  );
+                }),
                 phase === "shooting" &&
                   flyerFlightPaths.map((p) => {
                     const dx = p.toX - p.fromX;
@@ -8131,6 +9000,16 @@ var ShootingResolver = function () {
                   const isRouted = routedUnits.has(unit.id);
                   const facing = getUnitFacing(unit);
                   const isHovered = mapHoveredUnitId === unit.id;
+                  const fx = unitResultFx[unit.id];
+                  const hasMovedTok = movedUnitIds.has(unit.id);
+                  const isMoveSel =
+                    phase === "movement" && unit.id === moveSelectedId;
+                  const lastMove =
+                    phase === "movement" ? lastMoveByUnit[unit.id] : null;
+                  const tokenStatuses = [
+                    ...(unitStatuses[unit.id] || []),
+                    ...(isRouted ? ["Routed"] : []),
+                  ];
                   // Resolve a unit-art thumbnail for the token.  Objectives
                   // keep their plain symbol — they aren't a unit.
                   const tokenArt =
@@ -8205,12 +9084,149 @@ var ShootingResolver = function () {
                         },
                         unit.label || unit.name || "—",
                       ),
+                    /* Result highlight badge — shows what happened to this
+                       unit when an action was resolved on the map */
+                    fx &&
+                      React.createElement(
+                        "div",
+                        {
+                          style: {
+                            position: "absolute",
+                            top: sz + 4,
+                            left: sz / 2,
+                            transform: "translateX(-50%)",
+                            padding: "2px 6px",
+                            fontSize: 9,
+                            fontWeight: 900,
+                            fontFamily: "'Share Tech Mono', serif",
+                            whiteSpace: "nowrap",
+                            borderRadius: 3,
+                            background: "rgba(8,10,8,0.92)",
+                            border: `1px solid ${fx.color}`,
+                            color: fx.color,
+                            letterSpacing: 1,
+                            textShadow: `0 0 6px ${fx.color}`,
+                            zIndex: 30,
+                            pointerEvents: "none",
+                          },
+                        },
+                        fx.text,
+                      ),
+                    /* Movement phase — distance pill for completed moves */
+                    !fx &&
+                      lastMove &&
+                      React.createElement(
+                        "div",
+                        {
+                          style: {
+                            position: "absolute",
+                            top: sz + 4,
+                            left: sz / 2,
+                            transform: "translateX(-50%)",
+                            padding: "2px 6px",
+                            fontSize: 9,
+                            fontWeight: 900,
+                            fontFamily: "'Share Tech Mono', serif",
+                            whiteSpace: "nowrap",
+                            borderRadius: 3,
+                            background: "rgba(8,10,8,0.92)",
+                            border: "1px solid #9fd69b",
+                            color: "#9fd69b",
+                            letterSpacing: 1,
+                            zIndex: 30,
+                            pointerEvents: "none",
+                          },
+                        },
+                        `→ ${lastMove.distance}"`,
+                      ),
+                    /* Moved tick — unit has completed its move this round */
+                    hasMovedTok &&
+                      React.createElement(
+                        "div",
+                        {
+                          style: {
+                            position: "absolute",
+                            top: -4,
+                            right: -4,
+                            width: 12,
+                            height: 12,
+                            borderRadius: "50%",
+                            background: "#2e7d32",
+                            border: "1px solid #9fe69b",
+                            color: "#eaffea",
+                            fontSize: 8,
+                            fontWeight: 900,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            zIndex: 26,
+                            pointerEvents: "none",
+                          },
+                        },
+                        "✓",
+                      ),
+                    /* Status chips — Pinned, Suppressed, Stunned, Panicked,
+                       Falling Back, Routed. Click a chip to clear it. */
+                    tokenStatuses.length > 0 &&
+                      React.createElement(
+                        "div",
+                        {
+                          style: {
+                            position: "absolute",
+                            top: sz + (fx || lastMove ? 22 : 4),
+                            left: sz / 2,
+                            transform: "translateX(-50%)",
+                            display: "flex",
+                            gap: 2,
+                            flexWrap: "wrap",
+                            justifyContent: "center",
+                            width: "max-content",
+                            maxWidth: 130,
+                            zIndex: 29,
+                          },
+                        },
+                        tokenStatuses.map((s) => {
+                          const sMeta =
+                            UNIT_STATUS_META[s] || { icon: "•", color: "#d8f7c8" };
+                          return React.createElement(
+                            "div",
+                            {
+                              key: s,
+                              onClick: (e) => {
+                                e.stopPropagation();
+                                if (s === "Routed")
+                                  setRoutedUnits((prev) => {
+                                    const next = new Set(prev);
+                                    next.delete(unit.id);
+                                    return next;
+                                  });
+                                else clearUnitStatus(unit.id, s);
+                              },
+                              title: `${s} — click to clear`,
+                              style: {
+                                padding: "1px 4px",
+                                fontSize: 8,
+                                fontWeight: 900,
+                                fontFamily: "'Share Tech Mono', serif",
+                                whiteSpace: "nowrap",
+                                borderRadius: 3,
+                                background: "rgba(8,10,8,0.92)",
+                                border: `1px solid ${sMeta.color}`,
+                                color: sMeta.color,
+                                letterSpacing: 0.5,
+                                cursor: "pointer",
+                              },
+                            },
+                            `${sMeta.icon} ${s.toUpperCase()}`,
+                          );
+                        }),
+                      ),
                     React.createElement(
                       "div",
                       {
                         onClick: (e) => {
                           e.stopPropagation();
-                          onUnitClick && onUnitClick(unit);
+                          onUnitClick && onUnitClick(unit, e);
                         },
                         title: `${unit.label || unit.name || "Unit"} (${(unit.player || "").toUpperCase() || "—"}) ${unit.x ?? "?"}",${unit.y ?? "?"}"${isRouted ? " — ROUTED" : ""}`,
                         style: {
@@ -8228,23 +9244,35 @@ var ShootingResolver = function () {
                               : tokenArt
                                 ? "#1e1a14"
                                 : bgCol,
-                          border: isAtk
-                            ? "2.5px solid #ffd700"
-                            : isDef
-                              ? "2.5px solid #ff4444"
-                              : `1.5px solid ${unit.type === "objective" ? "#ffd700" : col}`,
+                          border:
+                            isAtk || isMoveSel
+                              ? "2.5px solid #ffd700"
+                              : isDef
+                                ? "2.5px solid #ff4444"
+                                : fx
+                                  ? `2px solid ${fx.color}`
+                                  : `1.5px solid ${unit.type === "objective" ? "#ffd700" : col}`,
                           color: unit.type === "objective" ? "#2a2418" : "#fff",
                           fontSize: Math.max(sz * 0.55, 10),
                           fontWeight: 700,
                           cursor: "pointer",
-                          boxShadow: isAtk
-                            ? "0 0 12px rgba(255,215,0,0.6)"
-                            : isDef
-                              ? "0 0 12px rgba(255,68,68,0.6)"
-                              : "0 1px 4px rgba(0,0,0,0.4)",
-                          zIndex: isAtk || isDef ? 20 : 10,
+                          boxShadow:
+                            isAtk || isMoveSel
+                              ? "0 0 12px rgba(255,215,0,0.6)"
+                              : isDef
+                                ? "0 0 12px rgba(255,68,68,0.6)"
+                                : fx
+                                  ? `0 0 10px ${fx.color}`
+                                  : "0 1px 4px rgba(0,0,0,0.4)",
+                          zIndex: isAtk || isDef || isMoveSel ? 20 : 10,
                           lineHeight: 1,
-                          opacity: isRouted ? 0.7 : 1,
+                          opacity: isRouted
+                            ? 0.7
+                            : fx && fx.destroyed
+                              ? 0.45
+                              : 1,
+                          filter:
+                            fx && fx.destroyed ? "grayscale(0.8)" : "none",
                         },
                       },
                       tokenArt
@@ -8424,13 +9452,18 @@ var ShootingResolver = function () {
               null,
               isFullSize &&
                 renderFullSizeOverlayHeader(
-                  "Unit Selection",
+                  isCombatPhase || phase === "end"
+                    ? "Unit Selection"
+                    : `${phaseMeta.title} Status`,
                   "selection",
                   phaseColor,
                 ),
+              ...(isCombatPhase || phase === "end"
+                ? [
         React.createElement(
           "div",
           {
+            key: "sel-atk",
             style: {
               flex: 1,
               padding: "6px 10px",
@@ -8476,6 +9509,7 @@ var ShootingResolver = function () {
         React.createElement(
           "div",
           {
+            key: "sel-def",
             style: {
               flex: 1,
               padding: "6px 10px",
@@ -8521,6 +9555,7 @@ var ShootingResolver = function () {
         React.createElement(
           "button",
           {
+            key: "sel-clear",
             onClick: () => {
               setMapAttackerId(null);
               setMapTargetId(null);
@@ -8539,6 +9574,263 @@ var ShootingResolver = function () {
           },
           "CLEAR",
         ),
+                    /* Status toggles for the units selected on the map —
+                       rendered inside the Tactical Map panel itself */
+                    (atkUnit || defUnit) &&
+                      React.createElement(
+                        "div",
+                        {
+                          key: "sel-status",
+                          style: {
+                            flexBasis: "100%",
+                            display: "grid",
+                            gridTemplateColumns:
+                              "repeat(auto-fit, minmax(240px, 1fr))",
+                            gap: 6,
+                          },
+                        },
+                        atkUnit && renderUnitStatusToggles(atkUnit, "#ffd966"),
+                        defUnit && renderUnitStatusToggles(defUnit, "#ff8888"),
+                      ),
+                  ]
+                : phase === "movement"
+                  ? [
+                      React.createElement(
+                        "div",
+                        {
+                          key: "mv-sel",
+                          style: {
+                            flex: 1,
+                            padding: "6px 10px",
+                            borderRadius: 4,
+                            fontSize: 12,
+                            background: moveSelUnit
+                              ? isFullSize
+                                ? "rgba(255,215,0,0.16)"
+                                : "rgba(255,215,0,0.08)"
+                              : fullPanelBg,
+                            border: `1px solid ${moveSelUnit ? "rgba(255,215,0,0.55)" : fullPanelBorder}`,
+                          },
+                        },
+                        React.createElement(
+                          "span",
+                          {
+                            style: {
+                              fontFamily: "'Share Tech Mono', serif",
+                              fontSize: 8,
+                              color: isFullSize ? "#ffd966" : "#6b5b2e",
+                              letterSpacing: 1,
+                            },
+                          },
+                          "🚶 MOVING: ",
+                        ),
+                        React.createElement(
+                          "span",
+                          {
+                            style: {
+                              fontFamily: "'Share Tech Mono', serif",
+                              fontWeight: 700,
+                              fontSize: 12,
+                              color: moveSelUnit
+                                ? isFullSize
+                                  ? "#fff6d0"
+                                  : "#2a2418"
+                                : fullMuted,
+                            },
+                          },
+                          moveSelUnit
+                            ? `${moveSelUnit.label || moveSelUnit.name} — click a destination in range`
+                            : "Click a unit, then click its destination",
+                        ),
+                      ),
+                      React.createElement(
+                        "div",
+                        {
+                          key: "mv-count",
+                          style: {
+                            padding: "6px 10px",
+                            borderRadius: 4,
+                            fontSize: 12,
+                            background: fullPanelBg,
+                            border: `1px solid ${fullPanelBorder}`,
+                          },
+                        },
+                        React.createElement(
+                          "span",
+                          {
+                            style: {
+                              fontFamily: "'Share Tech Mono', serif",
+                              fontSize: 8,
+                              color: fullMuted,
+                              letterSpacing: 1,
+                            },
+                          },
+                          "MOVED: ",
+                        ),
+                        React.createElement(
+                          "span",
+                          {
+                            style: {
+                              fontFamily: "'Share Tech Mono', serif",
+                              fontWeight: 700,
+                              fontSize: 12,
+                              color: isFullSize ? "#d8f7c8" : "#2a2418",
+                            },
+                          },
+                          `${movedUnitIds.size}`,
+                        ),
+                      ),
+                      React.createElement(
+                        "button",
+                        {
+                          key: "mv-undo",
+                          onClick: undoLastMove,
+                          disabled: moveLog.length === 0,
+                          style: {
+                            padding: "4px 10px",
+                            borderRadius: 4,
+                            fontSize: 8,
+                            cursor:
+                              moveLog.length === 0 ? "default" : "pointer",
+                            fontFamily: "'Share Tech Mono', serif",
+                            fontWeight: 600,
+                            background: isFullSize
+                              ? "rgba(5,15,5,0.72)"
+                              : "#f0ebe2",
+                            border: `1px solid ${isFullSize ? "rgba(143,207,145,0.35)" : "#d0c4aa"}`,
+                            color: fullMuted,
+                            opacity: moveLog.length === 0 ? 0.5 : 1,
+                          },
+                        },
+                        "UNDO MOVE",
+                      ),
+                      React.createElement(
+                        "button",
+                        {
+                          key: "mv-clear",
+                          onClick: () => setMoveSelectedId(null),
+                          disabled: !moveSelectedId,
+                          style: {
+                            padding: "4px 10px",
+                            borderRadius: 4,
+                            fontSize: 8,
+                            cursor: moveSelectedId ? "pointer" : "default",
+                            fontFamily: "'Share Tech Mono', serif",
+                            fontWeight: 600,
+                            background: isFullSize
+                              ? "rgba(5,15,5,0.72)"
+                              : "#f0ebe2",
+                            border: `1px solid ${isFullSize ? "rgba(143,207,145,0.35)" : "#d0c4aa"}`,
+                            color: fullMuted,
+                            opacity: moveSelectedId ? 1 : 0.5,
+                          },
+                        },
+                        "CLEAR",
+                      ),
+                      /* Status toggles for the unit being moved — Pinned or
+                         Falling Back units are flagged right on the map */
+                      moveSelUnit &&
+                        React.createElement(
+                          "div",
+                          {
+                            key: "mv-status",
+                            style: { flexBasis: "100%" },
+                          },
+                          renderUnitStatusToggles(moveSelUnit, "#ffd966"),
+                        ),
+                    ]
+                  : [
+                      React.createElement(
+                        "div",
+                        {
+                          key: "dp-armed",
+                          style: {
+                            flex: 1,
+                            padding: "6px 10px",
+                            borderRadius: 4,
+                            fontSize: 12,
+                            background: deployBrushUnit
+                              ? isFullSize
+                                ? "rgba(91,74,138,0.28)"
+                                : "rgba(91,74,138,0.10)"
+                              : fullPanelBg,
+                            border: `1px solid ${deployBrushUnit ? "rgba(180,150,255,0.55)" : fullPanelBorder}`,
+                          },
+                        },
+                        React.createElement(
+                          "span",
+                          {
+                            style: {
+                              fontFamily: "'Share Tech Mono', serif",
+                              fontSize: 8,
+                              color: isFullSize ? "#d8c0ff" : "#5b4a8a",
+                              letterSpacing: 1,
+                            },
+                          },
+                          "📍 ARMED TO PLACE: ",
+                        ),
+                        React.createElement(
+                          "span",
+                          {
+                            style: {
+                              fontFamily: "'Share Tech Mono', serif",
+                              fontWeight: 700,
+                              fontSize: 12,
+                              color: deployBrushUnit
+                                ? isFullSize
+                                  ? "#fff6d0"
+                                  : "#2a2418"
+                                : fullMuted,
+                            },
+                          },
+                          deployBrushUnit
+                            ? `${deployBrushUnit.name} (${deployBrushModels}) — click the map to place`
+                            : placingObjective
+                              ? "Placing objectives — click the map"
+                              : placingTerrain
+                                ? "Placing terrain — click the map"
+                                : "Select a unit or tool to begin",
+                        ),
+                      ),
+                      React.createElement(
+                        "div",
+                        {
+                          key: "dp-side",
+                          style: {
+                            padding: "6px 10px",
+                            borderRadius: 4,
+                            fontSize: 12,
+                            background: fullPanelBg,
+                            border: `1px solid ${fullPanelBorder}`,
+                          },
+                        },
+                        React.createElement(
+                          "span",
+                          {
+                            style: {
+                              fontFamily: "'Share Tech Mono', serif",
+                              fontSize: 8,
+                              color: fullMuted,
+                              letterSpacing: 1,
+                            },
+                          },
+                          "SIDE: ",
+                        ),
+                        React.createElement(
+                          "span",
+                          {
+                            style: {
+                              fontFamily: "'Share Tech Mono', serif",
+                              fontWeight: 700,
+                              fontSize: 12,
+                              color:
+                                deployPlayer === "p1" ? "#ff8888" : "#8bbcff",
+                            },
+                          },
+                          deployPlayer === "p1" ? "LOYALIST" : "TRAITOR",
+                        ),
+                      ),
+                    ]),
             ),
       ),
       isFullSize &&
@@ -8567,7 +9859,13 @@ var ShootingResolver = function () {
                 renderFullSizeOverlayHeader(
                   phase === "shooting"
                     ? "Shooting Resolver"
-                    : "Assault Resolver",
+                    : phase === "assault"
+                      ? "Assault Resolver"
+                      : phase === "movement"
+                        ? "Movement Controls"
+                        : phase === "deployment"
+                          ? "Deployment Controls"
+                          : "End Phase Controls",
                   "resolver",
                   phaseColor,
                 ),
@@ -8951,6 +10249,33 @@ var ShootingResolver = function () {
   const [deployBrushArmyEntryId, setDeployBrushArmyEntryId] = useState(null); // tracks which army builder entry is being placed
   const [deployModalOpen, setDeployModalOpen] = useState(false);
 
+  // Arm a unit preset as the deployment brush — shared by the Deploy tab's
+  // unit selector and the War Room Tactical Map's in-map selector.
+  const armDeployBrushUnit = (unit) => {
+    setDeployBrushUnit(unit);
+    setDeployBrushModels(unit.models || 1);
+    setDeploySelectedUnit(null);
+    setDeployModalOpen(false);
+    setDeployBrushArmyEntryId(null); // not from army roster
+    const rw = getRangedWeapons(unit.id);
+    setDeployBrushRangedWeapon(rw.length > 0 ? rw[0] : null);
+    const mw = MELEE_getRangedWeapons(unit.id);
+    setDeployBrushMeleeWeapon(mw.length > 0 ? mw[0] : null);
+    setDeployBrushSecondaryWeapons([]); // Reset secondary weapons
+    const sgtCat = getSgtCategory(unit.id);
+    const hasSgt = unit.hasSgt && sgtCat;
+    setDeployBrushSgtEnabled(!!hasSgt);
+    const sgtW = sgtCat ? SERGEANT_WEAPONS[sgtCat] || [] : [];
+    setDeployBrushSgtWeapon(sgtW.length > 0 ? sgtW[0] : null);
+    setDeployBrushEquipment({
+      vexilla: false,
+      noxVox: false,
+      metaBomb: false,
+      bayonet: false,
+      chainBayonet: false,
+    });
+  };
+
   const deployRangedWeapons = useMemo(() => {
     const base = deployBrushUnit ? getRangedWeapons(deployBrushUnit.id) : [];
     const legion =
@@ -8980,7 +10305,7 @@ var ShootingResolver = function () {
   const [deployShowGrid, setDeployShowGrid] = useState(true);
   const [deployShowZones, setDeployShowZones] = useState(true);
   const [deployZoneDepth, setDeployZoneDepth] = useState(12); // deployment zone depth in inches
-  const [missionType, setMissionType] = useState("search"); // "search" | "hammer" | "dawn" | "zm"
+  // (missionType state lives earlier in the component, above deployArmyToBoard)
   const [zmMission, setZmMission] = useState("sector_sweep"); // "sector_sweep" | "terminal_control" | "signal_influx"
   const [satMission, setSatMission] = useState("ignis_sector_assault"); // saturnine sub-mission
   const [levMission, setLevMission] = useState("charge_khalekaorus"); // leviathan sub-mission
@@ -10564,9 +11889,111 @@ var ShootingResolver = function () {
     tech_elite: 6,
     thrall: 6,
     ogryn: 6,
-    heavy_dread: 6,
-    jetbike: 14,
+    heavy_dread: 8,
+    jetbike: 15,
     grav_tank: 12,
+  };
+
+  // Per-unit movement corrections — checked by name before falling back to
+  // the type defaults above. First match wins, so specific strings go first.
+  const UNIT_MOVE_OVERRIDES = [
+    // Immobile once placed
+    ["drop pod", 0],
+    ["dreadclaw", 0],
+    ["kharybdis", 0],
+    ["termite", 0],
+    ["tarantula", 0],
+    // Transports
+    ["rhino", 12], // includes Damocles Command Rhino
+    ["dracosan", 12],
+    ["triaros", 12],
+    ["coronus", 14],
+    // Fast tanks
+    ["sicaran", 14],
+    ["sabre", 12],
+    ["predator", 12],
+    ["malcador", 12],
+    ["scorpius", 12],
+    ["whirlwind", 12],
+    // Line & siege tanks
+    ["kratos", 10],
+    ["cerberus", 10],
+    ["valdor tank", 10],
+    ["vindicator", 10],
+    ["land raider", 10],
+    ["spartan", 10],
+    ["araknae", 10],
+    ["arquitor", 10],
+    ["basilisk", 10],
+    ["medusa artillery", 10],
+    ["leman russ strike", 10],
+    ["leman russ assault", 10],
+    // Super-heavies ("typhon heavy" so Calas Typhon the character is skipped)
+    ["typhon heavy", 10],
+    ["glaive", 10],
+    ["fellblade", 10],
+    ["falchion", 10],
+    ["stormhammer", 10],
+    // Artillery carriages
+    ["rapier", 4],
+    // Walkers, automata & daemon engines
+    ["contemptor", 9],
+    ["mhara gal", 8],
+    ["telemon", 8],
+    ["domitar", 8],
+    ["thanatar", 6],
+    ["decimator", 8],
+    ["blood slaughterer", 8],
+    ["kytan", 8],
+    ["brass scorpion", 10],
+    ["armiger", 12],
+    ["moirax", 12],
+    // Jump-pack & jet infantry
+    ["jump pack", 12],
+    ["assault squad", 12], // Despoilers (no jump packs) stay at 7
+    ["night raptor", 12],
+    ["dawnbreaker", 12],
+    ["dark fury", 12],
+    ["erelim", 12],
+    ["venatari", 12],
+    ["angel's tears", 12],
+    ["thallax", 10],
+    ["ursarax", 10],
+    // Heavy-assault units that are actually Terminators
+    ["red butcher", 5],
+    ["varagyr", 5],
+    // Bikes & speeders
+    ["outrider", 14],
+    ["keshig rider", 14],
+    ["kyzagan", 16],
+    ["land speeder", 16],
+    ["javelin", 16],
+    ["pallas", 16],
+    ["caladius", 14],
+    // Solar Auxilia sentinels (specific strings — "Hermes Command Section"
+    // and "Sentinel Guard Sodality" must NOT match)
+    ["aethon heavy sentinel", 10],
+    ["hermes light sentinel", 12],
+    ["hermes veletaris squadron", 10],
+    // Flyers without a preset move value
+    ["thunderhawk", 24],
+    ["orion assault dropship", 20],
+    ["arvus", 20],
+    ["ares gunship", 20],
+  ];
+
+  // Single source of truth for a deployed unit's movement allowance:
+  // explicit preset move → name override → type default → 7".
+  const getUnitMaxMove = (unit) => {
+    if (!unit) return 7;
+    const explicit =
+      (unit.unitData && typeof unit.unitData.move === "number"
+        ? unit.unitData.move
+        : undefined) ?? (typeof unit.move === "number" ? unit.move : undefined);
+    if (typeof explicit === "number") return explicit;
+    const n = (unit.label || unit.name || "").toLowerCase();
+    for (const [s, m] of UNIT_MOVE_OVERRIDES) if (n.includes(s)) return m;
+    return MOVE_VALUES[unit.type] ?? 7;
   };
   const [moveSelectedId, setMoveSelectedId] = useState(null);
   const [moveLog, setMoveLog] = useState([]);
@@ -10630,7 +12057,8 @@ var ShootingResolver = function () {
       return;
     }
 
-    const maxMove = MOVE_VALUES[unit.type] || 7;
+    const maxMove = getUnitMaxMove(unit);
+    if (maxMove <= 0) return; // immobile units (drop pods, tarantulas) stay put
     const dist = Math.sqrt((snapX - unit.x) ** 2 + (snapY - unit.y) ** 2);
     if (dist > maxMove + 0.5) return; // tolerance for snapping
 
@@ -10708,9 +12136,7 @@ var ShootingResolver = function () {
     const selectedMoveUnit = moveRangeUnit
       ? deployedUnits.find((u) => u.id === moveRangeUnit)
       : null;
-    const moveMax = selectedMoveUnit
-      ? MOVE_VALUES[selectedMoveUnit.type] || 7
-      : 0;
+    const moveMax = selectedMoveUnit ? getUnitMaxMove(selectedMoveUnit) : 0;
     const weaponUnit = weaponRangeUnit
       ? deployedUnits.find((u) => u.id === weaponRangeUnit)
       : null;
@@ -13587,6 +15013,7 @@ var ShootingResolver = function () {
       icon: "🗡",
       label: hasMulti ? "ASSAULT (MULTI)" : "ASSAULT",
     });
+    return combined;
   };
 
   const [numModels, setNumModels] = useState(10);
@@ -14233,6 +15660,7 @@ var ShootingResolver = function () {
       icon: "🔫",
       label: secondaryResults.length > 0 ? "SHOOTING (MULTI)" : "SHOOTING",
     });
+    return combined;
   };
 
   const [returnFireResult, setReturnFireResult] = useState(null);
@@ -14339,6 +15767,7 @@ var ShootingResolver = function () {
       label:
         secondaryResults.length > 0 ? "RETURN FIRE (MULTI)" : "RETURN FIRE",
     });
+    return combined;
   };
 
   const handleChargeResolve = () => {
@@ -14458,6 +15887,8 @@ var ShootingResolver = function () {
       label: "CHARGE",
     });
     applyChargeMovement(res);
+    recordCombatFx("charge", res);
+    return res;
   };
 
   const TRACKER_TYPE_COLORS = {
@@ -15183,18 +16614,18 @@ var ShootingResolver = function () {
     };
 
     const resolveWarroomShooting = () => {
-      handleResolve();
+      recordCombatFx("shooting", handleResolve());
       openFullSizeMapResults("shooting");
     };
 
     const resolveWarroomReturnFire = () => {
       setDoReturnFire(true);
-      handleReturnFire();
+      recordCombatFx("returnFire", handleReturnFire());
       openFullSizeMapResults("shooting");
     };
 
     const resolveWarroomAssault = () => {
-      handleAssaultResolve();
+      recordCombatFx("assault", handleAssaultResolve());
       openFullSizeMapResults("assault");
     };
 
@@ -15220,6 +16651,74 @@ var ShootingResolver = function () {
           },
         },
         label,
+      );
+
+    const renderWarroomWeaponPicker = (
+      label,
+      weapons,
+      selectedName,
+      onSelect,
+      color,
+    ) =>
+      React.createElement(
+        "div",
+        {
+          style: {
+            padding: "8px 9px",
+            borderRadius: 4,
+            background: "rgba(255,255,255,0.045)",
+            border: `1px solid ${color}`,
+          },
+        },
+        React.createElement(
+          "div",
+          {
+            style: {
+              fontSize: 8,
+              color,
+              letterSpacing: 1,
+              textTransform: "uppercase",
+              marginBottom: 5,
+              fontWeight: 900,
+            },
+          },
+          label,
+        ),
+        !weapons || weapons.length === 0
+          ? React.createElement(
+              "div",
+              { style: { fontSize: 10, color: "#9fd69b", lineHeight: 1.4 } },
+              "Select a unit on the map first",
+            )
+          : React.createElement(
+              "div",
+              { style: { display: "flex", gap: 4, flexWrap: "wrap" } },
+              weapons.map((w) => {
+                const active = selectedName === w.name;
+                return React.createElement(
+                  "button",
+                  {
+                    key: w.name,
+                    onClick: () => onSelect(w),
+                    title: w.name,
+                    style: {
+                      padding: "3px 7px",
+                      borderRadius: 3,
+                      cursor: "pointer",
+                      fontSize: 9,
+                      fontFamily: "'Share Tech Mono', serif",
+                      fontWeight: active ? 900 : 600,
+                      background: active
+                        ? `${color}33`
+                        : "rgba(255,255,255,0.05)",
+                      border: `1px solid ${active ? color : "rgba(143,207,145,0.28)"}`,
+                      color: active ? "#fff6d0" : "#9fd69b",
+                    },
+                  },
+                  w.name,
+                );
+              }),
+            ),
       );
 
     const renderWarroomStat = (label, value, color = "#d8f7c8") =>
@@ -15266,32 +16765,20 @@ var ShootingResolver = function () {
 
     const renderWarroomMap = () => {
       if (warroomTacticalMode === "deployment") {
-        return renderBoard({
+        return renderTacticalMap({
           refObj: boardRef,
-          onClick: handleBoardClick,
-          cursorMode: sendToReservesMode
-            ? "cell"
-            : deployBrushUnit || deploySelectedUnit || placingObjective || placingTerrain || bfaBrush
-              ? "crosshair"
-              : "default",
-          showZones: deployShowZones,
-          showMoveRange: false,
-          moveRangeUnit: null,
-          unitOnClick: (unit, e) => {
+          phase: "deployment",
+          onUnitClick: (unit, e) => {
             if (e && e.shiftKey) removeDeployedUnit(unit.id);
             else sendUnitToReserves(unit.id);
           },
         });
       }
       if (warroomTacticalMode === "movement") {
-        return renderBoard({
+        return renderTacticalMap({
           refObj: moveBoardRef,
-          onClick: handleMoveMapClick,
-          cursorMode: moveSelectedId ? "crosshair" : "pointer",
-          showZones: deployShowZones,
-          showMoveRange: !!moveSelectedId,
-          moveRangeUnit: moveSelectedId,
-          unitOnClick: (unit) => {
+          phase: "movement",
+          onUnitClick: (unit) => {
             if (moveSelectedId === unit.id) {
               setMoveSelectedId(null);
               return;
@@ -15309,16 +16796,10 @@ var ShootingResolver = function () {
         });
       }
       if (warroomTacticalMode === "end") {
-        return renderBoard({
+        return renderTacticalMap({
           refObj: boardRef,
-          onClick: null,
-          cursorMode: "pointer",
-          showZones: deployShowZones,
-          showMoveRange: false,
-          moveRangeUnit: null,
-          highlightAttacker: mapAttackerId,
-          highlightTarget: mapTargetId,
-          unitOnClick: (unit) => selectCombatMapUnit(unit, "end"),
+          phase: "end",
+          onUnitClick: (unit) => selectCombatMapUnit(unit, "end"),
         });
       }
       return renderTacticalMap({
@@ -15343,11 +16824,15 @@ var ShootingResolver = function () {
             "div",
             { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 } },
             ["p1", "p2"].map((p) =>
-              renderWarroomButton(
-                p === "p1" ? "Loyalist" : "Traitor",
-                () => setDeployPlayer(p),
-                p === "p1" ? "#9b2d2d" : "#2a6fb4",
-                false,
+              React.createElement(
+                React.Fragment,
+                { key: p },
+                renderWarroomButton(
+                  p === "p1" ? "Loyalist" : "Traitor",
+                  () => setDeployPlayer(p),
+                  p === "p1" ? "#9b2d2d" : "#2a6fb4",
+                  false,
+                ),
               ),
             ),
           ),
@@ -15412,10 +16897,19 @@ var ShootingResolver = function () {
             selectedDistance !== null ? `${selectedDistance}"` : "--",
             "#9ee68f",
           ),
-          renderWarroomStat(
-            "Weapon",
-            selectedWeapon?.name || "Auto-selected",
+          renderWarroomWeaponPicker(
+            "Attacker Weapon",
+            attacker ? availableWeapons : [],
+            selectedWeapon?.name,
+            applyWeaponPreset,
             "#f4d27a",
+          ),
+          renderWarroomWeaponPicker(
+            "Defender Weapon (Return Fire)",
+            target ? targetAvailableWeapons : [],
+            targetSelectedWeapon?.name,
+            applyReturnWeapon,
+            "#ffd6a0",
           ),
           renderWarroomButton("Resolve Shooting", resolveWarroomShooting, "#b8860b", !attacker || !target),
           renderWarroomButton(
@@ -15440,6 +16934,20 @@ var ShootingResolver = function () {
             selectedDistance !== null ? `${Math.ceil(selectedDistance)}"` : "--",
             "#ffb0b0",
           ),
+          renderWarroomWeaponPicker(
+            "Attacker Melee Weapon",
+            attacker ? aMeleeWeapons : [],
+            aSelectedMelee?.name,
+            (w) => applyAssaultMelee(w, "attacker"),
+            "#ff8888",
+          ),
+          renderWarroomWeaponPicker(
+            "Defender Melee Weapon",
+            target ? dMeleeWeapons : [],
+            dSelectedMelee?.name,
+            (w) => applyAssaultMelee(w, "defender"),
+            "#8bbcff",
+          ),
           renderWarroomButton("Resolve Assault", resolveWarroomAssault, "#9b2d2d", !attacker || !target),
           renderWarroomButton("Charge Contact", () => applyChargeMovement({ chargeSucceeded: true }), "#9b2d2d", !attacker || !target),
           renderWarroomButton("Route Target", () => routUnit(mapTargetId), "#c74040", !target),
@@ -15453,7 +16961,15 @@ var ShootingResolver = function () {
         renderWarroomStat("Round", currentRound, "#d8f7c8"),
         renderWarroomStat("Loyalist VP", p1TotalVP + calcSecondaryVP(p1Secondaries), "#ff8888"),
         renderWarroomStat("Traitor VP", p2TotalVP + calcSecondaryVP(p2Secondaries), "#8bbcff"),
-        renderWarroomButton("Score Round", scoreRound, "#2e5e3e", false),
+        renderWarroomButton(
+          "Score Round",
+          () => {
+            scoreRound();
+            openFullSizeMapResults("end");
+          },
+          "#2e5e3e",
+          false,
+        ),
         renderWarroomButton(
           "Next Round",
           () => {
@@ -15461,9 +16977,16 @@ var ShootingResolver = function () {
             setTrackerRound((prev) => prev + 1);
             setMovedUnitIds(new Set());
             setMoveLog([]);
+            clearUnitResultFx();
           },
           "#8fcf91",
           false,
+        ),
+        renderWarroomButton(
+          "Recover Statuses",
+          clearAllUnitStatuses,
+          "#b8860b",
+          Object.keys(unitStatuses).length === 0 && routedUnits.size === 0,
         ),
         renderWarroomButton("Open End Tab", () => setActivePhase("end"), "#2e5e3e", false),
       );
@@ -15646,8 +17169,7 @@ var ShootingResolver = function () {
         ),
       ),
       !fullSizeTacticalMapPhase &&
-        (fullSizeMapResultModal === "shooting" ||
-          fullSizeMapResultModal === "assault") &&
+        fullSizeMapResultModal &&
         fullSizeMapResultMinimized &&
         React.createElement(
           "button",
@@ -15668,7 +17190,7 @@ var ShootingResolver = function () {
               letterSpacing: 1,
               textTransform: "uppercase",
               background: "rgba(3,8,3,0.96)",
-              border: `1.5px solid ${fullSizeMapResultModal === "shooting" ? "#b8860b" : "#9b2d2d"}`,
+              border: `1.5px solid ${(TAC_PHASE_META[fullSizeMapResultModal] || TAC_PHASE_META.shooting).color}`,
               color: "#d8f7c8",
               boxShadow: "0 0 14px rgba(143,207,145,0.35)",
             },
@@ -15676,10 +17198,21 @@ var ShootingResolver = function () {
           "Dice & Results +",
         ),
       !fullSizeTacticalMapPhase &&
-        (fullSizeMapResultModal === "shooting" ||
-          fullSizeMapResultModal === "assault") &&
+        fullSizeMapResultModal &&
         !fullSizeMapResultMinimized &&
         renderFullSizeMapResultPopup(fullSizeMapResultModal),
+      /* In-map unit selector — lets Deployment be played entirely on the
+         Tactical Map (the modal portals to document.body above the map). */
+      deployModalOpen &&
+        React.createElement(UnitSelectorModal, {
+          presets: UNIT_PRESETS,
+          faction: getArmy().faction,
+          selectedId: deployBrushUnit?.name,
+          onSelect: armDeployBrushUnit,
+          onClose: () => setDeployModalOpen(false),
+          accentColor: "#5b4a8a",
+          title: "SELECT UNIT TO DEPLOY",
+        }),
       combatLog.length > 0 &&
         React.createElement(
           "div",
@@ -15740,6 +17273,7 @@ var ShootingResolver = function () {
       ),
       /* Phase tab buttons */
       ...[
+        { id: "tutorial",     icon: "🎓", label: "TUTORIAL" },
         { id: "warroom",      icon: "🗺", label: "TACTICAL" },
         { id: "help",         icon: "❓", label: "HELP" },
         { id: "army_builder", icon: "📋", label: "ARMY" },
@@ -15808,11 +17342,20 @@ var ShootingResolver = function () {
       "div",
       {
         style: {
-          maxWidth: activePhase === "warroom" ? 1440 : 960,
+          maxWidth: activePhase === "warroom" || activePhase === "tutorial" ? 1440 : 960,
           margin: "0 auto",
-          padding: activePhase === "warroom" ? "12px 12px" : "20px 16px",
+          padding: activePhase === "warroom" || activePhase === "tutorial" ? "12px 12px" : "20px 16px",
         },
       },
+      activePhase === "tutorial" &&
+        typeof HHTutorialPage !== "undefined" &&
+        React.createElement(HHTutorialPage, {
+          goToPhase: setActivePhase,
+          goToTactical: (mode) => {
+            setWarroomTacticalMode(mode);
+            setActivePhase("warroom");
+          },
+        }),
       activePhase === "warroom" && renderWarroomTacticalSection(),
       activePhase === "army_builder" &&
         React.createElement(
@@ -17240,8 +18783,10 @@ var ShootingResolver = function () {
                   { style: { color: "#5b4a8a", fontSize: 14 } },
                   "📦",
                 ),
-                React.createElement("span", null, "DEPLOY ARMIES → RESERVES"),
+                React.createElement("span", null, "DEPLOY ARMIES"),
               ),
+              /* ── AUTO DEPLOY — place the army straight onto the Tactical
+                 Map in its mission deployment zone ── */
               React.createElement(
                 "div",
                 {
@@ -17254,7 +18799,115 @@ var ShootingResolver = function () {
                     lineHeight: 1.4,
                   },
                 },
-                "Units are sent to the reserves tray. Open the Deployment phase, click a reserved unit, then click anywhere on the map to place it. Deployed units can be dragged around the map to reposition.",
+                "Auto Deploy places every unit directly on the Tactical Map inside its deployment zone for the selected mission (flyers go to aerial reserves), then opens the map.",
+              ),
+              React.createElement(
+                "div",
+                {
+                  style: {
+                    display: "flex",
+                    gap: 6,
+                    flexWrap: "wrap",
+                    marginBottom: 12,
+                  },
+                },
+                loyalistArmy.entries.length > 0 &&
+                  React.createElement(
+                    "button",
+                    {
+                      onClick: () => {
+                        deployArmyToBoard("loyalist");
+                        setActivePhase("warroom");
+                        setWarroomTacticalMode("deployment");
+                      },
+                      style: {
+                        flex: 1,
+                        padding: "10px 14px",
+                        borderRadius: 6,
+                        cursor: "pointer",
+                        fontFamily: "'Share Tech Mono', serif",
+                        fontWeight: 900,
+                        fontSize: 12,
+                        letterSpacing: 1,
+                        background: "rgba(42,111,180,0.16)",
+                        border: "2px solid #2a6fb4",
+                        color: "#2a6fb4",
+                      },
+                    },
+                    "⚡ AUTO DEPLOY LOYALIST (",
+                    loyalistArmy.entries.length,
+                    " units)",
+                  ),
+                traitorArmy.entries.length > 0 &&
+                  React.createElement(
+                    "button",
+                    {
+                      onClick: () => {
+                        deployArmyToBoard("traitor");
+                        setActivePhase("warroom");
+                        setWarroomTacticalMode("deployment");
+                      },
+                      style: {
+                        flex: 1,
+                        padding: "10px 14px",
+                        borderRadius: 6,
+                        cursor: "pointer",
+                        fontFamily: "'Share Tech Mono', serif",
+                        fontWeight: 900,
+                        fontSize: 12,
+                        letterSpacing: 1,
+                        background: "rgba(155,45,45,0.16)",
+                        border: "2px solid #9b2d2d",
+                        color: "#9b2d2d",
+                      },
+                    },
+                    "⚡ AUTO DEPLOY TRAITOR (",
+                    traitorArmy.entries.length,
+                    " units)",
+                  ),
+                loyalistArmy.entries.length > 0 &&
+                  traitorArmy.entries.length > 0 &&
+                  React.createElement(
+                    "button",
+                    {
+                      onClick: () => {
+                        deployArmyToBoard("loyalist");
+                        deployArmyToBoard("traitor");
+                        setActivePhase("warroom");
+                        setWarroomTacticalMode("deployment");
+                      },
+                      style: {
+                        flex: 1,
+                        padding: "10px 14px",
+                        borderRadius: 6,
+                        cursor: "pointer",
+                        fontFamily: "'Share Tech Mono', serif",
+                        fontWeight: 900,
+                        fontSize: 12,
+                        letterSpacing: 1,
+                        background: "rgba(74,103,65,0.16)",
+                        border: "2px solid #4a6741",
+                        color: "#4a6741",
+                      },
+                    },
+                    "⚡ AUTO DEPLOY BOTH",
+                  ),
+              ),
+              React.createElement(
+                "div",
+                {
+                  style: {
+                    fontSize: 11,
+                    color: "#6a5e4e",
+                    fontFamily: "'Share Tech Mono', serif",
+                    fontStyle: "italic",
+                    marginBottom: 8,
+                    paddingTop: 8,
+                    borderTop: "1px dashed #d0c4aa",
+                    lineHeight: 1.4,
+                  },
+                },
+                "Or send units to the reserves tray: open the Deployment phase, click a reserved unit, then click anywhere on the map to place it. Deployed units can be dragged around the map to reposition.",
               ),
               React.createElement(
                 "div",
@@ -17333,76 +18986,6 @@ var ShootingResolver = function () {
                       },
                     },
                     "⚔ Deploy Both → Reserves",
-                  ),
-              ),
-              React.createElement(
-                "div",
-                {
-                  style: {
-                    marginTop: 8,
-                    paddingTop: 8,
-                    borderTop: "1px dashed #d0c4aa",
-                    display: "flex",
-                    gap: 6,
-                    flexWrap: "wrap",
-                  },
-                },
-                React.createElement(
-                  "span",
-                  {
-                    style: {
-                      fontSize: 10,
-                      color: "#8a7e6e",
-                      fontFamily: "'Share Tech Mono', serif",
-                      letterSpacing: 1,
-                      alignSelf: "center",
-                    },
-                  },
-                  "LEGACY — place in a grid on the board:",
-                ),
-                loyalistArmy.entries.length > 0 &&
-                  React.createElement(
-                    "button",
-                    {
-                      onClick: () => {
-                        deployArmyToBoard("loyalist");
-                        setActivePhase("deployment");
-                      },
-                      style: {
-                        padding: "4px 10px",
-                        borderRadius: 4,
-                        cursor: "pointer",
-                        fontFamily: "'Share Tech Mono', serif",
-                        fontWeight: 600,
-                        fontSize: 10,
-                        background: "transparent",
-                        border: "1px solid #b5a88a",
-                        color: "#6a5e4e",
-                      },
-                    },
-                    "Auto-place Loyalist",
-                  ),
-                traitorArmy.entries.length > 0 &&
-                  React.createElement(
-                    "button",
-                    {
-                      onClick: () => {
-                        deployArmyToBoard("traitor");
-                        setActivePhase("deployment");
-                      },
-                      style: {
-                        padding: "4px 10px",
-                        borderRadius: 4,
-                        cursor: "pointer",
-                        fontFamily: "'Share Tech Mono', serif",
-                        fontWeight: 600,
-                        fontSize: 10,
-                        background: "transparent",
-                        border: "1px solid #b5a88a",
-                        color: "#6a5e4e",
-                      },
-                    },
-                    "Auto-place Traitor",
                   ),
               ),
             ),
@@ -23091,30 +24674,7 @@ var ShootingResolver = function () {
               presets: UNIT_PRESETS,
               faction: getArmy().faction,
               selectedId: deployBrushUnit?.name,
-              onSelect: (unit) => {
-                setDeployBrushUnit(unit);
-                setDeployBrushModels(unit.models || 1);
-                setDeploySelectedUnit(null);
-                setDeployModalOpen(false);
-                setDeployBrushArmyEntryId(null); // not from army roster
-                const rw = getRangedWeapons(unit.id);
-                setDeployBrushRangedWeapon(rw.length > 0 ? rw[0] : null);
-                const mw = MELEE_getRangedWeapons(unit.id);
-                setDeployBrushMeleeWeapon(mw.length > 0 ? mw[0] : null);
-                setDeployBrushSecondaryWeapons([]); // Reset secondary weapons
-                const sgtCat = getSgtCategory(unit.id);
-                const hasSgt = unit.hasSgt && sgtCat;
-                setDeployBrushSgtEnabled(!!hasSgt);
-                const sgtW = sgtCat ? SERGEANT_WEAPONS[sgtCat] || [] : [];
-                setDeployBrushSgtWeapon(sgtW.length > 0 ? sgtW[0] : null);
-                setDeployBrushEquipment({
-                  vexilla: false,
-                  noxVox: false,
-                  metaBomb: false,
-                  bayonet: false,
-                  chainBayonet: false,
-                });
-              },
+              onSelect: armDeployBrushUnit,
               onClose: () => setDeployModalOpen(false),
               accentColor: "#5b4a8a",
               title: "SELECT UNIT TO DEPLOY",
@@ -25506,7 +27066,7 @@ var ShootingResolver = function () {
               : (() => {
                   const su = deployedUnits.find((u) => u.id === moveSelectedId);
                   if (!su) return null;
-                  const maxM = MOVE_VALUES[su.type] || 7;
+                  const maxM = getUnitMaxMove(su);
                   const isP1 = su.player === "p1";
                   const pCol = isP1 ? "#9b2d2d" : "#2a6fb4";
                   return React.createElement(
