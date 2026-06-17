@@ -130,7 +130,7 @@
 
   <!-- Global error handler to catch script load/exec failures -->
   <script>
-    var _ld = 0, _ldTotal = 22;
+    var _ld = 0, _ldTotal = 24;
     var _ldMsg = [
       'Loading machine spirit...', 'Parsing unit manifests...',
       'Calibrating bolter trajectories...', 'Compiling FOC slot data...',
@@ -144,7 +144,9 @@
       'Initializing visual effects...', 'Loading unit artwork...',
       'Booting tactical map...',
       'Loading legacy manifests...',
-      'Compiling battle primer...'
+      'Compiling battle primer...',
+      'Calibrating recognition optics...',
+      'Priming neural cogitator...'
     ];
     function _ldUp() {
       _ld++;
@@ -187,6 +189,8 @@
   <script src="19-warroom-game.js?v=warroom-game-2"       onerror="_ldErr('Failed to load 19-warroom-game.js')"       onload="_ldUp()"></script>
   <script src="20-legacy-units.js"       onerror="_ldErr('Failed to load 20-legacy-units.js')"       onload="_ldUp()"></script>
   <script src="21-tutorial.js?v=1"       onerror="_ldErr('Failed to load 21-tutorial.js')"           onload="_ldUp()"></script>
+  <script src="22-photo-id.js?v=3"        onerror="_ldErr('Failed to load 22-photo-id.js')"           onload="_ldUp()"></script>
+  <script src="23-unit-trainer.js?v=1"    onerror="_ldErr('Failed to load 23-unit-trainer.js')"       onload="_ldUp()"></script>
 
   <!-- Mount with diagnostics -->
   <script>

@@ -17333,6 +17333,8 @@ var ShootingResolver = function () {
         { id: "warroom",      icon: "🗺", label: "TACTICAL" },
         { id: "help",         icon: "❓", label: "HELP" },
         { id: "army_builder", icon: "📋", label: "ARMY" },
+        { id: "photo_id",     icon: "📷", label: "PHOTO ID" },
+        { id: "train_ai",     icon: "🧠", label: "TRAIN AI" },
         { id: "deployment",   icon: "📍", label: "DEPLOY" },
         { id: "movement",     icon: "🚶", label: "MOVE" },
         { id: "shooting",     icon: "⚔",  label: "SHOOTING" },
@@ -17412,6 +17414,24 @@ var ShootingResolver = function () {
             setActivePhase("warroom");
           },
         }),
+      activePhase === "photo_id" &&
+        typeof HHPhotoIdPage !== "undefined" &&
+        React.createElement(HHPhotoIdPage, {
+          goToPhase: setActivePhase,
+          onLoadUnit: (unit, modelCount, slot) => {
+            const n = Math.max(1, parseInt(modelCount, 10) || 1);
+            if (slot === "target") {
+              applyTargetPreset(unit);
+              setTargetModels(n);
+            } else {
+              applyUnitPreset(unit);
+              setNumModels(n);
+            }
+          },
+        }),
+      activePhase === "train_ai" &&
+        typeof HHTrainerPanel !== "undefined" &&
+        React.createElement(HHTrainerPanel, { goToPhase: setActivePhase }),
       activePhase === "warroom" && renderWarroomTacticalSection(),
       activePhase === "army_builder" &&
         React.createElement(
