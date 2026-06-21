@@ -247,11 +247,28 @@ var HHPhotoIdPage = (function () {
     }, label);
   }
 
-  return function HHPhotoIdPage(props) {
+  function countBtnStyle() {
+    return {
+      width: 30, height: 30, background: "transparent",
+      border: "1px solid " + GREEN_LINE, color: GREEN,
+      fontFamily: MONO, fontSize: 16, cursor: "pointer", borderRadius: 3,
+    };
+  }
+
+  // ───────────────────────────────────────────────────────────────────────
+  // SlotPanel — one self-contained capture → identify → load flow bound to a
+  // single slot ("attacker" or "target"). Two of these are rendered side by
+  // side so the player can photograph each combatant independently.
+  //   props: { slot, slotLabel, slotIcon, accent, flatUnits, onLoadUnit, goToPhase }
+  // ───────────────────────────────────────────────────────────────────────
+  function SlotPanel(props) {
+    var slot = props.slot;                 // "attacker" | "target"
+    var slotLabel = props.slotLabel;       // "ATTACKER" | "TARGET"
+    var slotIcon = props.slotIcon;         // "⚔" | "🎯"
+    var accent = props.accent || GREEN;
+    var flatUnits = props.flatUnits || [];
     var onLoadUnit = props.onLoadUnit || function () {};
     var goToPhase = props.goToPhase || function () {};
-
-    var flatUnits = useMemo(flattenUnits, []);
 
     var imgState = useState(null);            var imageData = imgState[0], setImageData = imgState[1];
     var camState = useState(false);           var cameraOn = camState[0], setCameraOn = camState[1];
@@ -260,11 +277,8 @@ var HHPhotoIdPage = (function () {
     var qState = useState("");                var query = qState[0], setQuery = qState[1];
     var pickState = useState(null);           var picked = pickState[0], setPicked = pickState[1];
     var countState = useState(1);             var count = countState[0], setCount = countState[1];
-    var slotState = useState(null);           var pendingSlot = slotState[0], setPendingSlot = slotState[1];
+    var loadedState = useState(false);        var loaded = loadedState[0], setLoaded = loadedState[1];
     var errState = useState("");              var camError = errState[0], setCamError = errState[1];
-    var keyState = useState(getStoredApiKey());        var savedKey = keyState[0], setSavedKey = keyState[1];
-    var keyInputState = useState("");                  var keyInput = keyInputState[0], setKeyInput = keyInputState[1];
-    var keyOpenState = useState(!getStoredApiKey());   var keyOpen = keyOpenState[0], setKeyOpen = keyOpenState[1];
 
     var videoRef = useRef(null);
     var streamRef = useRef(null);
@@ -285,7 +299,7 @@ var HHPhotoIdPage = (function () {
 
     function resetAll() {
       setImageData(null); setAiResult(null); setPicked(null);
-      setQuery(""); setCount(1); setPendingSlot(null);
+      setQuery(""); setCount(1); setLoaded(false);
     }
 
     function onFile(file) {
@@ -400,11 +414,11 @@ var HHPhotoIdPage = (function () {
       }
     }
 
-    function doLoad(slot) {
+    function doLoad() {
       if (!picked) return;
       var n = Math.max(1, parseInt(count, 10) || 1);
       onLoadUnit(picked, n, slot);
-      setPendingSlot(slot);
+      setLoaded(true);
     }
 
     // ── search results for the manual picker ──
@@ -413,72 +427,19 @@ var HHPhotoIdPage = (function () {
       return fuzzyMatchUnits(query, flatUnits).slice(0, 8);
     }, [query, flatUnits]);
 
-    // ════════════════════════════ RENDER ════════════════════════════
-    var children = [];
+    var rows = [];
 
-    // Header / intro
-    children.push(h("div", { key: "intro", style: { marginBottom: 16 } },
-      h("div", {
-        style: {
-          fontFamily: "'VT323', monospace", fontSize: 30, color: GREEN,
-          letterSpacing: 3, textShadow: "0 0 10px " + GREEN, lineHeight: 1.1,
-        },
-      }, "📷 UNIT RECOGNITION"),
-      h("div", {
-        style: { fontFamily: MONO, fontSize: 12, color: GREEN_DIM, marginTop: 6, maxWidth: 640, lineHeight: 1.5 },
-      }, "Upload or photograph the unit on the table. Your trained on-device model recognizes the unit first; OpenAI is the recognition fallback and handles model counting. The result loads into the selectors used by every phase."),
-      h("div", { style: { marginTop: 10 } },
-        btn("🧠 Teach the AI a new unit", function () { goToPhase("train_ai"); }, { small: true }))
-    ));
-
-    // ── AI Settings (API key) ──
-    function maskKey(k) {
-      if (!k) return "";
-      if (k.length <= 12) return k.slice(0, 4) + "…";
-      return k.slice(0, 8) + "…" + k.slice(-4);
-    }
-    var keyInner = [];
-    keyInner.push(h("div", {
-      key: "khead",
-      onClick: function () { setKeyOpen(!keyOpen); },
+    // ── slot header ──
+    rows.push(h("div", {
+      key: "slothead",
       style: {
-        display: "flex", justifyContent: "space-between", alignItems: "center",
-        cursor: "pointer",
+        fontFamily: "'VT323', monospace", fontSize: 22, color: accent,
+        letterSpacing: 2, textShadow: "0 0 8px " + accent, marginBottom: 12,
+        borderBottom: "1px solid " + accent, paddingBottom: 8,
       },
-    },
-      h("span", { style: { fontFamily: MONO, color: GREEN, fontSize: 13, letterSpacing: 2, textTransform: "uppercase" } },
-        "⚙ AI Settings"),
-      h("span", { style: { fontFamily: MONO, fontSize: 11, color: savedKey ? GREEN_DIM : AMBER } },
-        savedKey ? ("Key saved · " + maskKey(savedKey) + "  ▾") : "No key — click to add  ▾")
-    ));
-    if (keyOpen) {
-      keyInner.push(h("div", { key: "kbody", style: { marginTop: 12 } },
-        h("div", { style: { fontFamily: MONO, fontSize: 11.5, color: GREEN_DIM, lineHeight: 1.5, marginBottom: 8 } },
-          "Paste your OpenAI API key (model gpt-4o). It is stored only in this browser and sent directly to OpenAI — never saved in the app's files. Set a spend cap on the key in your OpenAI dashboard."),
-        h("div", { style: { display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" } },
-          h("input", {
-            type: "password", value: keyInput, placeholder: savedKey ? "Replace saved key…" : "sk-…",
-            onChange: function (e) { setKeyInput(e.target.value); },
-            style: {
-              flex: "1 1 320px", minWidth: 200, padding: "9px 10px",
-              background: BG, border: "1px solid " + GREEN_LINE, color: GREEN,
-              fontFamily: MONO, fontSize: 12, borderRadius: 3,
-            },
-          }),
-          btn("Save Key", function () {
-            var k = (keyInput || "").trim();
-            if (!k) return;
-            setStoredApiKey(k); setSavedKey(k); setKeyInput(""); setKeyOpen(false);
-          }, { primary: true, disabled: !keyInput.trim() }),
-          savedKey && btn("Remove", function () {
-            setStoredApiKey(""); setSavedKey(""); setKeyInput("");
-          }, { danger: true })
-        )
-      ));
-    }
-    children.push(h("div", { key: "keyp" }, panel(keyInner)));
+    }, slotIcon + " " + slotLabel));
 
-    // ── 1. Capture panel ──
+    // ── 1. Capture ──
     var captureInner = [];
     captureInner.push(sectionTitle("1 · Capture"));
 
@@ -512,7 +473,7 @@ var HHPhotoIdPage = (function () {
           border: "1px dashed " + GREEN_LINE, borderRadius: 4, padding: "28px 16px",
           textAlign: "center", color: GREEN_DIM, fontFamily: MONO, fontSize: 12, marginBottom: 12,
         },
-      }, "Drag a photo here, or use the buttons below."));
+      }, "Drag a photo of the " + slotLabel.toLowerCase() + " here, or use the buttons below."));
       captureInner.push(h("div", { key: "capbtns", style: { display: "flex", gap: 8, flexWrap: "wrap" } },
         btn("📁 Upload / Take Photo", function () { if (fileRef.current) fileRef.current.click(); }, { primary: true }),
         btn("🎥 Use Camera", startCamera, {})
@@ -526,9 +487,9 @@ var HHPhotoIdPage = (function () {
         key: "camerr", style: { color: AMBER, fontFamily: MONO, fontSize: 11, marginTop: 8 },
       }, "⚠ " + camError));
     }
-    children.push(h("div", { key: "cap" }, panel(captureInner)));
+    rows.push(h("div", { key: "cap" }, panel(captureInner)));
 
-    // ── 2. Identification / manual select panel (only after a photo exists) ──
+    // ── 2. Identify / manual select (only after a photo exists) ──
     if (imageData) {
       var idInner = [];
       idInner.push(sectionTitle("2 · Identify & Confirm"));
@@ -646,22 +607,21 @@ var HHPhotoIdPage = (function () {
           )
         ));
       }
-      children.push(h("div", { key: "idp" }, panel(idInner)));
+      rows.push(h("div", { key: "idp" }, panel(idInner)));
 
-      // ── 3. Load panel ──
+      // ── 3. Load into this slot ──
       if (picked) {
         var loadInner = [];
-        loadInner.push(sectionTitle("3 · Load Into Selectors"));
+        loadInner.push(sectionTitle("3 · Load As " + slotLabel));
         loadInner.push(h("div", {
           key: "loadhint",
           style: { fontFamily: MONO, fontSize: 11.5, color: GREEN_DIM, marginBottom: 10, lineHeight: 1.5 },
-        }, "Choose whether this unit fills the Attacker or the Target / Defender slot. It stays loaded across the Shooting, Assault, Charge and other phases."));
+        }, "Load this unit into the " + slotLabel + " slot. It stays loaded across the Shooting, Assault, Charge and other phases."));
         loadInner.push(h("div", { key: "loadbtns", style: { display: "flex", gap: 10, flexWrap: "wrap" } },
-          btn("⚔ Load as ATTACKER", function () { doLoad("attacker"); }, { primary: true }),
-          btn("🎯 Load as TARGET", function () { doLoad("target"); }, { primary: true })
+          btn(slotIcon + " Load as " + slotLabel, doLoad, { primary: true })
         ));
 
-        if (pendingSlot) {
+        if (loaded) {
           loadInner.push(h("div", {
             key: "loaded",
             style: {
@@ -671,7 +631,7 @@ var HHPhotoIdPage = (function () {
             },
           },
             h("div", { style: { marginBottom: 8 } },
-              "✓ Loaded " + count + "× " + picked.name + " as " + (pendingSlot === "attacker" ? "ATTACKER" : "TARGET") + ". Jump to a phase:"),
+              "✓ Loaded " + count + "× " + picked.name + " as " + slotLabel + ". Jump to a phase:"),
             h("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
               btn("Shooting", function () { goToPhase("shooting"); }, { small: true }),
               btn("Assault", function () { goToPhase("assault"); }, { small: true }),
@@ -680,18 +640,109 @@ var HHPhotoIdPage = (function () {
             )
           ));
         }
-        children.push(h("div", { key: "loadp" }, panel(loadInner)));
+        rows.push(h("div", { key: "loadp" }, panel(loadInner)));
       }
     }
 
+    return h("div", {
+      style: {
+        flex: "1 1 380px", minWidth: 300,
+        border: "1px solid " + accent, borderRadius: 4, padding: 14,
+        background: "rgba(0,0,0,0.15)",
+      },
+    }, rows);
+  }
+
+  return function HHPhotoIdPage(props) {
+    var onLoadUnit = props.onLoadUnit || function () {};
+    var goToPhase = props.goToPhase || function () {};
+
+    var flatUnits = useMemo(flattenUnits, []);
+
+    var keyState = useState(getStoredApiKey());        var savedKey = keyState[0], setSavedKey = keyState[1];
+    var keyInputState = useState("");                  var keyInput = keyInputState[0], setKeyInput = keyInputState[1];
+    var keyOpenState = useState(!getStoredApiKey());   var keyOpen = keyOpenState[0], setKeyOpen = keyOpenState[1];
+
+    // ════════════════════════════ RENDER ════════════════════════════
+    var children = [];
+
+    // Header / intro
+    children.push(h("div", { key: "intro", style: { marginBottom: 16 } },
+      h("div", {
+        style: {
+          fontFamily: "'VT323', monospace", fontSize: 30, color: GREEN,
+          letterSpacing: 3, textShadow: "0 0 10px " + GREEN, lineHeight: 1.1,
+        },
+      }, "📷 UNIT RECOGNITION"),
+      h("div", {
+        style: { fontFamily: MONO, fontSize: 12, color: GREEN_DIM, marginTop: 6, maxWidth: 720, lineHeight: 1.5 },
+      }, "Photograph each combatant separately — one picture for the Attacker, one for the Target. Your trained on-device model recognizes the unit first; OpenAI is the recognition fallback and handles model counting. Each result loads into the selectors used by every phase."),
+      h("div", { style: { marginTop: 10 } },
+        btn("🧠 Teach the AI a new unit", function () { goToPhase("train_ai"); }, { small: true }))
+    ));
+
+    // ── AI Settings (API key) — shared by both slots ──
+    function maskKey(k) {
+      if (!k) return "";
+      if (k.length <= 12) return k.slice(0, 4) + "…";
+      return k.slice(0, 8) + "…" + k.slice(-4);
+    }
+    var keyInner = [];
+    keyInner.push(h("div", {
+      key: "khead",
+      onClick: function () { setKeyOpen(!keyOpen); },
+      style: {
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        cursor: "pointer",
+      },
+    },
+      h("span", { style: { fontFamily: MONO, color: GREEN, fontSize: 13, letterSpacing: 2, textTransform: "uppercase" } },
+        "⚙ AI Settings"),
+      h("span", { style: { fontFamily: MONO, fontSize: 11, color: savedKey ? GREEN_DIM : AMBER } },
+        savedKey ? ("Key saved · " + maskKey(savedKey) + "  ▾") : "No key — click to add  ▾")
+    ));
+    if (keyOpen) {
+      keyInner.push(h("div", { key: "kbody", style: { marginTop: 12 } },
+        h("div", { style: { fontFamily: MONO, fontSize: 11.5, color: GREEN_DIM, lineHeight: 1.5, marginBottom: 8 } },
+          "Paste your OpenAI API key (model gpt-4o). It is stored only in this browser and sent directly to OpenAI — never saved in the app's files. Set a spend cap on the key in your OpenAI dashboard."),
+        h("div", { style: { display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" } },
+          h("input", {
+            type: "password", value: keyInput, placeholder: savedKey ? "Replace saved key…" : "sk-…",
+            onChange: function (e) { setKeyInput(e.target.value); },
+            style: {
+              flex: "1 1 320px", minWidth: 200, padding: "9px 10px",
+              background: BG, border: "1px solid " + GREEN_LINE, color: GREEN,
+              fontFamily: MONO, fontSize: 12, borderRadius: 3,
+            },
+          }),
+          btn("Save Key", function () {
+            var k = (keyInput || "").trim();
+            if (!k) return;
+            setStoredApiKey(k); setSavedKey(k); setKeyInput(""); setKeyOpen(false);
+          }, { primary: true, disabled: !keyInput.trim() }),
+          savedKey && btn("Remove", function () {
+            setStoredApiKey(""); setSavedKey(""); setKeyInput("");
+          }, { danger: true })
+        )
+      ));
+    }
+    children.push(h("div", { key: "keyp" }, panel(keyInner)));
+
+    // ── Two independent capture flows, side by side ──
+    children.push(h("div", {
+      key: "slots",
+      style: { display: "flex", flexDirection: "column", gap: 16, alignItems: "stretch" },
+    },
+      h(SlotPanel, {
+        key: "attacker", slot: "attacker", slotLabel: "ATTACKER", slotIcon: "⚔",
+        accent: GREEN, flatUnits: flatUnits, onLoadUnit: onLoadUnit, goToPhase: goToPhase,
+      }),
+      h(SlotPanel, {
+        key: "target", slot: "target", slotLabel: "TARGET", slotIcon: "🎯",
+        accent: AMBER, flatUnits: flatUnits, onLoadUnit: onLoadUnit, goToPhase: goToPhase,
+      })
+    ));
+
     return h("div", { style: { fontFamily: MONO } }, children);
   };
-
-  function countBtnStyle() {
-    return {
-      width: 30, height: 30, background: "transparent",
-      border: "1px solid " + GREEN_LINE, color: GREEN,
-      fontFamily: MONO, fontSize: 16, cursor: "pointer", borderRadius: 3,
-    };
-  }
 })();

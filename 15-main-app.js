@@ -2320,7 +2320,7 @@ function createHelpWelcomeMessage(contextPhaseId) {
 var ShootingResolver = function () {
   // Tactical is the first screen; the other tabs are supporting toolkit
   // surfaces for list building and detailed phase resolution.
-  const [activePhase, setActivePhase] = useState("warroom");
+  const [activePhase, setActivePhase] = useState("tutorial");
   const [warroomTacticalMode, setWarroomTacticalMode] = useState("movement");
   const activeMapPhase =
     activePhase === "warroom" ? warroomTacticalMode : activePhase;
