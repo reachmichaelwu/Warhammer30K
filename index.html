@@ -130,7 +130,7 @@
 
   <!-- Global error handler to catch script load/exec failures -->
   <script>
-    var _ld = 0, _ldTotal = 24;
+    var _ld = 0, _ldTotal = 25;
     var _ldMsg = [
       'Loading machine spirit...', 'Parsing unit manifests...',
       'Calibrating bolter trajectories...', 'Compiling FOC slot data...',
@@ -145,6 +145,7 @@
       'Booting tactical map...',
       'Loading legacy manifests...',
       'Compiling battle primer...',
+      'Indexing Warhammer references...',
       'Calibrating recognition optics...',
       'Priming neural cogitator...'
     ];
@@ -183,13 +184,14 @@
   <script src="12-charge.js"             onerror="_ldErr('Failed to load 12-charge.js')"             onload="_ldUp()"></script>
   <script src="13-icons.js"              onerror="_ldErr('Failed to load 13-icons.js')"              onload="_ldUp()"></script>
   <script src="14-ui-components.js"      onerror="_ldErr('Failed to load 14-ui-components.js')"      onload="_ldUp()"></script>
-  <script src="15-main-app.js?v=warroom-game-2"           onerror="_ldErr('Failed to load 15-main-app.js')"           onload="_ldUp()"></script>
+  <script src="15-main-app.js?v=photo-weapons-1"           onerror="_ldErr('Failed to load 15-main-app.js')"           onload="_ldUp()"></script>
   <script src="16-graphics.js"           onerror="_ldErr('Failed to load 16-graphics.js')"           onload="_ldUp()"></script>
   <script src="17-artwork.js"            onerror="_ldErr('Failed to load 17-artwork.js')"            onload="_ldUp()"></script>
   <script src="19-warroom-game.js?v=warroom-game-2"       onerror="_ldErr('Failed to load 19-warroom-game.js')"       onload="_ldUp()"></script>
   <script src="20-legacy-units.js"       onerror="_ldErr('Failed to load 20-legacy-units.js')"       onload="_ldUp()"></script>
   <script src="21-tutorial.js?v=1"       onerror="_ldErr('Failed to load 21-tutorial.js')"           onload="_ldUp()"></script>
-  <script src="22-photo-id.js?v=3"        onerror="_ldErr('Failed to load 22-photo-id.js')"           onload="_ldUp()"></script>
+  <script src="24-warhammer-reference-catalog.js?v=1" onerror="_ldErr('Failed to load 24-warhammer-reference-catalog.js')" onload="_ldUp()"></script>
+  <script src="22-photo-id.js?v=4"        onerror="_ldErr('Failed to load 22-photo-id.js')"           onload="_ldUp()"></script>
   <script src="23-unit-trainer.js?v=1"    onerror="_ldErr('Failed to load 23-unit-trainer.js')"       onload="_ldUp()"></script>
 
   <!-- Mount with diagnostics -->

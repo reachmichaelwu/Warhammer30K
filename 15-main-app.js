@@ -17418,14 +17418,57 @@ var ShootingResolver = function () {
         typeof HHPhotoIdPage !== "undefined" &&
         React.createElement(HHPhotoIdPage, {
           goToPhase: setActivePhase,
-          onLoadUnit: (unit, modelCount, slot) => {
+          onLoadUnit: (unit, modelCount, slot, detectedWeapons) => {
             const n = Math.max(1, parseInt(modelCount, 10) || 1);
+            const normalizePhotoWeaponName = (value) =>
+              String(value || "")
+                .toLowerCase()
+                .replace(/\([^)]*\)/g, " ")
+                .replace(/\b(sustained|maximal|frag|krak)\b/g, " ")
+                .replace(/[^a-z0-9]+/g, " ")
+                .replace(/\s+/g, " ")
+                .trim();
+            const applyDetectedRangedWeapons = (side) => {
+              const profiles = unit && unit.id ? getRangedWeapons(unit.id) || [] : [];
+              if (!profiles.length || !detectedWeapons || !detectedWeapons.length) return;
+              const byName = {};
+              (detectedWeapons || []).forEach((entry) => {
+                const rawName = entry.matchedName || entry.name || entry.weapon_name || "";
+                const key = normalizePhotoWeaponName(rawName);
+                if (!key) return;
+                const profile =
+                  profiles.find((w) => normalizePhotoWeaponName(w.name) === key) ||
+                  profiles.find((w) => {
+                    const wn = normalizePhotoWeaponName(w.name);
+                    return wn && (wn.includes(key) || key.includes(wn));
+                  });
+                if (!profile) return;
+                const models = Math.max(1, parseInt(entry.count || entry.model_count || 1, 10) || 1);
+                const existing = byName[profile.name];
+                if (existing) existing.models += models;
+                else byName[profile.name] = { weapon: profile, models };
+              });
+              const groups = Object.values(byName).sort((a, b) => b.models - a.models);
+              if (!groups.length) return;
+              const primary = groups[0];
+              if (side === "target") {
+                applyReturnWeapon(primary.weapon);
+                setTargetSecondaryWeapons(groups.slice(1).map((g) => ({ weapon: g.weapon, models: g.models })));
+                setTargetModels(n);
+              } else {
+                applyWeaponPreset(primary.weapon);
+                setSecondaryWeapons(groups.slice(1).map((g) => ({ weapon: g.weapon, models: g.models })));
+                setNumModels(n);
+              }
+            };
             if (slot === "target") {
               applyTargetPreset(unit);
               setTargetModels(n);
+              applyDetectedRangedWeapons("target");
             } else {
               applyUnitPreset(unit);
               setNumModels(n);
+              applyDetectedRangedWeapons("attacker");
             }
           },
         }),
