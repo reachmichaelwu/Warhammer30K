@@ -308,6 +308,58 @@ async function identifyUnitFromPhoto(imageDataUrl, flatUnits) {
   }
 }
 
+// ───────────────────────────────────────────────────────────────────────────
+// Shared identify helper for the in-phase unit selectors.
+//
+// Used by the "📷 Photo ID" button added to UnitSelectorModal (shooting,
+// assault, deploy, return-fire). Mirrors the Photo-ID page's runIdentify flow
+// in a single call: try the trained in-browser recognizer first, then fall
+// back to OpenAI vision. Resolves to the same shape identifyUnitFromPhoto
+// returns ({ aiConfigured, count, guesses, weapons, aiName, error, needKey }),
+// plus a `source` field ("custom" | "openai" | ...).
+// ───────────────────────────────────────────────────────────────────────────
+async function HHQuickIdentifyUnit(imageDataUrl, flatUnits) {
+  if (!imageDataUrl) return { aiConfigured: false, count: null, guesses: [], error: "No photo provided." };
+  flatUnits = Array.isArray(flatUnits) ? flatUnits : [];
+
+  // ── 1. Trained on-device model first (works offline, no API key) ──
+  try {
+    var hasCustom =
+      typeof HHUnitRecognizer !== "undefined" &&
+      typeof HHUnitRecognizer.totalExamples === "function" &&
+      HHUnitRecognizer.totalExamples() > 0;
+    if (!hasCustom && typeof HHUnitRecognizer !== "undefined" &&
+        typeof HHUnitRecognizer.savedClassCounts === "function") {
+      try {
+        var saved = await HHUnitRecognizer.savedClassCounts();
+        hasCustom = Object.keys(saved || {}).length > 0;
+      } catch (e) {}
+    }
+    if (hasCustom && typeof HHUnitRecognizer.classifyDataUrl === "function") {
+      var c = await HHUnitRecognizer.classifyDataUrl(imageDataUrl);
+      if (c && (c.confidence || 0) >= 0.6) {
+        var u = flatUnits.find(function (x) { return x.id === c.label; });
+        if (u) {
+          return {
+            aiConfigured: true,
+            source: "custom",
+            count: u.models || null,
+            guesses: [{ unitId: u.id, name: u.name, score: c.confidence }],
+            weapons: [],
+            aiName: u.name,
+          };
+        }
+      }
+    }
+  } catch (e) { /* fall through to OpenAI */ }
+
+  // ── 2. OpenAI vision fallback (returns needKey:true when no key saved) ──
+  var res = await identifyUnitFromPhoto(imageDataUrl, flatUnits);
+  if (res && !res.source) res.source = res.aiConfigured ? "openai" : "none";
+  return res;
+}
+if (typeof window !== "undefined") window.HHQuickIdentifyUnit = HHQuickIdentifyUnit;
+
 // Count-only OpenAI call — used when the custom in-browser model already
 // recognized the unit, so we only need the model count. Returns { count, error }.
 async function countModelsFromPhoto(imageDataUrl) {

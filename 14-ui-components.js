@@ -156,6 +156,123 @@ function UnitSelectorModal({ presets, onSelect, selectedId, onClose, accentColor
     ? React.useDeferredValue(searchTerm)
     : searchTerm;
 
+  // ── Photo-ID: take/upload a photo of the miniature on the table and let the
+  //    vision AI pick the matching unit, then select it inline. Available on
+  //    every phase that uses this modal (shooting, assault, deploy, return-fire).
+  const [photoOpen, setPhotoOpen]       = useState(false);
+  const [photoBusy, setPhotoBusy]       = useState(false);
+  const [photoError, setPhotoError]     = useState("");
+  const [photoNote, setPhotoNote]       = useState("");
+  const [photoGuesses, setPhotoGuesses] = useState([]); // [{unitId,name,score}]
+  const [cameraOn, setCameraOn]         = useState(false);
+  const [camError, setCamError]         = useState("");
+  const photoFileInputRef   = React.useRef(null);        // library / file picker
+  const photoVideoRef       = React.useRef(null);        // live camera <video>
+  const photoStreamRef      = React.useRef(null);        // active MediaStream
+
+  // Resolve a guessed unitId back to a unit object this modal can actually
+  // select. Prefer the faction-filtered list so we never select a hidden unit.
+  const resolvePhotoUnit = (unitId) =>
+    allUnits.find((u) => (u.id || u.name) === unitId) || null;
+
+  // Run the captured/uploaded image through the identifier and select a match.
+  const identifyFromDataUrl = (dataUrl) => {
+    if (!dataUrl) return;
+    if (typeof HHQuickIdentifyUnit === "undefined") {
+      setPhotoError("Photo ID engine not loaded.");
+      return;
+    }
+    setPhotoBusy(true);
+    setPhotoError("");
+    setPhotoNote("");
+    setPhotoGuesses([]);
+    Promise.resolve(HHQuickIdentifyUnit(dataUrl, allUnits))
+      .then((res) => {
+        res = res || {};
+        if (res.needKey || res.aiConfigured === false) {
+          setPhotoError("Photo ID needs setup — open the “📷 Photo ID” tab and add your AI key (or train the on-device model) first.");
+          return;
+        }
+        if (res.error) { setPhotoError(res.error); return; }
+        const guesses = (res.guesses || []).filter((g) => resolvePhotoUnit(g.unitId));
+        if (!guesses.length) {
+          setPhotoError(res.aiName
+            ? `AI saw “${res.aiName}” but no matching unit is available in this list.`
+            : "No matching unit recognized. Try a clearer photo.");
+          return;
+        }
+        // Auto-select the top match; show the rest as alternatives to tap.
+        const top = resolvePhotoUnit(guesses[0].unitId);
+        setPhotoGuesses(guesses);
+        setPhotoNote(
+          (res.aiName ? `Identified: ${res.aiName}` : "Identified unit") +
+          (res.count != null ? ` · ~${res.count} model${res.count === 1 ? "" : "s"}` : "") +
+          ` → selecting “${top.name}”.`
+        );
+        onSelect(top);
+      })
+      .catch((err) => setPhotoError("Identify failed: " + String((err && err.message) || err)))
+      .finally(() => setPhotoBusy(false));
+  };
+
+  const handlePhotoFile = (file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onerror = () => setPhotoError("Could not read that image.");
+    reader.onload = (e) => identifyFromDataUrl(e.target.result);
+    reader.readAsDataURL(file);
+  };
+
+  // ── Live camera (getUserMedia) — the file-input `capture` attribute is
+  //    ignored on desktop and unreliable in the iOS wrapper, so use a real feed.
+  const stopPhotoCamera = () => {
+    const s = photoStreamRef.current;
+    if (s) { try { s.getTracks().forEach((t) => t.stop()); } catch (e) {} }
+    photoStreamRef.current = null;
+    setCameraOn(false);
+  };
+
+  const startPhotoCamera = async () => {
+    setCamError("");
+    setPhotoError("");
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setCamError("Live camera not available here — use Upload Photo instead.");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" } }, audio: false,
+      });
+      photoStreamRef.current = stream;
+      setCameraOn(true);
+      setTimeout(() => {
+        if (photoVideoRef.current) {
+          photoVideoRef.current.srcObject = stream;
+          photoVideoRef.current.play().catch(() => {});
+        }
+      }, 50);
+    } catch (err) {
+      setCamError("Camera access denied or unavailable — use Upload Photo instead.");
+    }
+  };
+
+  const capturePhotoFrame = () => {
+    const v = photoVideoRef.current;
+    if (!v) return;
+    const w = v.videoWidth || 640, ht = v.videoHeight || 480;
+    const canvas = document.createElement("canvas");
+    canvas.width = w; canvas.height = ht;
+    canvas.getContext("2d").drawImage(v, 0, 0, w, ht);
+    let dataUrl = "";
+    try { dataUrl = canvas.toDataURL("image/jpeg", 0.9); } catch (e) {}
+    stopPhotoCamera();
+    if (dataUrl) identifyFromDataUrl(dataUrl);
+  };
+
+  // Stop the camera when the panel closes or the modal unmounts.
+  useEffect(() => { if (!photoOpen) stopPhotoCamera(); }, [photoOpen]);
+  useEffect(() => () => stopPhotoCamera(), []);
+
   // Reset roleFilter if the active selection becomes empty after a faction change
   useEffect(() => {
     if (roleFilter && !availableRoles.includes(roleFilter)) setRoleFilter("");
@@ -274,6 +391,152 @@ function UnitSelectorModal({ presets, onSelect, selectedId, onClose, accentColor
               color: "#2a2418",
             },
           }),
+          // ── Photo-ID toggle — identify the unit from a tabletop photo ──────
+          React.createElement("button", {
+            type: "button",
+            onClick: () => { setPhotoOpen(v => !v); setPhotoError(""); },
+            title: "Identify the unit from a photo",
+            style: {
+              flexShrink: 0, padding: "7px 11px", borderRadius: 4,
+              border: `1px solid ${photoOpen ? accentColor : "#d0c4aa"}`,
+              background: photoOpen ? `rgba(${accentRgb},0.10)` : "#fff",
+              color: photoOpen ? accentColor : "#6a5e4e",
+              fontSize: 12, fontFamily: "'Share Tech Mono', monospace",
+              letterSpacing: 1, cursor: "pointer", whiteSpace: "nowrap",
+            },
+          }, "📷 PHOTO"),
+        ),
+        // ── Photo-ID panel (collapsible) ──────────────────────────────────
+        photoOpen && React.createElement("div", {
+          style: {
+            padding: "12px 18px", borderBottom: "1px solid #e0dbd0",
+            background: "#fffdf9",
+            display: "flex", flexDirection: "column", gap: 8,
+          },
+        },
+          React.createElement("div", {
+            style: {
+              fontSize: 11, color: "#8a7e6e", letterSpacing: 0.5,
+              fontFamily: "'Share Tech Mono', serif",
+            },
+          }, "Point your camera at the miniature, or upload a photo, and the AI will pick the matching unit."),
+          // Hidden file input — library / file picker fallback.
+          React.createElement("input", {
+            ref: photoFileInputRef, type: "file", accept: "image/*",
+            style: { display: "none" },
+            onChange: e => { handlePhotoFile(e.target.files && e.target.files[0]); e.target.value = ""; },
+          }),
+          // Live camera preview (only while the stream is active).
+          cameraOn && React.createElement("div", {
+            style: {
+              position: "relative", width: "100%", maxWidth: 360, alignSelf: "center",
+              borderRadius: 6, overflow: "hidden", border: `1.5px solid ${accentColor}`,
+              background: "#000",
+            },
+          },
+            React.createElement("video", {
+              ref: photoVideoRef, autoPlay: true, playsInline: true, muted: true,
+              style: { width: "100%", display: "block" },
+            }),
+          ),
+          React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
+            cameraOn
+              ? React.createElement("button", {
+                  type: "button", disabled: photoBusy,
+                  onClick: capturePhotoFrame,
+                  style: {
+                    padding: "8px 14px", borderRadius: 4,
+                    border: `1.5px solid ${accentColor}`,
+                    background: `rgba(${accentRgb},0.10)`, color: accentColor,
+                    fontSize: 12, fontFamily: "'Share Tech Mono', monospace",
+                    letterSpacing: 1, cursor: photoBusy ? "default" : "pointer",
+                    opacity: photoBusy ? 0.5 : 1,
+                  },
+                }, "📸 Capture")
+              : React.createElement("button", {
+                  type: "button", disabled: photoBusy,
+                  onClick: startPhotoCamera,
+                  style: {
+                    padding: "8px 14px", borderRadius: 4,
+                    border: `1.5px solid ${accentColor}`,
+                    background: `rgba(${accentRgb},0.10)`, color: accentColor,
+                    fontSize: 12, fontFamily: "'Share Tech Mono', monospace",
+                    letterSpacing: 1, cursor: photoBusy ? "default" : "pointer",
+                    opacity: photoBusy ? 0.5 : 1,
+                  },
+                }, "📷 Take Photo"),
+            cameraOn && React.createElement("button", {
+              type: "button",
+              onClick: stopPhotoCamera,
+              style: {
+                padding: "8px 14px", borderRadius: 4,
+                border: "1.5px solid #d0c4aa", background: "#fff", color: "#6a5e4e",
+                fontSize: 12, fontFamily: "'Share Tech Mono', monospace",
+                letterSpacing: 1, cursor: "pointer",
+              },
+            }, "✕ Cancel"),
+            !cameraOn && React.createElement("button", {
+              type: "button", disabled: photoBusy,
+              onClick: () => photoFileInputRef.current && photoFileInputRef.current.click(),
+              style: {
+                padding: "8px 14px", borderRadius: 4,
+                border: "1.5px solid #d0c4aa", background: "#fff", color: "#6a5e4e",
+                fontSize: 12, fontFamily: "'Share Tech Mono', monospace",
+                letterSpacing: 1, cursor: photoBusy ? "default" : "pointer",
+                opacity: photoBusy ? 0.5 : 1,
+              },
+            }, "🖼 Upload Photo"),
+            photoBusy && React.createElement("span", {
+              style: {
+                alignSelf: "center", fontSize: 12, color: accentColor,
+                fontFamily: "'Share Tech Mono', monospace", letterSpacing: 1,
+              },
+            }, "⏳ Identifying…"),
+          ),
+          camError && React.createElement("div", {
+            style: {
+              fontSize: 12, color: "#b03030",
+              fontFamily: "'Share Tech Mono', serif", lineHeight: 1.4,
+            },
+          }, "⚠ " + camError),
+          photoError && React.createElement("div", {
+            style: {
+              fontSize: 12, color: "#b03030",
+              fontFamily: "'Share Tech Mono', serif", lineHeight: 1.4,
+            },
+          }, "⚠ " + photoError),
+          photoNote && React.createElement("div", {
+            style: {
+              fontSize: 12, color: "#3a6a2a",
+              fontFamily: "'Share Tech Mono', serif", lineHeight: 1.4,
+            },
+          }, "✓ " + photoNote),
+          photoGuesses.length > 1 && React.createElement("div", {
+            style: { display: "flex", flexDirection: "column", gap: 5 },
+          },
+            React.createElement("div", {
+              style: {
+                fontSize: 10, color: "#8a7e6e", letterSpacing: 1,
+                fontFamily: "'Share Tech Mono', serif", textTransform: "uppercase",
+              },
+            }, "Other matches — tap to use instead"),
+            React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } },
+              photoGuesses.slice(1, 5).map((g) => {
+                const gu = resolvePhotoUnit(g.unitId);
+                if (!gu) return null;
+                return React.createElement("button", {
+                  key: g.unitId, type: "button",
+                  onClick: () => { onSelect(gu); setPhotoNote(`Selected “${gu.name}”.`); },
+                  style: {
+                    padding: "5px 10px", borderRadius: 12,
+                    border: "1px solid #d0c4aa", background: "#fff", color: "#2a2418",
+                    fontSize: 11, fontFamily: "'Share Tech Mono', serif",
+                    cursor: "pointer",
+                  },
+                }, gu.name);
+              }),
+            ),
+          ),
         ),
         // ── Unit list (vertical, army-builder row style) ──────────────────
         React.createElement("div", {
