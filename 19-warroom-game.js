@@ -7,7 +7,7 @@
   var WIN_SCORE = 20;
   var OBJECTIVE_CONTROL_RADIUS = 2;
   var DEFAULT_TILE_SIZE = 14;
-  var MIN_TILE_SIZE = 10;
+  var MIN_TILE_SIZE = 6;
   var MAX_TILE_SIZE = 44;
   var GAME_MODE_SOLO = "solo";
   var GAME_MODE_HOTSEAT = "hotseat";
@@ -381,6 +381,19 @@
     return { x: 0, y: 0, tileSize: tileSize || DEFAULT_TILE_SIZE };
   }
 
+  // On phones, start zoomed out enough that the full board width fits the
+  // screen instead of showing a cropped corner of the 50x50 sector.
+  function defaultCameraForDevice() {
+    var mobile = typeof window !== "undefined" && window.HHMobile && window.HHMobile.isMobile;
+    if (mobile) {
+      var vw = (window.innerWidth || 390) - 24;
+      var vh = Math.max(300, (window.innerHeight || 700) * 0.66);
+      var size = clamp(Math.floor(Math.min(vw / BOARD_W, vh / BOARD_H)), MIN_TILE_SIZE, DEFAULT_TILE_SIZE);
+      return { x: 0, y: 0, tileSize: size };
+    }
+    return initialCamera();
+  }
+
   function centerCamera(tileSize) {
     return {
       x: Math.max(0, BOARD_CENTER - 16),
@@ -672,11 +685,6 @@
     if (attacker.ap <= 0 || attacker.activated) return false;
     return tileDistance(attacker, target) <= attacker.range;
   }
-  // Back-compat alias — older call sites refer to canAttack for ranged fire.
-  function canAttack(game, attacker, target) {
-    return canShoot(game, attacker, target);
-  }
-
   // Find a free tile in base contact with the target, reachable within the
   // attacker's movement allowance (its charge reach).
   function chargeLanding(game, attacker, target) {
@@ -1155,6 +1163,13 @@
 
     var selected = selectedId ? findUnit(game, selectedId) : null;
     var targetLock = targetLockId ? findUnit(game, targetLockId) : null;
+    // Precompute per-draw lookups: occupancy by tile (instead of an O(units)
+    // scan per visible tile) and objective control (instead of recomputing it
+    // once per objective marker).
+    var alive = aliveUnits(game);
+    var occupiedByTile = {};
+    alive.forEach(function (u) { occupiedByTile[keyFor(u.x, u.y)] = u; });
+    var controls = controlledObjectives(game);
     for (var vy = 0; vy < layout.visibleRows; vy++) {
       var y = layout.startY + vy;
       if (y < 0 || y >= BOARD_H) continue;
@@ -1186,7 +1201,7 @@
             ctx.fillStyle = "rgba(227, 90, 82, 0.10)";
             ctx.fillRect(px + 3, py + 3, layout.cell - 6, layout.cell - 6);
           }
-          if (dist <= selected.range && (mode === "shoot" || unitAt(game, x, y))) {
+          if (dist <= selected.range && (mode === "shoot" || occupiedByTile[keyFor(x, y)])) {
             ctx.strokeStyle = "rgba(227, 90, 82, 0.62)";
             ctx.lineWidth = 2;
             ctx.strokeRect(px + 5, py + 5, layout.cell - 10, layout.cell - 10);
@@ -1202,7 +1217,6 @@
 
     OBJECTIVES.forEach(function (obj) {
       if (obj.x < layout.startX - 1 || obj.x > layout.startX + layout.visibleCols || obj.y < layout.startY - 1 || obj.y > layout.startY + layout.visibleRows) return;
-      var controls = controlledObjectives(game);
       var objCenter = tileCenter(layout, obj);
       var px = objCenter.x;
       var py = objCenter.y;
@@ -1223,7 +1237,7 @@
       ctx.fillText(obj.id, px, py + 4);
     });
 
-    aliveUnits(game).sort(function (a, b) { return a.y - b.y || a.x - b.x; }).forEach(function (unit) {
+    alive.slice().sort(function (a, b) { return a.y - b.y || a.x - b.x; }).forEach(function (unit) {
       if (unit.x < layout.startX - 1 || unit.x > layout.startX + layout.visibleCols || unit.y < layout.startY - 1 || unit.y > layout.startY + layout.visibleRows) return;
       var center = tileCenter(layout, unit);
       var cx = center.x;
@@ -1341,6 +1355,9 @@
     var applyTargetPreset = props.applyTargetPreset;
     var applyWeaponPreset = props.applyWeaponPreset;
     var canvasRef = useRef(null);
+    var wheelHandlerRef = useRef(null);
+    var touchHandlersRef = useRef({});
+    var touchStateRef = useRef(null);
     var imageCacheRef = useRef({});
     var autoPresetLoadedRef = useRef(false);
     var savedPayloadRef = useRef(null);
@@ -1387,7 +1404,7 @@
     var modeState = useState("move");
     var mode = modeState[0];
     var setMode = modeState[1];
-    var cameraState = useState(function () { return initialCamera(); });
+    var cameraState = useState(function () { return defaultCameraForDevice(); });
     var camera = cameraState[0];
     var setCamera = cameraState[1];
     var hoverState = useState(null);
@@ -1396,6 +1413,11 @@
     var targetLockState = useState(null);
     var targetLockId = targetLockState[0];
     var setTargetLockId = targetLockState[1];
+    var boardLogOpenState = useState(function () {
+      return !(typeof window !== "undefined" && window.HHMobile && window.HHMobile.isMobile);
+    });
+    var boardLogOpen = boardLogOpenState[0];
+    var setBoardLogOpen = boardLogOpenState[1];
     var drawTickState = useState(0);
     var drawTick = drawTickState[0];
     var setDrawTick = drawTickState[1];
@@ -1487,6 +1509,37 @@
       }
       window.addEventListener("resize", onResize);
       return function () { window.removeEventListener("resize", onResize); };
+    }, []);
+
+    useEffect(function () {
+      var canvas = canvasRef.current;
+      if (!canvas) return;
+      function onWheel(event) {
+        if (wheelHandlerRef.current) wheelHandlerRef.current(event);
+      }
+      canvas.addEventListener("wheel", onWheel, { passive: false });
+      return function () { canvas.removeEventListener("wheel", onWheel); };
+    }, []);
+
+    // Touch controls (iPhone / iPad / Android): one-finger drag pans the
+    // camera, pinch zooms, and a quick tap acts like a click. Listeners must
+    // be native + non-passive so preventDefault can stop page scroll/zoom.
+    useEffect(function () {
+      var canvas = canvasRef.current;
+      if (!canvas) return;
+      function onTouchStart(e) { if (touchHandlersRef.current.start) touchHandlersRef.current.start(e); }
+      function onTouchMove(e) { if (touchHandlersRef.current.move) touchHandlersRef.current.move(e); }
+      function onTouchEnd(e) { if (touchHandlersRef.current.end) touchHandlersRef.current.end(e); }
+      canvas.addEventListener("touchstart", onTouchStart, { passive: false });
+      canvas.addEventListener("touchmove", onTouchMove, { passive: false });
+      canvas.addEventListener("touchend", onTouchEnd, { passive: false });
+      canvas.addEventListener("touchcancel", onTouchEnd, { passive: false });
+      return function () {
+        canvas.removeEventListener("touchstart", onTouchStart);
+        canvas.removeEventListener("touchmove", onTouchMove);
+        canvas.removeEventListener("touchend", onTouchEnd);
+        canvas.removeEventListener("touchcancel", onTouchEnd);
+      };
     }, []);
 
     useEffect(function () {
@@ -1594,7 +1647,7 @@
       setSelectedId(null);
       setTargetLockId(null);
       setMode("move");
-      setCamera(initialCamera());
+      setCamera(defaultCameraForDevice());
     }
 
     function resetGame() {
@@ -1664,6 +1717,14 @@
         var nextSize = clamp(prev.tileSize + delta, MIN_TILE_SIZE, MAX_TILE_SIZE);
         return clampCamera({ ...prev, tileSize: nextSize });
       });
+    }
+
+    function fitCameraToBoard() {
+      var canvas = canvasRef.current;
+      var width = canvas?.clientWidth || 900;
+      var height = canvas?.clientHeight || 620;
+      var size = clamp(Math.floor(Math.min(width / BOARD_W, height / BOARD_H)), MIN_TILE_SIZE, MAX_TILE_SIZE);
+      setCamera({ x: 0, y: 0, tileSize: size });
     }
 
     function focusCameraOn(unit) {
@@ -1743,6 +1804,104 @@
       event.preventDefault();
       zoomCamera(event.deltaY < 0 ? 4 : -4);
     }
+
+    // React (17+) registers onWheel as a PASSIVE listener on its root, so
+    // event.preventDefault() inside a React onWheel prop cannot stop the page
+    // from scrolling while the player zooms the map (and logs a console
+    // error). Attach a native non-passive wheel listener to the canvas
+    // instead; the ref always points at the latest handler closure.
+    wheelHandlerRef.current = handleCanvasWheel;
+
+    function handleTouchStart(event) {
+      if (event.touches.length === 2) {
+        event.preventDefault();
+        var a = event.touches[0];
+        var b = event.touches[1];
+        touchStateRef.current = {
+          kind: "pinch",
+          startDist: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY) || 1,
+          startSize: camera.tileSize,
+        };
+        return;
+      }
+      if (event.touches.length === 1) {
+        var t = event.touches[0];
+        touchStateRef.current = {
+          kind: "pan",
+          startX: t.clientX,
+          startY: t.clientY,
+          lastX: t.clientX,
+          lastY: t.clientY,
+          camX: camera.x,
+          camY: camera.y,
+          moved: false,
+        };
+      }
+    }
+
+    function handleTouchMove(event) {
+      var state = touchStateRef.current;
+      if (!state) return;
+      event.preventDefault();
+      if (state.kind === "pinch" && event.touches.length >= 2) {
+        var a = event.touches[0];
+        var b = event.touches[1];
+        var dist = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY) || 1;
+        var nextSize = clamp(Math.round(state.startSize * (dist / state.startDist)), MIN_TILE_SIZE, MAX_TILE_SIZE);
+        setCamera(function (prev) {
+          return clampCamera({ ...prev, tileSize: nextSize });
+        });
+        return;
+      }
+      if (state.kind === "pan" && event.touches.length === 1) {
+        var t = event.touches[0];
+        state.lastX = t.clientX;
+        state.lastY = t.clientY;
+        var dxPx = t.clientX - state.startX;
+        var dyPx = t.clientY - state.startY;
+        if (!state.moved && Math.hypot(dxPx, dyPx) > 8) state.moved = true;
+        if (!state.moved) return;
+        setCamera(function (prev) {
+          return clampCamera({
+            ...prev,
+            x: state.camX - dxPx / prev.tileSize,
+            y: state.camY - dyPx / prev.tileSize,
+          });
+        });
+      }
+    }
+
+    function handleTouchEnd(event) {
+      var state = touchStateRef.current;
+      if (!state) return;
+      if (event.touches.length > 0) {
+        // Went from pinch to one finger: restart as a pan so the map
+        // doesn't jump, and never treat the remaining finger as a tap.
+        var t = event.touches[0];
+        touchStateRef.current = {
+          kind: "pan",
+          startX: t.clientX,
+          startY: t.clientY,
+          lastX: t.clientX,
+          lastY: t.clientY,
+          camX: camera.x,
+          camY: camera.y,
+          moved: true,
+        };
+        return;
+      }
+      event.preventDefault(); // suppress the browser's synthetic click
+      touchStateRef.current = null;
+      if (state.kind === "pan" && !state.moved) {
+        handleCanvasClick({ clientX: state.lastX, clientY: state.lastY });
+      }
+    }
+
+    touchHandlersRef.current = {
+      start: handleTouchStart,
+      move: handleTouchMove,
+      end: handleTouchEnd,
+    };
 
     function handleEndOrders() {
       setSelectedId(null);
@@ -2089,9 +2248,14 @@
     }
 
     function renderBoardLog() {
-      return React.createElement("div", { className: "hh-game-board-log", "aria-live": "polite" },
-        React.createElement("div", { className: "hh-game-board-log-title" }, "Battle Log"),
-        game.log.slice(0, 4).map(function (entry) {
+      return React.createElement("div", { className: "hh-game-board-log" + (boardLogOpen ? "" : " is-collapsed"), "aria-live": "polite" },
+        React.createElement("button", {
+          type: "button",
+          className: "hh-game-board-log-title",
+          onClick: function () { setBoardLogOpen(!boardLogOpen); },
+          "aria-expanded": boardLogOpen,
+        }, "Battle Log ", boardLogOpen ? "▾" : "▸"),
+        boardLogOpen && game.log.slice(0, 4).map(function (entry) {
           return React.createElement("div", { key: entry.id, className: "hh-game-board-log-entry " + entry.type }, entry.text);
         }),
       );
@@ -2112,8 +2276,9 @@
         React.createElement("div", { className: "hh-game-zoom-pad" },
           React.createElement("button", { type: "button", onClick: function () { zoomCamera(4); }, title: "Zoom in", "aria-keyshortcuts": "+ PageUp" }, "Zoom In"),
           React.createElement("button", { type: "button", onClick: function () { zoomCamera(-4); }, title: "Zoom out", "aria-keyshortcuts": "- PageDown" }, "Zoom Out"),
-          React.createElement("button", { type: "button", onClick: function () { setCamera(deploymentCameraFor(game.currentSide)); }, title: "Focus deployment" }, "DEP"),
-          React.createElement("button", { type: "button", onClick: function () { setCamera(centerCamera()); }, title: "Focus center" }, "CTR"),
+          React.createElement("button", { type: "button", onClick: function () { setCamera(deploymentCameraFor(game.currentSide, camera.tileSize)); }, title: "Focus deployment" }, "DEP"),
+          React.createElement("button", { type: "button", onClick: function () { setCamera(centerCamera(camera.tileSize)); }, title: "Focus center" }, "CTR"),
+          React.createElement("button", { type: "button", onClick: fitCameraToBoard, title: "Fit the whole 50x50 board on screen" }, "FIT"),
         ),
       );
     }
@@ -2211,7 +2376,6 @@
             onMouseLeave: function () {
               setHover(function (prev) { return prev ? null : prev; });
             },
-            onWheel: handleCanvasWheel,
             role: "img",
             "aria-label": "Horus Heresy tactical warroom battlefield",
           }),

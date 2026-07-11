@@ -18,8 +18,8 @@ var LEGION_WEAPON_PROFILES = {
   ],
   // IV Iron Warriors
   tyrant_siege_term: [
-    { name: "Tyrant Rocket Launcher", shots: 2, s: 8, ap: "3", damage: 1, type: "Heavy", rules: { breaching5: true } },
-    { name: "Combi-Bolter", shots: 2, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {} },
+    { name: "Tyrant Rocket Launcher", shots: 1, s: 9, ap: "3", damage: 1, type: "Heavy", rules: { breaching5: true } },
+    { name: "Combi-Bolter", shots: 4, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {} },
   ],
   // VI Space Wolves  
   grey_slayer: [
@@ -41,7 +41,7 @@ var LEGION_WEAPON_PROFILES = {
     { name: "Bolter", shots: 2, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {} },
   ],
   contekar: [
-    { name: "Combi-Bolter", shots: 2, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {} },
+    { name: "Combi-Bolter", shots: 4, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {} },
   ],
   // IX Blood Angels
   dawnbreaker: [
@@ -63,10 +63,10 @@ var LEGION_WEAPON_PROFILES = {
   ],
   // XIV Death Guard
   deathshroud: [
-    { name: "Alchem Flamer", shots: 1, s: 4, ap: "4", damage: 1, type: "Assault", rules: { template: true, poisoned2: true } },
+    { name: "Alchem Flamer", shots: 1, s: 4, ap: "5", damage: 1, type: "Assault", rules: { template: true, poisoned2: true } },
   ],
   grave_warden: [
-    { name: "Assault Grenade Launcher", shots: 1, s: 4, ap: "4", damage: 1, type: "Assault", rules: { blast: true, poisoned: true } },
+    { name: "Assault Grenade Launcher", shots: 2, s: 6, ap: "4", damage: 2, type: "Assault", rules: { blast: true, poisoned: true } },
   ],
   // XV Thousand Sons
   sekhmet: [
@@ -74,8 +74,8 @@ var LEGION_WEAPON_PROFILES = {
   ],
   // XVI Sons of Horus
   justaerin: [
-    { name: "Combi-Bolter", shots: 2, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {} },
-    { name: "Plasma Blaster (Sustained)", shots: 2, s: 6, ap: "4", damage: 1, type: "Pistol", rules: { breaching6: true } },
+    { name: "Combi-Bolter", shots: 4, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {} },
+    { name: "Plasma Blaster (Sustained)", shots: 2, s: 7, ap: "4", damage: 1, type: "Pistol", rules: { breaching6: true } },
     { name: "Plasma Blaster (Maximal)", shots: 2, s: 7, ap: "4", damage: 1, type: "Pistol", rules: { breaching5: true, getshot: true } },
   ],
   reaver_soh: [
@@ -93,7 +93,7 @@ var LEGION_WEAPON_PROFILES = {
     { name: "Bolt Pistol", shots: 1, s: 4, ap: "5", damage: 1, type: "Pistol", rules: {} },
   ],
   mor_deythan: [
-    { name: "Combi-Bolter", shots: 2, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {} },
+    { name: "Combi-Bolter", shots: 4, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {} },
     { name: "Bolter", shots: 2, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {} },
   ],
   // XX Alpha Legion
@@ -101,8 +101,8 @@ var LEGION_WEAPON_PROFILES = {
     { name: "Volkite Charger", shots: 2, s: 5, ap: "5", damage: 1, type: "Assault", rules: { deflagrate: true } },
   ],
   headhunter: [
-    { name: "Combi-Bolter", shots: 2, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {} },
-    { name: "Disintegrator Blaster", shots: 2, s: 5, ap: "3", damage: 1, type: "Assault", rules: { getshot: true } },
+    { name: "Combi-Bolter", shots: 4, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {} },
+    { name: "Disintegrator Blaster", shots: 1, s: 5, ap: "2", damage: 2, type: "Assault", rules: { getshot: true } },
   ],
 };
 

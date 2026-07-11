@@ -691,28 +691,28 @@ var WEAPON_PROFILES = {
     { name: "Fury of the Legion", shots: 4, s: 4, ap: "5", damage: 1, type: "Heavy", rules: {}, traits: "Bolt" },
   ],
   tactical_support: [
-    { name: "Plasma Gun (Sustained)", shots: 1, s: 6, ap: "4", damage: 1, type: "Rapid Fire", rules: { breaching6: true }, traits: "Plasma" },
-    { name: "Plasma Gun (Maximal)", shots: 1, s: 7, ap: "4", damage: 1, type: "Rapid Fire", rules: { breaching5: true, getshot: true }, traits: "Plasma" },
-    { name: "Melta Gun", shots: 1, s: 8, ap: "1", damage: 2, type: "Assault", rules: { melta: true }, traits: "Melta" },
+    { name: "Plasma Gun (Sustained)", shots: 2, s: 6, ap: "4", damage: 1, type: "Rapid Fire", rules: { breaching6: true }, traits: "Plasma" },
+    { name: "Plasma Gun (Maximal)", shots: 2, s: 7, ap: "4", damage: 1, type: "Rapid Fire", rules: { breaching5: true, getshot: true }, traits: "Plasma" },
+    { name: "Melta Gun", shots: 1, s: 8, ap: "2", damage: 3, type: "Assault", rules: { melta: true }, traits: "Melta" },
     { name: "Volkite Charger", shots: 2, s: 5, ap: "5", damage: 1, type: "Assault", rules: { deflagrate: true }, traits: "Assault, Volkite" },
     { name: "Volkite Caliver", shots: 2, s: 6, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true }, traits: "Volkite" },
-    { name: "Rotor Cannon", shots: 3, s: 3, ap: "4", damage: 1, type: "Heavy", rules: { suppressive: true }, traits: "Auto" },
+    { name: "Rotor Cannon", shots: 3, s: 3, ap: "-", damage: 1, type: "Heavy", rules: { suppressive: true }, traits: "Auto" },
     { name: "Flamer", shots: 1, s: 4, ap: "5", damage: 1, type: "Assault", rules: { panic: true, template: true }, traits: "Flame" },
     { name: "Heavy Flamer", shots: 1, s: 5, ap: "4", damage: 1, type: "Assault", rules: { panic: true, template: true }, traits: "Flame" },
   ],
   heavy_support: [
     { name: "Lascannon", shots: 1, s: 9, ap: "2", damage: 1, type: "Heavy", rules: { armourbane: true }, traits: "Las" },
     { name: "Autocannon", shots: 2, s: 7, ap: "4", damage: 2, type: "Heavy", rules: { breaching6: true }, traits: "Auto" },
-    { name: "Heavy Bolter", shots: 5, s: 5, ap: "4", damage: 1, type: "Heavy", rules: {  }, traits: "Bolt" },
+    { name: "Heavy Bolter", shots: 3, s: 5, ap: "4", damage: 1, type: "Heavy", rules: {  }, traits: "Bolt" },
     { name: "Missile L. (Frag)", shots: 1, s: 4, ap: "6", damage: 1, type: "Heavy", rules: { blast: true }, traits: "Missile" },
     { name: "Missile L. (Krak)", shots: 1, s: 8, ap: "3", damage: 1, type: "Heavy", rules: {  }, traits: "Missile" },
     { name: "Volkite Culverin", shots: 3, s: 6, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true }, traits: "Volkite" },
     { name: "Plasma Cannon (Sustained)", shots: 1, s: 6, ap: "4", damage: 1, type: "Heavy", rules: { blast: true, breaching6: true }, traits: "Plasma" },
     { name: "Plasma Cannon (Maximal)", shots: 1, s: 6, ap: "4", damage: 1, type: "Heavy", rules: { blast: true, breaching5: true, getshot: true }, traits: "Plasma" },
-    { name: "Multi-Melta", shots: 1, s: 8, ap: "1", damage: 3, type: "Heavy", rules: { melta: true }, traits: "Melta" },
+    { name: "Multi-Melta", shots: 1, s: 8, ap: "2", damage: 3, type: "Heavy", rules: { melta: true }, traits: "Melta" },
   ],
   seeker: [
-    { name: "Kraken Bolter", shots: 4, s: 4, ap: "4", damage: 1, type: "Rapid Fire", rules: { precision: true }, traits: "Bolt" },
+    { name: "Kraken Bolter", shots: 2, s: 4, ap: "4", damage: 1, type: "Rapid Fire", rules: { precision: true }, traits: "Bolt" },
     { name: "Nemesis Bolter", shots: 1, s: 4, ap: "5", damage: 1, type: "Heavy", rules: { breaching5: true, pinning: true, precision: true }, traits: "Bolt" },
   ],
   recon: [
@@ -720,7 +720,7 @@ var WEAPON_PROFILES = {
     { name: "Sniper Rifle", shots: 1, s: 3, ap: "6", damage: 1, type: "Heavy", rules: { precision: true, pinning: true } },
   ],
   destroyer: [
-    { name: "Rad Missile", shots: 1, s: 4, ap: "3", damage: 1, type: "Assault", rules: { blast: true, fleshbane: true, poisoned: true }, traits: "Assault" },
+    { name: "Rad Missile", shots: 2, s: 4, ap: "3", damage: 1, type: "Assault", rules: { blast: true, fleshbane: true, poisoned: true }, traits: "Assault" },
   ],
   breacher: [
     { name: "Bolter", shots: 2, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {  }, traits: "Bolt" },
@@ -791,15 +791,15 @@ var WEAPON_PROFILES = {
     { name: "Volkite Charger", shots: 2, s: 5, ap: "5", damage: 1, type: "Assault", rules: { deflagrate: true }, traits: "Assault, Volkite" },
     { name: "Disintegrator Rifle", shots: 1, s: 4, ap: "3", damage: 2, type: "Rapid Fire", rules: { getshot: true }, traits: "Disintegrator" },
     { name: "Combi-Bolter", shots: 4, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {  }, traits: "Bolt" },
-    { name: "Plasma Gun (Sustained)", shots: 1, s: 6, ap: "4", damage: 1, type: "Rapid Fire", rules: { breaching6: true }, traits: "Plasma", defaultModels: 1 },
-    { name: "Melta Gun", shots: 1, s: 8, ap: "1", damage: 2, type: "Assault", rules: { melta: true }, traits: "Melta", defaultModels: 1 },
-    { name: "Heavy Bolter", shots: 5, s: 5, ap: "4", damage: 1, type: "Heavy", rules: {  }, traits: "Bolt", defaultModels: 1 },
+    { name: "Plasma Gun (Sustained)", shots: 2, s: 6, ap: "4", damage: 1, type: "Rapid Fire", rules: { breaching6: true }, traits: "Plasma", defaultModels: 1 },
+    { name: "Melta Gun", shots: 1, s: 8, ap: "2", damage: 3, type: "Assault", rules: { melta: true }, traits: "Melta", defaultModels: 1 },
+    { name: "Heavy Bolter", shots: 3, s: 5, ap: "4", damage: 1, type: "Heavy", rules: {  }, traits: "Bolt", defaultModels: 1 },
     { name: "Lascannon", shots: 1, s: 9, ap: "2", damage: 1, type: "Heavy", rules: { armourbane: true }, traits: "Las", defaultModels: 1 },
   ],
   tartaros_cmd: [
     { name: "Combi-Bolter", shots: 4, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {  }, traits: "Bolt" },
     { name: "Volkite Charger", shots: 2, s: 5, ap: "5", damage: 1, type: "Assault", rules: { deflagrate: true }, traits: "Assault, Volkite" },
-    { name: "Combi-Melta", shots: 1, s: 8, ap: "1", damage: 2, type: "Assault", rules: { melta: true }, traits: "Melta" },
+    { name: "Combi-Melta", shots: 1, s: 8, ap: "2", damage: 3, type: "Assault", rules: { melta: true }, traits: "Melta" },
     { name: "Combi-Plasma", shots: 2, s: 6, ap: "4", damage: 1, type: "Rapid Fire", rules: { breaching6: true }, traits: "Plasma" },
     { name: "Heavy Flamer", shots: 1, s: 5, ap: "4", damage: 1, type: "Assault", rules: { template: true, panic: true }, traits: "Flame", defaultModels: 1 },
     { name: "Reaper Autocannon", shots: 2, s: 6, ap: "4", damage: 2, type: "Heavy", rules: { breaching6: true }, traits: "Auto", defaultModels: 1 },
@@ -808,7 +808,7 @@ var WEAPON_PROFILES = {
   cataphractii_cmd: [
     { name: "Volkite Charger", shots: 2, s: 5, ap: "5", damage: 1, type: "Assault", rules: { deflagrate: true }, traits: "Assault, Volkite" },
     { name: "Combi-Bolter", shots: 4, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {  }, traits: "Bolt" },
-    { name: "Combi-Melta", shots: 1, s: 8, ap: "1", damage: 2, type: "Assault", rules: { melta: true }, traits: "Melta" },
+    { name: "Combi-Melta", shots: 1, s: 8, ap: "2", damage: 3, type: "Assault", rules: { melta: true }, traits: "Melta" },
     { name: "Combi-Plasma", shots: 2, s: 6, ap: "4", damage: 1, type: "Rapid Fire", rules: { breaching6: true }, traits: "Plasma" },
     { name: "Heavy Flamer", shots: 1, s: 5, ap: "4", damage: 1, type: "Assault", rules: { template: true, panic: true }, traits: "Flame", defaultModels: 1 },
     { name: "Reaper Autocannon", shots: 2, s: 6, ap: "4", damage: 2, type: "Heavy", rules: { breaching6: true }, traits: "Auto", defaultModels: 1 },
@@ -818,7 +818,7 @@ var WEAPON_PROFILES = {
   outrider: [
     { name: "Twin Bolter", shots: 4, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {  }, traits: "Bolt" },
     { name: "Twin Plasma Gun (Sustained)", shots: 2, s: 6, ap: "4", damage: 1, type: "Rapid Fire", rules: { breaching5: true }, traits: "Plasma" },
-    { name: "Twin Plasma Gun (Maximal)", shots: 2, s: 7, ap: "4", damage: 1, type: "Rapid Fire", rules: { breaching4: true, getshot: true }, traits: "Plasma" },
+    { name: "Twin Plasma Gun (Maximal)", shots: 2, s: 7, ap: "4", damage: 1, type: "Rapid Fire", rules: { breaching: true, getshot: true }, traits: "Plasma" },
   ],
   // ── VEHICLES (primary weapons for resolving) ──
   rhino: [
@@ -895,14 +895,14 @@ var WEAPON_PROFILES = {
     { name: "Bolter", shots: 2, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {  }, traits: "Bolt" },
     { name: "Astartes Shotgun (Solid)", shots: 2, s: 4, ap: "-", damage: 1, type: "Assault", rules: { stun: true }, traits: "Assault, Auto" },
     { name: "Astartes Shotgun (Scatter)", shots: 3, s: 3, ap: "-", damage: 1, type: "Assault", rules: { stun: true }, traits: "Assault, Auto" },
-    { name: "Plasma Gun (Sustained)", shots: 1, s: 6, ap: "4", damage: 1, type: "Rapid Fire", rules: { breaching6: true }, traits: "Plasma" },
-    { name: "Plasma Gun (Maximal)", shots: 1, s: 7, ap: "4", damage: 1, type: "Rapid Fire", rules: { breaching5: true, getshot: true }, traits: "Plasma" },
-    { name: "Melta Gun", shots: 1, s: 8, ap: "1", damage: 2, type: "Assault", rules: { melta: true }, traits: "Melta" },
+    { name: "Plasma Gun (Sustained)", shots: 2, s: 6, ap: "4", damage: 1, type: "Rapid Fire", rules: { breaching6: true }, traits: "Plasma" },
+    { name: "Plasma Gun (Maximal)", shots: 2, s: 7, ap: "4", damage: 1, type: "Rapid Fire", rules: { breaching5: true, getshot: true }, traits: "Plasma" },
+    { name: "Melta Gun", shots: 1, s: 8, ap: "2", damage: 3, type: "Assault", rules: { melta: true }, traits: "Melta" },
     { name: "Volkite Charger", shots: 2, s: 5, ap: "5", damage: 1, type: "Assault", rules: { deflagrate: true }, traits: "Assault, Volkite" },
     { name: "Disintegrator Rifle", shots: 1, s: 4, ap: "3", damage: 2, type: "Rapid Fire", rules: { getshot: true }, traits: "Disintegrator" },
     { name: "Disintegrator Blaster", shots: 1, s: 5, ap: "2", damage: 2, type: "Assault", rules: { getshot: true }, traits: "Disintegrator", defaultModels: 2 },
     { name: "Heavy Disintegrator", shots: 1, s: 6, ap: "2", damage: 2, type: "Heavy", rules: { getshot: true }, traits: "Disintegrator", defaultModels: 2 },
-    { name: "Heavy Bolter", shots: 5, s: 5, ap: "4", damage: 1, type: "Heavy", rules: {  }, traits: "Bolt", defaultModels: 2 },
+    { name: "Heavy Bolter", shots: 3, s: 5, ap: "4", damage: 1, type: "Heavy", rules: {  }, traits: "Bolt", defaultModels: 2 },
     { name: "Volkite Caliver", shots: 2, s: 6, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true }, traits: "Volkite", defaultModels: 2 },
     { name: "Missile L. (Krak)", shots: 1, s: 8, ap: "3", damage: 1, type: "Heavy", rules: {  }, traits: "Missile", defaultModels: 2 },
     { name: "Lascannon", shots: 1, s: 9, ap: "2", damage: 1, type: "Heavy", rules: { armourbane: true }, traits: "Las", defaultModels: 2 },
@@ -920,7 +920,7 @@ var WEAPON_PROFILES = {
     { name: "Combi-Bolter", shots: 4, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {  }, traits: "Bolt" },
     { name: "Volkite Charger", shots: 2, s: 5, ap: "5", damage: 1, type: "Assault", rules: { deflagrate: true }, traits: "Assault, Volkite" },
     { name: "Combi-Plasma (Maximal)", shots: 2, s: 6, ap: "4", damage: 1, type: "Rapid Fire", rules: { breaching6: true }, traits: "Plasma" },
-    { name: "Combi-Melta", shots: 1, s: 8, ap: "1", damage: 2, type: "Assault", rules: { melta: true }, traits: "Melta" },
+    { name: "Combi-Melta", shots: 1, s: 8, ap: "2", damage: 3, type: "Assault", rules: { melta: true }, traits: "Melta" },
     { name: "Plasma Blaster (Maximal)", shots: 2, s: 8, ap: "4", damage: 1, type: "Assault", rules: { breaching5: true, getshot: true }, traits: "Plasma" },
   ],
   praetor_sat: [
@@ -979,7 +979,7 @@ var WEAPON_PROFILES = {
     { name: "Volkite Charger", shots: 2, s: 5, ap: "5", damage: 1, type: "Assault", rules: { deflagrate: true }, traits: "Assault, Volkite" },
     { name: "Combi-Bolter", shots: 4, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {  }, traits: "Bolt" },
     { name: "Combi-Plasma (Maximal)", shots: 2, s: 6, ap: "4", damage: 1, type: "Rapid Fire", rules: { breaching6: true }, traits: "Plasma" },
-    { name: "Combi-Melta", shots: 1, s: 8, ap: "1", damage: 2, type: "Assault", rules: { melta: true }, traits: "Melta" },
+    { name: "Combi-Melta", shots: 1, s: 8, ap: "2", damage: 3, type: "Assault", rules: { melta: true }, traits: "Melta" },
     { name: "Combi-Flamer", shots: 1, s: 4, ap: "5", damage: 1, type: "Assault", rules: { panic: true, template: true }, traits: "Flame" },
     { name: "Heavy Flamer", shots: 1, s: 5, ap: "4", damage: 1, type: "Assault", rules: { panic: true, template: true }, traits: "Flame", defaultModels: 1 },
     { name: "Reaper Autocannon", shots: 2, s: 6, ap: "4", damage: 2, type: "Heavy", rules: { breaching6: true }, traits: "Auto", defaultModels: 1 },
@@ -991,7 +991,7 @@ var WEAPON_PROFILES = {
     { name: "Plasma Blaster (Sustained)", shots: 2, s: 7, ap: "4", damage: 1, type: "Assault", rules: { breaching6: true }, traits: "Plasma", defaultModels: 1 },
     { name: "Plasma Blaster (Maximal)", shots: 2, s: 8, ap: "4", damage: 1, type: "Assault", rules: { breaching5: true, getshot: true }, traits: "Plasma", defaultModels: 1 },
     { name: "Volkite Charger", shots: 2, s: 5, ap: "5", damage: 1, type: "Assault", rules: { deflagrate: true }, traits: "Assault, Volkite" },
-    { name: "Combi-Melta", shots: 1, s: 8, ap: "1", damage: 2, type: "Assault", rules: { melta: true }, traits: "Melta" },
+    { name: "Combi-Melta", shots: 1, s: 8, ap: "2", damage: 3, type: "Assault", rules: { melta: true }, traits: "Melta" },
     { name: "Combi-Plasma (Maximal)", shots: 2, s: 6, ap: "4", damage: 1, type: "Rapid Fire", rules: { breaching6: true }, traits: "Plasma" },
   ],
   saturnine: [
@@ -1021,7 +1021,7 @@ var WEAPON_PROFILES = {
     { name: "Autocannon (Twin)", shots: 2, s: 7, ap: "4", damage: 2, type: "Heavy", rules: { breaching6: true }, traits: "Auto" },
     { name: "Twin Heavy Bolter", shots: 6, s: 5, ap: "4", damage: 1, type: "Rapid Fire", rules: {  }, traits: "Bolt" },
     { name: "Volkite Dual-Culverin", shots: 6, s: 6, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true }, traits: "Volkite" },
-    { name: "Multi-Melta", shots: 1, s: 8, ap: "1", damage: 3, type: "Heavy", rules: { melta: true }, traits: "Melta" },
+    { name: "Multi-Melta", shots: 1, s: 8, ap: "2", damage: 3, type: "Heavy", rules: { melta: true }, traits: "Melta" },
     { name: "Conversion Beam Cannon (<15\")", shots: 1, s: 6, ap: "4", damage: 1, type: "Heavy", rules: { blast: true } },
     { name: "Conversion Beam Cannon (15-30\")", shots: 1, s: 7, ap: "3", damage: 2, type: "Heavy", rules: { blast: true } },
     { name: "Conversion Beam Cannon (>30\")", shots: 1, s: 8, ap: "2", damage: 3, type: "Heavy", rules: { blast: true } },
@@ -1073,7 +1073,7 @@ var WEAPON_PROFILES = {
     { name: "Quad Accelerator Autocannon", shots: 10, s: 7, ap: "4", damage: 2, type: "Rapid Fire", rules: { breaching6: true, skyfire: true }, traits: "Auto" },
   ],
   rapier_la: [
-    { name: "Gravis Heavy Bolter Battery", shots: 5, s: 8, ap: "4", damage: 1, type: "Rapid Fire", rules: { suppressive: true }, traits: "Bolt" },
+    { name: "Gravis Heavy Bolter Battery", shots: 8, s: 5, ap: "4", damage: 1, type: "Rapid Fire", rules: { suppressive: true }, traits: "Bolt" },
     { name: "Laser Destroyer", shots: 2, s: 10, ap: "2", damage: 2, type: "Heavy", rules: { armourbane: true }, traits: "Las" },
     { name: "Graviton Cannon", shots: 1, s: 8, ap: "3", damage: 1, type: "Heavy", rules: { blast: true, breaching6: true, pinning: true }, traits: "Graviton" },
     { name: "Quad Launcher (Frag)", shots: 1, s: 5, ap: "5", damage: 1, type: "Heavy", rules: { barrage: true, blast: true } },
@@ -1116,7 +1116,7 @@ var WEAPON_PROFILES = {
   hermes_cmd_sa: [
     { name: "Multi-laser", shots: 3, s: 6, ap: "6", damage: 1, type: "Heavy", rules: { suppressive: true }, traits: "Las" },
     { name: "Grenade Launcher (Frag)", shots: 1, s: 3, ap: "6", damage: 1, type: "Assault", rules: { blast: true, stun: true } },
-    { name: "Grenade Launcher (Krak)", shots: 2, s: 7, ap: "4", damage: 2, type: "Assault", rules: {} },
+    { name: "Grenade Launcher (Krak)", shots: 1, s: 6, ap: "4", damage: 2, type: "Assault", rules: {} },
     { name: "Laspistol", shots: 1, s: 3, ap: "-", damage: 1, type: "Pistol", rules: {}, traits: "Assault, Las" },
   ],
   artillery_cmd_sa: [
@@ -1140,7 +1140,7 @@ var WEAPON_PROFILES = {
   ],
   // ── SOL AUXILIA SUPPORT / ARTILLERY ──
   basilisk_sa: [
-    { name: "Earthshaker Cannon", shots: 1, s: 7, ap: "4", damage: 2, type: "Ordnance", rules: { barrage: true, blast: true, pinning: true, breaching6: true } },
+    { name: "Earthshaker Cannon", shots: 1, s: 5, ap: "4", damage: 2, type: "Ordnance", rules: { barrage: true, blast: true, pinning: true, breaching6: true } },
     { name: "Hull Heavy Bolter", shots: 3, s: 5, ap: "4", damage: 1, type: "Heavy", rules: {}, traits: "Bolt" },
   ],
   medusa_sa: [
@@ -1156,13 +1156,13 @@ var WEAPON_PROFILES = {
   hermes_light_sa: [
     { name: "Multi-laser", shots: 3, s: 6, ap: "6", damage: 1, type: "Heavy", rules: { suppressive: true }, traits: "Las" },
     { name: "Grenade Launcher (Frag)", shots: 1, s: 3, ap: "6", damage: 1, type: "Assault", rules: { blast: true, stun: true } },
-    { name: "Grenade Launcher (Krak)", shots: 2, s: 7, ap: "4", damage: 2, type: "Assault", rules: {} },
+    { name: "Grenade Launcher (Krak)", shots: 1, s: 6, ap: "4", damage: 2, type: "Assault", rules: {} },
   ],
   // ── SOL AUXILIA FAST ATTACK ──
   hermes_vel_sa: [
     { name: "Volkite Culverin", shots: 3, s: 6, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true }, traits: "Volkite" },
     { name: "Grenade Launcher (Frag)", shots: 1, s: 3, ap: "6", damage: 1, type: "Assault", rules: { blast: true, stun: true } },
-    { name: "Grenade Launcher (Krak)", shots: 2, s: 7, ap: "4", damage: 2, type: "Assault", rules: {} },
+    { name: "Grenade Launcher (Krak)", shots: 1, s: 6, ap: "4", damage: 2, type: "Assault", rules: {} },
   ],
   primaris_lightning_sa: [
     { name: "Autocannon x2", shots: 4, s: 7, ap: "4", damage: 2, type: "Heavy", rules: { breaching6: true }, traits: "Auto" },
@@ -1197,7 +1197,7 @@ var WEAPON_PROFILES = {
   // ── SOL AUXILIA LORD OF WAR ──
   malcador_sa: [
     { name: "Battlecannon", shots: 1, s: 8, ap: "4", damage: 2, type: "Heavy", rules: { blast: true, pinning: true }, traits: "Auto" },
-    { name: "Twin Battlecannon (alt)", shots: 2, s: 10, ap: "2", damage: 3, type: "Heavy", rules: { criticalHit: true }, traits: "Auto" },
+    { name: "Twin Battlecannon (alt)", shots: 2, s: 8, ap: "4", damage: 2, type: "Heavy", rules: { criticalHit: true }, traits: "Auto" },
     { name: "Lascannon Sponsons x2 (opt)", shots: 2, s: 9, ap: "2", damage: 1, type: "Heavy", rules: { armourbane: true }, traits: "Las" },
     { name: "Hull Heavy Bolter", shots: 3, s: 5, ap: "4", damage: 1, type: "Heavy", rules: {}, traits: "Bolt" },
   ],
@@ -1221,18 +1221,18 @@ var WEAPON_PROFILES = {
     { name: "Lightning Locks", shots: 3, s: 7, ap: "5", damage: 1, type: "Assault", rules: { rending: true, shred: true }, traits: "Assault" },
   ],
   castellax: [
-    { name: "Mauler Bolt Cannon", shots: 3, s: 6, ap: "3", damage: 1, type: "Heavy", rules: { pinning: true }, traits: "Bolt" },
-    { name: "Darkfire Cannon", shots: 2, s: 7, ap: "2", damage: 2, type: "Heavy", rules: { getshot: true } },
+    { name: "Mauler Bolt Cannon", shots: 4, s: 6, ap: "4", damage: 1, type: "Heavy", rules: { pinning: true }, traits: "Bolt" },
+    { name: "Darkfire Cannon", shots: 2, s: 8, ap: "2", damage: 1, type: "Heavy", rules: { getshot: true } },
   ],
   thanatar: [
-    { name: "Plasma Mortar", shots: 1, s: 8, ap: "2", damage: 2, type: "Barrage", rules: { blast: true, getshot: true, breaching: true }, traits: "Plasma" },
+    { name: "Plasma Mortar", shots: 1, s: 8, ap: "4", damage: 2, type: "Barrage", rules: { blast: true, getshot: true, breaching: true }, traits: "Plasma" },
   ],
   // CUSTODES
   custodian_guard: [
     { name: "Guardian Spear (shooting)", shots: 2, s: 4, ap: "3", damage: 1, type: "Assault", rules: {}, traits: "Assault" },
   ],
   sagittarum: [
-    { name: "Adrastus Bolt Caliver", shots: 3, s: 5, ap: "3", damage: 1, type: "Heavy", rules: { breaching6: true }, traits: "Bolt" },
+    { name: "Adrastus Bolt Caliver", shots: 2, s: 6, ap: "4", damage: 2, type: "Heavy", rules: { breaching6: true }, traits: "Bolt" },
   ],
   aquilon: [
     { name: "Twin Adrathic Destructor", shots: 2, s: 5, ap: "2", damage: 2, type: "Assault", rules: { twinLinked: true }, traits: "Assault" },
@@ -1243,13 +1243,13 @@ var WEAPON_PROFILES = {
   // New units (basic defaults)
   centurion: [
     { name: "Bolt Pistol", shots: 1, s: 4, ap: "5", damage: 1, type: "Pistol", rules: {  }, traits: "Assault, Bolt" },
-    { name: "Combi-Plasma", shots: 1, s: 7, ap: "4", damage: 1, type: "Rapid Fire", rules: { getshot: true, breaching: true }, traits: "Plasma" },
+    { name: "Combi-Plasma", shots: 2, s: 6, ap: "4", damage: 1, type: "Rapid Fire", rules: { getshot: true, breaching: true }, traits: "Plasma" },
   ],
   centurion_ta: [
     { name: "Combi-Bolter", shots: 4, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {  }, traits: "Bolt" },
     { name: "Volkite Charger", shots: 2, s: 5, ap: "5", damage: 1, type: "Assault", rules: { deflagrate: true }, traits: "Assault, Volkite" },
     { name: "Combi-Plasma (Maximal)", shots: 2, s: 6, ap: "4", damage: 1, type: "Rapid Fire", rules: { breaching6: true }, traits: "Plasma" },
-    { name: "Combi-Melta", shots: 1, s: 8, ap: "1", damage: 2, type: "Assault", rules: { melta: true }, traits: "Melta" },
+    { name: "Combi-Melta", shots: 1, s: 8, ap: "2", damage: 3, type: "Assault", rules: { melta: true }, traits: "Melta" },
   ],
   apothecary: [
     { name: "Bolt Pistol", shots: 1, s: 4, ap: "5", damage: 1, type: "Pistol", rules: {  }, traits: "Assault, Bolt" },
@@ -1258,53 +1258,53 @@ var WEAPON_PROFILES = {
     { name: "Volkite Serpenta", shots: 2, s: 5, ap: "5", damage: 1, type: "Pistol", rules: { deflagrate: true }, traits: "Assault, Volkite" },
   ],
   ogryn: [
-    { name: "Laspistol", shots: 1, s: 3, ap: "6", damage: 1, type: "Pistol", rules: {}, traits: "Assault, Las" },
+    { name: "Laspistol", shots: 1, s: 3, ap: "-", damage: 1, type: "Pistol", rules: {}, traits: "Assault, Las" },
   ],
   tech_thrall: [
     { name: "Laslock", shots: 1, s: 3, ap: "6", damage: 1, type: "Assault", rules: {}, traits: "Assault, Las" },
-    { name: "Mitra-Lock", shots: 2, s: 3, ap: "6", damage: 1, type: "Assault", rules: {}, traits: "Assault, Las" },
+    { name: "Mitra-Lock", shots: 2, s: 4, ap: "-", damage: 1, type: "Assault", rules: {}, traits: "Assault, Las" },
   ],
   myrmidon_dest: [
     { name: "Volkite Culverin", shots: 3, s: 6, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true }, traits: "Volkite" },
-    { name: "Irradiation Engine", shots: 1, s: 4, ap: "3", damage: 1, type: "Heavy", rules: { fleshbane: true, blast: true } },
-    { name: "Photon Thruster", shots: 2, s: 6, ap: "2", damage: 2, type: "Heavy", rules: { getshot: true } },
+    { name: "Irradiation Engine", shots: 1, s: 4, ap: "5", damage: 1, type: "Heavy", rules: { fleshbane: true, blast: true } },
+    { name: "Photon Thruster", shots: 2, s: 8, ap: "2", damage: 1, type: "Heavy", rules: { getshot: true } },
   ],
   vorax: [
     { name: "Rotor Cannon x2", shots: 3, s: 3, ap: "4", damage: 1, type: "Heavy", rules: { suppressive: true }, traits: "Auto" },
-    { name: "Lightning Gun", shots: 3, s: 7, ap: "5", damage: 1, type: "Assault", rules: { rending: true, shred: true }, traits: "Assault" },
+    { name: "Lightning Gun", shots: 3, s: 5, ap: "5", damage: 1, type: "Assault", rules: { rending: true, shred: true }, traits: "Assault" },
   ],
   // ── MECHANICUM TAGHMATA ──
   archmagos_tm: [
     { name: "Bolt Pistol", shots: 1, s: 4, ap: "5", damage: 1, type: "Pistol", rules: {}, traits: "Assault, Bolt" },
-    { name: "Phased Plasma-Fusil", shots: 2, s: 7, ap: "4", damage: 1, type: "Assault", rules: { breaching5: true }, traits: "Plasma" },
+    { name: "Phased Plasma-Fusil", shots: 3, s: 5, ap: "3", damage: 1, type: "Assault", rules: { breaching5: true }, traits: "Plasma" },
     { name: "Conversion Beamer (<15\")", shots: 1, s: 6, ap: "4", damage: 1, type: "Heavy", rules: { blast: true } },
     { name: "Conversion Beamer (15-30\")", shots: 1, s: 7, ap: "3", damage: 2, type: "Heavy", rules: { blast: true } },
     { name: "Conversion Beamer (>30\")", shots: 1, s: 8, ap: "2", damage: 3, type: "Heavy", rules: { blast: true } },
-    { name: "Irad-Cleanser", shots: 1, s: 5, ap: "1", damage: 1, type: "Assault", rules: { template: true, poisoned2: true }, traits: "Flame" },
+    { name: "Irad-Cleanser", shots: 1, s: 2, ap: "5", damage: 1, type: "Assault", rules: { template: true, poisoned2: true }, traits: "Flame" },
   ],
   archmagos_abeyant_tm: [
     { name: "Bolt Pistol", shots: 1, s: 4, ap: "5", damage: 1, type: "Pistol", rules: {}, traits: "Assault, Bolt" },
-    { name: "Phased Plasma-Fusil", shots: 2, s: 7, ap: "4", damage: 1, type: "Assault", rules: { breaching5: true }, traits: "Plasma" },
+    { name: "Phased Plasma-Fusil", shots: 3, s: 5, ap: "3", damage: 1, type: "Assault", rules: { breaching5: true }, traits: "Plasma" },
     { name: "Conversion Beamer (<15\")", shots: 1, s: 6, ap: "4", damage: 1, type: "Heavy", rules: { blast: true } },
     { name: "Conversion Beamer (15-30\")", shots: 1, s: 7, ap: "3", damage: 2, type: "Heavy", rules: { blast: true } },
     { name: "Conversion Beamer (>30\")", shots: 1, s: 8, ap: "2", damage: 3, type: "Heavy", rules: { blast: true } },
-    { name: "Irad-Cleanser", shots: 1, s: 5, ap: "1", damage: 1, type: "Assault", rules: { template: true, poisoned2: true }, traits: "Flame" },
+    { name: "Irad-Cleanser", shots: 1, s: 2, ap: "5", damage: 1, type: "Assault", rules: { template: true, poisoned2: true }, traits: "Flame" },
   ],
   magos_tm: [
     { name: "Bolt Pistol", shots: 1, s: 4, ap: "5", damage: 1, type: "Pistol", rules: {}, traits: "Assault, Bolt" },
-    { name: "Phased Plasma-Fusil", shots: 2, s: 7, ap: "4", damage: 1, type: "Assault", rules: { breaching5: true }, traits: "Plasma" },
+    { name: "Phased Plasma-Fusil", shots: 3, s: 5, ap: "3", damage: 1, type: "Assault", rules: { breaching5: true }, traits: "Plasma" },
     { name: "Conversion Beamer (<15\")", shots: 1, s: 6, ap: "4", damage: 1, type: "Heavy", rules: { blast: true } },
     { name: "Conversion Beamer (15-30\")", shots: 1, s: 7, ap: "3", damage: 2, type: "Heavy", rules: { blast: true } },
     { name: "Conversion Beamer (>30\")", shots: 1, s: 8, ap: "2", damage: 3, type: "Heavy", rules: { blast: true } },
-    { name: "Irad-Cleanser", shots: 1, s: 5, ap: "1", damage: 1, type: "Assault", rules: { template: true, poisoned2: true }, traits: "Flame" },
+    { name: "Irad-Cleanser", shots: 1, s: 2, ap: "5", damage: 1, type: "Assault", rules: { template: true, poisoned2: true }, traits: "Flame" },
   ],
   magos_abeyant_tm: [
     { name: "Bolt Pistol", shots: 1, s: 4, ap: "5", damage: 1, type: "Pistol", rules: {}, traits: "Assault, Bolt" },
-    { name: "Phased Plasma-Fusil", shots: 2, s: 7, ap: "4", damage: 1, type: "Assault", rules: { breaching5: true }, traits: "Plasma" },
+    { name: "Phased Plasma-Fusil", shots: 3, s: 5, ap: "3", damage: 1, type: "Assault", rules: { breaching5: true }, traits: "Plasma" },
     { name: "Conversion Beamer (<15\")", shots: 1, s: 6, ap: "4", damage: 1, type: "Heavy", rules: { blast: true } },
     { name: "Conversion Beamer (15-30\")", shots: 1, s: 7, ap: "3", damage: 2, type: "Heavy", rules: { blast: true } },
     { name: "Conversion Beamer (>30\")", shots: 1, s: 8, ap: "2", damage: 3, type: "Heavy", rules: { blast: true } },
-    { name: "Irad-Cleanser", shots: 1, s: 5, ap: "1", damage: 1, type: "Assault", rules: { template: true, poisoned2: true }, traits: "Flame" },
+    { name: "Irad-Cleanser", shots: 1, s: 2, ap: "5", damage: 1, type: "Assault", rules: { template: true, poisoned2: true }, traits: "Flame" },
   ],
   arcuitor_tm: [
     { name: "Archaeotech Pistol", shots: 1, s: 6, ap: "4", damage: 2, type: "Pistol", rules: { breaching3: true }, traits: "Assault" },
@@ -1318,7 +1318,7 @@ var WEAPON_PROFILES = {
   ],
   secutor_tm: [
     { name: "Twin Maxima Bolters", shots: 5, s: 4, ap: "5", damage: 1, type: "Assault", rules: {}, traits: "Bolt" },
-    { name: "Phased Plasma-Fusil", shots: 2, s: 7, ap: "4", damage: 1, type: "Assault", rules: { breaching5: true }, traits: "Plasma" },
+    { name: "Phased Plasma-Fusil", shots: 3, s: 5, ap: "3", damage: 1, type: "Assault", rules: { breaching5: true }, traits: "Plasma" },
     { name: "Volkite Caliver", shots: 2, s: 6, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true }, traits: "Volkite" },
   ],
   tech_thrall_cov_tm: [
@@ -1335,13 +1335,13 @@ var WEAPON_PROFILES = {
   ],
   destructor_tm: [
     { name: "Volkite Culverin", shots: 3, s: 6, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true }, traits: "Volkite" },
-    { name: "Irradiation Engine", shots: 1, s: 4, ap: "3", damage: 1, type: "Heavy", rules: { fleshbane: true, blast: true } },
-    { name: "Photon Thruster", shots: 2, s: 6, ap: "2", damage: 2, type: "Heavy", rules: { getshot: true } },
+    { name: "Irradiation Engine", shots: 1, s: 4, ap: "5", damage: 1, type: "Heavy", rules: { fleshbane: true, blast: true } },
+    { name: "Photon Thruster", shots: 2, s: 8, ap: "2", damage: 1, type: "Heavy", rules: { getshot: true } },
   ],
   domitar_tm: [
     { name: "Cyclone ML (Frag)", shots: 1, s: 4, ap: "6", damage: 1, type: "Heavy", rules: { blast: true }, traits: "Missile" },
-    { name: "Cyclone ML (Krak)", shots: 1, s: 8, ap: "3", damage: 1, type: "Heavy", rules: {}, traits: "Missile" },
-    { name: "Cyclone ML (Flak)", shots: 2, s: 7, ap: "4", damage: 1, type: "Heavy", rules: {}, traits: "Missile" },
+    { name: "Cyclone ML (Krak)", shots: 2, s: 8, ap: "3", damage: 1, type: "Heavy", rules: {}, traits: "Missile" },
+    { name: "Cyclone ML (Flak)", shots: 2, s: 8, ap: "4", damage: 1, type: "Heavy", rules: {}, traits: "Missile" },
   ],
   castellax_dest_tm: [
     { name: "Twin Bolters", shots: 4, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {}, traits: "Bolt" },
@@ -1350,18 +1350,18 @@ var WEAPON_PROFILES = {
   castellax_battle_tm: [
     { name: "Twin Bolters", shots: 4, s: 4, ap: "5", damage: 1, type: "Rapid Fire", rules: {}, traits: "Bolt" },
     { name: "Mauler Bolt Cannon", shots: 4, s: 6, ap: "4", damage: 1, type: "Heavy", rules: {}, traits: "Bolt" },
-    { name: "Darkfire Cannon", shots: 2, s: 7, ap: "2", damage: 2, type: "Heavy", rules: { getshot: true } },
+    { name: "Darkfire Cannon", shots: 2, s: 8, ap: "2", damage: 1, type: "Heavy", rules: { getshot: true } },
   ],
   thanatar_siege_tm: [
-    { name: "Twin Mauler Bolt Cannon", shots: 8, s: 6, ap: "4", damage: 1, type: "Heavy", rules: {}, traits: "Bolt" },
-    { name: "Plasma Mortar (Sustained)", shots: 1, s: 8, ap: "2", damage: 2, type: "Barrage", rules: { blast: true, breaching6: true, barrage: true }, traits: "Plasma" },
-    { name: "Plasma Mortar (Maximal)", shots: 1, s: 9, ap: "2", damage: 3, type: "Barrage", rules: { blast: true, breaching5: true, getshot: true, barrage: true }, traits: "Plasma" },
-    { name: "Sollex Heavy-Las", shots: 2, s: 10, ap: "2", damage: 3, type: "Heavy", rules: { armourbane: true }, traits: "Las" },
+    { name: "Twin Mauler Bolt Cannon", shots: 6, s: 6, ap: "4", damage: 1, type: "Heavy", rules: {}, traits: "Bolt" },
+    { name: "Plasma Mortar (Sustained)", shots: 1, s: 8, ap: "4", damage: 2, type: "Barrage", rules: { blast: true, breaching6: true, barrage: true }, traits: "Plasma" },
+    { name: "Plasma Mortar (Maximal)", shots: 1, s: 8, ap: "4", damage: 2, type: "Barrage", rules: { blast: true, breaching5: true, getshot: true, barrage: true }, traits: "Plasma" },
+    { name: "Sollex Heavy-Las", shots: 2, s: 10, ap: "2", damage: 2, type: "Heavy", rules: { armourbane: true }, traits: "Las" },
   ],
   armiger_tm: [
-    { name: "Irad-Cleanser", shots: 1, s: 5, ap: "1", damage: 1, type: "Assault", rules: { template: true, poisoned2: true }, traits: "Flame" },
-    { name: "Volkite Veuglaire", shots: 3, s: 6, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true }, traits: "Volkite" },
-    { name: "Lightning Lock", shots: 3, s: 7, ap: "5", damage: 1, type: "Assault", rules: { rending: true }, traits: "Assault" },
+    { name: "Irad-Cleanser", shots: 1, s: 2, ap: "5", damage: 1, type: "Assault", rules: { template: true, poisoned2: true }, traits: "Flame" },
+    { name: "Volkite Veuglaire", shots: 5, s: 7, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true }, traits: "Volkite" },
+    { name: "Lightning Lock", shots: 1, s: 7, ap: "3", damage: 2, type: "Assault", rules: { rending: true }, traits: "Assault" },
   ],
   triaros_tm: [
     { name: "Volkite Calivers (x2)", shots: 4, s: 6, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true }, traits: "Volkite" },
@@ -1375,9 +1375,9 @@ var WEAPON_PROFILES = {
     // Blood Slaughterer is a melee-only daemon engine — no ranged weapons
   ],
   brass_scorpion_mm: [
-    { name: "Scorpion Cannon", shots: 4, s: 7, ap: "4", damage: 2, type: "Heavy", rules: { breaching5: true }, traits: "Auto" },
-    { name: "Despoiler Cannon (HE)", shots: 1, s: 8, ap: "4", damage: 2, type: "Ordnance", rules: { blast: true } },
-    { name: "Twin Hellmaw Cannon", shots: 1, s: 6, ap: "4", damage: 1, type: "Assault", rules: { template: true, panic: true }, traits: "Flame" },
+    { name: "Scorpion Cannon", shots: 15, s: 5, ap: "4", damage: 1, type: "Heavy", rules: { breaching5: true }, traits: "Auto" },
+    { name: "Despoiler Cannon (HE)", shots: 1, s: 10, ap: "3", damage: 3, type: "Ordnance", rules: { blast: true } },
+    { name: "Twin Hellmaw Cannon", shots: 1, s: 7, ap: "4", damage: 1, type: "Assault", rules: { template: true, panic: true }, traits: "Flame" },
   ],
   kytan_mm: [
     { name: "Kytan Gatling Cannon", shots: 12, s: 6, ap: "4", damage: 1, type: "Heavy", rules: {}, traits: "Auto" },
@@ -1406,7 +1406,7 @@ var WEAPON_PROFILES = {
     { name: "Infernus Pistol", shots: 1, s: 8, ap: "1", damage: 2, type: "Pistol", rules: {}, traits: "Assault, Melta" },
   ],
   ferrus: [
-    { name: "Graviton Imploder", shots: 1, s: 8, ap: "2", damage: 2, type: "Assault", rules: {} },
+    { name: "Graviton Imploder", shots: 1, s: 9, ap: "2", damage: 3, type: "Assault", rules: {} },
     { name: "Plasma Imploder", shots: 2, s: 7, ap: "2", damage: 2, type: "Assault", rules: { breaching: true, getshot: true }, traits: "Plasma" },
   ],
   guilliman: [
@@ -1464,7 +1464,7 @@ var WEAPON_PROFILES = {
     { name: "Twin Heavy Bolter", shots: 6, s: 5, ap: "4", damage: 1, type: "Rapid Fire", rules: {  }, traits: "Bolt" },
     { name: "Vengeance Launcher", shots: 1, s: 7, ap: "4", damage: 1, type: "Rapid Fire", rules: { blast: true }, traits: "Missile" },
     { name: "Tempest Rockets x4", shots: 1, s: 7, ap: "4", damage: 3, type: "Rapid Fire", rules: { armourbane: true }, traits: "Guided Missile" },
-    { name: "Twin Multi-Melta (opt)", shots: 2, s: 8, ap: "1", damage: 3, type: "Heavy", rules: { melta: true }, traits: "Melta" },
+    { name: "Twin Multi-Melta (opt)", shots: 1, s: 9, ap: "2", damage: 3, type: "Heavy", rules: { melta: true }, traits: "Melta" },
     { name: "Cyclone Missile L. (opt)", shots: 2, s: 8, ap: "3", damage: 1, type: "Heavy", rules: {} },
     { name: "Hunter-Killer Missiles x4 (opt)", shots: 4, s: 8, ap: "3", damage: 1, type: "Heavy", rules: {} },
     { name: "Twin Lascannon x2 (opt)", shots: 4, s: 9, ap: "2", damage: 2, type: "Heavy", rules: { twinLinked: true } },
@@ -1477,13 +1477,13 @@ var WEAPON_PROFILES = {
     { name: "Hellstrike Missiles x4 (opt)", shots: 4, s: 8, ap: "2", damage: 2, type: "Heavy", rules: {} },
   ],
   scimitar_jetbike: [
-    { name: "Heavy Bolter", shots: 5, s: 5, ap: "4", damage: 1, type: "Heavy", rules: {  }, traits: "Bolt" },
-    { name: "Volkite Culverin (opt)", shots: 4, s: 6, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true } },
-    { name: "Multi-Melta (opt)", shots: 1, s: 8, ap: "1", damage: 3, type: "Heavy", rules: {} },
-    { name: "Plasma Cannon (opt)", shots: 1, s: 7, ap: "4", damage: 1, type: "Heavy", rules: { getshot: true, breaching: true, blast: true } },
+    { name: "Heavy Bolter", shots: 3, s: 5, ap: "4", damage: 1, type: "Heavy", rules: {  }, traits: "Bolt" },
+    { name: "Volkite Culverin (opt)", shots: 3, s: 6, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true } },
+    { name: "Multi-Melta (opt)", shots: 1, s: 8, ap: "2", damage: 3, type: "Heavy", rules: {} },
+    { name: "Plasma Cannon (opt)", shots: 1, s: 6, ap: "4", damage: 1, type: "Heavy", rules: { getshot: true, breaching: true, blast: true } },
   ],
   javelin: [
-    { name: "Heavy Bolter", shots: 5, s: 5, ap: "4", damage: 1, type: "Heavy", rules: {  }, traits: "Bolt" },
+    { name: "Heavy Bolter", shots: 3, s: 5, ap: "4", damage: 1, type: "Heavy", rules: {  }, traits: "Bolt" },
     { name: "Cyclone Missile L.", shots: 2, s: 8, ap: "3", damage: 1, type: "Heavy", rules: {} },
     { name: "Two Heavy Flamers (opt)", shots: 2, s: 5, ap: "4", damage: 1, type: "Assault", rules: { panic: true } },
     { name: "Two Heavy Bolters (opt)", shots: 8, s: 5, ap: "4", damage: 1, type: "Heavy", rules: { suppressive: true } },
@@ -1491,13 +1491,13 @@ var WEAPON_PROFILES = {
     { name: "Two Volkite Culverin (opt)", shots: 8, s: 6, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true } },
   ],
   land_speeder: [
-    { name: "Heavy Bolter", shots: 5, s: 5, ap: "4", damage: 1, type: "Heavy", rules: {  }, traits: "Bolt" },
+    { name: "Heavy Bolter", shots: 3, s: 5, ap: "4", damage: 1, type: "Heavy", rules: {  }, traits: "Bolt" },
     { name: "Heavy Flamer (opt)", shots: 1, s: 5, ap: "4", damage: 1, type: "Assault", rules: { panic: true } },
     { name: "Havoc Launcher (opt)", shots: 1, s: 5, ap: "5", damage: 1, type: "Rapid Fire", rules: { blast: true, stun: true }, traits: "Missile" },
-    { name: "Multi-Melta (opt)", shots: 1, s: 8, ap: "1", damage: 3, type: "Heavy", rules: {} },
-    { name: "Volkite Culverin (opt)", shots: 4, s: 6, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true } },
-    { name: "Plasma Cannon (opt)", shots: 1, s: 7, ap: "4", damage: 1, type: "Heavy", rules: { getshot: true, breaching: true, blast: true } },
-    { name: "Graviton Gun (opt)", shots: 1, s: "-", ap: "4", damage: 1, type: "Heavy", rules: { blast: true } },
+    { name: "Multi-Melta (opt)", shots: 1, s: 8, ap: "2", damage: 3, type: "Heavy", rules: {} },
+    { name: "Volkite Culverin (opt)", shots: 3, s: 6, ap: "5", damage: 1, type: "Heavy", rules: { deflagrate: true } },
+    { name: "Plasma Cannon (opt)", shots: 1, s: 6, ap: "4", damage: 1, type: "Heavy", rules: { getshot: true, breaching: true, blast: true } },
+    { name: "Graviton Gun (opt)", shots: 1, s: 6, ap: "4", damage: 1, type: "Heavy", rules: { blast: true } },
   ],
   // ── LEGIO CUSTODES ──
   // High Command
@@ -1527,7 +1527,7 @@ var WEAPON_PROFILES = {
   ],
   // War Engines
   contemptor_achillus_c: [
-    { name: "Achillus Dreadspear (Ranged)", shots: 1, s: 10, ap: "3", damage: 2, type: "Heavy", rules: { armourbane: true, breaching4: true }, traits: "Las" },
+    { name: "Achillus Dreadspear (Ranged)", shots: 1, s: 10, ap: "3", damage: 2, type: "Heavy", rules: { armourbane: true, breaching: true }, traits: "Las" },
     { name: "Infernus Incinerator x2", shots: 1, s: 6, ap: "4", damage: 1, type: "Template", rules: {}, traits: "Flame" },
     { name: "Lastrum Storm Bolter (free opt, each)", shots: 4, s: 5, ap: "4", damage: 1, type: "Rapid Fire", rules: { shred: true }, traits: "Bolt" },
     { name: "Adrathic Combi-Destructor (+5pts opt, each)", shots: 2, s: 5, ap: "2", damage: 2, type: "Assault", rules: { rending: true, disintegrator: true } },
@@ -1543,7 +1543,7 @@ var WEAPON_PROFILES = {
   gyrfalcon_c: [
     { name: "Lastrum Bolt Cannon", shots: 3, s: 6, ap: "4", damage: 2, type: "Heavy", rules: {}, traits: "Bolt" },
     { name: "Adrathic Devastator (+10pts opt)", shots: 1, s: 6, ap: "2", damage: 4, type: "Heavy", rules: { rending: true, disintegrator: true } },
-    { name: "Twin Corvae Las-Pulser (+10pts opt)", shots: 1, s: 10, ap: "3", damage: 3, type: "Heavy", rules: { armourbane: true, breaching4: true }, traits: "Las" },
+    { name: "Twin Corvae Las-Pulser (+10pts opt)", shots: 1, s: 10, ap: "3", damage: 3, type: "Heavy", rules: { armourbane: true, breaching: true }, traits: "Las" },
   ],
   pallas_c: [
     { name: "Twin Iliastus Accelerator Fusil", shots: 4, s: 7, ap: "3", damage: 2, type: "Heavy", rules: { breaching6: true, rapidTracking: true }, traits: "Auto" },
@@ -1567,7 +1567,7 @@ var WEAPON_PROFILES = {
   ],
   // Lord of War
   telemon_c: [
-    { name: "Spiculus Missile Launcher", shots: 6, s: 5, ap: "4", damage: 2, type: "Heavy", rules: { breaching6: true, suppressive: true }, traits: "Missile" },
+    { name: "Spiculus Missile Launcher", shots: 6, s: 5, ap: "4", damage: 1, type: "Heavy", rules: { breaching6: true, suppressive: true }, traits: "Missile" },
     { name: "Arachnus Storm Cannon — Concentrated (opt)", shots: 2, s: 9, ap: "2", damage: 3, type: "Heavy", rules: { armourbane: true }, traits: "Las" },
     { name: "Arachnus Storm Cannon — Burst (opt)", shots: 4, s: 6, ap: "3", damage: 2, type: "Heavy", rules: {}, traits: "Las" },
     { name: "Adrathic Desolator (opt)", shots: 2, s: 7, ap: "2", damage: 4, type: "Heavy", rules: { rending: true, disintegrator: true } },
@@ -1582,7 +1582,7 @@ var WEAPON_PROFILES = {
   ares_c: [
     { name: "Twin Arachnus Storm Carronade — Concentrated", shots: 2, s: 10, ap: "2", damage: 2, type: "Heavy", rules: { armourbane: true }, traits: "Las" },
     { name: "Twin Arachnus Storm Carronade — Burst Fire", shots: 6, s: 7, ap: "3", damage: 2, type: "Heavy", rules: {}, traits: "Las" },
-    { name: "Neutronium Magna-Cascade Cannon", shots: 1, s: 10, ap: "3", damage: 3, type: "Template", rules: { hellstorm: true, breaching4: true }, traits: "Assault" },
+    { name: "Neutronium Magna-Cascade Cannon", shots: 1, s: 10, ap: "3", damage: 3, type: "Template", rules: { hellstorm: true, breaching: true }, traits: "Assault" },
     { name: "Infernus Firebomb Clusters x2", shots: 1, s: 6, ap: "4", damage: 2, type: "Assault", rules: { blast: true, panic: true }, traits: "Flame" },
   ],
 };

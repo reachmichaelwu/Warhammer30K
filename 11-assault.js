@@ -25,22 +25,36 @@ function resolveWeaponGroup(group, remainTarget, log) {
   sideLog.push("To Hit: [" + hitRolls.join(", ") + "] -> " + hits + " hit(s)");
   if (hits === 0) { sideLog.forEach(t => log.push({ phase: "Initiative", text: t })); return { casualties: 0, unsavedWounds: 0, groupRolls }; }
 
-  const toWoundNeeded = getWoundRoll(s, targetT);
+  let toWoundNeeded = getWoundRoll(s, targetT);
+  // Poisoned (X+): wounds automatically on X+ regardless of Toughness (use better of the two)
+  const poisonOn = rules ? (rules.m_poisoned2 ? 2 : rules.m_poisoned ? 4 : 0) : 0;
+  if (poisonOn) {
+    toWoundNeeded = toWoundNeeded === null ? poisonOn : Math.min(toWoundNeeded, poisonOn);
+    sideLog.push("Poisoned (" + poisonOn + "+): wounds on " + toWoundNeeded + "+ regardless of Toughness");
+  }
   if (toWoundNeeded === null) {
     sideLog.push("S" + s + " vs T" + targetT + ": Cannot wound!");
     sideLog.forEach(t => log.push({ phase: "Initiative", text: t }));
     return { casualties: 0, unsavedWounds: 0, groupRolls };
   }
+  // Brutal: +1 to wound roll (a natural 1 always fails, so floor at 2+)
+  if (rules && rules.m_brutal && toWoundNeeded > 2) {
+    toWoundNeeded -= 1;
+    sideLog.push("Brutal: +1 to wound -> needs " + toWoundNeeded + "+");
+  }
   sideLog.push("To Wound: S" + s + " vs T" + targetT + " -> needs " + toWoundNeeded + "+");
 
   const woundRolls = rollD6s(hits);
-  let wounds = 0, rendingW = 0, murderousW = 0, normalW = 0;
+  // Breaching (X+): qualifying wounds are resolved at AP2
+  const breachOn = rules ? ((rules.m_breaching || rules.m_breaching4) ? 4 : rules.m_breaching5 ? 5 : rules.m_breaching6 ? 6 : 0) : 0;
+  let wounds = 0, rendingW = 0, murderousW = 0, breachingW = 0, normalW = 0;
   woundRolls.forEach(r => {
     const success = r >= toWoundNeeded;
     if (success) {
       wounds++;
       if (rules && rules.m_rending && r === 6) rendingW++;
       else if (rules && rules.m_murderous && r === 6) murderousW++;
+      else if (breachOn && r >= breachOn) breachingW++;
       else normalW++;
     }
     groupRolls.wound.push({ value: r, success });
@@ -51,7 +65,13 @@ function resolveWeaponGroup(group, remainTarget, log) {
     if (misses.length > 0) {
       const rerolls = rollD6s(misses.length);
       rerolls.forEach(r => {
-        if (r >= toWoundNeeded) { wounds++; if (rules.m_rending && r === 6) rendingW++; else normalW++; }
+        if (r >= toWoundNeeded) {
+          wounds++;
+          if (rules.m_rending && r === 6) rendingW++;
+          else if (rules.m_murderous && r === 6) murderousW++;
+          else if (breachOn && r >= breachOn) breachingW++;
+          else normalW++;
+        }
         groupRolls.wound.push({ value: r, success: r >= toWoundNeeded, reroll: true });
       });
       sideLog.push("Shred: re-rolled " + misses.length + " -> " + rerolls.filter(r => r >= toWoundNeeded).length + " extra wound(s)");
@@ -59,8 +79,9 @@ function resolveWeaponGroup(group, remainTarget, log) {
   }
 
   if (rendingW > 0) sideLog.push("Rending: " + rendingW + " wound(s) at AP2");
+  if (breachingW > 0) sideLog.push("Breaching (" + breachOn + "+): " + breachingW + " wound(s) at AP2");
   if (murderousW > 0) sideLog.push("Murderous Strike: " + murderousW + " wound(s) cause Instant Death");
-  normalW = wounds - rendingW - murderousW;
+  normalW = wounds - rendingW - murderousW - breachingW;
   sideLog.push("Wounds: [" + woundRolls.join(", ") + "] -> " + wounds + " wound(s)");
   if (wounds === 0) { sideLog.forEach(t => log.push({ phase: "Initiative", text: t })); return { casualties: 0, unsavedWounds: 0, groupRolls }; }
 
@@ -80,6 +101,7 @@ function resolveWeaponGroup(group, remainTarget, log) {
   }
   unsaved += doSaves(normalW, ap, "Normal");
   if (rendingW > 0) unsaved += doSaves(rendingW, "2", "Rending AP2");
+  if (breachingW > 0) unsaved += doSaves(breachingW, "2", "Breaching AP2");
   if (murderousW > 0) unsaved += doSaves(murderousW, ap, "Murderous Strike");
 
   let casualties = unsaved;
@@ -139,7 +161,7 @@ function resolveAssaultPhase(params) {
     let atkA = attackerA;
     if (isCharging && !disordered) { atkA += 1; log.push({ phase: "Setup", text: "Attacker +1A for charging (" + attackerA + " + 1 = " + atkA + ")" }); }
     if (attackerRules && attackerRules.m_rampage && defenderModels > attackerModels) {
-      const rb = Math.ceil(Math.random() * 3); atkA += rb;
+      const rb = Math.floor(Math.random() * 3) + 1; atkA += rb; // D3
       log.push({ phase: "Setup", text: "Rampage: +" + rb + " attacks (now " + atkA + ")" });
     }
     const ei = attackerRules && attackerRules.m_unwieldy ? 1 : attackerI;
@@ -160,8 +182,39 @@ function resolveAssaultPhase(params) {
   const groupRollsMap = {};
 
   let totalAtkCas = 0, totalDefCas = 0;
+  let totalAtkWounds = 0, totalDefWounds = 0; // unsaved wounds inflicted on each side
   let remainAtk = atkGroups.reduce((s, g) => s + g.models, 0);
   let remainDef = defGroups.reduce((s, g) => s + g.models, 0);
+  const atkInitialModels = remainAtk, defInitialModels = remainDef;
+
+  // Resolve all of one side's groups at an initiative step; returns casualties inflicted on the opponent.
+  function resolveSideAtStep(steps, side, iVal, remainOwn, remainOpp) {
+    const isAtk = side === "attacker";
+    const sideLabel = isAtk ? "Attacker" : "Defender";
+    const legacy = isAtk ? rolls.attacker : rolls.defender;
+    let stepCas = 0;
+    for (const s of steps) {
+      const g = s.group;
+      const res = resolveWeaponGroup({
+        label: sideLabel + " " + g.weaponName + " (I" + iVal + ")", models: Math.min(g.models, remainOwn), attacks: g.attacks,
+        ws: g.ws, s: g.s, ap: g.ap, w: g.w, rules: g.rules,
+        targetWS: isAtk ? defenderWS : attackerWS,
+        targetT: isAtk ? defenderT : attackerT,
+        targetSv: isAtk ? defenderSv : attackerSv,
+        targetInv: isAtk ? defenderInv : attackerInv,
+        targetFnp: isAtk ? defenderFnp : attackerFnp,
+        targetW: isAtk ? defenderW : attackerW,
+      }, remainOpp, log);
+      stepCas += res.casualties;
+      if (isAtk) totalDefWounds += res.unsavedWounds; else totalAtkWounds += res.unsavedWounds;
+      const key = (isAtk ? "atk:" : "def:") + g.weaponName;
+      if (!groupRollsMap[key]) groupRollsMap[key] = { side: sideLabel, name: g.weaponName, models: g.models, i: iVal, rolls: { hit: [], wound: [], save: [], fnp: [] } };
+      const gr = groupRollsMap[key].rolls;
+      gr.hit.push(...res.groupRolls.hit); gr.wound.push(...res.groupRolls.wound); gr.save.push(...res.groupRolls.save); gr.fnp.push(...res.groupRolls.fnp);
+      legacy.hit.push(...res.groupRolls.hit); legacy.wound.push(...res.groupRolls.wound); legacy.save.push(...res.groupRolls.save); legacy.fnp.push(...res.groupRolls.fnp);
+    }
+    return stepCas;
+  }
 
   for (const iVal of iValues) {
     const atkAtI = allSteps.filter(s => s.side === "attacker" && s.iValue === iVal);
@@ -171,75 +224,20 @@ function resolveAssaultPhase(params) {
 
     if (hasAtk && hasDef) {
       log.push({ phase: "Initiative", text: "I" + iVal + ": Simultaneous" });
-      let stepDefCas = 0, stepAtkCas = 0;
-      for (const s of atkAtI) {
-        const g = s.group;
-        const res = resolveWeaponGroup({
-          label: "Attacker " + g.weaponName + " (I" + iVal + ")", models: Math.min(g.models, remainAtk), attacks: g.attacks,
-          ws: g.ws, s: g.s, ap: g.ap, w: g.w, rules: g.rules,
-          targetWS: defenderWS, targetT: defenderT, targetSv: defenderSv, targetInv: defenderInv, targetFnp: defenderFnp, targetW: defenderW,
-        }, remainDef, log);
-        stepDefCas += res.casualties;
-        const key = "atk:" + g.weaponName;
-        if (!groupRollsMap[key]) groupRollsMap[key] = { side: "Attacker", name: g.weaponName, models: g.models, i: iVal, rolls: { hit: [], wound: [], save: [], fnp: [] } };
-        const gr = groupRollsMap[key].rolls;
-        gr.hit.push(...res.groupRolls.hit); gr.wound.push(...res.groupRolls.wound); gr.save.push(...res.groupRolls.save); gr.fnp.push(...res.groupRolls.fnp);
-        rolls.attacker.hit.push(...res.groupRolls.hit); rolls.attacker.wound.push(...res.groupRolls.wound); rolls.attacker.save.push(...res.groupRolls.save); rolls.attacker.fnp.push(...res.groupRolls.fnp);
-      }
-      for (const s of defAtI) {
-        const g = s.group;
-        const res = resolveWeaponGroup({
-          label: "Defender " + g.weaponName + " (I" + iVal + ")", models: Math.min(g.models, remainDef), attacks: g.attacks,
-          ws: g.ws, s: g.s, ap: g.ap, w: g.w, rules: g.rules,
-          targetWS: attackerWS, targetT: attackerT, targetSv: attackerSv, targetInv: attackerInv, targetFnp: attackerFnp, targetW: attackerW,
-        }, remainAtk, log);
-        stepAtkCas += res.casualties;
-        const key = "def:" + g.weaponName;
-        if (!groupRollsMap[key]) groupRollsMap[key] = { side: "Defender", name: g.weaponName, models: g.models, i: iVal, rolls: { hit: [], wound: [], save: [], fnp: [] } };
-        const gr = groupRollsMap[key].rolls;
-        gr.hit.push(...res.groupRolls.hit); gr.wound.push(...res.groupRolls.wound); gr.save.push(...res.groupRolls.save); gr.fnp.push(...res.groupRolls.fnp);
-        rolls.defender.hit.push(...res.groupRolls.hit); rolls.defender.wound.push(...res.groupRolls.wound); rolls.defender.save.push(...res.groupRolls.save); rolls.defender.fnp.push(...res.groupRolls.fnp);
-      }
+      const stepDefCas = resolveSideAtStep(atkAtI, "attacker", iVal, remainAtk, remainDef);
+      const stepAtkCas = resolveSideAtStep(defAtI, "defender", iVal, remainDef, remainAtk);
       remainDef = Math.max(0, remainDef - stepDefCas);
       remainAtk = Math.max(0, remainAtk - stepAtkCas);
       totalDefCas += stepDefCas; totalAtkCas += stepAtkCas;
       log.push({ phase: "Initiative", text: "I" + iVal + ": " + stepDefCas + " def slain, " + stepAtkCas + " atk slain -> " + remainAtk + " atk / " + remainDef + " def remain" });
     } else if (hasAtk) {
       log.push({ phase: "Initiative", text: "I" + iVal + ": Attacker strikes" });
-      let stepDefCas = 0;
-      for (const s of atkAtI) {
-        const g = s.group;
-        const res = resolveWeaponGroup({
-          label: "Attacker " + g.weaponName + " (I" + iVal + ")", models: Math.min(g.models, remainAtk), attacks: g.attacks,
-          ws: g.ws, s: g.s, ap: g.ap, w: g.w, rules: g.rules,
-          targetWS: defenderWS, targetT: defenderT, targetSv: defenderSv, targetInv: defenderInv, targetFnp: defenderFnp, targetW: defenderW,
-        }, remainDef, log);
-        stepDefCas += res.casualties;
-        const key = "atk:" + g.weaponName;
-        if (!groupRollsMap[key]) groupRollsMap[key] = { side: "Attacker", name: g.weaponName, models: g.models, i: iVal, rolls: { hit: [], wound: [], save: [], fnp: [] } };
-        const gr = groupRollsMap[key].rolls;
-        gr.hit.push(...res.groupRolls.hit); gr.wound.push(...res.groupRolls.wound); gr.save.push(...res.groupRolls.save); gr.fnp.push(...res.groupRolls.fnp);
-        rolls.attacker.hit.push(...res.groupRolls.hit); rolls.attacker.wound.push(...res.groupRolls.wound); rolls.attacker.save.push(...res.groupRolls.save); rolls.attacker.fnp.push(...res.groupRolls.fnp);
-      }
+      const stepDefCas = resolveSideAtStep(atkAtI, "attacker", iVal, remainAtk, remainDef);
       remainDef = Math.max(0, remainDef - stepDefCas); totalDefCas += stepDefCas;
       if (stepDefCas > 0) log.push({ phase: "Initiative", text: "I" + iVal + ": " + stepDefCas + " def slain -> " + remainDef + " remain" });
     } else if (hasDef) {
       log.push({ phase: "Initiative", text: "I" + iVal + ": Defender strikes" });
-      let stepAtkCas = 0;
-      for (const s of defAtI) {
-        const g = s.group;
-        const res = resolveWeaponGroup({
-          label: "Defender " + g.weaponName + " (I" + iVal + ")", models: Math.min(g.models, remainDef), attacks: g.attacks,
-          ws: g.ws, s: g.s, ap: g.ap, w: g.w, rules: g.rules,
-          targetWS: attackerWS, targetT: attackerT, targetSv: attackerSv, targetInv: attackerInv, targetFnp: attackerFnp, targetW: attackerW,
-        }, remainAtk, log);
-        stepAtkCas += res.casualties;
-        const key = "def:" + g.weaponName;
-        if (!groupRollsMap[key]) groupRollsMap[key] = { side: "Defender", name: g.weaponName, models: g.models, i: iVal, rolls: { hit: [], wound: [], save: [], fnp: [] } };
-        const gr = groupRollsMap[key].rolls;
-        gr.hit.push(...res.groupRolls.hit); gr.wound.push(...res.groupRolls.wound); gr.save.push(...res.groupRolls.save); gr.fnp.push(...res.groupRolls.fnp);
-        rolls.defender.hit.push(...res.groupRolls.hit); rolls.defender.wound.push(...res.groupRolls.wound); rolls.defender.save.push(...res.groupRolls.save); rolls.defender.fnp.push(...res.groupRolls.fnp);
-      }
+      const stepAtkCas = resolveSideAtStep(defAtI, "defender", iVal, remainDef, remainAtk);
       remainAtk = Math.max(0, remainAtk - stepAtkCas); totalAtkCas += stepAtkCas;
       if (stepAtkCas > 0) log.push({ phase: "Initiative", text: "I" + iVal + ": " + stepAtkCas + " atk slain -> " + remainAtk + " remain" });
     }
@@ -264,10 +262,19 @@ function resolveAssaultPhase(params) {
   }
   log.push({ phase: "Combat Res", text: "Survivors: " + remainAtk + " attacker(s), " + remainDef + " defender(s)" });
 
+  // Wounds remaining = starting wound pool (models × W) minus unsaved wounds taken, clamped at 0.
+  const atkW = Math.max(1, attackerW || 1), defW = Math.max(1, defenderW || 1);
+  const atkWoundPool = atkInitialModels * atkW, defWoundPool = defInitialModels * defW;
+  const remainAtkWounds = Math.max(0, atkWoundPool - totalAtkWounds);
+  const remainDefWounds = Math.max(0, defWoundPool - totalDefWounds);
+  log.push({ phase: "Combat Res", text: "Wounds remaining: " + remainAtkWounds + "/" + atkWoundPool + " attacker, " + remainDefWounds + "/" + defWoundPool + " defender" });
+
   return {
     log, rolls, combatResult, groupRollsMap,
     attackerCasualties: totalAtkCas, defenderCasualties: totalDefCas,
     remainingAttackers: remainAtk, remainingDefenders: remainDef, isCharging,
+    remainingAttackerWounds: remainAtkWounds, remainingDefenderWounds: remainDefWounds,
+    attackerWoundPool: atkWoundPool, defenderWoundPool: defWoundPool,
   };
 }
 

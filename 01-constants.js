@@ -19,13 +19,16 @@ var CRITICAL_HIT_THRESHOLD = {
 };
 
 // Strength vs Toughness wound chart
+// Matches the reference chart shown in the app (15-main-app.js): minimum 6+
+// when T is double S or more — there is no "cannot wound" result.
+// (Previously returned null for s <= t/2, which contradicted the displayed
+// chart and made the final `return 6` unreachable.)
 function getWoundRoll(s, t) {
   if (s >= t * 2) return 2;
   if (s > t) return 3;
   if (s === t) return 4;
-  if (s <= t / 2) return null; // cannot wound (would need 7+)
-  if (s < t) return 5;
-  return 6;
+  if (t >= s * 2) return 6;
+  return 5;
 }
 
 // Dice roller
@@ -76,3 +79,7 @@ var SPECIAL_RULES = [
   { id: "force", label: "Force", desc: "Make a Willpower check before attacking — success doubles the listed Characteristic; failure causes Perils of the Warp" },
 ];
 
+var SPECIAL_RULES_BY_ID = {};
+SPECIAL_RULES.forEach(function (rule) {
+  SPECIAL_RULES_BY_ID[rule.id] = rule;
+});

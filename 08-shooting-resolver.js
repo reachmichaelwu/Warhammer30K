@@ -162,11 +162,19 @@ function resolveShootingPhase(params) {
   } else {
     toWoundNeeded = getWoundRoll(strength, toughness);
     if (toWoundNeeded === null) {
-      log.push({ phase: "To Wound", text: `RS${strength} vs T${toughness}: Cannot wound! (would need 7+)` });
-      log.push({ phase: "Result", text: "No wounds possible. Shooting resolved." });
-      return { log, rolls, casualties: 0, getsHotWounds, precisionHits, totalShots, hits, wounds: 0, unsaved: 0, deflagrateHits: 0, criticalHitWounds: 0, statusEffects: [], ldRolls: [] };
+      if (criticalHits > 0) {
+        // Critical hits auto-wound and bypass the wound roll — they still count even when
+        // regular hits cannot wound. Regular hits simply cannot succeed (7+).
+        toWoundNeeded = 7;
+        log.push({ phase: "To Wound", text: `RS${strength} vs T${toughness}: Cannot wound with regular hits (would need 7+) — only Critical Hits auto-wound` });
+      } else {
+        log.push({ phase: "To Wound", text: `RS${strength} vs T${toughness}: Cannot wound! (would need 7+)` });
+        log.push({ phase: "Result", text: "No wounds possible. Shooting resolved." });
+        return { log, rolls, casualties: 0, getsHotWounds, precisionHits, totalShots, hits, wounds: 0, unsaved: 0, deflagrateHits: 0, criticalHitWounds: 0, statusEffects: [], ldRolls: [] };
+      }
+    } else {
+      log.push({ phase: "To Wound", text: `RS${strength} vs T${toughness} → needs ${toWoundNeeded}+ to wound` });
     }
-    log.push({ phase: "To Wound", text: `RS${strength} vs T${toughness} → needs ${toWoundNeeded}+ to wound` });
   }
 
   // 3rd Edition: Critical hits auto-wound, only roll for regular hits
@@ -178,7 +186,6 @@ function resolveShootingPhase(params) {
   let rendingWounds = 0;
   let breachingWounds = 0;
   let normalWounds = 0;
-  let criticalWounds = criticalHits;
 
   // Track each wound roll
   const woundResults = woundRolls.map(r => {
@@ -201,7 +208,8 @@ function resolveShootingPhase(params) {
     return { value: r, success, rending, breaching };
   });
 
-  wounds = woundResults.filter(r => r.success).length;
+  // Critical hits auto-wound and are added on top of the rolled wounds
+  wounds = criticalHits + woundResults.filter(r => r.success).length;
   rolls.wound = woundResults;
 
   // Shred re-rolls
@@ -223,13 +231,19 @@ function resolveShootingPhase(params) {
     log.push({ phase: "To Wound", text: `Shred: re-rolled ${woundMisses.length} failed wound(s) → ${rerollWounds} additional wound(s)` });
   }
 
-  // Poisoned re-rolls (if S >= T)
-  if (poisonedValue && strength >= toughness && regularHitsToWound > 0) {
+  // Poisoned re-rolls (if S >= T) — skipped if Shred already re-rolled (no re-rolling a re-roll)
+  if (poisonedValue && strength >= toughness && regularHitsToWound > 0 && !specialRules.shred) {
     const woundMisses = woundResults.filter(r => !r.success);
     const rerolls = rollD6s(woundMisses.length);
     let poisonRerolls = 0;
     rerolls.forEach(r => {
-      if (r >= poisonedValue) { poisonRerolls++; wounds++; normalWounds++; }
+      if (r >= poisonedValue) {
+        poisonRerolls++;
+        wounds++;
+        if (specialRules.rending && r === 6) rendingWounds++;
+        else if ((specialRules.breaching3 && r >= 3) || (specialRules.breaching && r >= 4) || (specialRules.breaching5 && r >= 5) || (specialRules.breaching6 && r === 6)) breachingWounds++;
+        else normalWounds++;
+      }
       rolls.wound.push({ value: r, success: r >= poisonedValue, reroll: true });
     });
     if (poisonRerolls > 0) {
@@ -251,7 +265,7 @@ function resolveShootingPhase(params) {
 
   if (wounds === 0) {
     log.push({ phase: "Result", text: "No wounds scored. Shooting resolved." });
-    return { log, rolls, casualties: 0, getsHotWounds, precisionHits, totalShots, hits, wounds, unsaved: 0, deflagrateHits: 0, statusEffects: [], ldRolls: [] };
+    return { log, rolls, casualties: 0, getsHotWounds, precisionHits, totalShots, hits, wounds, unsaved: 0, deflagrateHits: 0, criticalHitWounds, statusEffects: [], ldRolls: [] };
   }
 
   // ━━ STEP 3: Saving Throws ━━
@@ -323,7 +337,7 @@ function resolveShootingPhase(params) {
 
   if (unsavedWounds === 0) {
     log.push({ phase: "Result", text: "All wounds saved. No casualties." });
-    return { log, rolls, casualties: 0, getsHotWounds, precisionHits, totalShots, hits, wounds, unsaved: 0, deflagrateHits: 0, statusEffects: [], ldRolls: [] };
+    return { log, rolls, casualties: 0, getsHotWounds, precisionHits, totalShots, hits, wounds, unsaved: 0, deflagrateHits: 0, criticalHitWounds, statusEffects: [], ldRolls: [] };
   }
 
   // ━━ STEP 4: Feel No Pain ━━
@@ -366,18 +380,12 @@ function resolveShootingPhase(params) {
     
     // Sergeant To Hit (same BS as squad)
     let sgtHitNeeded = BS_TO_HIT[bs] || 6;
-    let sgtSnapShooting = false;
-    if (sgtWeapon.type === "Heavy" && moved) {
-      sgtSnapShooting = true;
-      if (bs <= 3) sgtHitNeeded = 6;
-      else if (bs <= 5) sgtHitNeeded = 5;
-      else if (bs <= 7) sgtHitNeeded = 4;
-      else sgtHitNeeded = 3;
+    // Manual Snap Shots apply to the whole unit; Heavy weapons that moved also snap fire.
+    // (Pistols can fire normally even if moved.)
+    if (snapShots || (sgtWeapon.type === "Heavy" && moved)) {
+      sgtHitNeeded = getSnapThreshold(bs);
     }
-    if (sgtWeapon.type === "Pistol" && moved) {
-      // Pistols can fire normally even if moved
-    }
-    
+
     const sgtHitRolls = rollD6s(sgtTotalShots);
     rolls.hit.push(...sgtHitRolls.map(r => ({ value: r, success: r >= sgtHitNeeded, sergeant: true })));
     
@@ -425,7 +433,7 @@ function resolveShootingPhase(params) {
           if (success) {
             sgtWounds++;
             if (sgtWeapon.rules?.rending && r === 6) sgtRendingW++;
-            else if ((sgtWeapon.rules?.breaching && r >= 4) || (sgtWeapon.rules?.breaching5 && r >= 5) || (sgtWeapon.rules?.breaching6 && r === 6)) sgtBreachingW++;
+            else if ((sgtWeapon.rules?.breaching3 && r >= 3) || (sgtWeapon.rules?.breaching && r >= 4) || (sgtWeapon.rules?.breaching5 && r >= 5) || (sgtWeapon.rules?.breaching6 && r === 6)) sgtBreachingW++;
             else sgtNormalW++;
           }
           rolls.wound.push({ value: r, success, sergeant: true });
@@ -436,7 +444,12 @@ function resolveShootingPhase(params) {
           const sgtMisses = sgtWoundRolls.filter(r => r < sgtWoundNeeded);
           const sgtRerolls = rollD6s(sgtMisses.length);
           sgtRerolls.forEach(r => {
-            if (r >= sgtWoundNeeded) { sgtWounds++; sgtNormalW++; }
+            if (r >= sgtWoundNeeded) {
+              sgtWounds++;
+              if (sgtWeapon.rules?.rending && r === 6) sgtRendingW++;
+              else if ((sgtWeapon.rules?.breaching3 && r >= 3) || (sgtWeapon.rules?.breaching && r >= 4) || (sgtWeapon.rules?.breaching5 && r >= 5) || (sgtWeapon.rules?.breaching6 && r === 6)) sgtBreachingW++;
+              else sgtNormalW++;
+            }
             rolls.wound.push({ value: r, success: r >= sgtWoundNeeded, reroll: true, sergeant: true });
           });
         }
@@ -500,7 +513,7 @@ function resolveShootingPhase(params) {
     wounds += sgtWounds;
     unsavedWounds += sgtUnsaved;
     casualties += sgtCasualties;
-    totalShots += hasSgt ? (sgtWeapon.type === "Rapid Fire" && halfRange ? sgtWeapon.shots * 2 : sgtWeapon.shots) : 0;
+    totalShots += sgtTotalShots;
   }
 
   // ━━ FINAL RESULT ━━

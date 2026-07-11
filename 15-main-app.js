@@ -2668,54 +2668,11 @@ var ShootingResolver = function () {
     else setTraitorArmy(typeof fn === "function" ? fn : () => fn);
   };
 
-  const armyRoleCounts = useMemo(() => {
-    const army = getArmy();
-    const counts = {};
-    Object.keys(BATTLEFIELD_ROLES).forEach((r) => (counts[r] = 0));
-    army.entries.forEach((e) => {
-      const role = e.slotRole || UNIT_BATTLEFIELD_ROLE[e.unitId] || "troops";
-      counts[role] = (counts[role] || 0) + 1;
-    });
-    return counts;
-  }, [loyalistArmy, traitorArmy, armyBuilderSide]);
-
-  const getDetachmentRoleCounts = useCallback(
-    (detId) => {
-      const army = getArmy();
-      const counts = {};
-      army.entries
-        .filter((e) => e.detachmentId === detId)
-        .forEach((e) => {
-          const role =
-            e.slotRole || UNIT_BATTLEFIELD_ROLE[e.unitId] || "troops";
-          counts[role] = (counts[role] || 0) + 1;
-        });
-      return counts;
-    },
-    [loyalistArmy, traitorArmy, armyBuilderSide],
-  );
-
   const armyTotalPoints = useMemo(() => {
     return getArmy().entries.reduce(
       (sum, e) => sum + calcArmyEntryPoints(e),
       0,
     );
-  }, [loyalistArmy, traitorArmy, armyBuilderSide]);
-
-  const highCommandCount = useMemo(() => {
-    return getArmy().entries.filter(
-      (e) =>
-        (e.slotRole || UNIT_BATTLEFIELD_ROLE[e.unitId]) === "high_command" &&
-        e.detachmentId === "primary",
-    ).length;
-  }, [loyalistArmy, traitorArmy, armyBuilderSide]);
-
-  const commandCount = useMemo(() => {
-    return getArmy().entries.filter(
-      (e) =>
-        (e.slotRole || UNIT_BATTLEFIELD_ROLE[e.unitId]) === "command" &&
-        e.detachmentId === "primary",
-    ).length;
   }, [loyalistArmy, traitorArmy, armyBuilderSide]);
 
   const armyValidation = useMemo(() => {
@@ -2976,13 +2933,6 @@ var ShootingResolver = function () {
     [loyalistArmy, traitorArmy, armyBuilderSide],
   );
 
-  const isSlotPrime = useCallback(
-    (detId, slotRole) => {
-      return isSlotPrimeForEntry(detId, slotRole, 0);
-    },
-    [isSlotPrimeForEntry],
-  );
-
   const isEntryPrimeEligible = useCallback(
     (entry) => {
       const army = getArmy();
@@ -3092,7 +3042,6 @@ var ShootingResolver = function () {
     [loyalistArmy, traitorArmy, armyBuilderSide],
   );
 
-  const [logisticalSlots, setLogisticalSlots] = useState({}); // { entryId: { role: "troops" } }
 
   const getLegionDetachments = useCallback(() => {
     const army = getArmy();
@@ -3671,7 +3620,6 @@ var ShootingResolver = function () {
 
   const [mapAttackerId, setMapAttackerId] = useState(null);
   const [mapTargetId, setMapTargetId] = useState(null);
-  const [showTacticalMap, setShowTacticalMap] = useState(true);
   const [fullSizeTacticalMapPhase, setFullSizeTacticalMapPhase] =
     useState(null);
   const [fullSizeMapResultModal, setFullSizeMapResultModal] = useState(null);
@@ -3943,7 +3891,13 @@ var ShootingResolver = function () {
       reserves: false,
       resolver: false,
     });
-    setDeployScale((scale) => Math.max(scale, 14));
+    // Desktop full-size wants a big scale; on phones forcing 14px/inch would
+    // blow the board out to ~1200px wide, so keep whatever fits the screen.
+    const minFullScale =
+      typeof window !== "undefined" && window.HHMobile && window.HHMobile.isMobile
+        ? 6
+        : 14;
+    setDeployScale((scale) => Math.max(scale, minFullScale));
     setFullSizeTacticalMapPhase(phase);
   }
 
@@ -5893,27 +5847,6 @@ var ShootingResolver = function () {
     );
   };
 
-  const declareCombatAirPatrol = (triggerFlyerId) => {
-    const trigger = deployedUnits.find((u) => u.id === triggerFlyerId);
-    if (!trigger) return;
-    const enemyPlayer = trigger.player === "p1" ? "p2" : "p1";
-    const interceptors = aerialReserves.filter(
-      (f) => f.player === enemyPlayer && hasInterceptor(f),
-    );
-    if (interceptors.length === 0) {
-      alert("No eligible interceptors in Aerial Reserves.");
-      return;
-    }
-    setCapReaction({
-      triggerFlyerId,
-      triggerPlayer: trigger.player,
-      availableInterceptors: interceptors,
-      reactingFlyerId: null,
-      shootingResolved: false,
-      declined: false,
-    });
-  };
-
   const resolveCombatAirPatrol = () => {
     if (!capReaction || !capReaction.reactingFlyerId) return;
     const reactor = aerialReserves.find(
@@ -6453,17 +6386,27 @@ var ShootingResolver = function () {
       background: "rgba(5,15,5,0.86)",
       border: "1px solid rgba(143,207,145,0.45)",
     };
-    const renderStat = (label, value, color = "#e8f4d8") =>
+    const renderStat = (label, value, color = "#e8f4d8", highlight = false) =>
       React.createElement(
         "div",
-        { key: label, style: statStyle },
+        {
+          key: label,
+          style: highlight
+            ? {
+                ...statStyle,
+                background: "rgba(184,134,11,0.12)",
+                border: "1px solid rgba(184,134,11,0.7)",
+                boxShadow: "0 0 12px rgba(184,134,11,0.3)",
+              }
+            : statStyle,
+        },
         React.createElement(
           "div",
           {
             style: {
               fontSize: 8,
               fontFamily: "'Share Tech Mono', serif",
-              color: "#8fcf91",
+              color: highlight ? "#f4d27a" : "#8fcf91",
               letterSpacing: 1,
               textTransform: "uppercase",
               marginBottom: 3,
@@ -6484,13 +6427,53 @@ var ShootingResolver = function () {
           value,
         ),
       );
-    const renderDiceRow = (label, rolls) => {
+    const renderDiceRow = (label, rolls, highlight) => {
       const list = rolls || [];
       if (list.length === 0) return null;
+      const successes = list.filter((d) => d.success).length;
+      const rowStyle = highlight
+        ? {
+            marginBottom: 10,
+            padding: "8px 10px",
+            borderRadius: 4,
+            background: "rgba(184,134,11,0.10)",
+            border: "1px solid rgba(184,134,11,0.65)",
+            boxShadow: "0 0 12px rgba(184,134,11,0.28)",
+          }
+        : { marginBottom: 10 };
+      const labelStyle = highlight
+        ? { ...rollLabelStyle, color: "#f4d27a", marginBottom: 6 }
+        : rollLabelStyle;
       return React.createElement(
         "div",
-        { style: { marginBottom: 10 } },
-        React.createElement("div", { style: rollLabelStyle }, label),
+        { style: rowStyle },
+        React.createElement(
+          "div",
+          {
+            style: {
+              display: "flex",
+              alignItems: "baseline",
+              gap: 8,
+              marginBottom: highlight ? 6 : 4,
+            },
+          },
+          React.createElement("div", { style: labelStyle }, label),
+          highlight
+            ? React.createElement(
+                "span",
+                {
+                  style: {
+                    fontSize: 10,
+                    fontFamily: "'Share Tech Mono', serif",
+                    fontWeight: 900,
+                    color: "#f4d27a",
+                    letterSpacing: 1,
+                  },
+                },
+                `${successes}/${list.length} WOUNDS`,
+              )
+            : null,
+        ),
         React.createElement(
           "div",
           { style: { display: "flex", flexWrap: "wrap", gap: 3 } },
@@ -6574,7 +6557,7 @@ var ShootingResolver = function () {
           ),
         ),
         renderDiceRow("TO HIT", hit),
-        renderDiceRow("TO WOUND", wound),
+        renderDiceRow("TO WOUND", wound, mode === "assault"),
         renderDiceRow("SAVES", save),
         renderDiceRow("FNP", fnp),
       );
@@ -6910,6 +6893,12 @@ var ShootingResolver = function () {
                         renderStat(
                           "Survivors",
                           `${data.remainingAttackers || 0}/${data.remainingDefenders || 0}`,
+                        ),
+                        renderStat(
+                          "Wounds Left (Atk/Def)",
+                          `${data.remainingAttackerWounds ?? "-"}/${data.remainingDefenderWounds ?? "-"}`,
+                          "#f4d27a",
+                          true,
                         ),
                       ],
                 ),
@@ -8362,7 +8351,7 @@ var ShootingResolver = function () {
             },
             "Zoom:",
           ),
-          [6, 8, 10, 12, 14, 16].map((z) =>
+          [4, 6, 8, 10, 12, 14, 16].map((z) =>
             React.createElement(
               "button",
               {
@@ -9960,7 +9949,6 @@ var ShootingResolver = function () {
   const [dS, setDS] = useState(4);
   const [dAP, setDAP] = useState("-");
   const [dI, setDI] = useState(4);
-  const [dMove, setDMove] = useState(6);
   const [dA, setDA] = useState(1);
   const [dW, setDW] = useState(1);
   const [dT, setDT] = useState(4);
@@ -10232,7 +10220,15 @@ var ShootingResolver = function () {
 
   const BOARD_W = 72; // inches
   const BOARD_H = 48; // inches
-  const [deployScale, setDeployScale] = useState(10); // px per inch
+  const [deployScale, setDeployScale] = useState(() => {
+    // Phones start zoomed out so the whole 72"x48" board fits the screen
+    // width instead of showing a scrolled-in corner of the table.
+    if (typeof window !== "undefined" && window.HHMobile && window.HHMobile.isMobile) {
+      const w = (window.innerWidth || 390) - 40;
+      return Math.max(4, Math.min(10, Math.floor(w / (72 + 16))));
+    }
+    return 10;
+  }); // px per inch
   const [deployedUnits, setDeployedUnits] = useState([]);
   const [deploySelectedUnit, setDeploySelectedUnit] = useState(null);
   const [deployPlayer, setDeployPlayer] = useState("p1"); // p1 or p2
@@ -10310,7 +10306,6 @@ var ShootingResolver = function () {
   );
   const [deployShowGrid, setDeployShowGrid] = useState(true);
   const [deployShowZones, setDeployShowZones] = useState(true);
-  const [deployZoneDepth, setDeployZoneDepth] = useState(12); // deployment zone depth in inches
   // (missionType state lives earlier in the component, above deployArmyToBoard)
   const [zmMission, setZmMission] = useState("sector_sweep"); // "sector_sweep" | "terminal_control" | "signal_influx"
   const [satMission, setSatMission] = useState("ignis_sector_assault"); // saturnine sub-mission
@@ -11567,7 +11562,6 @@ var ShootingResolver = function () {
   const [selectedTerrainType, setSelectedTerrainType] = useState("difficult");
   const [terrainSize, setTerrainSize] = useState({ w: 6, h: 4 }); // in inches
   const [terrainCounter, setTerrainCounter] = useState(1);
-  const [terrainSizing, setTerrainSizing] = useState(false); // toggle between small/medium/large presets
 
   const TERRAIN_SIZES = [
     { label: 'Small (4"×4")', w: 4, h: 4 },
@@ -12450,7 +12444,7 @@ var ShootingResolver = function () {
                 }
                 if (onClick) onClick(e);
               },
-              onMouseMove: (e) => {
+              onPointerMove: (e) => {
                 const drag = deployDragRef.current;
                 if (
                   drag &&
@@ -12481,7 +12475,7 @@ var ShootingResolver = function () {
                   scheduleDeployDragUpdate(drag.unitId, snapX, snapY);
                 }
               },
-              onMouseUp: () => {
+              onPointerUp: () => {
                 if (deployDragPendingRef.current) {
                   if (deployDragFrameRef.current) {
                     cancelAnimationFrame(deployDragFrameRef.current);
@@ -12498,7 +12492,7 @@ var ShootingResolver = function () {
                   deployDragRef.current = { unitId: null };
                 }
               },
-              onMouseLeave: () => {
+              onPointerLeave: () => {
                 if (deployDragPendingRef.current) {
                   if (deployDragFrameRef.current) {
                     cancelAnimationFrame(deployDragFrameRef.current);
@@ -14368,9 +14362,12 @@ var ShootingResolver = function () {
                     setMapHoveredUnitId((cur) =>
                       cur === unit.id ? null : cur,
                     ),
-                  onMouseDown: (e) => {
+                  // Pointer events so unit dragging works with both mouse
+                  // and touch (iPhone/iPad). touch-action:none on the token
+                  // stops the scroll container from stealing the gesture.
+                  onPointerDown: (e) => {
                     if (!canDragOnBoard) return;
-                    if (e.button !== 0) return; // left click only
+                    if (e.button !== 0) return; // left click / primary touch only
                     e.stopPropagation();
                     deployDragRef.current = {
                       unitId: unit.id,
@@ -14430,6 +14427,7 @@ var ShootingResolver = function () {
                     fontSize: Math.max(sz * 0.55, 10),
                     fontWeight: 700,
                     cursor: canDragOnBoard ? "grab" : "pointer",
+                    touchAction: canDragOnBoard ? "none" : "auto",
                     boxShadow: isAttacker
                       ? "0 0 14px rgba(255,215,0,0.6)"
                       : isTarget
@@ -15324,19 +15322,15 @@ var ShootingResolver = function () {
   const [overwatchShots, setOverwatchShots] = useState(1);
   const [overwatchS, setOverwatchS] = useState(4);
   const [overwatchAP, setOverwatchAP] = useState("5");
-  const [overwatchFullBS, setOverwatchFullBS] = useState(true); // true = normal BS, false = snap shots 6+
   const [overwatchBS, setOverwatchBS] = useState(4);
-  const [selectedOverwatchWeapon, setSelectedOverwatchWeapon] = useState(null);
   const [doVolleyFire, setDoVolleyFire] = useState(false);
   const [volleyFireShots, setVolleyFireShots] = useState(1);
   const [volleyFireS, setVolleyFireS] = useState(4);
   const [volleyFireAP, setVolleyFireAP] = useState("5");
-  const [selectedVolleyWeapon, setSelectedVolleyWeapon] = useState(null);
   const [doDefVolleyFire, setDoDefVolleyFire] = useState(false);
   const [defVolleyFireShots, setDefVolleyFireShots] = useState(1);
   const [defVolleyFireS, setDefVolleyFireS] = useState(4);
   const [defVolleyFireAP, setDefVolleyFireAP] = useState("5");
-  const [selectedDefVolleyWeapon, setSelectedDefVolleyWeapon] = useState(null);
   const [doReturnFire, setDoReturnFire] = useState(false);
   const [returnFireShots, setReturnFireShots] = useState(1);
   const [returnFireS, setReturnFireS] = useState(4);
@@ -15357,55 +15351,9 @@ var ShootingResolver = function () {
   const [defenderAP_melee, setDefenderAP_melee] = useState("-");
   const [defenderI, setDefenderI] = useState(4);
   const [defenderA, setDefenderA] = useState(1);
-  const [defenderW_melee, setDefenderW_melee] = useState(1);
-  const [chargerMeleeRules, setChargerMeleeRules] = useState({});
-  const [defenderMeleeRules, setDefenderMeleeRules] = useState({});
-  const [selectedChargerMelee, setSelectedChargerMelee] = useState(null);
-  const [selectedDefenderMelee, setSelectedDefenderMelee] = useState(null);
   const [chargeResult, setChargeResult] = useState(null);
   const [chargeAnimating, setChargeAnimating] = useState(false);
   const [chargeAnimProgress, setChargeAnimProgress] = useState(0); // 0→1
-
-  const chargerMeleeWeapons = useMemo(() => {
-    if (!aUnit) return [];
-    return MELEE_getRangedWeapons(aUnit.id);
-  }, [aUnit]);
-
-  const chargerAssaultWeapons = aRangedWeapons;
-
-  const applyVolleyWeapon = useCallback((weapon) => {
-    setSelectedVolleyWeapon(weapon);
-    setVolleyFireShots(weapon.shots);
-    setVolleyFireS(weapon.s);
-    setVolleyFireAP(weapon.ap);
-  }, []);
-
-  const defenderAssaultWeapons = dRangedWeapons;
-
-  const applyDefVolleyWeapon = useCallback((weapon) => {
-    setSelectedDefVolleyWeapon(weapon);
-    setDefVolleyFireShots(weapon.shots);
-    setDefVolleyFireS(weapon.s);
-    setDefVolleyFireAP(weapon.ap);
-  }, []);
-
-  const defenderAllRangedWeapons = dRangedWeapons;
-
-  const applyOverwatchWeapon = useCallback((weapon) => {
-    setSelectedOverwatchWeapon(weapon);
-    setOverwatchShots(weapon.shots);
-    setOverwatchS(weapon.s);
-    setOverwatchAP(weapon.ap);
-  }, []);
-
-  const defenderRangedWeapons = useMemo(() => {
-    if (!targetPresetName) return [];
-    for (const cat of UNIT_PRESETS) {
-      const found = cat.units.find((u) => u.name === targetPresetName);
-      if (found && found.id) return getRangedWeapons(found.id);
-    }
-    return [];
-  }, [targetPresetName]);
 
   const applyReturnWeapon = useCallback((weapon) => {
     setSelectedReturnWeapon(weapon);
@@ -15413,37 +15361,6 @@ var ShootingResolver = function () {
     setReturnFireShots(weapon.shots);
     setReturnFireS(weapon.s);
     setReturnFireAP(weapon.ap);
-  }, []);
-
-  const defenderMeleeWeapons = useMemo(() => {
-    if (!dUnit) return [];
-    return MELEE_getRangedWeapons(dUnit.id);
-  }, [dUnit]);
-
-  const applyChargerMelee = useCallback((weapon) => {
-    setSelectedChargerMelee(weapon);
-    setChargerWS(weapon.ws);
-    setChargerS_melee(weapon.s);
-    setChargerAP_melee(weapon.ap);
-    setChargerI(weapon.i);
-    setChargerA(weapon.a);
-    setChargerW_melee(weapon.w);
-    setChargerT_melee(weapon.t);
-    setChargerSv(weapon.sv);
-    setChargerInvSv(weapon.inv);
-    setChargerFnpSv(weapon.fnp || "-");
-    setChargerMeleeRules(weapon.rules || {});
-  }, []);
-
-  const applyDefenderMelee = useCallback((weapon) => {
-    setSelectedDefenderMelee(weapon);
-    setDefenderWS(weapon.ws);
-    setDefenderS_melee(weapon.s);
-    setDefenderAP_melee(weapon.ap);
-    setDefenderI(weapon.i);
-    setDefenderA(weapon.a);
-    setDefenderW_melee(weapon.w);
-    setDefenderMeleeRules(weapon.rules || {});
   }, []);
 
   const toggleRule = useCallback((id) => {
@@ -21896,7 +21813,7 @@ var ShootingResolver = function () {
                   },
                   "Zoom:",
                 ),
-                [6, 8, 10, 12, 14].map((z) =>
+                [4, 6, 8, 10, 12, 14].map((z) =>
                   React.createElement(
                     "button",
                     {
@@ -27070,7 +26987,7 @@ var ShootingResolver = function () {
                   },
                   "Zoom:",
                 ),
-                [6, 8, 10, 12, 14].map((z) =>
+                [4, 6, 8, 10, 12, 14].map((z) =>
                   React.createElement(
                     "button",
                     {
@@ -37824,7 +37741,15 @@ var ShootingResolver = function () {
                 }),
               ),
               (assaultResult.defenderCasualties > 0 ||
-                assaultResult.attackerCasualties > 0) &&
+                assaultResult.attackerCasualties > 0 ||
+                (dW > 1 &&
+                  (assaultResult.defenderWoundPool ?? 0) -
+                    (assaultResult.remainingDefenderWounds ?? 0) >
+                    0) ||
+                (aW > 1 &&
+                  (assaultResult.attackerWoundPool ?? 0) -
+                    (assaultResult.remainingAttackerWounds ?? 0) >
+                    0)) &&
                 (() => {
                   const atkD = 1;
                   const defD = 1;
@@ -37832,6 +37757,37 @@ var ShootingResolver = function () {
                   const defVsAtkW = aW; // defender hits → attacker's W matters
                   const atkInstant = atkD > atkVsDefW; // Casualty when D > W
                   const defInstant = defD > defVsAtkW;
+                  // Wounds dealt to each side (only meaningful for multi-wound models)
+                  const defWoundsDealt = Math.max(
+                    0,
+                    (assaultResult.defenderWoundPool ?? 0) -
+                      (assaultResult.remainingDefenderWounds ?? 0),
+                  );
+                  const atkWoundsDealt = Math.max(
+                    0,
+                    (assaultResult.attackerWoundPool ?? 0) -
+                      (assaultResult.remainingAttackerWounds ?? 0),
+                  );
+                  const woundBadge = (borderColor, bg, label) =>
+                    React.createElement(
+                      "div",
+                      {
+                        style: {
+                          display: "inline-block",
+                          padding: "5px 14px",
+                          borderRadius: 5,
+                          background: bg,
+                          border: "2px solid " + borderColor,
+                          color: "#111",
+                          fontWeight: 800,
+                          fontSize: 13,
+                          letterSpacing: 1,
+                          marginTop: 4,
+                          marginLeft: 6,
+                        },
+                      },
+                      label,
+                    );
                   const casBadge = (color, borderColor, bg, label) =>
                     React.createElement(
                       "div",
@@ -37852,7 +37808,10 @@ var ShootingResolver = function () {
                       label,
                     );
                   const rows = [];
-                  if (assaultResult.defenderCasualties > 0) {
+                  if (
+                    assaultResult.defenderCasualties > 0 ||
+                    (atkVsDefW > 1 && defWoundsDealt > 0)
+                  ) {
                     const cas = assaultResult.defenderCasualties;
                     rows.push(
                       React.createElement(
@@ -37899,20 +37858,38 @@ var ShootingResolver = function () {
                                 atkVsDefW +
                                 ")",
                         ),
-                        casBadge(
-                          "#c73030",
-                          "#c73030",
-                          "rgba(199,48,48,0.12)",
-                          "💀 CASUALTIES: " +
-                            cas +
-                            " defender model" +
-                            (cas !== 1 ? "s" : "") +
-                            " slain",
-                        ),
+                        atkVsDefW > 1
+                          ? woundBadge(
+                              "#c73030",
+                              "rgba(199,48,48,0.10)",
+                              "🩸 WOUNDS: " +
+                                defWoundsDealt +
+                                " dealt · " +
+                                (assaultResult.remainingDefenderWounds ?? 0) +
+                                "/" +
+                                (assaultResult.defenderWoundPool ?? 0) +
+                                " W remain",
+                            )
+                          : null,
+                        cas > 0
+                          ? casBadge(
+                              "#c73030",
+                              "#c73030",
+                              "rgba(199,48,48,0.12)",
+                              "💀 CASUALTIES: " +
+                                cas +
+                                " defender model" +
+                                (cas !== 1 ? "s" : "") +
+                                " slain",
+                            )
+                          : null,
                       ),
                     );
                   }
-                  if (assaultResult.attackerCasualties > 0) {
+                  if (
+                    assaultResult.attackerCasualties > 0 ||
+                    (defVsAtkW > 1 && atkWoundsDealt > 0)
+                  ) {
                     const cas = assaultResult.attackerCasualties;
                     rows.push(
                       React.createElement(
@@ -37952,16 +37929,31 @@ var ShootingResolver = function () {
                                 defVsAtkW +
                                 ")",
                         ),
-                        casBadge(
-                          "#1a5a99",
-                          "#1a5a99",
-                          "rgba(42,111,180,0.12)",
-                          "💀 CASUALTIES: " +
-                            cas +
-                            " attacker model" +
-                            (cas !== 1 ? "s" : "") +
-                            " slain",
-                        ),
+                        defVsAtkW > 1
+                          ? woundBadge(
+                              "#1a5a99",
+                              "rgba(42,111,180,0.10)",
+                              "🩸 WOUNDS: " +
+                                atkWoundsDealt +
+                                " dealt · " +
+                                (assaultResult.remainingAttackerWounds ?? 0) +
+                                "/" +
+                                (assaultResult.attackerWoundPool ?? 0) +
+                                " W remain",
+                            )
+                          : null,
+                        cas > 0
+                          ? casBadge(
+                              "#1a5a99",
+                              "#1a5a99",
+                              "rgba(42,111,180,0.12)",
+                              "💀 CASUALTIES: " +
+                                cas +
+                                " attacker model" +
+                                (cas !== 1 ? "s" : "") +
+                                " slain",
+                            )
+                          : null,
                       ),
                     );
                   }

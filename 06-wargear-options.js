@@ -452,7 +452,6 @@ var UNIT_WARGEAR_OPTIONS = {
     wargearOption("Nemesis Bolters (+5pts/mdl)", 5, true),
     wargearOption("Melta Bombs (Sgt, +10pts)", 10, false),
   ],
-  seeker: [],
   sabre: [
     wargearOption("Neutron Blaster (+10pts)", 10, false, "main"),
     wargearOption("Volkite Saker (free)", 0, false, "main"),

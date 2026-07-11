@@ -377,16 +377,13 @@ var WEAPON_UPGRADE_COSTS = {
   "Volkite Culverin": 15,
   Lascannon: 25,
   // Legion Combi-weapons (per model)
-  "Combi-Bolter": 0,
-  "Combi-Flamer": 10,
-  "Combi-Melta": 10,
+  // NOTE: Combi-Bolter/Flamer/Melta/Volkite/Disintegrator/Grav are priced in
+  // the "Additional costs" block further down (duplicate keys removed — the
+  // later entries were silently winning at runtime).
   "Combi-Plasma (Sustained)": 10,
   "Combi-Plasma (Maximal)": 10,
-  "Combi-Volkite": 10,
-  "Combi-Disintegrator": 10,
   "Combi-Grenade L. (Frag)": 10,
   "Combi-Grenade L. (Krak)": 10,
-  "Combi-Grav": 10,
   // Legion Pistols
   "Plasma Pistol (Sustained)": 5,
   "Plasma Pistol (Maximal)": 5,
@@ -411,9 +408,7 @@ var WEAPON_UPGRADE_COSTS = {
   // Breacher specials
   "Graviton Gun": 10,
   Lascutter: 10,
-  // Vehicle sponson weapons
-  "Heavy Bolter Sponsons": 0,
-  "Lascannon Sponsons": 20,
+  // Vehicle sponson weapons — see "Vehicle sponsons" block below
   // Sergeant melee upgrades (from Legion Sergeant Melee Weapons list)
   Chainsword: 0,
   Chainaxe: 0,
@@ -424,7 +419,7 @@ var WEAPON_UPGRADE_COSTS = {
   "Lightning Claw": 10,
   // Officer Wargear / Paragon
   "Paragon Blade": 15,
-  "Archaeotech Pistol": 10,
+  // (Archaeotech Pistol priced above under Legion Pistols)
   // Terminator Melee Weapons
   Chainfist: 5,
   "Pair Lightning Claws": 5,
@@ -432,7 +427,7 @@ var WEAPON_UPGRADE_COSTS = {
   "Saturnine Concussion Hammer": 10,
   "Plasma Blaster": 10,
   "Saturnine Teleportation Transponder": 60,
-  "Twin Heavy Disintegrator": 10,
+  // (Twin Heavy Disintegrator priced above under Terminator weapons)
   // Psychic Disciplines
   Biomancy: 20,
   Pyromancy: 10,

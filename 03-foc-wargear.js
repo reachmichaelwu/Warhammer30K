@@ -208,7 +208,7 @@ function getLegionWargearOptions(unitId, faction) {
         { label: "Inferno Pistol (+5pts) [BA]", cost: 5, perModel: false, legion: true },
       ] : []),
       ...(["assault"].includes(unitId) ? [
-        { label: "Inferno Pistol (+5pts) [BA]", cost: 5, perModel: true, legion: true },
+        { label: "Inferno Pistol (+5pts/mdl) [BA]", cost: 5, perModel: true, legion: true },
       ] : []),
     ],
     ultramarines: [

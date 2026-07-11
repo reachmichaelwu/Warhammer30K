@@ -18,7 +18,7 @@ function resolveReturnFire(params) {
   const rolls = { hit: [], wound: [], save: [], fnp: [] };
   const rollsByWeapon = [];
 
-  const hitNeeded = bs ? (BS_TO_HIT[bs] || 4) : 6;
+  const hitNeeded = bs ? (BS_TO_HIT[bs] || 6) : 6;
   const isSnapShot = !bs;
   const hasSgt = sgtEnabled && sgtWeapon;
   const squadModels = hasSgt ? Math.max(defenderModels - 1, 0) : defenderModels;
@@ -106,7 +106,7 @@ function resolveReturnFire(params) {
 
   // ━━ SERGEANT FIRE ━━
   if (hasSgt) {
-    const sgtHitNeeded = bs ? (BS_TO_HIT[bs] || 4) : 6;
+    const sgtHitNeeded = bs ? (BS_TO_HIT[bs] || 6) : 6;
     const sgtTotalShots = sgtWeapon.shots || 1;
     log.push({ phase: "Sergeant", text: `★ Sergeant fires ${sgtWeapon.name} (${sgtTotalShots} shots, S${sgtWeapon.s} AP${sgtWeapon.ap})` });
 
@@ -148,6 +148,18 @@ function resolveReturnFire(params) {
             sgtUnsaved = sgtWounds - sgtSaved;
             log.push({ phase: "Sergeant", text: `Save (${sgtBestSave}+): ${sgtSaved} saved, ${sgtUnsaved} unsaved` });
           }
+
+          // FNP (same as squad fire)
+          const sgtFnpN = attackerFnp !== "-" ? parseInt(attackerFnp) : null;
+          if (sgtFnpN && sgtUnsaved > 0) {
+            const sgtFnpRolls = rollD6s(sgtUnsaved);
+            const sgtFnpResults = sgtFnpRolls.map(r => ({ value: r, success: r >= sgtFnpN, sergeant: true }));
+            rolls.fnp.push(...sgtFnpResults);
+            sgtRolls.fnpRolls = sgtFnpResults;
+            const sgtFnpSaved = sgtFnpRolls.filter(r => r >= sgtFnpN).length;
+            sgtUnsaved -= sgtFnpSaved;
+            log.push({ phase: "Sergeant", text: `FNP (${sgtFnpN}+): ${sgtFnpSaved} saved → ${sgtUnsaved} unsaved` });
+          }
           const w = attackerW || 1;
           const isSingleAtk = attackerModels === 1;
           sgtCasualties = isSingleAtk
@@ -179,8 +191,11 @@ function calculateExpected(params) {
 
   // Hit probability
   let hitNeeded = BS_TO_HIT[bs] || 6;
-  if (weaponType === "Heavy" && params.moved) hitNeeded = 6;
-  if (weaponType === "Barrage" && (indirect || params.moved)) hitNeeded = 6;
+  // 3rd Edition snap-shot threshold scales with BS (matches resolveShootingPhase)
+  const snapNeeded = bs <= 1 ? 7 : bs <= 3 ? 6 : bs <= 5 ? 5 : bs <= 7 ? 4 : bs <= 9 ? 3 : 2;
+  if (params.snapShots) hitNeeded = snapNeeded; // manual Snap Shots toggle (matches resolveShootingPhase)
+  if (weaponType === "Heavy" && params.moved) hitNeeded = snapNeeded;
+  if (weaponType === "Barrage" && (indirect || params.moved)) hitNeeded = snapNeeded;
   let pHit = (7 - hitNeeded) / 6;
   if (specialRules.twinLinked) pHit = pHit + (1 - pHit) * pHit;
 
@@ -235,11 +250,7 @@ function calculateExpected(params) {
     if (sgtWeapon.type === "Rapid Fire" && halfRange) sgtShots *= 2;
     
     let sgtHitNeeded = BS_TO_HIT[bs] || 6;
-    if (sgtWeapon.type === "Heavy" && params.moved) {
-      if (bs <= 3) sgtHitNeeded = 6;
-      else if (bs <= 5) sgtHitNeeded = 5;
-      else sgtHitNeeded = 4;
-    }
+    if (params.snapShots || (sgtWeapon.type === "Heavy" && params.moved)) sgtHitNeeded = snapNeeded;
     let sgtPHit = (7 - sgtHitNeeded) / 6;
     if (sgtWeapon.rules?.twinLinked) sgtPHit = sgtPHit + (1 - sgtPHit) * sgtPHit;
     
@@ -247,6 +258,7 @@ function calculateExpected(params) {
     if (sgtWeapon.rules?.fleshbane) sgtWoundNeeded = 2;
     else if (sgtWeapon.rules?.poisoned) sgtWoundNeeded = 4;
     else if (sgtWeapon.rules?.poisoned3) sgtWoundNeeded = 3;
+    else if (sgtWeapon.rules?.poisoned2) sgtWoundNeeded = 2;
     else sgtWoundNeeded = getWoundRoll(sgtWeapon.s, toughness);
     
     if (sgtWoundNeeded !== null) {

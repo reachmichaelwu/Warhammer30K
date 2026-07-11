@@ -82,6 +82,8 @@ function resolveChallenge(params) {
   // Tie-breaker
   while (atkFocus === defFocus) {
     const a = rollD6(); const d = rollD6();
+    rolls.attacker.focus.push({ value: a, success: true, reroll: true });
+    rolls.defender.focus.push({ value: d, success: true, reroll: true });
     log.push({ phase: "Focus", text: `Tied! Re-roll: Attacker ${a} vs Defender ${d}` });
     atkFocus = a; defFocus = d;
   }
@@ -102,7 +104,7 @@ function resolveChallenge(params) {
 
   // Attacker gambit
   if (atkGambitData.effect === "flurry") {
-    const bonus = Math.ceil(Math.random() * 3);
+    const bonus = Math.floor(Math.random() * 3) + 1; // D3
     effAtkA += bonus; atkDamageCap = 1;
     log.push({ phase: "Gambit", text: `Attacker Flurry: +${bonus} Attacks (Damage capped to 1)` });
   }
@@ -127,7 +129,7 @@ function resolveChallenge(params) {
 
   // Defender gambit
   if (defGambitData.effect === "flurry") {
-    const bonus = Math.ceil(Math.random() * 3);
+    const bonus = Math.floor(Math.random() * 3) + 1; // D3
     effDefA += bonus; defDamageCap = 1;
     log.push({ phase: "Gambit", text: `Defender Flurry: +${bonus} Attacks (Damage capped to 1)` });
   }
@@ -164,6 +166,7 @@ function resolveChallenge(params) {
     // Taunt: opponent must re-roll one successful hit
     if (tauntOpp && hits > 0) {
       const reroll = rollD6();
+      rolls[rollKey].hit.push({ value: reroll, success: reroll >= toHit, reroll: true });
       if (reroll < toHit) { hits -= 1; strikeLog.push(`Taunt & Bait: forced re-roll → ${reroll} (miss!) — ${hits} hit(s)`); }
       else { strikeLog.push(`Taunt & Bait: forced re-roll → ${reroll} (still hits)`); }
     }
@@ -172,19 +175,33 @@ function resolveChallenge(params) {
     if (hits === 0) { strikeLog.forEach(t => log.push({ phase: "Strike", text: t })); return { wounds: 0 }; }
 
     // Wound
-    const toWoundNeeded = getWoundRoll(aS, dT);
+    let toWoundNeeded = getWoundRoll(aS, dT);
+    // Poisoned (X+): wounds automatically on X+ regardless of Toughness (use better of the two)
+    const poisonOn = rules?.m_poisoned2 ? 2 : rules?.m_poisoned ? 4 : 0;
+    if (poisonOn) {
+      toWoundNeeded = toWoundNeeded === null ? poisonOn : Math.min(toWoundNeeded, poisonOn);
+      strikeLog.push(`Poisoned (${poisonOn}+): wounds on ${toWoundNeeded}+ regardless of Toughness`);
+    }
     if (toWoundNeeded === null) {
       strikeLog.push(`S${aS} vs T${dT}: Cannot wound!`);
       strikeLog.forEach(t => log.push({ phase: "Strike", text: t })); return { wounds: 0 };
     }
+    // Brutal: +1 to wound roll (a natural 1 always fails, so floor at 2+)
+    if (rules?.m_brutal && toWoundNeeded > 2) {
+      toWoundNeeded -= 1;
+      strikeLog.push(`Brutal: +1 to wound → needs ${toWoundNeeded}+`);
+    }
 
     const woundRolls = rollD6s(hits);
-    let wounds = 0, rendingW = 0, murderousW = 0, normalW = 0;
+    // Breaching (X+): qualifying wounds are resolved at AP2
+    const breachOn = (rules?.m_breaching || rules?.m_breaching4) ? 4 : rules?.m_breaching5 ? 5 : rules?.m_breaching6 ? 6 : 0;
+    let wounds = 0, rendingW = 0, murderousW = 0, breachingW = 0, normalW = 0;
     woundRolls.forEach(r => {
       if (r >= toWoundNeeded) {
         wounds++;
         if (rules?.m_rending && r === 6) rendingW++;
         else if (rules?.m_murderous && r === 6) murderousW++;
+        else if (breachOn && r >= breachOn) breachingW++;
         else normalW++;
       }
       rolls[rollKey].wound.push({ value: r, success: r >= toWoundNeeded });
@@ -195,14 +212,21 @@ function resolveChallenge(params) {
       const misses = woundRolls.filter(r => r < toWoundNeeded);
       const rerolls = rollD6s(misses.length);
       rerolls.forEach(r => {
-        if (r >= toWoundNeeded) { wounds++; if (rules?.m_rending && r === 6) rendingW++; else normalW++; }
+        if (r >= toWoundNeeded) {
+          wounds++;
+          if (rules?.m_rending && r === 6) rendingW++;
+          else if (rules?.m_murderous && r === 6) murderousW++;
+          else if (breachOn && r >= breachOn) breachingW++;
+          else normalW++;
+        }
         rolls[rollKey].wound.push({ value: r, success: r >= toWoundNeeded, reroll: true });
       });
       strikeLog.push(`Shred: re-rolled ${misses.length} → ${rerolls.filter(r => r >= toWoundNeeded).length} extra`);
     }
 
-    normalW = wounds - rendingW - murderousW;
+    normalW = wounds - rendingW - murderousW - breachingW;
     if (rendingW > 0) strikeLog.push(`🗡 Rending: ${rendingW} at AP2`);
+    if (breachingW > 0) strikeLog.push(`💥 Breaching (${breachOn}+): ${breachingW} at AP2`);
     if (murderousW > 0) strikeLog.push(`💀 Murderous Strike: ${murderousW} — Instant Death`);
     strikeLog.push(`Wounds: ${wounds} from ${hits} hit(s)`);
     if (wounds === 0) { strikeLog.forEach(t => log.push({ phase: "Strike", text: t })); return { wounds: 0 }; }
@@ -225,6 +249,7 @@ function resolveChallenge(params) {
 
     unsaved += doSave(normalW, aAP, "Normal saves");
     if (rendingW > 0) unsaved += doSave(rendingW, "2", "Rending saves");
+    if (breachingW > 0) unsaved += doSave(breachingW, "2", "Breaching saves");
     if (murderousW > 0) unsaved += doSave(murderousW, aAP, "Murderous saves");
 
     // FNP
@@ -254,14 +279,18 @@ function resolveChallenge(params) {
   let defWoundsRemaining = defW;
   let atkWoundsDealt = 0, defWoundsDealt = 0;
 
+  // Taunt & Bait only triggers if the taunting champion LOST the Focus roll
+  const atkTauntActive = tauntAtk && atkWinsFocus === false;
+  const defTauntActive = tauntDef && atkWinsFocus === true;
+
   if (atkWinsFocus) {
     // Attacker strikes first
-    const atkResult = resolveStrike(`⚔ ${atkName || "Attacker"} (Focus winner)`, effAtkA, atkWS, defWS, effAtkS, defT, effAtkAP, defSv, defInv, defFnp, defW, atkRules, 0, atkDamageCap, tauntDef, "attacker");
+    const atkResult = resolveStrike(`⚔ ${atkName || "Attacker"} (Focus winner)`, effAtkA, atkWS, defWS, effAtkS, defT, effAtkAP, defSv, defInv, defFnp, defW, atkRules, atkHitPenalty, atkDamageCap, defTauntActive, "attacker");
     defWoundsRemaining -= atkResult.wounds;
     atkWoundsDealt = atkResult.wounds;
 
     if (defWoundsRemaining > 0) {
-      const defResult = resolveStrike(`🛡 ${defName || "Defender"} strikes back`, effDefA, defWS, atkWS, effDefS, atkT, effDefAP, atkSv, atkInv, atkFnp, atkW, defRules, 0, defDamageCap, tauntAtk, "defender");
+      const defResult = resolveStrike(`🛡 ${defName || "Defender"} strikes back`, effDefA, defWS, atkWS, effDefS, atkT, effDefAP, atkSv, atkInv, atkFnp, atkW, defRules, defHitPenalty, defDamageCap, atkTauntActive, "defender");
       atkWoundsRemaining -= defResult.wounds;
       defWoundsDealt = defResult.wounds;
     } else {
@@ -269,12 +298,12 @@ function resolveChallenge(params) {
     }
   } else {
     // Defender strikes first
-    const defResult = resolveStrike(`🛡 ${defName || "Defender"} (Focus winner)`, effDefA, defWS, atkWS, effDefS, atkT, effDefAP, atkSv, atkInv, atkFnp, atkW, defRules, 0, defDamageCap, tauntAtk, "defender");
+    const defResult = resolveStrike(`🛡 ${defName || "Defender"} (Focus winner)`, effDefA, defWS, atkWS, effDefS, atkT, effDefAP, atkSv, atkInv, atkFnp, atkW, defRules, defHitPenalty, defDamageCap, atkTauntActive, "defender");
     atkWoundsRemaining -= defResult.wounds;
     defWoundsDealt = defResult.wounds;
 
     if (atkWoundsRemaining > 0) {
-      const atkResult = resolveStrike(`⚔ ${atkName || "Attacker"} strikes back`, effAtkA, atkWS, defWS, effAtkS, defT, effAtkAP, defSv, defInv, defFnp, defW, atkRules, 0, atkDamageCap, tauntDef, "attacker");
+      const atkResult = resolveStrike(`⚔ ${atkName || "Attacker"} strikes back`, effAtkA, atkWS, defWS, effAtkS, defT, effAtkAP, defSv, defInv, defFnp, defW, atkRules, atkHitPenalty, atkDamageCap, defTauntActive, "attacker");
       defWoundsRemaining -= atkResult.wounds;
       atkWoundsDealt = atkResult.wounds;
     } else {

@@ -3,14 +3,7 @@
 
 // ━━━ CHARGE PHASE RESOLVER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-// WS comparison chart for melee To Hit
-var WS_TO_HIT_CHART = {
-  higher: 3,    // Attacker WS > Defender WS
-  equal: 4,     // Attacker WS == Defender WS
-  lower: 5,     // Attacker WS < Defender WS (but not half or less)
-  halfOrLess: 5 // Attacker WS <= Defender WS / 2 (still 5+ in HH)
-};
-
+// Melee To Hit: attacker WS higher = 3+, equal = 4+, lower = 5+
 function getMeleeToHit(attackerWS, defenderWS) {
   if (attackerWS > defenderWS) return 3;
   if (attackerWS === defenderWS) return 4;
@@ -24,7 +17,7 @@ var MELEE_SPECIAL_RULES = [
   { id: "m_unwieldy", label: "Unwieldy", desc: "Always strikes at Initiative 1" },
   { id: "m_specialist", label: "Specialist Weapon", desc: "+1A if paired with another Specialist Weapon" },
   { id: "m_brutal", label: "Brutal (X)", desc: "+1 to wound roll" },
-  { id: "m_reaping", label: "Reaping Blow", desc: "Each model makes 1 extra attack against all models in base contact" },
+  { id: "m_reapingBlow", label: "Reaping Blow", desc: "Each model makes 1 extra attack against all models in base contact" },
   { id: "m_duelist", label: "Duelist's Edge", desc: "+1 Initiative in challenges" },
   { id: "m_rampage", label: "Rampage", desc: "+D3 attacks when outnumbered" },
   // ── Additional rules from rulebook ──
@@ -111,7 +104,7 @@ var MELEE_WEAPON_PROFILES = {
     meleeWeapon("Power Weapon", 5, 4, "3", 4, 2, 1, 4, "3", "-", "-", { m_breaching6: true }, "Power"),
     meleeWeapon("Power Fist", 5, 8, "2", 1, 2, 1, 4, "3", "-", "-", {  }, "Power"),
     meleeWeapon("Lightning Claw", 5, 4, "3", 4, 2, 1, 4, "3", "-", "-", { m_breaching6: true, m_rending: true }, "Power"),
-    meleeWeapon("Power Axe", 5, 5, "2", 3, 2, 1, 4, "3", "-", "-", { m_breaching5: true }, "Power"),
+    meleeWeapon("Power Axe", 5, 5, "3", 3, 2, 1, 4, "3", "-", "-", { m_breaching5: true }, "Power"),
   ],
   praetor_pa: [
     meleeWeapon("Paragon Blade", 6, 5, "2", 5, 4, 3, 4, "2", "4", "-", { m_criticalHit: true }),
@@ -120,7 +113,7 @@ var MELEE_WEAPON_PROFILES = {
     meleeWeapon("Chainfist", 6, 8, "2", 1, 4, 3, 4, "2", "4", "-", { m_armourbane: true, m_shred: true }, "Chain"),
     meleeWeapon("Power Weapon", 6, 4, "3", 5, 4, 3, 4, "2", "4", "-", { m_breaching6: true }, "Power"),
     meleeWeapon("Lightning Claw (pair)", 6, 4, "3", 5, 5, 3, 4, "2", "4", "-", { m_breaching6: true, m_rending: true }, "Power"),
-    meleeWeapon("Power Axe", 6, 5, "2", 4, 4, 3, 4, "2", "4", "-", { m_breaching5: true }, "Power"),
+    meleeWeapon("Power Axe", 6, 5, "3", 4, 4, 3, 4, "2", "4", "-", { m_breaching5: true }, "Power"),
   ],
   praetor_ta: [
     meleeWeapon("Paragon Blade", 6, 5, "2", 5, 4, 3, 4, "2", "4", "-", { m_criticalHit: true }),
@@ -150,7 +143,7 @@ var MELEE_WEAPON_PROFILES = {
   ],
   forge_lord: [
     meleeWeapon("Thunder Hammer", 4, 8, "2", 1, 2, 2, 4, "2", "-", "-", {  }, "Power"),
-    meleeWeapon("Power Axe", 4, 5, "2", 3, 2, 2, 4, "2", "-", "-", { m_breaching5: true }, "Power"),
+    meleeWeapon("Power Axe", 4, 5, "3", 3, 2, 2, 4, "2", "-", "-", { m_breaching5: true }, "Power"),
     meleeWeapon("Servo-Arm", 4, 8, "1", 1, 1, 2, 4, "2", "-", "-", { m_unwieldy: true }),
   ],
   chaplain: [
@@ -176,7 +169,7 @@ var MELEE_WEAPON_PROFILES = {
   centurion: [
     meleeWeapon("Power Weapon", 5, 4, "3", 4, 3, 3, 4, "2", "-", "-", { m_breaching6: true }, "Power"),
     meleeWeapon("Power Fist", 5, 8, "2", 1, 3, 3, 4, "2", "-", "-", {  }, "Power"),
-    meleeWeapon("Power Axe", 5, 5, "2", 3, 3, 3, 4, "2", "-", "-", { m_breaching5: true }, "Power"),
+    meleeWeapon("Power Axe", 5, 5, "3", 3, 3, 3, 4, "2", "-", "-", { m_breaching5: true }, "Power"),
   ],
   apothecary: [
     meleeWeapon("Chain Bayonet", 4, 4, "5", 4, 1, 1, 4, "3", "-", "5", { m_shred: true }, "Bayonet, Chain"),
@@ -216,7 +209,7 @@ var MELEE_WEAPON_PROFILES = {
   contemptor: [
     meleeWeapon("Dreadnought Close Combat Weapon", 5, 7, "2", 4, 4, 7, 7, "2", "5", "-", {}),
     meleeWeapon("Chainfist", 5, 7, "2", 4, 4, 7, 7, "2", "5", "-", { m_armourbane: true, m_shred: true }, "Chain"),
-    meleeWeapon("Graviton Ram", 5, 8, "1", 4, 4, 7, 7, "2", "5", "-", {}),
+    meleeWeapon("Graviton Ram", 5, 8, "3", 4, 4, 7, 7, "2", "5", "-", {}),
   ],
   saturnine_dread: [
     meleeWeapon("Dreadnought Power Fist", 5, 8, "2", 4, 4, 9, 8, "2", "5", "-", {}),
@@ -230,7 +223,7 @@ var MELEE_WEAPON_PROFILES = {
     meleeWeapon("Close Combat Weapon", 2, 3, "-", 3, 1, 1, 3, "4", "-", "-", {}),
   ],
   veletaris: [
-    meleeWeapon("Power Axe", 3, 4, "2", 2, 1, 1, 3, "4", "-", "-", { m_breaching5: true }, "Power"),
+    meleeWeapon("Power Axe", 3, 4, "3", 2, 1, 1, 3, "4", "-", "-", { m_breaching5: true }, "Power"),
     meleeWeapon("Close Combat Weapon", 3, 3, "-", 3, 1, 1, 3, "4", "-", "-", {}),
   ],
   ogryn: [
@@ -279,17 +272,17 @@ var MELEE_WEAPON_PROFILES = {
     meleeWeapon("Power Fist", 4, 8, "2", 1, 2, 4, 6, "2", "5", "5", {}, "Power"),
   ],
   arcuitor_tm: [
-    meleeWeapon("Arc Maul", 5, 6, "4", 4, 2, 4, 5, "2", "5", "5", { m_breaching5: true }, "Power"),
+    meleeWeapon("Arc Maul", 5, 6, "3", 4, 2, 4, 5, "2", "5", "5", { m_breaching5: true }, "Power"),
     meleeWeapon("Power Weapon", 5, 4, "3", 4, 2, 4, 5, "2", "5", "5", { m_breaching6: true }, "Power"),
   ],
   tech_priest_tm: [
     meleeWeapon("Mechadendrite Harness", 3, 3, "5", 3, 1, 2, 5, "3", "6", "6", {}),
   ],
   scyllax_tm: [
-    meleeWeapon("Scyllax Combat Array", 4, 8, "2", 1, 2, 2, 5, "3", "6", "-", { m_armourbane: true }),
+    meleeWeapon("Scyllax Combat Array", 4, 8, "3", 1, 2, 2, 5, "3", "6", "-", { m_armourbane: true }),
   ],
   secutor_tm: [
-    meleeWeapon("Power Maul", 5, 6, "4", 4, 3, 4, 5, "3", "5", "-", { m_breaching5: true }, "Power"),
+    meleeWeapon("Power Maul", 5, 6, "3", 4, 3, 4, 5, "3", "5", "-", { m_breaching5: true }, "Power"),
     meleeWeapon("Power Weapon", 5, 4, "3", 4, 3, 4, 5, "3", "5", "-", { m_breaching6: true }, "Power"),
   ],
   tech_thrall_cov_tm: [
@@ -377,18 +370,18 @@ var MELEE_WEAPON_PROFILES = {
   sanguinius: [
     meleeWeapon("The Blade Encarmine", 9, 7, "2", 7, 7, 8, 6, "2", "4", "-", { m_murderous: true }),
     meleeWeapon("The Spear of Telesto", 9, 8, "1", 6, 6, 8, 6, "2", "4", "-", {}),
-    meleeWeapon("Moonsilver Blade", 9, 6, "2", 7, 7, 8, 6, "2", "4", "-", { m_murderous: true }),
+    meleeWeapon("Moonsilver Blade", 9, 6, "3", 7, 7, 8, 6, "2", "4", "-", { m_murderous: true }),
   ],
   ferrus: [
-    meleeWeapon("Forgebreaker", 7, 10, "1", 5, 5, 8, 7, "2", "3", "-", { m_murderous: true }),
+    meleeWeapon("Forgebreaker", 7, 10, "2", 5, 5, 8, 7, "2", "3", "-", { m_murderous: true }),
     meleeWeapon("Medusan Fists", 7, 8, "2", 5, 5, 8, 7, "2", "3", "-", {}),
   ],
   guilliman: [
-    meleeWeapon("The Gladius Incandor", 7, 6, "2", 6, 6, 7, 6, "2", "4", "-", { m_murderous: true }),
+    meleeWeapon("The Gladius Incandor", 7, 6, "3", 6, 6, 7, 6, "2", "4", "-", { m_murderous: true }),
     meleeWeapon("Hand of Dominion (Fist)", 7, 10, "1", 1, 6, 7, 6, "2", "4", "-", { m_unwieldy: true }),
   ],
   vulkan: [
-    meleeWeapon("Dawnbringer", 7, 10, "1", 5, 5, 9, 7, "2", "3", "-", { m_murderous: true }),
+    meleeWeapon("Dawnbringer", 7, 10, "2", 5, 5, 9, 7, "2", "3", "-", { m_murderous: true }),
   ],
   corax: [
     meleeWeapon("Raven's Talons (pair)", 8, 6, "2", 7, 7, 7, 6, "2", "4", "-", { m_shred: true, m_rending: true }),
@@ -400,7 +393,7 @@ var MELEE_WEAPON_PROFILES = {
     meleeWeapon("Laer Blade", 9, 7, "2", 8, 7, 7, 6, "2", "4", "-", { m_rending: true }),
   ],
   perturabo: [
-    meleeWeapon("Forgebreaker", 7, 10, "1", 5, 5, 8, 7, "2", "3", "-", { m_murderous: true }),
+    meleeWeapon("Forgebreaker", 7, 10, "2", 5, 5, 8, 7, "2", "3", "-", { m_murderous: true }),
     meleeWeapon("Logos (Melee)", 7, 8, "2", 5, 5, 8, 7, "2", "3", "-", {}),
   ],
   curze: [
@@ -427,7 +420,7 @@ var MELEE_WEAPON_PROFILES = {
     meleeWeapon("Talon of Horus (Claw)", 8, 7, "2", 7, 7, 8, 7, "2", "4", "-", { m_shred: true }),
   ],
   alpharius: [
-    meleeWeapon("The Pale Spear", 7, 7, "1", 6, 6, 7, 6, "2", "4", "-", { m_murderous: true }),
+    meleeWeapon("The Pale Spear", 7, 7, "2", 6, 6, 7, 6, "2", "4", "-", { m_murderous: true }),
   ],
   daemon_lesser: [
     meleeWeapon("Warp Claws", 3, 4, "-", 4, 2, 1, 4, "-", "5", "-", {}),
@@ -475,7 +468,7 @@ var MELEE_WEAPON_PROFILES = {
     meleeWeapon("Power Maul", 4, 6, "3", 4, 2, 2, 4, "3", "-", "-", { m_breaching6: true }, "Power"),
   ],
   techmarine: [
-    meleeWeapon("Power Axe", 4, 5, "2", 3, 2, 1, 4, "2", "-", "-", { m_breaching5: true }, "Power"),
+    meleeWeapon("Power Axe", 4, 5, "3", 3, 2, 1, 4, "2", "-", "-", { m_breaching5: true }, "Power"),
     meleeWeapon("Servo-arm", 4, 8, "2", 1, 1, 1, 4, "2", "-", "-", {  }),
   ],
   despoiler: [
@@ -577,7 +570,7 @@ var MELEE_WEAPON_PROFILES = {
     { name: "Tulwar Blade", ws: 5, s: 4, ap: "3", i: 5, a: 3, w: 3, t: 4, sv: "2", inv: "5", fnp: "-", ld: 10, rules: { m_shred: true } },
   ],
   stormseer: [
-    { name: "Force Staff", ws: 4, s: 5, ap: "3", i: 4, a: 2, w: 3, t: 4, sv: "2", inv: "5", fnp: "-", ld: 8, rules: {} },
+    { name: "Force Staff", ws: 4, s: 5, ap: "4", i: 4, a: 2, w: 3, t: 4, sv: "2", inv: "5", fnp: "-", ld: 8, rules: {} },
     { name: "Power Weapon", ws: 4, s: 4, ap: "3", i: 4, a: 2, w: 3, t: 4, sv: "2", inv: "5", fnp: "-", ld: 8, rules: { m_breaching6: true } },
   ],
   keshig_rider: [
@@ -712,7 +705,7 @@ var MELEE_WEAPON_PROFILES = {
     { name: "Lightning Claws (pair)", ws: 4, s: 5, ap: "3", i: 4, a: 3, w: 2, t: 5, sv: "2", inv: "4", fnp: "5", ld: 12, rules: { m_rending: true, m_shred: true } },
   ],
   rampager: [
-    { name: "Chainaxe", ws: 4, s: 5, ap: "4", i: 4, a: 2, w: 2, t: 4, sv: "3", inv: "-", fnp: "-", ld: 8, rules: { m_shred: true } },
+    { name: "Chainaxe", ws: 4, s: 5, ap: "5", i: 4, a: 2, w: 2, t: 4, sv: "3", inv: "-", fnp: "-", ld: 8, rules: { m_shred: true } },
     { name: "Power Weapon", ws: 4, s: 4, ap: "3", i: 4, a: 2, w: 2, t: 4, sv: "3", inv: "-", fnp: "-", ld: 8, rules: { m_breaching6: true } },
     { name: "Power Fist", ws: 4, s: 8, ap: "2", i: 1, a: 2, w: 2, t: 4, sv: "3", inv: "-", fnp: "-", ld: 8, rules: {} },
   ],
@@ -766,7 +759,7 @@ var MELEE_WEAPON_PROFILES = {
     { name: "Power Fist (Talon)", ws: 6, s: 9, ap: "2", i: 1, a: 5, w: 5, t: 5, sv: "2", inv: "4", fnp: "-", ld: 10, rules: {} },
   ],
   little_horus: [
-    { name: "Power Sword", ws: 6, s: 5, ap: "2", i: 5, a: 4, w: 4, t: 5, sv: "2", inv: "4", fnp: "-", ld: 10, rules: { m_shred: true } },
+    { name: "Power Sword", ws: 6, s: 5, ap: "3", i: 5, a: 4, w: 4, t: 5, sv: "2", inv: "4", fnp: "-", ld: 10, rules: { m_shred: true } },
     { name: "Power Fist", ws: 6, s: 9, ap: "2", i: 1, a: 4, w: 4, t: 5, sv: "2", inv: "4", fnp: "-", ld: 10, rules: {} },
   ],
   tybalt_marr: [
@@ -781,7 +774,7 @@ var MELEE_WEAPON_PROFILES = {
     { name: "Power Fist", ws: 5, s: 8, ap: "2", i: 1, a: 3, w: 4, t: 4, sv: "2", inv: "4", fnp: "-", ld: 9, rules: {} },
   ],
   maloghurst: [
-    { name: "Power Maul", ws: 5, s: 5, ap: "4", i: 4, a: 4, w: 5, t: 4, sv: "2", inv: "5", fnp: "-", ld: 10, rules: { m_concussive: true } },
+    { name: "Power Maul", ws: 5, s: 5, ap: "3", i: 4, a: 4, w: 5, t: 4, sv: "2", inv: "5", fnp: "-", ld: 10, rules: { m_concussive: true } },
     { name: "Power Sword", ws: 5, s: 4, ap: "3", i: 5, a: 4, w: 5, t: 4, sv: "2", inv: "5", fnp: "-", ld: 10, rules: { m_breaching6: true } },
   ],
   dark_emissary: [
@@ -793,7 +786,7 @@ var MELEE_WEAPON_PROFILES = {
     { name: "Lightning Claw (pair)", ws: 4, s: 5, ap: "3", i: 4, a: 3, w: 2, t: 5, sv: "2", inv: "4", fnp: "-", ld: 10, rules: { m_rending: true, m_shred: true } },
   ],
   reaver_soh: [
-    { name: "Chainaxe", ws: 4, s: 5, ap: "4", i: 4, a: 2, w: 2, t: 4, sv: "3", inv: "-", fnp: "-", ld: 8, rules: { m_shred: true } },
+    { name: "Chainaxe", ws: 4, s: 5, ap: "5", i: 4, a: 2, w: 2, t: 4, sv: "3", inv: "-", fnp: "-", ld: 8, rules: { m_shred: true } },
     { name: "Power Weapon", ws: 4, s: 4, ap: "3", i: 4, a: 2, w: 2, t: 4, sv: "3", inv: "-", fnp: "-", ld: 8, rules: { m_breaching6: true } },
   ],
   // XVII: Word Bearers
@@ -986,7 +979,7 @@ var LEGION_MELEE_WEAPONS = {
       eligibleUnits: ["tactical","assault","veteran","praetor_pa","praetor_ta","centurion","champion","herald"],
       note: "Any model with Space Wolves Trait. Replaces chainsword. +2pts." },
     // Frost sword: Command/Champion, IM:+0, AM:A, SM:S, AP:3, D:1, Breaching(5+), Reaping Blow(1)
-    { name: "Frost Sword", im: 1, sm: 0, ap: "3", d: 1, rules: { m_breaching5: true, m_reapingBlow: true }, traits: "Power",
+    { name: "Frost Sword", im: 0, sm: 0, ap: "3", d: 1, rules: { m_breaching5: true, m_reapingBlow: true }, traits: "Power",
       eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion"],
       note: "Command/Champion. Replaces power weapon. +5pts." },
     // Frost axe: Command/Champion, IM:-1, AM:A, SM:+1, AP:3, D:1, Breaching(4+), Reaping Blow(1)
@@ -994,7 +987,7 @@ var LEGION_MELEE_WEAPONS = {
       eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion"],
       note: "Command/Champion. Replaces power weapon. +5pts." },
     // Frost claw: Command/Champion, IM:+0, AM:A, SM:S, AP:3, D:1, Breaching(4+), Reaping Blow(1), Shred(6+)
-    { name: "Frost Claw", im: 1, sm: 0, ap: "3", d: 1, rules: { m_breaching4: true, m_reapingBlow: true, m_shred: true }, traits: "Power",
+    { name: "Frost Claw", im: 0, sm: 0, ap: "3", d: 1, rules: { m_breaching4: true, m_reapingBlow: true, m_shred: true }, traits: "Power",
       eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion"],
       note: "Command/Champion. Replaces lightning claw. +5pts." },
     // Great frost blade: Command/Champion, IM:-2, AM:A, SM:+3, AP:2, D:2, Reaping Blow(1)
@@ -1112,7 +1105,7 @@ var LEGION_MELEE_WEAPONS = {
   ],
   iron_hands: [
     // Artificer power axe: Command/Champion, IM:-1, AM:A, SM:+1, AP:3, D:1, Breaching(5+), Shred(5+)
-    { name: "Artificer Power Axe", im: -1, sm: 1, ap: "3", d: 1, rules: { m_breaching5: true, m_shred5: true }, traits: "Power",
+    { name: "Artificer Power Axe", im: -1, sm: 1, ap: "3", d: 1, rules: { m_breaching5: true, m_shred: true }, traits: "Power",
       eligibleUnits: ["praetor_pa","praetor_ta","centurion","champion"],
       note: "IH Trait. Any model. Power axe upgrade." },
   ],
@@ -1281,7 +1274,15 @@ function resolveChargePhase(params) {
       groupLog.push({ phase, text: `→ ${hits} hit(s) from ${totalShots} shots` });
 
       if (hits > 0) {
-        const woundNeeded = getWoundRoll(g.s, targetT);
+        // Fleshbane / Poisoned (X+) wound on a fixed value regardless of Toughness
+        let woundNeeded;
+        if (g.rules?.fleshbane) {
+          woundNeeded = 2;
+        } else {
+          woundNeeded = getWoundRoll(g.s, targetT);
+          const poisonOn = g.rules?.poisoned2 ? 2 : g.rules?.poisoned3 ? 3 : (g.rules?.poisoned || g.rules?.poisoned4) ? 4 : 0;
+          if (poisonOn) woundNeeded = woundNeeded === null ? poisonOn : Math.min(woundNeeded, poisonOn);
+        }
         if (woundNeeded !== null) {
           const woundRolls = rollD6s(hits);
           const woundResults = woundRolls.map(r => ({ value: r, success: r >= woundNeeded }));
@@ -1302,11 +1303,8 @@ function resolveChargePhase(params) {
             const svN = targetSv !== "-" ? parseInt(targetSv) : null;
             const invN = targetInv !== "-" ? parseInt(targetInv) : null;
             const apNum = g.ap !== "-" ? parseInt(g.ap) : null;
-            // Breaching AP improvement: -2 AP (min 2)
-            let effectiveAP = apNum;
-            if (breachedWounds > 0 && effectiveAP !== null) {
-              effectiveAP = Math.max(effectiveAP - 2, 2);
-            }
+            // Breaching wounds are resolved at AP2 (matches shooting/melee resolvers and rule text)
+            const effectiveAP = breachedWounds > 0 ? 2 : apNum;
 
             // Resolve breached and non-breached wounds separately if different APs
             const woundBatches = [];
@@ -1335,13 +1333,13 @@ function resolveChargePhase(params) {
                 groupLog.push({ phase, text: `→ ${batch.label !== "normal" ? "Breaching " : ""}Save ${bestSave}+: ${saved} saved, ${batch.count - saved} unsaved` });
               } else {
                 batchUnsaved += batch.count;
-                groupRolls.save.push(...Array(batch.count).fill({ value: 0, success: false }));
+                groupRolls.save.push(...Array.from({ length: batch.count }, () => ({ value: 0, success: false })));
                 groupLog.push({ phase, text: `→ ${batch.label !== "normal" ? "Breaching " : ""}No save — ${batch.count} unsaved` });
               }
             });
 
             // FNP
-            if (targetFnp && targetFnp !== "-" && batchUnsaved > 0) {
+            if (targetFnp && targetFnp !== "-" && targetFnp !== "0" && batchUnsaved > 0) {
               const fnpN = parseInt(targetFnp);
               if (fnpN <= 6) {
                 const fnpRolls = rollD6s(batchUnsaved);
