@@ -10315,6 +10315,8 @@ var ShootingResolver = function () {
   const [deployShowZones, setDeployShowZones] = useState(true);
   // (missionType state lives earlier in the component, above deployArmyToBoard)
   const [zmMission, setZmMission] = useState("sector_sweep"); // "sector_sweep" | "terminal_control" | "signal_influx"
+  // Zone Mortalis map size — classic 48"×48" or compact 48"×28"
+  const [zmMapSize, setZmMapSize] = useState("48x48"); // "48x48" | "48x28"
   const [satMission, setSatMission] = useState("ignis_sector_assault"); // saturnine sub-mission
   const [levMission, setLevMission] = useState("charge_khalekaorus"); // leviathan sub-mission
   const [turnRollP1, setTurnRollP1] = useState(null); // null | 1-6 — P1 initiative roll
@@ -10531,7 +10533,7 @@ var ShootingResolver = function () {
     zm: {
       id: "zm",
       name: "Zone Mortalis",
-      desc: "4'×4' enclosed battlefield divided into 16 sections (12\"×12\" each). Select a Zone Mortalis mission below.",
+      desc: 'Enclosed battlefield divided into 16 sections. Choose the classic 48"×48" map (12"×12" sections) or the compact 48"×28" map (12"×7" sections), then select a Zone Mortalis mission below.',
       renderZones: () => [], // ZM zones rendered separately
     },
     saturnine: {
@@ -10571,10 +10573,18 @@ var ShootingResolver = function () {
         : turnWinner
       : null;
 
-  const ZM_BOARD = 48; // ZM board is 48"×48"
-  const ZM_SECTION = 12; // each section is 12"×12"
+  const ZM_BOARD = 48; // classic ZM board is 48"×48"
+  const ZM_SECTION = 12; // classic section is 12"×12"
   const ZM_COLS = 4;
   const ZM_ROWS = 4;
+  // Active ZM map dimensions. The compact 48"×28" map keeps the same 4×4
+  // section grid and all mission layouts, rescaled to fit (12"×7" sections).
+  const ZM_W = zmMapSize === "48x28" ? 48 : ZM_BOARD;
+  const ZM_H = zmMapSize === "48x28" ? 28 : ZM_BOARD;
+  const ZM_SEC_W = ZM_W / ZM_COLS;
+  const ZM_SEC_H = ZM_H / ZM_ROWS;
+  const zmScaleX = ZM_W / ZM_BOARD;
+  const zmScaleY = ZM_H / ZM_BOARD;
 
   const ZM_SECTION_TYPES = {
     sector_sweep: [
@@ -10658,7 +10668,10 @@ var ShootingResolver = function () {
     sector_sweep: {
       name: "Sector Sweep",
       config: "Configuration Primus",
-      desc: 'Capture as many Objective Markers as possible. 4 fixed objectives worth 2VP each. Diagonal 24" deployment zones.',
+      desc:
+        "Capture as many Objective Markers as possible. 4 fixed objectives worth 2VP each. Deployment zones: full top/bottom section rows (" +
+        Math.round(ZM_SEC_H) +
+        '" deep).',
       special: [
         "Failing Power Conduits (roll per section each turn; on 1 = Abyssal Darkness)",
         "Impenetrable Area (no Deep Strike)",
@@ -10675,7 +10688,10 @@ var ShootingResolver = function () {
     terminal_control: {
       name: "Terminal Control",
       config: "Configuration Secundus",
-      desc: 'Interface cogitator terminals to retrieve data. 5 objectives with variable values (0–3VP). 12" opposite-edge deployment.',
+      desc:
+        "Interface cogitator terminals to retrieve data. 5 objectives with variable values (0–3VP). " +
+        Math.round(ZM_SEC_H) +
+        '" opposite-edge deployment.',
       special: [
         "Impenetrable Area (no Deep Strike)",
         "Reserves",
@@ -12733,9 +12749,10 @@ var ShootingResolver = function () {
                 const zm =
                   ZM_SECTION_TYPES[zmMission] || ZM_SECTION_TYPES.sector_sweep;
                 const zmObjs = ZM_OBJECTIVES[zmMission] || [];
-                const zmOffX = (BOARD_W - ZM_BOARD) / 2; // 12" offset on each side
-                const zmOffY = 0;
-                const S = ZM_SECTION * deployScale;
+                const zmOffX = (BOARD_W - ZM_W) / 2; // centre ZM map on the board
+                const zmOffY = (BOARD_H - ZM_H) / 2;
+                const SW = ZM_SEC_W * deployScale;
+                const SH = ZM_SEC_H * deployScale;
                 const OX = zmOffX * deployScale;
                 const OY = zmOffY * deployScale;
 
@@ -12775,8 +12792,8 @@ var ShootingResolver = function () {
                   React.createElement("rect", {
                     x: OX,
                     y: OY,
-                    width: ZM_BOARD * deployScale,
-                    height: ZM_BOARD * deployScale,
+                    width: ZM_W * deployScale,
+                    height: ZM_H * deployScale,
                     fill: "none",
                     stroke: "rgba(180,140,255,0.7)",
                     strokeWidth: 2,
@@ -12784,7 +12801,7 @@ var ShootingResolver = function () {
                   React.createElement(
                     "text",
                     {
-                      x: OX + (ZM_BOARD * deployScale) / 2,
+                      x: OX + (ZM_W * deployScale) / 2,
                       y: OY - 6,
                       textAnchor: "middle",
                       fontSize: 9,
@@ -12792,14 +12809,14 @@ var ShootingResolver = function () {
                       fontFamily: "'Share Tech Mono', serif",
                       letterSpacing: 2,
                     },
-                    "ZONE MORTALIS —",
+                    "ZONE MORTALIS " + ZM_W + '"×' + ZM_H + '" —',
                     (ZM_MISSIONS_INFO[zmMission] || {}).config || "",
                   ),
                   zm.map((sec, idx) => {
                     const col = idx % ZM_COLS;
                     const row = Math.floor(idx / ZM_COLS);
-                    const sx = OX + col * S;
-                    const sy = OY + row * S;
+                    const sx = OX + col * SW;
+                    const sy = OY + row * SH;
                     const colors =
                       sectionColors[sec.type] || sectionColors.normal;
                     const deployFill = sec.zone
@@ -12815,15 +12832,15 @@ var ShootingResolver = function () {
                         React.createElement("rect", {
                           x: sx,
                           y: sy,
-                          width: S,
-                          height: S,
+                          width: SW,
+                          height: SH,
                           fill: deployFill,
                         }),
                       React.createElement("rect", {
                         x: sx,
                         y: sy,
-                        width: S,
-                        height: S,
+                        width: SW,
+                        height: SH,
                         fill: isAbyssal ? "rgba(20,10,40,0.55)" : colors.bg,
                         stroke: colors.border,
                         strokeWidth: 1.2,
@@ -12832,8 +12849,8 @@ var ShootingResolver = function () {
                         React.createElement(
                           "text",
                           {
-                            x: sx + S / 2,
-                            y: sy + S / 2 - 4,
+                            x: sx + SW / 2,
+                            y: sy + SH / 2 - 4,
                             textAnchor: "middle",
                             fontSize: 10,
                             fill: isAbyssal
@@ -12847,8 +12864,8 @@ var ShootingResolver = function () {
                         React.createElement(
                           "text",
                           {
-                            x: sx + S / 2,
-                            y: sy + S / 2 + 8,
+                            x: sx + SW / 2,
+                            y: sy + SH / 2 + 8,
                             textAnchor: "middle",
                             fontSize: 8,
                             fill: "rgba(255,200,80,0.8)",
@@ -12877,8 +12894,8 @@ var ShootingResolver = function () {
                       React.createElement(
                         "text",
                         {
-                          x: sx + S - 4,
-                          y: sy + S - 3,
+                          x: sx + SW - 4,
+                          y: sy + SH - 3,
                           textAnchor: "end",
                           fontSize: 7,
                           fill: "rgba(255,255,255,0.2)",
@@ -12889,8 +12906,10 @@ var ShootingResolver = function () {
                     );
                   }),
                   zmObjs.map((obj, i) => {
-                    const ox = OX + obj.x * deployScale;
-                    const oy = OY + obj.y * deployScale;
+                    // Objective coordinates are authored on the classic 48×48
+                    // map and rescaled onto the active map size.
+                    const ox = OX + obj.x * zmScaleX * deployScale;
+                    const oy = OY + obj.y * zmScaleY * deployScale;
                     return React.createElement(
                       "g",
                       { key: i },
@@ -12934,10 +12953,10 @@ var ShootingResolver = function () {
                   Array.from({ length: ZM_COLS + 1 }, (_, i) =>
                     React.createElement("line", {
                       key: "v" + i,
-                      x1: OX + i * S,
+                      x1: OX + i * SW,
                       y1: OY,
-                      x2: OX + i * S,
-                      y2: OY + ZM_BOARD * deployScale,
+                      x2: OX + i * SW,
+                      y2: OY + ZM_H * deployScale,
                       stroke: "rgba(180,140,255,0.3)",
                       strokeWidth: 0.5,
                     }),
@@ -12946,9 +12965,9 @@ var ShootingResolver = function () {
                     React.createElement("line", {
                       key: "h" + i,
                       x1: OX,
-                      y1: OY + i * S,
-                      x2: OX + ZM_BOARD * deployScale,
-                      y2: OY + i * S,
+                      y1: OY + i * SH,
+                      x2: OX + ZM_W * deployScale,
+                      y2: OY + i * SH,
                       stroke: "rgba(180,140,255,0.3)",
                       strokeWidth: 0.5,
                     }),
@@ -12958,14 +12977,30 @@ var ShootingResolver = function () {
                       "text",
                       {
                         key: "rl" + i,
-                        x: OX + i * S,
-                        y: OY + ZM_BOARD * deployScale + 10,
+                        x: OX + i * SW,
+                        y: OY + ZM_H * deployScale + 10,
                         textAnchor: "middle",
                         fontSize: 7,
                         fill: "rgba(180,140,255,0.5)",
                         fontFamily: "'Share Tech Mono', serif",
                       },
-                      i * 12,
+                      Math.round(i * ZM_SEC_W),
+                      '"',
+                    ),
+                  ),
+                  Array.from({ length: ZM_ROWS + 1 }, (_, i) =>
+                    React.createElement(
+                      "text",
+                      {
+                        key: "rt" + i,
+                        x: OX - 6,
+                        y: OY + i * SH + 3,
+                        textAnchor: "end",
+                        fontSize: 7,
+                        fill: "rgba(180,140,255,0.5)",
+                        fontFamily: "'Share Tech Mono', serif",
+                      },
+                      Math.round(i * ZM_SEC_H),
                       '"',
                     ),
                   ),
@@ -22484,6 +22519,71 @@ var ShootingResolver = function () {
                       );
                     }),
                   ),
+                  React.createElement(
+                    "div",
+                    {
+                      style: {
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                        flexWrap: "wrap",
+                        marginBottom: 8,
+                      },
+                    },
+                    React.createElement(
+                      "span",
+                      {
+                        style: {
+                          fontSize: 10,
+                          fontFamily: "'Share Tech Mono', serif",
+                          color: "#7a5a9a",
+                          letterSpacing: 1,
+                        },
+                      },
+                      "MAP SIZE:",
+                    ),
+                    [
+                      { id: "48x48", label: '48"×48" CLASSIC' },
+                      { id: "48x28", label: '48"×28" COMPACT' },
+                    ].map((sz) => {
+                      const active = zmMapSize === sz.id;
+                      return React.createElement(
+                        "button",
+                        {
+                          key: sz.id,
+                          onClick: () => setZmMapSize(sz.id),
+                          style: {
+                            padding: "5px 12px",
+                            borderRadius: 6,
+                            fontSize: 11,
+                            cursor: "pointer",
+                            fontFamily: "'Share Tech Mono', serif",
+                            fontWeight: active ? 700 : 400,
+                            letterSpacing: 1,
+                            background: active
+                              ? "rgba(120,80,200,0.2)"
+                              : "#f8f4ec",
+                            border:
+                              "1.5px solid " + (active ? "#7a5a9a" : "#d0c4aa"),
+                            color: active ? "#5b3a8a" : "#6a5e4e",
+                          },
+                        },
+                        sz.label,
+                      );
+                    }),
+                    zmMapSize === "48x28" &&
+                      React.createElement(
+                        "span",
+                        {
+                          style: {
+                            fontSize: 9,
+                            fontFamily: "'Share Tech Mono', serif",
+                            color: "#8a7060",
+                          },
+                        },
+                        'Sections 12"×7" — all zones & objectives rescaled to fit',
+                      ),
+                  ),
                   zmInfo &&
                     React.createElement(
                       "div",
@@ -22815,9 +22915,9 @@ var ShootingResolver = function () {
                                     " V" +
                                     p.v +
                                     " → (" +
-                                    p.h * 12 +
+                                    Math.round(p.h * ZM_SEC_W * 10) / 10 +
                                     '", ' +
-                                    p.v * 12 +
+                                    Math.round(p.v * ZM_SEC_H * 10) / 10 +
                                     '")',
                                 }));
                                 setZmRollLog({
