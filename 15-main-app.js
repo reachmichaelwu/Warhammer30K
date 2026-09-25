@@ -26,6 +26,18 @@ var HELP_PHASE_GUIDE = [
       "The combined map reuses the phase engines: deployment placement, movement ranges, shooting resolution, return fire, charge contact, assault resolution, routing, scoring, and combat log tracking.",
   },
   {
+    id: "battle",
+    icon: "⚑",
+    label: "BATTLE SETUP",
+    shortLabel: "Battle",
+    color: "#b8860b",
+    desc: "Set the number of players (2-6), choose which army lists face each other, and pick the individual units that will fight. Every list built in the Army Builder appears here under its allegiance, and each army expands to show its units.",
+    howTo:
+      "Choose a player count, then press ATTACKER on one army and DEFENDER on another. Expand an army's UNITS list and press the sword on the unit that is shooting or charging and the shield on its target, then LOAD INTO SHOOTING or LOAD INTO ASSAULT. Use EDIT to jump into that list in the Army Builder, and DEPLOY to carry the matchup onto the map.",
+    rules:
+      "The attacker deploys as side 1 (P1) and the defender as side 2 (P2). An army's allegiance is set on its own list in the Army Builder, so Loyalist-vs-Loyalist and Traitor-vs-Traitor matchups are both legal. Units loaded into a resolver carry the squad size, ranged weapon, sergeant weapon, secondary weapons and wargear exactly as they were built.",
+  },
+  {
     id: "army_builder",
     icon: "📋",
     label: "ARMY BUILDER",
@@ -2004,6 +2016,9 @@ var HELP_CHAT_SUGGESTIONS = [
   "How do sonic shriekers work?",
   "What are the stats for a meltagun?",
   "What can a Praetor take?",
+  "Show the Tactical Squad profile and points",
+  "Review my loaded army for obvious issues",
+  "Cross-check this answer with New Recruit and BSData",
 ];
 
 function getHelpPhaseById(phaseId) {
@@ -2310,7 +2325,7 @@ function buildHelpChatReply(question, contextPhaseId) {
 function createHelpWelcomeMessage(contextPhaseId) {
   var phase = getHelpPhaseById(contextPhaseId || "warroom");
   return (
-    "Silica Animus online. Ask about rules, phase order, or how to use a tab.\n\n" +
+    "Silica Animus online. Ask about HH3 rules, unit profiles, points, wargear, loaded rosters, or how to use a tab. Internal catalog retrieval is always available; AI Settings enables grounded answers with live New Recruit and BSData checks.\n\n" +
     "Current context: " +
     phase.label +
     ". Try 'Explain this phase', 'How do detachments work?', or 'Walk me through shooting.'"
@@ -2334,6 +2349,12 @@ var ShootingResolver = function () {
   const [lastNonHelpPhase, setLastNonHelpPhase] = useState("warroom");
   const [helpChatOpen, setHelpChatOpen] = useState(false);
   const [helpChatInput, setHelpChatInput] = useState("");
+  const [helpAiBusy, setHelpAiBusy] = useState(false);
+  const [helpAiSettingsOpen, setHelpAiSettingsOpen] = useState(false);
+  const [helpAiKeyDraft, setHelpAiKeyDraft] = useState("");
+  const [helpAiConfigured, setHelpAiConfigured] = useState(() =>
+    typeof HH_SilicaAI !== "undefined" && !!HH_SilicaAI.getApiKey(),
+  );
   const helpSectionRefs = useRef({});
   const [helpChatMessages, setHelpChatMessages] = useState(() => [
     { role: "assistant", text: createHelpWelcomeMessage("warroom") },
@@ -2346,12 +2367,79 @@ var ShootingResolver = function () {
     entries: [], // [{id, unitId, unitName, models, weaponName, sgtWeaponName, secondaryWeapons, equipment, detachmentId, slotRole, isWarlord}]
     detachments: [], // [{id, type, name, parentSlot}] — auxiliary & apex detachments unlocked
   });
-  const [loyalistArmy, setLoyalistArmy] = useState(emptyArmy());
-  const [traitorArmy, setTraitorArmy] = useState({
+  /* --- Army roster ------------------------------------------------------
+     The toolkit used to carry exactly two armies (one Loyalist, one
+     Traitor).  It now carries a roster of up to six player armies, each of
+     which declares its own allegiance in the Army Builder.  `playerCount`
+     says how many of those slots are in play; the BATTLE tab picks which
+     two of them are the attacker and the defender for this engagement.
+
+     `loyalistArmy` / `traitorArmy` survive as aliases for the attacker and
+     the defender so every downstream consumer (deployment zones, tactical
+     map, warroom engine, resolvers) keeps working unchanged:
+         attacker = side 1 = P1,   defender = side 2 = P2.               */
+  const ARMY_SLOTS = 6;
+  const makeSlotArmy = (i) => ({
     ...emptyArmy(),
-    allegiance: "traitor",
+    id: "army" + (i + 1),
+    name: "Player " + (i + 1),
+    allegiance: i % 2 === 0 ? "loyalist" : "traitor",
   });
-  const [armyBuilderSide, setArmyBuilderSide] = useState("loyalist");
+  const [armyRoster, setArmyRoster] = useState(() =>
+    Array.from({ length: ARMY_SLOTS }, (_, i) => makeSlotArmy(i)),
+  );
+  const [playerCount, setPlayerCount] = useState(2);
+  const [builderArmyId, setBuilderArmyId] = useState("army1");
+  const [attackerArmyId, setAttackerArmyId] = useState("army1");
+  const [defenderArmyId, setDefenderArmyId] = useState("army2");
+
+  const activeArmies = armyRoster.slice(0, playerCount);
+  const findArmy = (id, fallbackIdx) =>
+    activeArmies.find((a) => a.id === id) ||
+    activeArmies[fallbackIdx] ||
+    activeArmies[0];
+  // Army identity (id / display name) is owned by the roster, so a whole-army
+  // replacement (CSV import, preset load) can never clobber it.
+  const setArmyById = (id, fn) =>
+    setArmyRoster((prev) =>
+      prev.map((a) => {
+        if (a.id !== id) return a;
+        const next = typeof fn === "function" ? fn(a) : fn;
+        return { ...next, id: a.id, name: a.name };
+      }),
+    );
+  const renameArmy = (id, name) =>
+    setArmyRoster((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, name: name } : a)),
+    );
+  const setArmyAllegiance = (id, allegiance) =>
+    setArmyRoster((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, allegiance: allegiance } : a)),
+    );
+
+  const builderArmy = findArmy(builderArmyId, 0);
+  const attackerArmy = findArmy(attackerArmyId, 0);
+  const defenderArmy = findArmy(defenderArmyId, 1);
+  const loyalistArmy = attackerArmy; // side 1 (P1)
+  const traitorArmy = defenderArmy; // side 2 (P2)
+  const setLoyalistArmy = (fn) => setArmyById(attackerArmy.id, fn);
+  const setTraitorArmy = (fn) => setArmyById(defenderArmy.id, fn);
+  const armyBuilderSide = builderArmy.allegiance;
+  const setArmyBuilderSide = (side) => setArmyAllegiance(builderArmyId, side);
+
+  // Keep the attacker / defender / builder picks inside the active player
+  // count, and never let one army be both attacker and defender.
+  useEffect(() => {
+    const ids = armyRoster.slice(0, playerCount).map((a) => a.id);
+    if (!ids.length) return;
+    const atk = ids.indexOf(attackerArmyId) >= 0 ? attackerArmyId : ids[0];
+    if (atk !== attackerArmyId) setAttackerArmyId(atk);
+    if (ids.indexOf(defenderArmyId) < 0 || defenderArmyId === atk) {
+      const alt = ids.find((id) => id !== atk);
+      if (alt) setDefenderArmyId(alt);
+    }
+    if (ids.indexOf(builderArmyId) < 0) setBuilderArmyId(ids[0]);
+  }, [playerCount, attackerArmyId, defenderArmyId, builderArmyId, armyRoster]);
   const [abAddModalOpen, setAbAddModalOpen] = useState(false);
   const [abEditIdx, setAbEditIdx] = useState(null);
   const [abEditEntry, setAbEditEntry] = useState(null);
@@ -2361,6 +2449,7 @@ var ShootingResolver = function () {
   const [abShowApexPicker, setAbShowApexPicker] = useState(null); // high command entry id
   const abFileInputRef = useRef(null);
   const helpChatScrollRef = useRef(null);
+  const helpChatRequestRef = useRef(0);
 
   useEffect(() => {
     if (activePhase !== "help") setLastNonHelpPhase(activePhase);
@@ -2373,27 +2462,102 @@ var ShootingResolver = function () {
     }
   }, [helpChatMessages]);
 
+  useEffect(() => {
+    if (helpChatOpen && typeof HH_SilicaAI !== "undefined") {
+      setHelpAiConfigured(!!HH_SilicaAI.getApiKey());
+    }
+  }, [helpChatOpen]);
+
   const helpChatContextPhase =
     activePhase === "help" ? lastNonHelpPhase : activePhase;
 
   const sendHelpChatMessage = useCallback(
-    (rawQuestion) => {
+    async (rawQuestion) => {
       const question = (rawQuestion || helpChatInput).trim();
-      if (!question) return;
-      const reply = buildHelpChatReply(question, helpChatContextPhase);
+      if (!question || helpAiBusy) return;
+
+      const localReply = buildHelpChatReply(question, helpChatContextPhase);
+      const requestId = ++helpChatRequestRef.current;
+      const history = helpChatMessages.slice();
+      setHelpAiBusy(true);
       setHelpChatMessages((prev) => [
         ...prev,
         { role: "user", text: question },
         {
           role: "assistant",
-          text: reply.text,
-          helpTarget: reply.helpTarget,
+          text: helpAiConfigured
+            ? "Consulting the internal catalog and trusted HH3 sources…"
+            : "Searching the internal HH3 catalog…",
+          requestId: requestId,
+          pending: true,
         },
       ]);
       setHelpChatInput("");
+
+      try {
+        var reply = localReply;
+        if (typeof HH_SilicaAI !== "undefined") {
+          reply = await HH_SilicaAI.answer(question, {
+            contextPhase: helpChatContextPhase,
+            history: history,
+            armies: { loyalist: loyalistArmy, traitor: traitorArmy },
+            localReply: localReply,
+          });
+        }
+        setHelpChatMessages((prev) => prev.map((message) =>
+          message.requestId === requestId
+            ? {
+                role: "assistant",
+                text: reply.text,
+                helpTarget: reply.helpTarget || localReply.helpTarget,
+                sources: reply.sources || [],
+                mode: reply.mode || "local",
+                notice: reply.notice || "",
+                error: !!reply.error,
+              }
+            : message,
+        ));
+      } catch (error) {
+        setHelpChatMessages((prev) => prev.map((message) =>
+          message.requestId === requestId
+            ? {
+                role: "assistant",
+                text: localReply.text,
+                helpTarget: localReply.helpTarget,
+                mode: "local",
+                notice: "AI lookup failed: " + (error && error.message || error),
+                error: true,
+              }
+            : message,
+        ));
+      } finally {
+        setHelpAiBusy(false);
+      }
     },
-    [helpChatInput, helpChatContextPhase],
+    [
+      helpAiBusy,
+      helpAiConfigured,
+      helpChatContextPhase,
+      helpChatInput,
+      helpChatMessages,
+      loyalistArmy,
+      traitorArmy,
+    ],
   );
+
+  const saveHelpAiKey = useCallback(() => {
+    if (typeof HH_SilicaAI === "undefined") return;
+    const configured = HH_SilicaAI.setApiKey(helpAiKeyDraft);
+    setHelpAiConfigured(configured);
+    setHelpAiKeyDraft("");
+    if (configured) setHelpAiSettingsOpen(false);
+  }, [helpAiKeyDraft]);
+
+  const removeHelpAiKey = useCallback(() => {
+    if (typeof HH_SilicaAI !== "undefined") HH_SilicaAI.setApiKey("");
+    setHelpAiConfigured(false);
+    setHelpAiKeyDraft("");
+  }, []);
 
   const resetHelpChat = useCallback(() => {
     setHelpChatMessages([
@@ -2468,6 +2632,25 @@ var ShootingResolver = function () {
             React.createElement(
               "button",
               {
+                onClick: function () {
+                  setHelpAiSettingsOpen(function (open) { return !open; });
+                },
+                style: {
+                  padding: "6px 10px",
+                  borderRadius: 6,
+                  border: "1px solid " + (helpAiConfigured ? "#79a986" : "#d2ab69"),
+                  background: helpAiConfigured ? "#f1f8f3" : "#fff8ea",
+                  color: helpAiConfigured ? "#3f7550" : "#8a6729",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: 1,
+                },
+              },
+              helpAiConfigured ? "AI READY" : "AI SETTINGS",
+            ),
+            React.createElement(
+              "button",
+              {
                 onClick: resetHelpChat,
                 style: {
                   padding: "6px 10px",
@@ -2494,9 +2677,123 @@ var ShootingResolver = function () {
               marginBottom: 12,
             },
           },
-          "Ask about rules, tab flow, or how to use the toolkit. Silica Animus uses the built-in phase guide and answers in the context of ",
+          "Ask about HH3 rules, unit profiles, points, wargear, your loaded rosters, or how to use the toolkit. Silica Animus grounds answers in the internal catalog and answers in the context of ",
           getHelpPhaseById(helpChatContextPhase).label,
           ".",
+        ),
+        helpAiSettingsOpen &&
+          React.createElement(
+            "div",
+            {
+              style: {
+                padding: 12,
+                marginBottom: 12,
+                borderRadius: 8,
+                border: "1px solid #d6e1ec",
+                background: "#f6fafe",
+              },
+            },
+            React.createElement(
+              "div",
+              { style: { fontSize: 11.5, color: "#5a6f82", lineHeight: 1.5, marginBottom: 8 } },
+              "Optional: save an OpenAI API key to enable natural-language answers and live source checks. The key is shared with Photo ID, stored only in this browser, and sent only to OpenAI. Local catalog answers work without it.",
+            ),
+            React.createElement(
+              "div",
+              { style: { display: "flex", flexWrap: "wrap", gap: 8 } },
+              React.createElement("input", {
+                type: "password",
+                value: helpAiKeyDraft,
+                autoComplete: "off",
+                placeholder: helpAiConfigured ? "Replace saved API key" : "OpenAI API key",
+                onChange: function (event) { setHelpAiKeyDraft(event.target.value); },
+                style: {
+                  flex: "1 1 260px",
+                  minWidth: 0,
+                  padding: "8px 10px",
+                  borderRadius: 6,
+                  border: "1px solid #c7d6e6",
+                  background: "#fff",
+                  color: "#3e5266",
+                  fontSize: 12,
+                },
+              }),
+              React.createElement(
+                "button",
+                {
+                  disabled: !helpAiKeyDraft.trim(),
+                  onClick: saveHelpAiKey,
+                  style: {
+                    padding: "8px 12px",
+                    borderRadius: 6,
+                    border: "1px solid #5a7a9a",
+                    background: helpAiKeyDraft.trim() ? "#5a7a9a" : "#b7c4d0",
+                    color: "#fff",
+                    fontSize: 11,
+                    fontWeight: 700,
+                  },
+                },
+                "SAVE KEY",
+              ),
+              helpAiConfigured &&
+                React.createElement(
+                  "button",
+                  {
+                    onClick: removeHelpAiKey,
+                    style: {
+                      padding: "8px 12px",
+                      borderRadius: 6,
+                      border: "1px solid #c98b8b",
+                      background: "#fff6f6",
+                      color: "#9b4b4b",
+                      fontSize: 11,
+                      fontWeight: 700,
+                    },
+                  },
+                  "REMOVE",
+                ),
+            ),
+          ),
+        React.createElement(
+          "div",
+          {
+            style: {
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 8,
+              alignItems: "center",
+              marginBottom: 12,
+              fontSize: 10.5,
+            },
+          },
+          React.createElement(
+            "span",
+            {
+              style: {
+                padding: "4px 8px",
+                borderRadius: 999,
+                background: helpAiConfigured ? "#edf7f0" : "#f4efe5",
+                color: helpAiConfigured ? "#3f7550" : "#7a6e5e",
+                border: "1px solid " + (helpAiConfigured ? "#b8d8c1" : "#d8cdb8"),
+                fontWeight: 700,
+              },
+            },
+            helpAiConfigured ? "GROUNDED AI + LIVE WEB" : "LOCAL RETRIEVAL",
+          ),
+          typeof HH_SilicaAI !== "undefined" &&
+            [HH_SilicaAI.sources.newRecruitWiki, HH_SilicaAI.sources.bsdata].map(function (source) {
+              return React.createElement(
+                "a",
+                {
+                  key: source.url,
+                  href: source.url,
+                  target: "_blank",
+                  rel: "noopener noreferrer",
+                  style: { color: "#5a7a9a", fontWeight: 700, textDecoration: "none" },
+                },
+                source.title,
+              );
+            }),
         ),
         React.createElement(
           "div",
@@ -2534,9 +2831,90 @@ var ShootingResolver = function () {
                   border: `1px solid ${isUser ? "rgba(90,122,154,0.35)" : "#d8cdb8"}`,
                   color: isUser ? "#4b6a88" : "#5a4e3e",
                   boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                  opacity: message.pending ? 0.72 : 1,
                 },
               },
+              !isUser &&
+                message.mode &&
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      marginBottom: 5,
+                      color: message.error ? "#a14c4c" : "#6e879f",
+                      fontSize: 9.5,
+                      fontWeight: 700,
+                      letterSpacing: 1,
+                      textTransform: "uppercase",
+                    },
+                  },
+                  message.mode === "ai+web"
+                    ? "Grounded AI · live sources"
+                    : message.mode === "ai"
+                      ? "Grounded AI · internal data"
+                      : "Internal catalog",
+                ),
               React.createElement("div", null, message.text),
+              !isUser &&
+                message.notice &&
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      marginTop: 8,
+                      paddingTop: 7,
+                      borderTop: "1px solid #eadfce",
+                      color: message.error ? "#a14c4c" : "#8a744d",
+                      fontSize: 10.5,
+                    },
+                  },
+                  message.notice,
+                ),
+              !isUser &&
+                message.sources &&
+                message.sources.length > 0 &&
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 6,
+                      marginTop: 8,
+                      paddingTop: 7,
+                      borderTop: "1px solid #eadfce",
+                    },
+                  },
+                  message.sources.map(function (source, sourceIndex) {
+                    var sourceStyle = {
+                      padding: "3px 7px",
+                      borderRadius: 999,
+                      border: "1px solid #d6e1ec",
+                      background: "#f6fafe",
+                      color: "#5a7a9a",
+                      fontSize: 9.5,
+                      fontWeight: 700,
+                      textDecoration: "none",
+                    };
+                    return source.url
+                      ? React.createElement(
+                          "a",
+                          {
+                            key: source.url + "_" + sourceIndex,
+                            href: source.url,
+                            target: "_blank",
+                            rel: "noopener noreferrer",
+                            style: sourceStyle,
+                          },
+                          source.title || "External source",
+                        )
+                      : React.createElement(
+                          "span",
+                          { key: source.title + "_" + sourceIndex, style: sourceStyle },
+                          source.title,
+                        );
+                  }),
+                ),
               !isUser &&
                 message.helpTarget &&
                 React.createElement(
@@ -2577,6 +2955,7 @@ var ShootingResolver = function () {
               "button",
               {
                 key: prompt,
+                disabled: helpAiBusy,
                 onClick: function () {
                   sendHelpChatMessage(prompt);
                 },
@@ -2589,6 +2968,7 @@ var ShootingResolver = function () {
                   fontSize: 11,
                   fontWeight: 700,
                   letterSpacing: 0.4,
+                  opacity: helpAiBusy ? 0.55 : 1,
                 },
               },
               prompt,
@@ -2607,9 +2987,10 @@ var ShootingResolver = function () {
           },
           React.createElement("textarea", {
             value: helpChatInput,
+            disabled: helpAiBusy,
             rows: 3,
             placeholder:
-              "Ask about a rule or phase. Example: How do I use the shooting tab?",
+              "Ask about a rule, unit, weapon, points cost, roster, or phase…",
             onChange: function (e) {
               setHelpChatInput(e.target.value);
             },
@@ -2635,6 +3016,7 @@ var ShootingResolver = function () {
           React.createElement(
             "button",
             {
+              disabled: helpAiBusy,
               onClick: function () {
                 sendHelpChatMessage();
               },
@@ -2645,42 +3027,45 @@ var ShootingResolver = function () {
                 padding: compact ? "12px 16px" : "0 16px",
                 borderRadius: 8,
                 border: "1px solid #5a7a9a",
-                background: "linear-gradient(180deg, #6f90b0 0%, #5a7a9a 100%)",
+                background: helpAiBusy
+                  ? "linear-gradient(180deg, #aab8c5 0%, #91a0ae 100%)"
+                  : "linear-gradient(180deg, #6f90b0 0%, #5a7a9a 100%)",
                 color: "#fff",
                 fontSize: 12,
                 fontWeight: 700,
                 letterSpacing: 1,
               },
             },
-            "ASK AI",
+            helpAiBusy ? "CONSULTING…" : (helpAiConfigured ? "ASK AI" : "SEARCH LOCAL"),
           ),
         ),
       );
     },
     [
+      helpAiBusy,
+      helpAiConfigured,
+      helpAiKeyDraft,
+      helpAiSettingsOpen,
       helpChatContextPhase,
       helpChatInput,
       helpChatMessages,
       openHelpSection,
+      removeHelpAiKey,
       resetHelpChat,
+      saveHelpAiKey,
       sendHelpChatMessage,
     ],
   );
 
-  const getArmy = () =>
-    armyBuilderSide === "loyalist" ? loyalistArmy : traitorArmy;
-  const setArmy = (fn) => {
-    if (armyBuilderSide === "loyalist")
-      setLoyalistArmy(typeof fn === "function" ? fn : () => fn);
-    else setTraitorArmy(typeof fn === "function" ? fn : () => fn);
-  };
+  const getArmy = () => builderArmy;
+  const setArmy = (fn) => setArmyById(builderArmyId, fn);
 
   const armyTotalPoints = useMemo(() => {
     return getArmy().entries.reduce(
       (sum, e) => sum + calcArmyEntryPoints(e),
       0,
     );
-  }, [loyalistArmy, traitorArmy, armyBuilderSide]);
+  }, [armyRoster, builderArmyId]);
 
   const armyValidation = useMemo(() => {
     const army = getArmy();
@@ -2744,7 +3129,7 @@ var ShootingResolver = function () {
       });
     });
     return { valid: errors.length === 0, errors };
-  }, [loyalistArmy, traitorArmy, armyBuilderSide]);
+  }, [armyRoster, builderArmyId]);
 
   const getAvailableUnitsForRole = useCallback(
     (role, detachmentId) => {
@@ -2804,7 +3189,7 @@ var ShootingResolver = function () {
         return true;
       });
     },
-    [loyalistArmy, traitorArmy, armyBuilderSide],
+    [armyRoster, builderArmyId],
   );
 
   const createArmyEntry = (unit, detachmentId, slotRole) => {
@@ -2852,7 +3237,7 @@ var ShootingResolver = function () {
       }));
       setAbShowAuxPicker(null);
     },
-    [armyBuilderSide],
+    [armyRoster, builderArmyId],
   );
 
   const addApexDetachment = useCallback(
@@ -2873,7 +3258,7 @@ var ShootingResolver = function () {
       }));
       setAbShowApexPicker(null);
     },
-    [armyBuilderSide],
+    [armyRoster, builderArmyId],
   );
 
   const addAdditionalDetachment = useCallback(
@@ -2895,7 +3280,7 @@ var ShootingResolver = function () {
       }));
       setAbShowApexPicker(null);
     },
-    [armyBuilderSide],
+    [armyRoster, builderArmyId],
   );
 
   const removeDetachment = useCallback(
@@ -2906,7 +3291,7 @@ var ShootingResolver = function () {
         entries: prev.entries.filter((e) => e.detachmentId !== detId),
       }));
     },
-    [armyBuilderSide],
+    [armyRoster, builderArmyId],
   );
 
   const isSlotPrimeForEntry = useCallback(
@@ -2937,7 +3322,7 @@ var ShootingResolver = function () {
       if (slot.primeCount && entryIndex < slot.primeCount) return true; // first N are prime
       return false;
     },
-    [loyalistArmy, traitorArmy, armyBuilderSide],
+    [armyRoster, builderArmyId],
   );
 
   const isEntryPrimeEligible = useCallback(
@@ -2956,7 +3341,7 @@ var ShootingResolver = function () {
         idx >= 0 ? idx : 0,
       );
     },
-    [loyalistArmy, traitorArmy, armyBuilderSide, isSlotPrimeForEntry],
+    [armyRoster, builderArmyId, isSlotPrimeForEntry],
   );
 
   const getAvailablePrimeAdvantages = useCallback(
@@ -3046,7 +3431,7 @@ var ShootingResolver = function () {
 
       return advantages;
     },
-    [loyalistArmy, traitorArmy, armyBuilderSide],
+    [armyRoster, builderArmyId],
   );
 
 
@@ -3054,7 +3439,7 @@ var ShootingResolver = function () {
     const army = getArmy();
     const faction = army.faction;
     return LEGION_DETACHMENTS[faction] || {};
-  }, [loyalistArmy, traitorArmy, armyBuilderSide]);
+  }, [armyRoster, builderArmyId]);
 
   const addLegionAuxDetachment = useCallback(
     (legionDetType, parentEntryId) => {
@@ -3081,12 +3466,75 @@ var ShootingResolver = function () {
           ],
         };
       };
-      if (armyBuilderSide === "loyalist") setLoyalistArmy(doAdd);
-      else setTraitorArmy(doAdd);
+      setArmyById(builderArmyId, doAdd);
       setAbShowAuxPicker(null);
       setAbShowApexPicker(null);
     },
-    [armyBuilderSide],
+    [armyRoster, builderArmyId],
+  );
+
+  /* Convert one Army Builder entry into the runtime unit shape used by the
+     Tactical Map, the reserves tray, and the combat resolvers: the unit
+     preset plus its resolved ranged weapon, sergeant weapon, secondary
+     weapons, equipment, and army-builder model count.  Shared by auto
+     deploy, reserves deployment, and the BATTLE tab's unit picker so all
+     three routes carry identical wargear into the resolvers. */
+  const buildUnitFromArmyEntry = useCallback(
+    (entry, army, player, i, idPrefix, idSuffix) => {
+      if (!entry) return null;
+      const unitPreset = UNIT_PRESET_BY_ID[entry.unitId];
+      if (!unitPreset) return null;
+      const weapons = getRangedWeapons(entry.unitId);
+      const weaponsByName = {};
+      weapons.forEach((weapon) => {
+        weaponsByName[weapon.name] = weapon;
+      });
+      const rangedWeapon =
+        weaponsByName[entry.weaponName] || weapons[0] || null;
+      const iconType = getUnitIconType(entry.unitName);
+      return {
+        id: `${idPrefix || army.id}_${entry.unitId}_${i}_${Date.now()}${idSuffix || ""}`,
+        name: entry.unitName,
+        // Fields used by the Tactical Map token renderer — without these the
+        // token shows up blank and tooltips say "undefined".
+        label: entry.unitName,
+        symbol: getSymbolForType(iconType),
+        type: iconType,
+        // Identity fields used by the Tactical Map's thumbnail renderer
+        // (getUnitArtwork → UNIT_ARTWORK_MAP / FACTION_MARINE_MAP).
+        unitId: entry.unitId,
+        factionId: army.faction,
+        allegiance: army.allegiance,
+        player,
+        x: 0,
+        y: 0,
+        unitData: { ...unitPreset, models: entry.models },
+        rangedWeapon,
+        secondaryWeapons:
+          entry.secondaryWeapons && entry.secondaryWeapons.length > 0
+            ? entry.secondaryWeapons
+                .map((sw) => ({
+                  weapon: weaponsByName[sw.weaponName] || weapons[0],
+                  models: sw.models || 1,
+                }))
+                .filter((sw) => sw.weapon)
+            : null,
+        sgtEnabled: !!entry.sgtWeaponName,
+        sgtWeapon: entry.sgtWeaponName
+          ? (SERGEANT_WEAPONS[getSgtCategory(entry.unitId)] || []).find(
+              (w) => w.name === entry.sgtWeaponName,
+            )
+          : null,
+        equipment: entry.equipment || {},
+        isWarlord: entry.isWarlord || false,
+        armyEntryId: entry.id,
+        isFlyer: !!unitPreset.isFlyer,
+        isTransport: !!unitPreset.isTransport,
+        hasInterceptor: !!unitPreset.hasInterceptor,
+        transportCapacity: unitPreset.transportCapacity || 0,
+      };
+    },
+    [],
   );
 
   const [missionType, setMissionType] = useState("search"); // "search" | "hammer" | "dawn" | "zm"
@@ -3117,58 +3565,10 @@ var ShootingResolver = function () {
       };
       const newUnits = army.entries
         .map((entry, i) => {
-          const unitPreset = UNIT_PRESET_BY_ID[entry.unitId];
-          if (!unitPreset) return null;
-          const weapons = getRangedWeapons(entry.unitId);
-          const weaponsByName = {};
-          weapons.forEach((weapon) => {
-            weaponsByName[weapon.name] = weapon;
-          });
-          const rangedWeapon =
-            weaponsByName[entry.weaponName] || weapons[0] || null;
-          const iconType = getUnitIconType(entry.unitName);
-          const symbol = getSymbolForType(iconType);
-          const baseUnit = {
-            id: `${side}_${entry.unitId}_${i}_${Date.now()}`,
-            name: entry.unitName,
-            // Fields used by the Tactical Map token renderer — without these
-            // the token shows up blank and tooltips say "undefined".
-            label: entry.unitName,
-            symbol,
-            type: iconType,
-            // Identity fields used by the Tactical Map's thumbnail renderer
-            // (getUnitArtwork → UNIT_ARTWORK_MAP / FACTION_MARINE_MAP).
-            unitId: entry.unitId,
-            factionId: army.faction,
-            allegiance: army.allegiance,
-            player,
-            ...autoPlace(i),
-            unitData: { ...unitPreset, models: entry.models },
-            rangedWeapon,
-            secondaryWeapons:
-              entry.secondaryWeapons && entry.secondaryWeapons.length > 0
-                ? entry.secondaryWeapons
-                    .map((sw) => ({
-                      weapon: weaponsByName[sw.weaponName] || weapons[0],
-                      models: sw.models || 1,
-                    }))
-                    .filter((sw) => sw.weapon)
-                : null,
-            sgtEnabled: !!entry.sgtWeaponName,
-            sgtWeapon: entry.sgtWeaponName
-              ? (SERGEANT_WEAPONS[getSgtCategory(entry.unitId)] || []).find(
-                  (w) => w.name === entry.sgtWeaponName,
-                )
-              : null,
-            equipment: entry.equipment || {},
-            isWarlord: entry.isWarlord || false,
-            armyEntryId: entry.id,
-            isFlyer: !!unitPreset.isFlyer,
-            isTransport: !!unitPreset.isTransport,
-            hasInterceptor: !!unitPreset.hasInterceptor,
-            transportCapacity: unitPreset.transportCapacity || 0,
-          };
-          if (unitPreset.isFlyer) {
+          const baseUnit = buildUnitFromArmyEntry(entry, army, player, i, side, "");
+          if (!baseUnit) return null;
+          Object.assign(baseUnit, autoPlace(i));
+          if (baseUnit.isFlyer) {
             flyerEntries.push({
               ...baseUnit,
               deploymentCount: 0,
@@ -3190,7 +3590,7 @@ var ShootingResolver = function () {
         ...flyerEntries,
       ]);
     },
-    [loyalistArmy, traitorArmy, missionType],
+    [armyRoster, loyalistArmy, traitorArmy, missionType],
   );
 
   // Deploy an entire army from the Army Builder into the reserves pool
@@ -3203,55 +3603,11 @@ var ShootingResolver = function () {
       const player = side === "loyalist" ? "p1" : "p2";
       const newReserves = army.entries
         .map((entry, i) => {
-          const unitPreset = UNIT_PRESET_BY_ID[entry.unitId];
-          if (!unitPreset) return null;
-          const weapons = getRangedWeapons(entry.unitId);
-          const weaponsByName = {};
-          weapons.forEach((weapon) => {
-            weaponsByName[weapon.name] = weapon;
-          });
-          const rangedWeapon =
-            weaponsByName[entry.weaponName] || weapons[0] || null;
-          const iconType = getUnitIconType(entry.unitName);
-          const symbol = getSymbolForType(iconType);
-          const isFlyer = !!unitPreset.isFlyer;
+          const base = buildUnitFromArmyEntry(entry, army, player, i, side, "_res");
+          if (!base) return null;
+          const isFlyer = base.isFlyer;
           return {
-            id: `${side}_${entry.unitId}_${i}_${Date.now()}_res`,
-            name: entry.unitName,
-            label: entry.unitName,
-            symbol,
-            type: iconType,
-            // Identity fields for the Tactical Map thumbnail renderer.
-            unitId: entry.unitId,
-            factionId: army.faction,
-            allegiance: army.allegiance,
-            player,
-            x: 0,
-            y: 0,
-            unitData: { ...unitPreset, models: entry.models },
-            rangedWeapon,
-            secondaryWeapons:
-              entry.secondaryWeapons && entry.secondaryWeapons.length > 0
-                ? entry.secondaryWeapons
-                    .map((sw) => ({
-                      weapon: weaponsByName[sw.weaponName] || weapons[0],
-                      models: sw.models || 1,
-                    }))
-                    .filter((sw) => sw.weapon)
-                : null,
-            sgtEnabled: !!entry.sgtWeaponName,
-            sgtWeapon: entry.sgtWeaponName
-              ? (SERGEANT_WEAPONS[getSgtCategory(entry.unitId)] || []).find(
-                  (w) => w.name === entry.sgtWeaponName,
-                )
-              : null,
-            equipment: entry.equipment || {},
-            isWarlord: entry.isWarlord || false,
-            armyEntryId: entry.id,
-            isFlyer,
-            isTransport: !!unitPreset.isTransport,
-            hasInterceptor: !!unitPreset.hasInterceptor,
-            transportCapacity: unitPreset.transportCapacity || 0,
+            ...base,
             // reserve bookkeeping
             isReserveUnit: !isFlyer,
             deploymentCount: 0,
@@ -3271,12 +3627,12 @@ var ShootingResolver = function () {
         ...newReserves,
       ]);
     },
-    [loyalistArmy, traitorArmy],
+    [armyRoster, loyalistArmy, traitorArmy],
   );
 
   const exportArmyXlsx = useCallback(
-    (side) => {
-      const army = side === "loyalist" ? loyalistArmy : traitorArmy;
+    (armyId) => {
+      const army = armyRoster.find((a) => a.id === armyId) || builderArmy;
       // Build a lookup from detachmentId → { type, name } so each row can
       // record the detachment type as a stable, data-driven key (not the
       // runtime id, which is regenerated every session).
@@ -3376,14 +3732,14 @@ var ShootingResolver = function () {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${side}_army_list.csv`;
+      a.download = `${String(army.name || "army").replace(/[^a-z0-9]+/gi, "_")}_${army.allegiance}_army_list.csv`;
       a.click();
       URL.revokeObjectURL(url);
     },
-    [loyalistArmy, traitorArmy],
+    [armyRoster, builderArmy],
   );
 
-  const importArmyCsv = useCallback((text, side) => {
+  const importArmyCsv = useCallback((text, targetArmyId) => {
     try {
       // Proper CSV line parser: respects double-quoted cells (which may
       // contain commas, e.g. the Equipment column) and escaped "" inside.
@@ -3565,15 +3921,21 @@ var ShootingResolver = function () {
       });
 
       const newArmy = emptyArmy();
-      newArmy.allegiance = side;
       if (headerLine) {
         newArmy.faction = faction;
         newArmy.pointsLimit = parseInt(headerLine[5]) || 3000;
       }
       newArmy.entries = entries;
       newArmy.detachments = newDetachments;
-      if (side === "loyalist") setLoyalistArmy(newArmy);
-      else setTraitorArmy(newArmy);
+      // Replace the contents of the targeted roster slot; its id, display
+      // name and allegiance belong to the slot, not to the imported list.
+      setArmyRoster((prev) =>
+        prev.map((a) =>
+          a.id === targetArmyId
+            ? { ...newArmy, id: a.id, name: a.name, allegiance: a.allegiance }
+            : a,
+        ),
+      );
       return true;
     } catch (err) {
       console.error("Import error:", err);
@@ -3587,13 +3949,13 @@ var ShootingResolver = function () {
       if (!file) return;
       const reader = new FileReader();
       reader.onload = (ev) => {
-        const ok = importArmyCsv(ev.target.result, armyBuilderSide);
+        const ok = importArmyCsv(ev.target.result, builderArmyId);
         if (!ok) alert("Failed to import army list.");
       };
       reader.readAsText(file);
       e.target.value = "";
     },
-    [armyBuilderSide, importArmyCsv],
+    [builderArmyId, importArmyCsv],
   );
 
   // Load a shipped army preset into the currently-active side.  The preset
@@ -3613,16 +3975,16 @@ var ShootingResolver = function () {
       if (existing.entries && existing.entries.length > 0) {
         if (
           !window.confirm(
-            `Replace the current ${armyBuilderSide} army with "${preset.name}"?`,
+            `Replace ${builderArmy.name} (${armyBuilderSide}) with "${preset.name}"?`,
           )
         ) {
           return;
         }
       }
-      const ok = importArmyCsv(preset.csv, armyBuilderSide);
+      const ok = importArmyCsv(preset.csv, builderArmyId);
       if (!ok) alert("Failed to load army preset.");
     },
-    [armyBuilderSide, getArmy, importArmyCsv],
+    [builderArmyId, builderArmy, armyBuilderSide, getArmy, importArmyCsv],
   );
 
   const [mapAttackerId, setMapAttackerId] = useState(null);
@@ -3986,12 +4348,15 @@ var ShootingResolver = function () {
     return (Math.atan2(u2.y - u1.y, u2.x - u1.x) * 180) / Math.PI;
   };
 
-  const handleMapAttackerSelect = (unit) => {
+  /* Load a runtime unit (from the Tactical Map, the reserves tray, or the
+     BATTLE tab's army list) into the attacker slot of the shooting and
+     assault resolvers.  Carries the built squad size, ranged weapon,
+     sergeant weapon and secondary weapons across verbatim. */
+  const applyUnitToAttackerSlot = (unit) => {
     // Defensive guard: a stray click on a token without a unit object,
     // or on an objective/terrain token, should not crash the shoot phase.
     if (!unit || !unit.id) return;
     try {
-      setMapAttackerId(unit.id);
       if (unit.unitData) {
         const ud = unit.unitData;
         // Squad size as deployed (army builder count) — must win over any
@@ -4039,15 +4404,21 @@ var ShootingResolver = function () {
       // tactical-map click handler — a thrown error here would unmount
       // the React tree and look like a hard crash to the user.
       if (typeof console !== "undefined" && console.error) {
-        console.error("handleMapAttackerSelect failed:", err);
+        console.error("applyUnitToAttackerSlot failed:", err);
       }
     }
   };
 
-  const handleMapTargetSelect = (unit) => {
+  const handleMapAttackerSelect = (unit) => {
+    if (!unit || !unit.id) return;
+    setMapAttackerId(unit.id);
+    applyUnitToAttackerSlot(unit);
+  };
+
+  /* Same as applyUnitToAttackerSlot, for the target / defender slot. */
+  const applyUnitToTargetSlot = (unit) => {
     if (!unit || !unit.id) return;
     try {
-      setMapTargetId(unit.id);
       if (unit.unitData) {
         const ud = unit.unitData;
         const deployedModels = ud.models || 1;
@@ -4090,14 +4461,24 @@ var ShootingResolver = function () {
           setTargetSecondaryWeapons([]);
         }
       }
+    } catch (err) {
+      if (typeof console !== "undefined" && console.error) {
+        console.error("applyUnitToTargetSlot failed:", err);
+      }
+    }
+  };
+
+  const handleMapTargetSelect = (unit) => {
+    if (!unit || !unit.id) return;
+    setMapTargetId(unit.id);
+    applyUnitToTargetSlot(unit);
+    // Map-only: derive the charge distance and facing from board positions.
+    try {
       const atkUnit = deployedUnits.find((u) => u.id === mapAttackerId);
       if (atkUnit) {
         const dist = getDistanceBetween(atkUnit, unit);
-        if (dist !== null) {
-          setChargeDistance(Math.ceil(dist));
-        }
-        const angle = getAngleBetween(atkUnit, unit);
-        setUnitFacing(atkUnit.id, angle + 90);
+        if (dist !== null) setChargeDistance(Math.ceil(dist));
+        setUnitFacing(atkUnit.id, getAngleBetween(atkUnit, unit) + 90);
       }
     } catch (err) {
       if (typeof console !== "undefined" && console.error) {
@@ -16634,6 +17015,886 @@ var ShootingResolver = function () {
     openFullSizeMapResults("assault");
   };
 
+  /* --- BATTLE tab -------------------------------------------------------
+     Replaces the old real-time skirmish tab.  Sets the player count (2-6),
+     lists every army built in the Army Builder grouped by allegiance, and
+     lets the player name one army the attacker and another the defender.
+     The attacker becomes side 1 (P1) and the defender side 2 (P2) for
+     deployment, the tactical map, and every combat resolver.             */
+  /* --- BATTLE tab unit picker -------------------------------------------
+     Which army lists are expanded, and which single unit from each side is
+     staged for the resolvers.  A pick is stored as {armyId, entryId} and
+     re-resolved on every render, so editing or deleting a unit in the Army
+     Builder can never leave a stale unit staged.                         */
+  const [battleOpenArmies, setBattleOpenArmies] = useState({});
+  const [battleAttackerPick, setBattleAttackerPick] = useState(null);
+  const [battleTargetPick, setBattleTargetPick] = useState(null);
+
+  const resolveBattlePick = (pick) => {
+    if (!pick) return null;
+    // Only armies inside the active player count can be staged, so lowering
+    // the player count quietly drops a pick instead of loading a hidden army.
+    const army = activeArmies.find((a) => a.id === pick.armyId);
+    if (!army) return null;
+    const index = (army.entries || []).findIndex((e) => e.id === pick.entryId);
+    if (index < 0) return null;
+    return { army, entry: army.entries[index], index };
+  };
+
+  const battleAttackerPicked = resolveBattlePick(battleAttackerPick);
+  const battleTargetPicked = resolveBattlePick(battleTargetPick);
+
+  /* Stage the two picked units into the shooting and assault resolvers and
+     open that tab.  Both slots are filled through the same code path the
+     Tactical Map uses, so the squad size, ranged weapon, sergeant weapon,
+     secondary weapons and equipment come across exactly as built.  The
+     legion faction of each army is applied too, so legion-specific weapon
+     lists are available in the resolver. */
+  const loadBattleEngagement = (phase) => {
+    const atk = resolveBattlePick(battleAttackerPick);
+    const def = resolveBattlePick(battleTargetPick);
+    if (!atk || !def) return;
+    const atkUnit = buildUnitFromArmyEntry(
+      atk.entry, atk.army, "p1", atk.index, "battleatk", "",
+    );
+    const defUnit = buildUnitFromArmyEntry(
+      def.entry, def.army, "p2", def.index, "battledef", "",
+    );
+    if (!atkUnit || !defUnit) {
+      window.alert(
+        "One of those units has no matching datasheet preset in the toolkit, so it cannot be loaded into the resolver.",
+      );
+      return;
+    }
+    setShootFaction(atk.army.faction);
+    setAFaction(atk.army.faction);
+    setTargetFaction(def.army.faction);
+    setDFaction(def.army.faction);
+    applyUnitToAttackerSlot(atkUnit);
+    applyUnitToTargetSlot(defUnit);
+    setActivePhase(phase === "assault" ? "assault" : "shooting");
+  };
+
+  const renderBattleSetupSection = () => {
+    const armyPoints = (army) =>
+      (army.entries || []).reduce((sum, e) => sum + calcArmyEntryPoints(e), 0);
+    const factionName = (army) =>
+      (typeof LEGION_FACTION_BY_ID !== "undefined" &&
+        LEGION_FACTION_BY_ID[army.faction] &&
+        LEGION_FACTION_BY_ID[army.faction].name) ||
+      "Unassigned";
+    const SIDE = {
+      loyalist: {
+        color: "#2a6fb4",
+        tint: "rgba(42,111,180,0.10)",
+        title: "🦅 LOYALIST ARMIES",
+      },
+      traitor: {
+        color: "#9b2d2d",
+        tint: "rgba(155,45,45,0.10)",
+        title: "🔥 TRAITOR ARMIES",
+      },
+    };
+    // Assigning a role steals it from whichever army held it; if that army
+    // held the other role too we swap rather than leave a role unfilled.
+    const assignRole = (role, id) => {
+      if (role === "attacker") {
+        if (defenderArmyId === id) setDefenderArmyId(attackerArmyId);
+        setAttackerArmyId(id);
+      } else {
+        if (attackerArmyId === id) setAttackerArmyId(defenderArmyId);
+        setDefenderArmyId(id);
+      }
+    };
+
+    const labelStyle = {
+      fontSize: 11,
+      color: "#8a7e6e",
+      fontFamily: "'Share Tech Mono', serif",
+      letterSpacing: 1,
+      marginBottom: 6,
+    };
+    const roleBtn = (active, color) => ({
+      flex: 1,
+      padding: "6px 8px",
+      borderRadius: 4,
+      fontSize: 10,
+      cursor: "pointer",
+      fontFamily: "'Share Tech Mono', serif",
+      fontWeight: 700,
+      letterSpacing: 1,
+      background: active ? color : "#f0ebe2",
+      border: `1px solid ${active ? color : "#d0c4aa"}`,
+      color: active ? "#fff" : "#8a7e6e",
+    });
+
+    /* Unit thumbnail: the same artwork the Tactical Map and reserves tray
+       use, with the UnitIcon SVG sitting behind it as the fallback — if the
+       image is missing or fails to load it hides itself and the icon shows
+       through, so a row is never left blank. */
+    const unitThumb = (army, entry, size) => {
+      const tone = SIDE[army.allegiance] || SIDE.loyalist;
+      const art =
+        typeof getUnitArtwork === "function"
+          ? getUnitArtwork(entry.unitId, army.faction, army.allegiance)
+          : null;
+      return React.createElement(
+        "div",
+        {
+          style: {
+            position: "relative",
+            width: size,
+            height: size,
+            flexShrink: 0,
+            borderRadius: 4,
+            overflow: "hidden",
+            background: "#efe9dc",
+            border: `1px solid ${tone.color}55`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          },
+        },
+        typeof UnitIcon !== "undefined" &&
+          React.createElement(UnitIcon, {
+            type: getUnitIconType(entry.unitName),
+            size: Math.round(size * 0.82),
+            color: tone.color,
+          }),
+        art &&
+          React.createElement("img", {
+            src: art,
+            alt: "",
+            loading: "lazy",
+            decoding: "async",
+            style: {
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              background: "#1e1a14",
+            },
+            onError: function (e) {
+              e.currentTarget.style.display = "none";
+            },
+          }),
+      );
+    };
+
+    const entryWeaponSummary = (entry) => {
+      const bits = [];
+      if (entry.weaponName) bits.push(entry.weaponName);
+      if (entry.sgtWeaponName) bits.push("★ " + entry.sgtWeaponName);
+      (entry.secondaryWeapons || []).forEach((sw) => {
+        if (sw.weaponName) bits.push(sw.models + "× " + sw.weaponName);
+      });
+      const eq = Object.keys(entry.equipment || {}).filter(
+        (k) => entry.equipment[k],
+      );
+      if (eq.length) bits.push(eq.length + " wargear");
+      return bits.join(" · ");
+    };
+
+    // One row per army-list entry.  ⚔ stages the unit as the attacking unit,
+    // 🛡 as the target; both also hand that unit's army the matching role so
+    // the matchup header and the resolvers never disagree.
+    const unitRow = (army, entry) => {
+      const isAtk =
+        battleAttackerPick &&
+        battleAttackerPick.armyId === army.id &&
+        battleAttackerPick.entryId === entry.id;
+      const isTgt =
+        battleTargetPick &&
+        battleTargetPick.armyId === army.id &&
+        battleTargetPick.entryId === entry.id;
+      const pickBtn = (active, bg, glyph, title, onClick) =>
+        React.createElement(
+          "button",
+          {
+            onClick: onClick,
+            title: title,
+            style: {
+              padding: "3px 8px",
+              borderRadius: 3,
+              fontSize: 11,
+              lineHeight: 1.2,
+              cursor: "pointer",
+              fontFamily: "'Share Tech Mono', serif",
+              background: active ? bg : "#f0ebe2",
+              border: `1px solid ${active ? bg : "#d0c4aa"}`,
+              color: active ? "#fff" : "#8a7e6e",
+              flexShrink: 0,
+            },
+          },
+          glyph,
+        );
+      return React.createElement(
+        "div",
+        {
+          key: entry.id,
+          style: {
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "4px 2px",
+            borderTop: "1px dashed #e0d6c2",
+            background: isAtk
+              ? "rgba(184,134,11,0.10)"
+              : isTgt
+                ? "rgba(91,74,138,0.10)"
+                : "transparent",
+          },
+        },
+        unitThumb(army, entry, 30),
+        React.createElement(
+          "div",
+          { style: { flex: 1, minWidth: 0 } },
+          React.createElement(
+            "div",
+            {
+              style: {
+                fontFamily: "'Share Tech Mono', serif",
+                fontSize: 11,
+                fontWeight: 700,
+                color: "#2a2418",
+              },
+            },
+            (entry.isWarlord ? "👑 " : "") +
+              entry.unitName +
+              " ×" +
+              (entry.models || 1),
+          ),
+          React.createElement(
+            "div",
+            {
+              style: {
+                fontSize: 10,
+                color: "#8a7e6e",
+                fontFamily: "'Share Tech Mono', serif",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              },
+            },
+            entryWeaponSummary(entry) || "—",
+          ),
+        ),
+        React.createElement(
+          "span",
+          {
+            style: {
+              fontFamily: "'Share Tech Mono', serif",
+              fontSize: 10,
+              color: "#4a6741",
+              flexShrink: 0,
+            },
+          },
+          calcArmyEntryPoints(entry) + "pts",
+        ),
+        pickBtn(isAtk, "#b8860b", "⚔", "Use as the attacking unit", () => {
+          setBattleAttackerPick({ armyId: army.id, entryId: entry.id });
+          assignRole("attacker", army.id);
+        }),
+        pickBtn(isTgt, "#5b4a8a", "🛡", "Use as the target unit", () => {
+          setBattleTargetPick({ armyId: army.id, entryId: entry.id });
+          assignRole("defender", army.id);
+        }),
+      );
+    };
+
+    const armyCard = (army) => {
+      const isAtk = army.id === attackerArmyId;
+      const isDef = army.id === defenderArmyId;
+      const tone = SIDE[army.allegiance] || SIDE.loyalist;
+      const entries = army.entries || [];
+      const units = entries.length;
+      const pts = armyPoints(army);
+      const slot = armyRoster.findIndex((a) => a.id === army.id) + 1;
+      // The two armies actually in the matchup show their units straight
+      // away; the rest stay collapsed until asked for.
+      const open =
+        battleOpenArmies[army.id] === undefined
+          ? isAtk || isDef
+          : !!battleOpenArmies[army.id];
+      return React.createElement(
+        "div",
+        {
+          key: army.id,
+          style: {
+            border: `1px solid ${isAtk || isDef ? tone.color : "#d0c4aa"}`,
+            borderLeft: `4px solid ${tone.color}`,
+            borderRadius: 5,
+            background: isAtk || isDef ? tone.tint : "#faf8f4",
+            padding: "9px 11px",
+            marginBottom: 8,
+          },
+        },
+        React.createElement(
+          "div",
+          {
+            style: {
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              marginBottom: 4,
+            },
+          },
+          React.createElement(
+            "span",
+            {
+              style: {
+                fontFamily: "'Share Tech Mono', serif",
+                fontSize: 10,
+                color: "#8a7e6e",
+                border: "1px solid #d0c4aa",
+                borderRadius: 3,
+                padding: "1px 5px",
+              },
+            },
+            "P" + slot,
+          ),
+          React.createElement(
+            "span",
+            {
+              style: {
+                fontFamily: "'Share Tech Mono', serif",
+                fontWeight: 700,
+                fontSize: 13,
+                color: "#2a2418",
+                flex: 1,
+              },
+            },
+            army.name,
+          ),
+          (isAtk || isDef) &&
+            React.createElement(
+              "span",
+              {
+                style: {
+                  fontFamily: "'Share Tech Mono', serif",
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: 1,
+                  color: "#fff",
+                  background: tone.color,
+                  borderRadius: 3,
+                  padding: "2px 6px",
+                },
+              },
+              isAtk ? "⚔ ATTACKER" : "🛡 DEFENDER",
+            ),
+        ),
+        React.createElement(
+          "div",
+          {
+            style: {
+              fontSize: 11,
+              color: "#6b6152",
+              fontFamily: "'Share Tech Mono', serif",
+              marginBottom: 7,
+            },
+          },
+          `${factionName(army)} · ${units} unit${units === 1 ? "" : "s"} · ${pts}/${army.pointsLimit} pts`,
+        ),
+        units === 0 &&
+          React.createElement(
+            "div",
+            {
+              style: {
+                fontSize: 10,
+                color: "#9b2d2d",
+                fontFamily: "'Share Tech Mono', serif",
+                marginBottom: 7,
+              },
+            },
+            "⚠ EMPTY — build this list in the ARMY tab",
+          ),
+        React.createElement(
+          "div",
+          { style: { display: "flex", gap: 6 } },
+          React.createElement(
+            "button",
+            {
+              onClick: () => assignRole("attacker", army.id),
+              style: roleBtn(isAtk, "#b8860b"),
+            },
+            "⚔ ATTACKER",
+          ),
+          React.createElement(
+            "button",
+            {
+              onClick: () => assignRole("defender", army.id),
+              style: roleBtn(isDef, "#5b4a8a"),
+            },
+            "🛡 DEFENDER",
+          ),
+          React.createElement(
+            "button",
+            {
+              onClick: () => {
+                setBuilderArmyId(army.id);
+                setActivePhase("army_builder");
+              },
+              style: {
+                padding: "6px 10px",
+                borderRadius: 4,
+                fontSize: 10,
+                cursor: "pointer",
+                fontFamily: "'Share Tech Mono', serif",
+                background: "#f0ebe2",
+                border: "1px solid #d0c4aa",
+                color: "#6b6152",
+              },
+              title: "Open this list in the Army Builder",
+            },
+            "📋 EDIT",
+          ),
+        ),
+        /* Unit list — pick the units that will shoot or assault. */
+        units > 0 &&
+          React.createElement(
+            "button",
+            {
+              onClick: () =>
+                setBattleOpenArmies((prev) => ({ ...prev, [army.id]: !open })),
+              style: {
+                marginTop: 7,
+                width: "100%",
+                padding: "4px 8px",
+                borderRadius: 3,
+                fontSize: 10,
+                letterSpacing: 1,
+                cursor: "pointer",
+                textAlign: "left",
+                fontFamily: "'Share Tech Mono', serif",
+                fontWeight: 700,
+                background: "#f0ebe2",
+                border: "1px solid #d0c4aa",
+                color: "#6b6152",
+              },
+            },
+            (open ? "▾ " : "▸ ") + "UNITS (" + units + ")",
+          ),
+        units > 0 &&
+          open &&
+          React.createElement(
+            "div",
+            { style: { marginTop: 4 } },
+            entries.map((entry) => unitRow(army, entry)),
+          ),
+      );
+    };
+    const column = (allegiance) => {
+      const tone = SIDE[allegiance];
+      const list = activeArmies.filter((a) => a.allegiance === allegiance);
+      return React.createElement(
+        "div",
+        { style: { flex: "1 1 280px", minWidth: 260 } },
+        React.createElement(
+          "div",
+          {
+            style: {
+              fontFamily: "'Share Tech Mono', serif",
+              fontWeight: 700,
+              fontSize: 12,
+              letterSpacing: 2,
+              color: tone.color,
+              borderBottom: `2px solid ${tone.color}`,
+              paddingBottom: 5,
+              marginBottom: 9,
+            },
+          },
+          tone.title + "  (" + list.length + ")",
+        ),
+        list.length
+          ? list.map(armyCard)
+          : React.createElement(
+              "div",
+              {
+                style: {
+                  fontSize: 11,
+                  color: "#8a7e6e",
+                  fontFamily: "'Share Tech Mono', serif",
+                  fontStyle: "italic",
+                  padding: "10px 2px",
+                },
+              },
+              "No army on this side. Set a player's allegiance in the ARMY tab.",
+            ),
+      );
+    };
+
+    return React.createElement(
+      React.Fragment,
+      null,
+      /* Player count */
+      React.createElement(
+        "div",
+        { style: { ...panelStyle, marginBottom: 12 } },
+        React.createElement(
+          "div",
+          {
+            style: {
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 12,
+              alignItems: "center",
+              justifyContent: "space-between",
+            },
+          },
+          React.createElement(
+            "div",
+            null,
+            React.createElement("div", { style: labelStyle }, "PLAYERS"),
+            React.createElement(
+              "div",
+              { style: { display: "flex", gap: 4 } },
+              [2, 3, 4, 5, 6].map((n) =>
+                React.createElement(
+                  "button",
+                  {
+                    key: n,
+                    onClick: () => setPlayerCount(n),
+                    style: {
+                      padding: "7px 15px",
+                      borderRadius: 4,
+                      fontSize: 12,
+                      cursor: "pointer",
+                      fontFamily: "'Share Tech Mono', serif",
+                      fontWeight: 700,
+                      background:
+                        playerCount === n ? "rgba(184,134,11,0.16)" : "#f0ebe2",
+                      border: `1px solid ${playerCount === n ? "#b8860b" : "#d0c4aa"}`,
+                      color: playerCount === n ? "#8a6508" : "#8a7e6e",
+                    },
+                  },
+                  n,
+                ),
+              ),
+            ),
+          ),
+          React.createElement(
+            "div",
+            {
+              style: {
+                fontSize: 11,
+                color: "#6b6152",
+                fontFamily: "'Share Tech Mono', serif",
+                maxWidth: 340,
+                lineHeight: 1.5,
+              },
+            },
+            `${playerCount} army lists are in play. Each list is built in the ARMY tab and declares its own allegiance there. Pick one attacker and one defender below — the attacker deploys as side 1 (P1), the defender as side 2 (P2).`,
+          ),
+        ),
+      ),
+      /* Matchup */
+      React.createElement(
+        "div",
+        { style: { ...panelStyle, marginBottom: 12 } },
+        React.createElement(
+          "div",
+          {
+            style: {
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 14,
+            },
+          },
+          React.createElement(
+            "div",
+            { style: { textAlign: "center", minWidth: 150 } },
+            React.createElement("div", { style: labelStyle }, "⚔ ATTACKER (P1)"),
+            React.createElement(
+              "div",
+              {
+                style: {
+                  fontFamily: "'Share Tech Mono', serif",
+                  fontWeight: 700,
+                  fontSize: 15,
+                  color: (SIDE[attackerArmy.allegiance] || SIDE.loyalist).color,
+                },
+              },
+              attackerArmy.name,
+            ),
+            React.createElement(
+              "div",
+              {
+                style: {
+                  fontSize: 11,
+                  color: "#6b6152",
+                  fontFamily: "'Share Tech Mono', serif",
+                },
+              },
+              `${attackerArmy.allegiance.toUpperCase()} · ${armyPoints(attackerArmy)} pts`,
+            ),
+          ),
+          React.createElement(
+            "div",
+            {
+              style: {
+                fontFamily: "'VT323', monospace",
+                fontSize: 28,
+                color: "#b8860b",
+                letterSpacing: 2,
+              },
+            },
+            "VS",
+          ),
+          React.createElement(
+            "div",
+            { style: { textAlign: "center", minWidth: 150 } },
+            React.createElement("div", { style: labelStyle }, "🛡 DEFENDER (P2)"),
+            React.createElement(
+              "div",
+              {
+                style: {
+                  fontFamily: "'Share Tech Mono', serif",
+                  fontWeight: 700,
+                  fontSize: 15,
+                  color: (SIDE[defenderArmy.allegiance] || SIDE.traitor).color,
+                },
+              },
+              defenderArmy.name,
+            ),
+            React.createElement(
+              "div",
+              {
+                style: {
+                  fontSize: 11,
+                  color: "#6b6152",
+                  fontFamily: "'Share Tech Mono', serif",
+                },
+              },
+              `${defenderArmy.allegiance.toUpperCase()} · ${armyPoints(defenderArmy)} pts`,
+            ),
+          ),
+          React.createElement(
+            "button",
+            {
+              onClick: () => setActivePhase("deployment"),
+              style: {
+                padding: "9px 20px",
+                borderRadius: 4,
+                fontSize: 12,
+                cursor: "pointer",
+                fontFamily: "'Share Tech Mono', serif",
+                fontWeight: 700,
+                letterSpacing: 1,
+                background: "rgba(184,134,11,0.16)",
+                border: "1px solid #b8860b",
+                color: "#8a6508",
+              },
+            },
+            "📍 DEPLOY →",
+          ),
+        ),
+        attackerArmy.allegiance === defenderArmy.allegiance &&
+          React.createElement(
+            "div",
+            {
+              style: {
+                marginTop: 10,
+                fontSize: 11,
+                color: "#9b2d2d",
+                fontFamily: "'Share Tech Mono', serif",
+                textAlign: "center",
+              },
+            },
+            "⚠ Both forces share an allegiance — this is a civil-war matchup.",
+          ),
+      ),
+      /* Staged units — what will actually be loaded into the resolvers */
+      React.createElement(
+        "div",
+        { style: { ...panelStyle, marginBottom: 12 } },
+        React.createElement("div", { style: labelStyle }, "SELECTED UNITS"),
+        React.createElement(
+          "div",
+          {
+            style: {
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 10,
+              alignItems: "stretch",
+            },
+          },
+          [
+            {
+              pick: battleAttackerPicked,
+              title: "⚔ ATTACKING UNIT",
+              color: "#b8860b",
+              empty: "Open an army's UNITS list below and press ⚔ on the unit that will shoot or charge.",
+            },
+            {
+              pick: battleTargetPicked,
+              title: "🛡 TARGET UNIT",
+              color: "#5b4a8a",
+              empty: "Press 🛡 on the unit being shot at or charged.",
+            },
+          ].map((slot) =>
+            React.createElement(
+              "div",
+              {
+                key: slot.title,
+                style: {
+                  flex: "1 1 240px",
+                  minWidth: 220,
+                  border: `1px solid ${slot.pick ? slot.color : "#d0c4aa"}`,
+                  borderRadius: 5,
+                  background: slot.pick ? "#faf8f4" : "#f3efe6",
+                  padding: "8px 10px",
+                },
+              },
+              React.createElement(
+                "div",
+                {
+                  style: {
+                    fontFamily: "'Share Tech Mono', serif",
+                    fontSize: 10,
+                    fontWeight: 700,
+                    letterSpacing: 1,
+                    color: slot.color,
+                    marginBottom: 4,
+                  },
+                },
+                slot.title,
+              ),
+              slot.pick
+                ? React.createElement(
+                    "div",
+                    {
+                      style: {
+                        display: "flex",
+                        gap: 8,
+                        alignItems: "flex-start",
+                      },
+                    },
+                    unitThumb(slot.pick.army, slot.pick.entry, 44),
+                    React.createElement(
+                      "div",
+                      { style: { flex: 1, minWidth: 0 } },
+                      React.createElement(
+                        "div",
+                        {
+                          style: {
+                            fontFamily: "'Share Tech Mono', serif",
+                            fontWeight: 700,
+                            fontSize: 13,
+                            color: "#2a2418",
+                          },
+                        },
+                        (slot.pick.entry.isWarlord ? "👑 " : "") +
+                          slot.pick.entry.unitName +
+                          " ×" +
+                          (slot.pick.entry.models || 1),
+                      ),
+                      React.createElement(
+                        "div",
+                        {
+                          style: {
+                            fontSize: 10,
+                            color: "#6b6152",
+                            fontFamily: "'Share Tech Mono', serif",
+                            marginTop: 2,
+                          },
+                        },
+                        slot.pick.army.name +
+                          " · " +
+                          factionName(slot.pick.army),
+                      ),
+                      React.createElement(
+                        "div",
+                        {
+                          style: {
+                            fontSize: 10,
+                            color: "#8a7e6e",
+                            fontFamily: "'Share Tech Mono', serif",
+                            marginTop: 2,
+                          },
+                        },
+                        entryWeaponSummary(slot.pick.entry) || "—",
+                      ),
+                    ),
+                  )
+                : React.createElement(
+                    "div",
+                    {
+                      style: {
+                        fontSize: 11,
+                        color: "#8a7e6e",
+                        fontFamily: "'Share Tech Mono', serif",
+                        fontStyle: "italic",
+                        lineHeight: 1.4,
+                      },
+                    },
+                    slot.empty,
+                  ),
+            ),
+          ),
+          React.createElement(
+            "div",
+            {
+              style: {
+                display: "flex",
+                flexDirection: "column",
+                gap: 6,
+                justifyContent: "center",
+                minWidth: 180,
+              },
+            },
+            [
+              { phase: "shooting", label: "⚔ LOAD INTO SHOOTING →" },
+              { phase: "assault", label: "🗡 LOAD INTO ASSAULT →" },
+            ].map((action) => {
+              const ready = !!battleAttackerPicked && !!battleTargetPicked;
+              return React.createElement(
+                "button",
+                {
+                  key: action.phase,
+                  disabled: !ready,
+                  onClick: () => loadBattleEngagement(action.phase),
+                  title: ready
+                    ? "Load both units, with their built wargear, into the " +
+                      action.phase +
+                      " resolver"
+                    : "Pick an attacking unit and a target unit first",
+                  style: {
+                    padding: "9px 14px",
+                    borderRadius: 4,
+                    fontSize: 11,
+                    cursor: ready ? "pointer" : "not-allowed",
+                    fontFamily: "'Share Tech Mono', serif",
+                    fontWeight: 700,
+                    letterSpacing: 1,
+                    background: ready ? "rgba(184,134,11,0.16)" : "#f0ebe2",
+                    border: `1px solid ${ready ? "#b8860b" : "#d0c4aa"}`,
+                    color: ready ? "#8a6508" : "#a89b88",
+                  },
+                },
+                action.label,
+              );
+            }),
+          ),
+        ),
+      ),
+      /* Army lists by allegiance */
+      React.createElement(
+        "div",
+        { style: { ...panelStyle } },
+        React.createElement(
+          "div",
+          { style: { display: "flex", flexWrap: "wrap", gap: 20 } },
+          column("loyalist"),
+          column("traitor"),
+        ),
+      ),
+    );
+  };
+
   const renderWarroomTacticalSection = () => {
     const modes = [
       { id: "deployment", icon: "📍", label: "Deploy", color: "#5b4a8a" },
@@ -17777,6 +19038,7 @@ var ShootingResolver = function () {
       /* Phase tab buttons */
       ...[
         { id: "tutorial",     icon: "🎓", label: "TUTORIAL" },
+        { id: "battle",       icon: "⚑", label: "BATTLE" },
         { id: "warroom",      icon: "🗺", label: "TACTICAL" },
         { id: "ios_map",      icon: "📱", label: "MOBILE" },
         { id: "help",         icon: "❓", label: "HELP" },
@@ -17923,6 +19185,7 @@ var ShootingResolver = function () {
       activePhase === "train_ai" &&
         typeof HHTrainerPanel !== "undefined" &&
         React.createElement(HHTrainerPanel, { goToPhase: setActivePhase }),
+      activePhase === "battle" && renderBattleSetupSection(),
       activePhase === "warroom" && renderWarroomTacticalSection(),
       activePhase === "ios_map" && renderIOSTacticalSection(),
       activePhase === "army_builder" &&
@@ -17966,40 +19229,132 @@ var ShootingResolver = function () {
                   "CRUSADE ARMY BUILDER",
                 ),
               ),
+              /* Army slot picker — which of the up-to-six player lists is
+                 being edited, what it is called, and whose side it is on. */
               React.createElement(
                 "div",
-                { style: { display: "flex", gap: 4 } },
-                ["loyalist", "traitor"].map((side) =>
-                  React.createElement(
-                    "button",
-                    {
-                      key: side,
-                      onClick: () => setArmyBuilderSide(side),
-                      style: {
-                        padding: "6px 16px",
-                        borderRadius: 4,
-                        fontSize: 11,
-                        cursor: "pointer",
-                        fontFamily: "'Share Tech Mono', serif",
-                        fontWeight: 700,
-                        letterSpacing: 1,
-                        background:
-                          armyBuilderSide === side
-                            ? side === "loyalist"
-                              ? "rgba(42,111,180,0.15)"
-                              : "rgba(155,45,45,0.15)"
-                            : "#f0ebe2",
-                        border: `1px solid ${armyBuilderSide === side ? (side === "loyalist" ? "#2a6fb4" : "#9b2d2d") : "#d0c4aa"}`,
-                        color:
-                          armyBuilderSide === side
-                            ? side === "loyalist"
-                              ? "#2a6fb4"
-                              : "#9b2d2d"
-                            : "#8a7e6e",
+                {
+                  style: {
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 6,
+                    alignItems: "flex-end",
+                  },
+                },
+                React.createElement(
+                  "div",
+                  { style: { display: "flex", gap: 4, flexWrap: "wrap" } },
+                  activeArmies.map((a, i) =>
+                    React.createElement(
+                      "button",
+                      {
+                        key: a.id,
+                        onClick: () => setBuilderArmyId(a.id),
+                        title: a.name,
+                        style: {
+                          padding: "6px 12px",
+                          borderRadius: 4,
+                          fontSize: 11,
+                          cursor: "pointer",
+                          fontFamily: "'Share Tech Mono', serif",
+                          fontWeight: 700,
+                          letterSpacing: 1,
+                          background:
+                            builderArmyId === a.id
+                              ? a.allegiance === "loyalist"
+                                ? "rgba(42,111,180,0.15)"
+                                : "rgba(155,45,45,0.15)"
+                              : "#f0ebe2",
+                          border: `1px solid ${builderArmyId === a.id ? (a.allegiance === "loyalist" ? "#2a6fb4" : "#9b2d2d") : "#d0c4aa"}`,
+                          color:
+                            builderArmyId === a.id
+                              ? a.allegiance === "loyalist"
+                                ? "#2a6fb4"
+                                : "#9b2d2d"
+                              : "#8a7e6e",
+                        },
                       },
-                    },
-                    side === "loyalist" ? "🦅 LOYALIST" : "🔥 TRAITOR",
+                      (a.allegiance === "loyalist" ? "🦅 " : "🔥 ") +
+                        "P" +
+                        (i + 1),
+                    ),
                   ),
+                ),
+                React.createElement(
+                  "div",
+                  {
+                    style: { display: "flex", gap: 4, alignItems: "center" },
+                  },
+                  React.createElement("input", {
+                    value: builderArmy.name,
+                    onChange: (e) => renameArmy(builderArmyId, e.target.value),
+                    placeholder: "Army name",
+                    style: {
+                      padding: "5px 8px",
+                      borderRadius: 4,
+                      border: "1px solid #d0c4aa",
+                      fontSize: 11,
+                      fontFamily: "'Share Tech Mono', serif",
+                      background: "#faf8f4",
+                      color: "#2a2418",
+                      width: 150,
+                    },
+                  }),
+                  ["loyalist", "traitor"].map((side) =>
+                    React.createElement(
+                      "button",
+                      {
+                        key: side,
+                        onClick: () => setArmyBuilderSide(side),
+                        style: {
+                          padding: "6px 12px",
+                          borderRadius: 4,
+                          fontSize: 11,
+                          cursor: "pointer",
+                          fontFamily: "'Share Tech Mono', serif",
+                          fontWeight: 700,
+                          letterSpacing: 1,
+                          background:
+                            armyBuilderSide === side
+                              ? side === "loyalist"
+                                ? "rgba(42,111,180,0.15)"
+                                : "rgba(155,45,45,0.15)"
+                              : "#f0ebe2",
+                          border: `1px solid ${armyBuilderSide === side ? (side === "loyalist" ? "#2a6fb4" : "#9b2d2d") : "#d0c4aa"}`,
+                          color:
+                            armyBuilderSide === side
+                              ? side === "loyalist"
+                                ? "#2a6fb4"
+                                : "#9b2d2d"
+                              : "#8a7e6e",
+                        },
+                      },
+                      side === "loyalist" ? "🦅 LOYALIST" : "🔥 TRAITOR",
+                    ),
+                  ),
+                  (builderArmyId === attackerArmyId ||
+                    builderArmyId === defenderArmyId) &&
+                    React.createElement(
+                      "span",
+                      {
+                        style: {
+                          fontFamily: "'Share Tech Mono', serif",
+                          fontSize: 10,
+                          fontWeight: 700,
+                          letterSpacing: 1,
+                          color: "#fff",
+                          background:
+                            builderArmyId === attackerArmyId
+                              ? "#b8860b"
+                              : "#5b4a8a",
+                          borderRadius: 3,
+                          padding: "3px 7px",
+                        },
+                      },
+                      builderArmyId === attackerArmyId
+                        ? "⚔ ATTACKER"
+                        : "🛡 DEFENDER",
+                    ),
                 ),
               ),
             ),
@@ -18178,7 +19533,7 @@ var ShootingResolver = function () {
                 React.createElement(
                   "button",
                   {
-                    onClick: () => exportArmyXlsx(armyBuilderSide),
+                    onClick: () => exportArmyXlsx(builderArmyId),
                     style: {
                       padding: "5px 10px",
                       borderRadius: 4,
@@ -18226,7 +19581,7 @@ var ShootingResolver = function () {
                       const count = (army.entries || []).length;
                       if (count > 0) {
                         const ok = window.confirm(
-                          `Clear all ${count} unit${count === 1 ? "" : "s"} from the ${armyBuilderSide} army? This cannot be undone — EXPORT first if you want to keep it.`,
+                          `Clear all ${count} unit${count === 1 ? "" : "s"} from ${builderArmy.name} (${armyBuilderSide})? This cannot be undone — EXPORT first if you want to keep it.`,
                         );
                         if (!ok) return;
                       }
@@ -19405,12 +20760,12 @@ var ShootingResolver = function () {
                         fontWeight: 900,
                         fontSize: 12,
                         letterSpacing: 1,
-                        background: "rgba(42,111,180,0.16)",
-                        border: "2px solid #2a6fb4",
-                        color: "#2a6fb4",
+                        background: attackerArmy.allegiance === "loyalist" ? "rgba(42,111,180,0.16)" : "rgba(155,45,45,0.16)",
+                        border: `2px solid ${attackerArmy.allegiance === "loyalist" ? "#2a6fb4" : "#9b2d2d"}`,
+                        color: attackerArmy.allegiance === "loyalist" ? "#2a6fb4" : "#9b2d2d",
                       },
                     },
-                    "⚡ AUTO DEPLOY LOYALIST (",
+                    "⚡ AUTO DEPLOY ATTACKER — " + attackerArmy.name + " (",
                     loyalistArmy.entries.length,
                     " units)",
                   ),
@@ -19432,12 +20787,12 @@ var ShootingResolver = function () {
                         fontWeight: 900,
                         fontSize: 12,
                         letterSpacing: 1,
-                        background: "rgba(155,45,45,0.16)",
-                        border: "2px solid #9b2d2d",
-                        color: "#9b2d2d",
+                        background: defenderArmy.allegiance === "loyalist" ? "rgba(42,111,180,0.16)" : "rgba(155,45,45,0.16)",
+                        border: `2px solid ${defenderArmy.allegiance === "loyalist" ? "#2a6fb4" : "#9b2d2d"}`,
+                        color: defenderArmy.allegiance === "loyalist" ? "#2a6fb4" : "#9b2d2d",
                       },
                     },
-                    "⚡ AUTO DEPLOY TRAITOR (",
+                    "⚡ AUTO DEPLOY DEFENDER — " + defenderArmy.name + " (",
                     traitorArmy.entries.length,
                     " units)",
                   ),
@@ -19509,7 +20864,7 @@ var ShootingResolver = function () {
                         color: "#2a6fb4",
                       },
                     },
-                    "🦅 Deploy Loyalist → Reserves (",
+                    "⚔ Deploy Attacker (" + attackerArmy.name + ") → Reserves (",
                     loyalistArmy.entries.length,
                     "units)",
                   ),
@@ -19534,7 +20889,7 @@ var ShootingResolver = function () {
                         color: "#9b2d2d",
                       },
                     },
-                    "🔥 Deploy Traitor → Reserves (",
+                    "🛡 Deploy Defender (" + defenderArmy.name + ") → Reserves (",
                     traitorArmy.entries.length,
                     "units)",
                   ),

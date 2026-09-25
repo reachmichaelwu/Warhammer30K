@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="warroom-game.css?v=ios-map-1">
   <link rel="stylesheet" href="mobile.css">
+  <link rel="stylesheet" href="tutorial.css?v=interactive-1">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#050f05">
@@ -130,7 +131,7 @@
 
   <!-- Global error handler to catch script load/exec failures -->
   <script>
-    var _ld = 0, _ldTotal = 26;
+    var _ld = 0, _ldTotal = 27;
     var _ldMsg = [
       'Loading machine spirit...', 'Parsing unit manifests...',
       'Calibrating bolter trajectories...', 'Compiling FOC slot data...',
@@ -147,6 +148,7 @@
       'Loading legacy manifests...',
       'Compiling battle primer...',
       'Indexing Warhammer references...',
+      'Grounding Silica Animus...',
       'Calibrating recognition optics...',
       'Priming neural cogitator...'
     ];
@@ -168,37 +170,39 @@
     };
   </script>
 
-  <!-- App scripts — all plain JS, no transpiler needed -->
-  <script src="00-boot.js"              onerror="_ldErr('Failed to load 00-boot.js')"              onload="_ldUp()"></script>
-  <script src="01-constants.js"          onerror="_ldErr('Failed to load 01-constants.js')"          onload="_ldUp()"></script>
-  <script src="02-unit-presets.js"       onerror="_ldErr('Failed to load 02-unit-presets.js')"       onload="_ldUp()"></script>
-  <script src="03-foc-wargear.js"        onerror="_ldErr('Failed to load 03-foc-wargear.js')"        onload="_ldUp()"></script>
-  <script src="04-points.js"             onerror="_ldErr('Failed to load 04-points.js')"             onload="_ldUp()"></script>
-  <script src="05-weapon-profiles.js"    onerror="_ldErr('Failed to load 05-weapon-profiles.js')"    onload="_ldUp()"></script>
-  <script src="06-wargear-options.js"    onerror="_ldErr('Failed to load 06-wargear-options.js')"    onload="_ldUp()"></script>
-  <script src="07-army-builder-data.js"  onerror="_ldErr('Failed to load 07-army-builder-data.js')"  onload="_ldUp()"></script>
-  <script src="07b-army-presets.js"      onerror="_ldErr('Failed to load 07b-army-presets.js')"      onload="_ldUp()"></script>
-  <script src="08-shooting-resolver.js"  onerror="_ldErr('Failed to load 08-shooting-resolver.js')"  onload="_ldUp()"></script>
-  <script src="09-return-fire.js"        onerror="_ldErr('Failed to load 09-return-fire.js')"        onload="_ldUp()"></script>
-  <script src="10-challenge.js"          onerror="_ldErr('Failed to load 10-challenge.js')"          onload="_ldUp()"></script>
-  <script src="11-assault.js"            onerror="_ldErr('Failed to load 11-assault.js')"            onload="_ldUp()"></script>
-  <script src="12-charge.js"             onerror="_ldErr('Failed to load 12-charge.js')"             onload="_ldUp()"></script>
-  <script src="13-icons.js"              onerror="_ldErr('Failed to load 13-icons.js')"              onload="_ldUp()"></script>
-  <script src="14-ui-components.js?v=photo-select-2"      onerror="_ldErr('Failed to load 14-ui-components.js')"      onload="_ldUp()"></script>
-  <script src="26-ios-tactical.js?v=ios-map-1"          onerror="_ldErr('Failed to load 26-ios-tactical.js')"       onload="_ldUp()"></script>
-  <script src="15-main-app.js?v=zm-map-1"              onerror="_ldErr('Failed to load 15-main-app.js')"           onload="_ldUp()"></script>
-  <script src="16-graphics.js"           onerror="_ldErr('Failed to load 16-graphics.js')"           onload="_ldUp()"></script>
-  <script src="17-artwork.js"            onerror="_ldErr('Failed to load 17-artwork.js')"            onload="_ldUp()"></script>
-  <script src="19-warroom-game.js?v=warroom-game-3"       onerror="_ldErr('Failed to load 19-warroom-game.js')"       onload="_ldUp()"></script>
-  <script src="20-legacy-units.js"       onerror="_ldErr('Failed to load 20-legacy-units.js')"       onload="_ldUp()"></script>
-  <script src="21-tutorial.js?v=1"       onerror="_ldErr('Failed to load 21-tutorial.js')"           onload="_ldUp()"></script>
-  <script src="24-warhammer-reference-catalog.js?v=1" onerror="_ldErr('Failed to load 24-warhammer-reference-catalog.js')" onload="_ldUp()"></script>
-  <script src="22-photo-id.js?v=5"        onerror="_ldErr('Failed to load 22-photo-id.js')"           onload="_ldUp()"></script>
-  <script src="23-unit-trainer.js?v=1"    onerror="_ldErr('Failed to load 23-unit-trainer.js')"       onload="_ldUp()"></script>
+  <!-- Deferred scripts download without blocking parsing and execute in order. -->
+  <script defer src="00-boot.js"              onerror="_ldErr('Failed to load 00-boot.js')"              onload="_ldUp()"></script>
+  <script defer src="01-constants.js"          onerror="_ldErr('Failed to load 01-constants.js')"          onload="_ldUp()"></script>
+  <script defer src="02-unit-presets.js"       onerror="_ldErr('Failed to load 02-unit-presets.js')"       onload="_ldUp()"></script>
+  <script defer src="03-foc-wargear.js"        onerror="_ldErr('Failed to load 03-foc-wargear.js')"        onload="_ldUp()"></script>
+  <script defer src="04-points.js"             onerror="_ldErr('Failed to load 04-points.js')"             onload="_ldUp()"></script>
+  <script defer src="05-weapon-profiles.js"    onerror="_ldErr('Failed to load 05-weapon-profiles.js')"    onload="_ldUp()"></script>
+  <script defer src="06-wargear-options.js"    onerror="_ldErr('Failed to load 06-wargear-options.js')"    onload="_ldUp()"></script>
+  <script defer src="07-army-builder-data.js"  onerror="_ldErr('Failed to load 07-army-builder-data.js')"  onload="_ldUp()"></script>
+  <script defer src="07b-army-presets.js"      onerror="_ldErr('Failed to load 07b-army-presets.js')"      onload="_ldUp()"></script>
+  <script defer src="08-shooting-resolver.js"  onerror="_ldErr('Failed to load 08-shooting-resolver.js')"  onload="_ldUp()"></script>
+  <script defer src="09-return-fire.js"        onerror="_ldErr('Failed to load 09-return-fire.js')"        onload="_ldUp()"></script>
+  <script defer src="10-challenge.js"          onerror="_ldErr('Failed to load 10-challenge.js')"          onload="_ldUp()"></script>
+  <script defer src="11-assault.js"            onerror="_ldErr('Failed to load 11-assault.js')"            onload="_ldUp()"></script>
+  <script defer src="12-charge.js"             onerror="_ldErr('Failed to load 12-charge.js')"             onload="_ldUp()"></script>
+  <script defer src="13-icons.js"              onerror="_ldErr('Failed to load 13-icons.js')"              onload="_ldUp()"></script>
+  <script defer src="14-ui-components.js?v=photo-select-2"      onerror="_ldErr('Failed to load 14-ui-components.js')"      onload="_ldUp()"></script>
+  <script defer src="26-ios-tactical.js?v=perf-2"          onerror="_ldErr('Failed to load 26-ios-tactical.js')"       onload="_ldUp()"></script>
+  <script defer src="15-main-app.js?v=battle-5"              onerror="_ldErr('Failed to load 15-main-app.js')"           onload="_ldUp()"></script>
+  <script defer src="16-graphics.js"           onerror="_ldErr('Failed to load 16-graphics.js')"           onload="_ldUp()"></script>
+  <script defer src="17-artwork.js?v=custodes-art-1"            onerror="_ldErr('Failed to load 17-artwork.js')"            onload="_ldUp()"></script>
+  <script defer src="19-warroom-game.js?v=warroom-game-3"       onerror="_ldErr('Failed to load 19-warroom-game.js')"       onload="_ldUp()"></script>
+  <script defer src="20-legacy-units.js"       onerror="_ldErr('Failed to load 20-legacy-units.js')"       onload="_ldUp()"></script>
+  <script defer src="21-tutorial.js?v=interactive-1" onerror="_ldErr('Failed to load 21-tutorial.js')"     onload="_ldUp()"></script>
+  <script defer src="24-warhammer-reference-catalog.js?v=1" onerror="_ldErr('Failed to load 24-warhammer-reference-catalog.js')" onload="_ldUp()"></script>
+  <script defer src="25-silica-animus-ai.js?v=1" onerror="_ldErr('Failed to load 25-silica-animus-ai.js')" onload="_ldUp()"></script>
+  <script defer src="22-photo-id.js?v=5"        onerror="_ldErr('Failed to load 22-photo-id.js')"           onload="_ldUp()"></script>
+  <script defer src="23-unit-trainer.js?v=1"    onerror="_ldErr('Failed to load 23-unit-trainer.js')"       onload="_ldUp()"></script>
 
   <!-- Mount with diagnostics -->
   <script>
-    (function() {
+    document.addEventListener("DOMContentLoaded", function() {
+      // Deferred application scripts have now executed in dependency order.
       // Verify critical globals exist
       var missing = [];
       if (typeof React === 'undefined') missing.push('React');
@@ -235,7 +239,7 @@
       } catch(e) {
         _ldErr('Mount failed: ' + e.message);
       }
-    })();
+    }, { once: true });
   </script>
 </body>
 </html>
