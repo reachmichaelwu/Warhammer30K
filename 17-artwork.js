@@ -166,6 +166,10 @@ var UNIT_ARTWORK_MAP = {
   "glaive":            "Glaive.jpg",
   "fellblade":         "Fellblade.jpg",
   "falchion":          "Falchion.jpg",
+  // ── Legio Custodes (dedicated art) ────────────────────────────
+  "valdor_c":          "ConstantinValdor.jpg",
+  "shield_captain_c":  "Custodes_Shield_Captain.jpg",
+  "venatari_c":        "CustodesVenatariSodality.jpg",
 };
 
 // ━━━ FACTION → ARTWORK FILE MAP (used as fallback / faction banner) ━━━━━━━━━
@@ -259,15 +263,12 @@ var UNIT_ARTWORK_ALIAS_MAP = {
   "tarantula":         "Rapier.jpg",
 
   // Custodes range.
-  "valdor_c":          "custodian_guard.jpg",
   "tribune_c":         "custodian_guard.jpg",
-  "shield_captain_c":  "custodian_guard.jpg",
   "custodian_guard_c": "custodian_guard.jpg",
   "sentinel_guard_c":  "custodian_guard.jpg",
   "sagittarum":        "custodian_guard.jpg",
   "aquilon":           "Cataphractii Terminator.jpg",
   "aquilon_c":         "Cataphractii Terminator.jpg",
-  "venatari_c":        "SkyHunter_scimatar.jpg",
   "gyrfalcon_c":       "SkyHunter_scimatar.jpg",
   "coronus_c":         "CustodesCaladiusGravTank1.jpg",
   "orion_c":           "Fireraptor.jpg",
