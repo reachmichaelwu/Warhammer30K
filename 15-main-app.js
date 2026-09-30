@@ -4569,6 +4569,10 @@ var ShootingResolver = function () {
 
   const getWeaponRange = (weapon) => {
     if (!weapon) return 0;
+    if (typeof getWeaponRangeInfo === "function") {
+      const info = getWeaponRangeInfo(weapon);
+      if (info && info.inches > 0) return info.inches;
+    }
     const t = weapon.type || "";
     if (t === "Pistol") return 12;
     if (t === "Assault") return 12;
@@ -10374,12 +10378,12 @@ var ShootingResolver = function () {
   const aAssaultSgtWeapons = useMemo(() => {
     if (!aUnit || !aUnit.hasSgt) return [];
     const cat = getSgtCategory(aUnit.id);
-    return cat ? SERGEANT_MELEE_WEAPONS[cat] || [] : [];
+    return getNewRecruitSergeantMeleeWeapons(aUnit);
   }, [aUnit]);
   const dAssaultSgtWeapons = useMemo(() => {
     if (!dUnit || !dUnit.hasSgt) return [];
     const cat = getSgtCategory(dUnit.id);
-    return cat ? SERGEANT_MELEE_WEAPONS[cat] || [] : [];
+    return getNewRecruitSergeantMeleeWeapons(dUnit);
   }, [dUnit]);
 
   const addSecondaryMelee = (side) => {
@@ -10518,6 +10522,152 @@ var ShootingResolver = function () {
   };
 
   const clearAllCombatLog = () => setCombatLog([]);
+
+  /* ── BATTLE damage tracker ───────────────────────────────────────────
+     Damage the shooting / return-fire / charge / assault resolvers deal to
+     units that were staged from the BATTLE tab.  Keyed "armyId:entryId":
+       { lost: models removed,
+         cur:  wounds (Hull Points for vehicles) already taken by the next
+               model in line — damage never spills over to another model,
+         events: [{ phase, text, t }] }
+     It lasts across phases and re-loads until the player presses RESULT →
+     FINALISE in the BATTLE tab.  battleDamageRef mirrors the state so two
+     commits inside one handler (e.g. charge: both sides) never race. */
+  const [battleDamage, setBattleDamage] = useState({});
+  const battleDamageRef = useRef({});
+  const [battleLink, setBattleLink] = useState(null);
+  const [battleResultOpen, setBattleResultOpen] = useState(false);
+
+  const battleEntryStats = (entry) => {
+    const p = (entry && UNIT_PRESET_BY_ID[entry.unitId]) || {};
+    const isVehicle = !!p.isVehicle;
+    return {
+      models: Math.max(1, (entry && entry.models) || p.models || 1),
+      // Per-model damage capacity: Hull Points for vehicles, Wounds otherwise
+      w: Math.max(1, isVehicle ? p.hp || p.w || 3 : p.w || 1),
+      isVehicle,
+    };
+  };
+
+  const battleStatusOf = (armyId, entry) => {
+    const st = battleEntryStats(entry);
+    const rec = battleDamage[armyId + ":" + entry.id];
+    const lost = Math.min(st.models, rec ? rec.lost : 0);
+    const remaining = st.models - lost;
+    const cur = remaining > 0 && rec ? rec.cur || 0 : 0;
+    return {
+      ...st,
+      lost,
+      remaining,
+      cur,
+      destroyed: remaining <= 0,
+      damaged: lost > 0 || cur > 0,
+      events: rec ? rec.events : [],
+    };
+  };
+
+  // Short status text: "7/10 models · 1W on next" or "HP 2/3" / "☠ DESTROYED"
+  const battleStatusText = (st) => {
+    if (st.destroyed) return "☠ DESTROYED";
+    if (st.isVehicle) {
+      const hp = "HP " + (st.w - st.cur) + "/" + st.w;
+      return st.models > 1 ? st.remaining + "/" + st.models + " vehicles · " + hp : hp;
+    }
+    let t = st.remaining + "/" + st.models + " models";
+    if (st.w > 1) t += " · W " + (st.w - st.cur) + "/" + st.w;
+    return t;
+  };
+
+  /* Apply damage to one tracked unit.  damages: one Damage value per
+     unsaved wound (or penetrating hit for vehicles); kills: models removed
+     outright (charge volley / overwatch casualties).  Returns the change. */
+  const commitBattleDamage = (key, stats, opts) => {
+    const damages = (opts && opts.damages) || [];
+    const kills = (opts && opts.kills) || 0;
+    const all = battleDamageRef.current;
+    const prev = all[key] || { lost: 0, cur: 0, events: [] };
+    let lost = Math.min(stats.models, prev.lost);
+    let cur = prev.cur || 0;
+    let dealt = 0;
+    for (const d of damages) {
+      if (lost >= stats.models) break;
+      const dd = Math.max(1, Number(d) || 1);
+      const take = Math.min(dd, stats.w - cur); // excess damage is lost
+      dealt += take;
+      cur += take;
+      if (cur >= stats.w) {
+        lost++;
+        cur = 0;
+      }
+    }
+    if (kills > 0) lost = Math.min(stats.models, lost + kills);
+    if (lost >= stats.models) {
+      lost = stats.models;
+      cur = 0;
+    }
+    const slain = lost - Math.min(stats.models, prev.lost);
+    const change = {
+      slain,
+      dealt,
+      remaining: stats.models - lost,
+      cur,
+      destroyed: lost >= stats.models,
+    };
+    if (slain === 0 && cur === (prev.cur || 0)) return change;
+    const unitWord = stats.isVehicle ? "vehicle" : "model";
+    const bits = [];
+    if (dealt > 0) bits.push(dealt + (stats.isVehicle ? " HP lost" : " wound" + (dealt !== 1 ? "s" : "")));
+    if (slain > 0) bits.push(slain + " " + unitWord + (slain !== 1 ? "s" : "") + (stats.isVehicle ? " wrecked" : " slain"));
+    if (change.destroyed) bits.push("UNIT DESTROYED");
+    const ev = {
+      phase: (opts && opts.phase) || "",
+      text: ((opts && opts.text) || "") + (bits.length ? " → " + bits.join(", ") : ""),
+      t: Date.now(),
+    };
+    const next = {
+      ...all,
+      [key]: { lost, cur, events: [...(prev.events || []), ev] },
+    };
+    battleDamageRef.current = next;
+    setBattleDamage(next);
+    return change;
+  };
+
+  const resetBattleDamage = () => {
+    battleDamageRef.current = {};
+    setBattleDamage({});
+    setBattleLink(null);
+    setBattleResultOpen(false);
+  };
+
+  /* The link only applies while the resolver still holds the two units it
+     was loaded with — picking a different unit by hand stops tracking. */
+  const battleLinkFor = (mode) => {
+    if (!battleLink) return null;
+    if (mode === "shooting")
+      return selectedUnit?.id === battleLink.atkPresetId &&
+        targetPresetId === battleLink.defPresetId
+        ? battleLink
+        : null;
+    return aUnit?.id === battleLink.atkPresetId &&
+      dUnit?.id === battleLink.defPresetId
+      ? battleLink
+      : null;
+  };
+
+  // After damage, shrink the resolver squads so the next roll uses survivors
+  const syncBattleCounts = (atkChange, defChange, link) => {
+    if (atkChange) {
+      setNumModels(Math.max(0, atkChange.remaining));
+      setAModels(Math.max(0, atkChange.remaining));
+    }
+    if (defChange) {
+      setTargetModels(Math.max(0, defChange.remaining));
+      setDModels(Math.max(0, defChange.remaining));
+      if (link && link.defStats.isVehicle)
+        setTargetHP(Math.max(0, link.defStats.w - defChange.cur));
+    }
+  };
 
   const updateObjective = (idx, field, val) => {
     setObjectives((prev) =>
@@ -15066,7 +15216,7 @@ var ShootingResolver = function () {
         setAInv(w0.inv);
         setAFnp(w0.fnp);
         setARules(w0.rules || {});
-        setALd(w0.ld || 8);
+        setALd(unit.ld ?? w0.ld ?? 8);
       }
       const nm = unit.name?.toLowerCase() || "";
       const defaultMove =
@@ -15081,7 +15231,7 @@ var ShootingResolver = function () {
               nm.includes("varagyr")
             ? 8
             : 6;
-      setAMove(defaultMove);
+      setAMove(unit.move ?? defaultMove);
       setASelectedRanged(r0);
       if (r0) {
         setVolleyFireShots(r0.shots);
@@ -15113,7 +15263,7 @@ var ShootingResolver = function () {
         setDInv(w0.inv);
         setDFnp(w0.fnp);
         setDRules(w0.rules || {});
-        setDLd(w0.ld || 8);
+        setDLd(unit.ld ?? w0.ld ?? 8);
       }
       setDSelectedRanged(r0);
       if (r0) {
@@ -15124,7 +15274,7 @@ var ShootingResolver = function () {
         setOverwatchS(r0.s);
         setOverwatchAP(r0.ap);
       }
-      if (unit.bs) setOverwatchBS(unit.bs);
+      if (unit.bs !== undefined) setOverwatchBS(unit.bs);
     }
   }, []);
 
@@ -15243,11 +15393,11 @@ var ShootingResolver = function () {
     ];
     if (atkSgtActive) {
       const sw = aAssaultSgtMelee;
-      const sgtI = sw.rules?.m_unwieldy ? 1 : sw.i || aI;
+      const sgtI = sw.rules?.m_unwieldy ? 1 : sw.i ?? aI;
       atkWeaponGroups.push({
         weaponName: `★ Sgt: ${sw.name}`,
         models: 1,
-        attacks: sw.a || 1,
+        attacks: sw.a ?? 1,
         i: sgtI,
         ws: sw.ws || aWS,
         s: sw.s,
@@ -15257,16 +15407,16 @@ var ShootingResolver = function () {
       });
       setupLog.push({
         phase: "Setup",
-        text: `Attacker Sergeant: ${sw.name} (WS${sw.ws || aWS} S${sw.s} AP${sw.ap} I${sgtI} A${sw.a || 1})`,
+        text: `Attacker Sergeant: ${sw.name} (WS${sw.ws || aWS} S${sw.s} AP${sw.ap} I${sgtI} A${sw.a ?? 1})`,
       });
     }
     for (const sec of aSecondaryMelee) {
       const w = sec.weapon;
-      const effI = w.rules?.m_unwieldy ? 1 : w.i || aI;
+      const effI = w.rules?.m_unwieldy ? 1 : w.i ?? aI;
       atkWeaponGroups.push({
         weaponName: w.name,
         models: sec.models,
-        attacks: w.a || 1,
+        attacks: w.a ?? 1,
         i: effI,
         ws: w.ws || aWS,
         s: w.s,
@@ -15294,11 +15444,11 @@ var ShootingResolver = function () {
     ];
     if (defSgtActive) {
       const sw = dAssaultSgtMelee;
-      const sgtI = sw.rules?.m_unwieldy ? 1 : sw.i || dI;
+      const sgtI = sw.rules?.m_unwieldy ? 1 : sw.i ?? dI;
       defWeaponGroups.push({
         weaponName: `★ Sgt: ${sw.name}`,
         models: 1,
-        attacks: sw.a || 1,
+        attacks: sw.a ?? 1,
         i: sgtI,
         ws: sw.ws || dWS,
         s: sw.s,
@@ -15308,16 +15458,16 @@ var ShootingResolver = function () {
       });
       setupLog.push({
         phase: "Setup",
-        text: `Defender Sergeant: ${sw.name} (WS${sw.ws || dWS} S${sw.s} AP${sw.ap} I${sgtI} A${sw.a || 1})`,
+        text: `Defender Sergeant: ${sw.name} (WS${sw.ws || dWS} S${sw.s} AP${sw.ap} I${sgtI} A${sw.a ?? 1})`,
       });
     }
     for (const sec of dSecondaryMelee) {
       const w = sec.weapon;
-      const effI = w.rules?.m_unwieldy ? 1 : w.i || dI;
+      const effI = w.rules?.m_unwieldy ? 1 : w.i ?? dI;
       defWeaponGroups.push({
         weaponName: w.name,
         models: sec.models,
-        attacks: w.a || 1,
+        attacks: w.a ?? 1,
         i: effI,
         ws: w.ws || dWS,
         s: w.s,
@@ -15493,6 +15643,34 @@ var ShootingResolver = function () {
       icon: "🗡",
       label: hasMulti ? "ASSAULT (MULTI)" : "ASSAULT",
     });
+    const asLink = battleLinkFor("assault");
+    if (asLink) {
+      // Unsaved wounds each side took (after FNP), from the resolver's pools;
+      // against a vehicle each one is treated as 1 Hull Point.
+      const atkWounds = Math.max(
+        0,
+        (combined.attackerWoundPool || 0) - (combined.remainingAttackerWounds || 0),
+      );
+      const defWounds = Math.max(
+        0,
+        (combined.defenderWoundPool || 0) - (combined.remainingDefenderWounds || 0),
+      );
+      const atkChange = commitBattleDamage(asLink.atkKey, asLink.atkStats, {
+        damages: Array.from({ length: atkWounds }, () => 1),
+        phase: "Assault",
+        text: "Melee vs " + asLink.defName,
+      });
+      const defChange = commitBattleDamage(asLink.defKey, asLink.defStats, {
+        damages: Array.from({ length: defWounds }, () => 1),
+        phase: "Assault",
+        text: "Melee vs " + asLink.atkName,
+      });
+      combined.battleUpdates = [
+        { side: "atk", name: asLink.atkName, ...atkChange, stats: asLink.atkStats },
+        { side: "def", name: asLink.defName, ...defChange, stats: asLink.defStats },
+      ];
+      syncBattleCounts(atkChange, defChange, asLink);
+    }
     return combined;
   };
 
@@ -16026,6 +16204,88 @@ var ShootingResolver = function () {
       }
     }
 
+    /* Vehicle targets: roll armour penetration ONCE here (it used to be
+       re-rolled on every render of the result panel) so the displayed
+       glancing / penetrating hits and the tracked Hull Point loss agree.
+       Penetrating hit → HP lost = weapon Damage; Armourbane turns glancing
+       hits into penetrating hits. */
+    if (isVehicleTarget && combined.hits > 0) {
+      const facingAV =
+        targetFacing === "front"
+          ? targetAVF
+          : targetFacing === "side"
+            ? targetAVS
+            : targetAVR;
+      const apGroups = [
+        { w: selectedWeapon || {}, hits: primaryRes.hits || 0 },
+        ...secondaryResults.map((sr, i) => ({
+          w: (secondaryWeapons[i] && secondaryWeapons[i].weapon) || {},
+          hits: sr.result.hits || 0,
+        })),
+      ];
+      const apRolls = [];
+      apGroups.forEach((g) => {
+        const ws = g.w.s || strength || 4;
+        for (let h = 0; h < g.hits; h++) {
+          const die = Math.floor(Math.random() * 6) + 1;
+          const total = die + ws;
+          let outcome =
+            total < facingAV
+              ? "no_effect"
+              : total === facingAV
+                ? "glancing"
+                : "penetrating";
+          let armourbane = false;
+          if (outcome === "glancing" && g.w.rules && g.w.rules.armourbane) {
+            outcome = "penetrating";
+            armourbane = true;
+          }
+          apRolls.push({
+            die,
+            total,
+            outcome,
+            armourbane,
+            s: ws,
+            d: g.w.damage || 1,
+            weapon: g.w.name || "",
+          });
+        }
+      });
+      const pens = apRolls.filter((r) => r.outcome === "penetrating");
+      combined.vehicleAP = {
+        av: facingAV,
+        s: (selectedWeapon && selectedWeapon.s) || strength || 4,
+        rolls: apRolls,
+        vdtRolls: pens.map(() => Math.floor(Math.random() * 6) + 1),
+        hpLost: pens.reduce((t, r) => t + r.d, 0),
+      };
+    }
+    const shootLink = battleLinkFor("shooting");
+    if (shootLink) {
+      const damages = [];
+      if (shootLink.defStats.isVehicle) {
+        ((combined.vehicleAP && combined.vehicleAP.rolls) || [])
+          .filter((r) => r.outcome === "penetrating")
+          .forEach((r) => damages.push(r.d));
+      } else {
+        // casualties = unsaved wounds that also got past Feel No Pain
+        for (let k = 0; k < (primaryRes.casualties || 0); k++)
+          damages.push((selectedWeapon && selectedWeapon.damage) || 1);
+        secondaryResults.forEach((sr, i) => {
+          const d =
+            (secondaryWeapons[i] && secondaryWeapons[i].weapon.damage) || 1;
+          for (let k = 0; k < (sr.result.casualties || 0); k++) damages.push(d);
+        });
+      }
+      const defChange = commitBattleDamage(shootLink.defKey, shootLink.defStats, {
+        damages,
+        phase: "Shooting",
+        text: "Shot by " + shootLink.atkName,
+      });
+      combined.battleUpdate = { side: "def", name: shootLink.defName, ...defChange, stats: shootLink.defStats };
+      syncBattleCounts(null, defChange, shootLink);
+    }
+
     setResult(combined);
     setHistory((prev) =>
       [{ ...combined, timestamp: Date.now() }, ...prev].slice(0, 20),
@@ -16151,6 +16411,20 @@ var ShootingResolver = function () {
       }
     }
 
+    const rfLink = battleLinkFor("shooting");
+    if (rfLink && !rfLink.atkStats.isVehicle && (combined.casualties || 0) > 0) {
+      const d =
+        (selectedReturnWeapon && selectedReturnWeapon.damage) ||
+        (targetSelectedWeapon && targetSelectedWeapon.damage) ||
+        1;
+      const atkChange = commitBattleDamage(rfLink.atkKey, rfLink.atkStats, {
+        damages: Array.from({ length: combined.casualties }, () => d),
+        phase: "Return Fire",
+        text: "Return fire from " + rfLink.defName,
+      });
+      combined.battleUpdate = { side: "atk", name: rfLink.atkName, ...atkChange, stats: rfLink.atkStats };
+      syncBattleCounts(atkChange, null, rfLink);
+    }
     setReturnFireResult(combined);
     const tgtName = targetPresetName || "Target Unit";
     const atkName = selectedUnit?.name || "Shooting Unit";
@@ -16285,6 +16559,26 @@ var ShootingResolver = function () {
       icon: "⚔",
       label: "CHARGE",
     });
+    const chgLink = battleLinkFor("assault");
+    if (chgLink) {
+      let atkChange = null;
+      let defChange = null;
+      const atkLoss =
+        (res.overwatchCasualties || 0) + (res.defVolleyCasualties || 0);
+      if (atkLoss > 0 && !chgLink.atkStats.isVehicle)
+        atkChange = commitBattleDamage(chgLink.atkKey, chgLink.atkStats, {
+          kills: atkLoss,
+          phase: "Charge",
+          text: "Overwatch / volley fire from " + chgLink.defName,
+        });
+      if ((res.volleyCasualties || 0) > 0 && !chgLink.defStats.isVehicle)
+        defChange = commitBattleDamage(chgLink.defKey, chgLink.defStats, {
+          kills: res.volleyCasualties,
+          phase: "Charge",
+          text: "Volley fire from " + chgLink.atkName,
+        });
+      if (atkChange || defChange) syncBattleCounts(atkChange, defChange, chgLink);
+    }
     applyChargeMovement(res);
     recordCombatFx("charge", res);
     return res;
@@ -17066,13 +17360,164 @@ var ShootingResolver = function () {
       );
       return;
     }
+    // Carry tracked battle damage into the resolvers: survivors only, and a
+    // damaged vehicle keeps its remaining Hull Points.
+    const atkSt = battleStatusOf(atk.army.id, atk.entry);
+    const defSt = battleStatusOf(def.army.id, def.entry);
+    if (atkSt.destroyed || defSt.destroyed) {
+      window.alert(
+        (atkSt.destroyed ? atk.entry.unitName : def.entry.unitName) +
+          " has been destroyed in this battle. Press RESULT in the BATTLE tab to finish the battle and reset damage.",
+      );
+      return;
+    }
+    const withSurvivors = (u, st) => {
+      u.unitData = { ...u.unitData, models: st.remaining };
+      if (u.secondaryWeapons) {
+        let room = Math.max(0, st.remaining - 1);
+        u.secondaryWeapons = u.secondaryWeapons
+          .map((sw) => {
+            const m = Math.min(sw.models || 1, room);
+            room -= m;
+            return { ...sw, models: m };
+          })
+          .filter((sw) => sw.models > 0);
+        if (u.secondaryWeapons.length === 0) u.secondaryWeapons = null;
+      }
+      return u;
+    };
+    withSurvivors(atkUnit, atkSt);
+    withSurvivors(defUnit, defSt);
     setShootFaction(atk.army.faction);
     setAFaction(atk.army.faction);
     setTargetFaction(def.army.faction);
     setDFaction(def.army.faction);
     applyUnitToAttackerSlot(atkUnit);
     applyUnitToTargetSlot(defUnit);
+    if (defSt.isVehicle) setTargetHP(Math.max(1, defSt.w - defSt.cur));
+    setBattleLink({
+      atkKey: atk.army.id + ":" + atk.entry.id,
+      defKey: def.army.id + ":" + def.entry.id,
+      atkPresetId: atk.entry.unitId,
+      defPresetId: def.entry.unitId,
+      atkArmyId: atk.army.id,
+      defArmyId: def.army.id,
+      atkEntryId: atk.entry.id,
+      defEntryId: def.entry.id,
+      atkName: atk.entry.unitName,
+      defName: def.entry.unitName,
+      atkStats: battleEntryStats(atk.entry),
+      defStats: battleEntryStats(def.entry),
+    });
     setActivePhase(phase === "assault" ? "assault" : "shooting");
+  };
+
+  /* Live status strip shown at the top of the SHOOTING / ASSAULT tabs while
+     the resolver holds a unit pair loaded from the BATTLE tab. */
+  const renderBattleTrackerBanner = (mode) => {
+    if (!battleLink) return null;
+    const link = battleLinkFor(mode);
+    const findEntry = (armyId, entryId) => {
+      const army = armyRoster.find((a) => a.id === armyId);
+      const entry = army && (army.entries || []).find((e) => e.id === entryId);
+      return entry ? { army, entry } : null;
+    };
+    const a = findEntry(battleLink.atkArmyId, battleLink.atkEntryId);
+    const d = findEntry(battleLink.defArmyId, battleLink.defEntryId);
+    if (!a || !d) return null;
+    const box = (label, color, x) => {
+      const st = battleStatusOf(x.army.id, x.entry);
+      const last = st.events[st.events.length - 1];
+      return React.createElement(
+        "div",
+        { style: { flex: "1 1 220px", minWidth: 200 } },
+        React.createElement(
+          "div",
+          { style: { fontSize: 10, letterSpacing: 1, color, fontWeight: 700 } },
+          label + " · " + x.entry.unitName,
+        ),
+        React.createElement(
+          "div",
+          {
+            style: {
+              fontSize: 13,
+              fontWeight: 700,
+              color: st.destroyed ? "#9b2d2d" : st.damaged ? "#8a4b0b" : "#2e5e2e",
+            },
+          },
+          battleStatusText(st),
+        ),
+        last &&
+          React.createElement(
+            "div",
+            { style: { fontSize: 10, color: "#6b6152", marginTop: 2 } },
+            last.phase + ": " + last.text,
+          ),
+      );
+    };
+    return React.createElement(
+      "div",
+      {
+        style: {
+          marginBottom: 12,
+          padding: "8px 12px",
+          borderRadius: 6,
+          fontFamily: "'Share Tech Mono', serif",
+          background: link ? "rgba(46,94,46,0.07)" : "rgba(155,45,45,0.06)",
+          border: `1.5px solid ${link ? "#4a7a4a" : "#c9a0a0"}`,
+        },
+      },
+      React.createElement(
+        "div",
+        {
+          style: {
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 8,
+            marginBottom: 6,
+            flexWrap: "wrap",
+          },
+        },
+        React.createElement(
+          "span",
+          {
+            style: {
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: 1,
+              color: link ? "#2e5e2e" : "#9b2d2d",
+            },
+          },
+          link
+            ? "⚑ BATTLE TRACKER — damage from this resolver is recorded"
+            : "⚑ BATTLE TRACKER PAUSED — the units here are not the ones loaded from BATTLE",
+        ),
+        React.createElement(
+          "button",
+          {
+            onClick: () => setActivePhase("battle"),
+            style: {
+              padding: "3px 10px",
+              borderRadius: 3,
+              fontSize: 10,
+              cursor: "pointer",
+              fontFamily: "'Share Tech Mono', serif",
+              background: "#f0ebe2",
+              border: "1px solid #d0c4aa",
+              color: "#6a5e4e",
+            },
+          },
+          "⚑ BATTLE STATUS →",
+        ),
+      ),
+      React.createElement(
+        "div",
+        { style: { display: "flex", gap: 12, flexWrap: "wrap" } },
+        box("⚔ ATTACKER", "#b8860b", a),
+        box("🛡 TARGET", "#5b4a8a", d),
+      ),
+    );
   };
 
   const renderBattleSetupSection = () => {
@@ -17208,6 +17653,7 @@ var ShootingResolver = function () {
         battleTargetPick &&
         battleTargetPick.armyId === army.id &&
         battleTargetPick.entryId === entry.id;
+      const rowStatus = battleStatusOf(army.id, entry);
       const pickBtn = (active, bg, glyph, title, onClick) =>
         React.createElement(
           "button",
@@ -17239,11 +17685,14 @@ var ShootingResolver = function () {
             gap: 6,
             padding: "4px 2px",
             borderTop: "1px dashed #e0d6c2",
+            opacity: rowStatus.destroyed ? 0.55 : 1,
             background: isAtk
               ? "rgba(184,134,11,0.10)"
               : isTgt
                 ? "rgba(91,74,138,0.10)"
-                : "transparent",
+                : rowStatus.destroyed
+                  ? "rgba(155,45,45,0.06)"
+                  : "transparent",
           },
         },
         unitThumb(army, entry, 30),
@@ -17279,6 +17728,19 @@ var ShootingResolver = function () {
             },
             entryWeaponSummary(entry) || "—",
           ),
+          rowStatus.damaged &&
+            React.createElement(
+              "div",
+              {
+                style: {
+                  fontSize: 10,
+                  fontWeight: 700,
+                  fontFamily: "'Share Tech Mono', serif",
+                  color: rowStatus.destroyed ? "#9b2d2d" : "#8a4b0b",
+                },
+              },
+              battleStatusText(rowStatus),
+            ),
         ),
         React.createElement(
           "span",
@@ -17300,6 +17762,269 @@ var ShootingResolver = function () {
           setBattleTargetPick({ armyId: army.id, entryId: entry.id });
           assignRole("defender", army.id);
         }),
+      );
+    };
+
+    /* BATTLE STATUS — every unit that has taken damage, plus the RESULT
+       button.  RESULT shows the battle summary; FINALISE clears the
+       tracked damage so the next battle starts fresh. */
+    const renderBattleStatusPanel = () => {
+      const rows = [];
+      activeArmies.forEach((army) =>
+        (army.entries || []).forEach((entry) => {
+          const st = battleStatusOf(army.id, entry);
+          if (st.damaged) rows.push({ army, entry, st });
+        }),
+      );
+      const summary = activeArmies.map((army) => {
+        let destroyed = 0;
+        let modelsLost = 0;
+        let ptsLost = 0;
+        let units = 0;
+        (army.entries || []).forEach((entry) => {
+          units++;
+          const st = battleStatusOf(army.id, entry);
+          modelsLost += st.lost;
+          const pts = calcArmyEntryPoints(entry) || 0;
+          if (st.destroyed) {
+            destroyed++;
+            ptsLost += pts;
+          }
+        });
+        return {
+          army,
+          units,
+          destroyed,
+          modelsLost,
+          ptsLost,
+          ptsTotal: armyPoints(army),
+        };
+      });
+      const mono = "'Share Tech Mono', serif";
+      const btn = (bg, border, color) => ({
+        padding: "7px 16px",
+        borderRadius: 4,
+        fontSize: 12,
+        cursor: "pointer",
+        fontFamily: mono,
+        fontWeight: 700,
+        letterSpacing: 1,
+        background: bg,
+        border: `1px solid ${border}`,
+        color,
+      });
+      const allEvents = [];
+      activeArmies.forEach((army) =>
+        (army.entries || []).forEach((entry) => {
+          const st = battleStatusOf(army.id, entry);
+          st.events.forEach((ev) =>
+            allEvents.push({ ...ev, unit: entry.unitName, army: army.name }),
+          );
+        }),
+      );
+      allEvents.sort((x, y) => x.t - y.t);
+      // Leader = fewest points lost, tie-broken by fewest models lost; only
+      // starred when exactly one army holds that spot.
+      const lossScore = (r) => r.ptsLost * 100000 + r.modelsLost;
+      const minLoss = Math.min(...summary.map(lossScore));
+      const anyLoss =
+        summary.some((r) => r.ptsLost > 0 || r.modelsLost > 0) &&
+        summary.filter((r) => lossScore(r) === minLoss).length === 1;
+      return React.createElement(
+        "div",
+        { style: { ...panelStyle, marginBottom: 12 } },
+        React.createElement(
+          "div",
+          {
+            style: {
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 10,
+              flexWrap: "wrap",
+              marginBottom: rows.length || battleResultOpen ? 8 : 0,
+            },
+          },
+          React.createElement(
+            "div",
+            null,
+            React.createElement("div", { style: labelStyle }, "⚑ BATTLE STATUS"),
+            React.createElement(
+              "div",
+              { style: { fontSize: 11, color: "#6b6152", fontFamily: mono } },
+              rows.length === 0
+                ? "No damage recorded yet. Wounds, casualties and vehicle Hull Points from the SHOOTING and ASSAULT resolvers are tracked here until you press RESULT."
+                : rows.length + " unit" + (rows.length !== 1 ? "s" : "") + " damaged. Damage carries over every time a unit is loaded again.",
+            ),
+          ),
+          React.createElement(
+            "button",
+            {
+              onClick: () => setBattleResultOpen((v) => !v),
+              style: btn("rgba(91,74,138,0.14)", "#5b4a8a", "#4a3a78"),
+            },
+            battleResultOpen ? "✕ CLOSE RESULT" : "🏁 RESULT",
+          ),
+        ),
+        rows.length > 0 &&
+          !battleResultOpen &&
+          React.createElement(
+            "div",
+            { style: { display: "flex", flexDirection: "column", gap: 3 } },
+            rows.map(({ army, entry, st }) =>
+              React.createElement(
+                "div",
+                {
+                  key: army.id + ":" + entry.id,
+                  style: {
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "3px 4px",
+                    borderTop: "1px dashed #e0d6c2",
+                    fontFamily: mono,
+                    fontSize: 11,
+                  },
+                },
+                unitThumb(army, entry, 24),
+                React.createElement(
+                  "span",
+                  { style: { flex: 1, minWidth: 0, color: "#2a2418" } },
+                  entry.unitName,
+                  React.createElement(
+                    "span",
+                    { style: { color: "#8a7e6e" } },
+                    " · " + army.name,
+                  ),
+                ),
+                React.createElement(
+                  "span",
+                  {
+                    style: {
+                      fontWeight: 700,
+                      color: st.destroyed ? "#9b2d2d" : "#8a4b0b",
+                    },
+                  },
+                  battleStatusText(st),
+                ),
+              ),
+            ),
+          ),
+        battleResultOpen &&
+          React.createElement(
+            "div",
+            {
+              style: {
+                border: "1.5px solid #5b4a8a",
+                borderRadius: 6,
+                padding: 10,
+                background: "#faf8f4",
+                fontFamily: mono,
+              },
+            },
+            React.createElement(
+              "div",
+              {
+                style: {
+                  fontFamily: "'VT323', monospace",
+                  fontSize: 24,
+                  color: "#4a3a78",
+                  letterSpacing: 2,
+                  marginBottom: 6,
+                },
+              },
+              "🏁 BATTLE RESULT",
+            ),
+            React.createElement(
+              "div",
+              { style: { display: "flex", flexWrap: "wrap", gap: 8 } },
+              summary.map((r) => {
+                const tone = SIDE[r.army.allegiance] || SIDE.loyalist;
+                const best = anyLoss && lossScore(r) === minLoss;
+                return React.createElement(
+                  "div",
+                  {
+                    key: r.army.id,
+                    style: {
+                      flex: "1 1 180px",
+                      border: `1px solid ${best ? "#4a7a4a" : "#d0c4aa"}`,
+                      borderRadius: 5,
+                      padding: "6px 8px",
+                      background: best ? "rgba(46,94,46,0.06)" : "#fff",
+                      fontSize: 11,
+                      color: "#4a4030",
+                      lineHeight: 1.6,
+                    },
+                  },
+                  React.createElement(
+                    "div",
+                    { style: { fontWeight: 700, fontSize: 13, color: tone.color } },
+                    r.army.name + (best ? "  ★" : ""),
+                  ),
+                  "Units destroyed: " + r.destroyed + " / " + r.units,
+                  React.createElement("br"),
+                  "Models / vehicles lost: " + r.modelsLost,
+                  React.createElement("br"),
+                  "Points destroyed: " + r.ptsLost + " / " + r.ptsTotal,
+                );
+              }),
+            ),
+            anyLoss &&
+              React.createElement(
+                "div",
+                { style: { fontSize: 10, color: "#6b6152", marginTop: 4 } },
+                "★ = fewest losses (points of completely destroyed units, then models lost).",
+              ),
+            allEvents.length > 0 &&
+              React.createElement(
+                "div",
+                {
+                  style: {
+                    marginTop: 8,
+                    maxHeight: 180,
+                    overflowY: "auto",
+                    borderTop: "1px solid #e0d6c2",
+                    paddingTop: 6,
+                    fontSize: 10,
+                    color: "#4a4030",
+                    lineHeight: 1.6,
+                  },
+                },
+                allEvents.map((ev, i) =>
+                  React.createElement(
+                    "div",
+                    { key: i },
+                    React.createElement(
+                      "b",
+                      null,
+                      ev.phase + " — " + ev.unit + " (" + ev.army + "): ",
+                    ),
+                    ev.text,
+                  ),
+                ),
+              ),
+            React.createElement(
+              "div",
+              { style: { display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" } },
+              React.createElement(
+                "button",
+                {
+                  onClick: resetBattleDamage,
+                  title: "End this battle: clear all tracked wounds, casualties and Hull Point damage",
+                  style: btn("rgba(155,45,45,0.10)", "#9b2d2d", "#9b2d2d"),
+                },
+                "✓ FINALISE — CLEAR DAMAGE",
+              ),
+              React.createElement(
+                "button",
+                {
+                  onClick: () => setBattleResultOpen(false),
+                  style: btn("#f0ebe2", "#d0c4aa", "#6a5e4e"),
+                },
+                "↩ CONTINUE BATTLE",
+              ),
+            ),
+          ),
       );
     };
 
@@ -17818,6 +18543,26 @@ var ShootingResolver = function () {
                         },
                         entryWeaponSummary(slot.pick.entry) || "—",
                       ),
+                      (() => {
+                        const st = battleStatusOf(slot.pick.army.id, slot.pick.entry);
+                        return React.createElement(
+                          "div",
+                          {
+                            style: {
+                              fontSize: 11,
+                              fontWeight: 700,
+                              fontFamily: "'Share Tech Mono', serif",
+                              marginTop: 3,
+                              color: st.destroyed
+                                ? "#9b2d2d"
+                                : st.damaged
+                                  ? "#8a4b0b"
+                                  : "#2e5e2e",
+                            },
+                          },
+                          (st.damaged ? "⚑ " : "✓ ") + battleStatusText(st),
+                        );
+                      })(),
                     ),
                   )
                 : React.createElement(
@@ -17881,6 +18626,7 @@ var ShootingResolver = function () {
           ),
         ),
       ),
+      renderBattleStatusPanel(),
       /* Army lists by allegiance */
       React.createElement(
         "div",
@@ -21905,16 +22651,10 @@ var ShootingResolver = function () {
                               React.createElement(
                                 "option",
                                 { key: w.name, value: w.name },
-                                w.name,
-                                "(S",
-                                w.s,
-                                "AP",
-                                w.ap,
-                                w.shots,
-                                "sh)",
-                                WEAPON_UPGRADE_COSTS[w.name]
-                                  ? `+${WEAPON_UPGRADE_COSTS[w.name]}pts/mdl`
-                                  : "free",
+                                `${w.name} (${formatWeaponRange(w)} · S${w.s} · AP${w.ap} · ${w.shots}sh) ` +
+                                  (WEAPON_UPGRADE_COSTS[w.name]
+                                    ? `+${WEAPON_UPGRADE_COSTS[w.name]}pts/mdl`
+                                    : "free"),
                               ),
                             ),
                           ),
@@ -22087,10 +22827,10 @@ var ShootingResolver = function () {
                                   React.createElement(
                                     "option",
                                     { key: w.name, value: w.name },
-                                    w.name,
-                                    WEAPON_UPGRADE_COSTS[w.name]
-                                      ? `+${WEAPON_UPGRADE_COSTS[w.name]}pts`
-                                      : "free",
+                                    `${w.name} (${formatWeaponRange(w)}) ` +
+                                      (WEAPON_UPGRADE_COSTS[w.name]
+                                        ? `+${WEAPON_UPGRADE_COSTS[w.name]}pts`
+                                        : "free"),
                                   ),
                                 ),
                               ),
@@ -22329,15 +23069,10 @@ var ShootingResolver = function () {
                               React.createElement(
                                 "option",
                                 { key: w.name, value: w.name },
-                                w.name,
-                                "(S",
-                                w.s,
-                                "AP",
-                                w.ap,
-                                ")",
-                                WEAPON_UPGRADE_COSTS[w.name]
-                                  ? `+${WEAPON_UPGRADE_COSTS[w.name]}pts`
-                                  : "",
+                                `${w.name} (${formatWeaponRange(w)} · S${w.s} · AP${w.ap})` +
+                                  (WEAPON_UPGRADE_COSTS[w.name]
+                                    ? ` +${WEAPON_UPGRADE_COSTS[w.name]}pts`
+                                    : ""),
                               ),
                             ),
                           ),
@@ -29448,6 +30183,7 @@ var ShootingResolver = function () {
         React.createElement(
           React.Fragment,
           null,
+          renderBattleTrackerBanner("shooting"),
           renderFlyerShootingBanner(),
           renderCombatAirPatrolPanel(),
           React.createElement(
@@ -29722,6 +30458,15 @@ var ShootingResolver = function () {
                     selectedWeapon.type,
                     selectedWeapon.shots,
                   ),
+                  React.createElement(
+                    "span",
+                    {
+                      title: getWeaponRangeInfo(selectedWeapon)?.estimated
+                        ? "Range estimated from weapon type"
+                        : "Weapon range",
+                    },
+                    formatWeaponRange(selectedWeapon),
+                  ),
                   React.createElement("span", null, "RS", selectedWeapon.s),
                   React.createElement("span", null, "AP", selectedWeapon.ap),
                   React.createElement("span", null, "D", selectedWeapon.damage),
@@ -29875,7 +30620,9 @@ var ShootingResolver = function () {
                               },
                               w.type,
                               w.shots,
-                              "· RS",
+                              " · ",
+                              formatWeaponRange(w),
+                              " · RS",
                               w.s,
                               "AP",
                               w.ap,
@@ -29919,6 +30666,11 @@ var ShootingResolver = function () {
                             null,
                             sgtWeapon.type,
                             sgtWeapon.shots,
+                          ),
+                          React.createElement(
+                            "span",
+                            null,
+                            formatWeaponRange(sgtWeapon),
                           ),
                           React.createElement(
                             "span",
@@ -30135,6 +30887,17 @@ var ShootingResolver = function () {
                               },
                             },
                             w.name,
+                            React.createElement(
+                              "span",
+                              {
+                                style: {
+                                  marginLeft: 5,
+                                  fontSize: 10,
+                                  opacity: 0.75,
+                                },
+                              },
+                              formatWeaponRange(w),
+                            ),
                           );
                         }),
                       ),
@@ -32257,9 +33020,12 @@ var ShootingResolver = function () {
                 result &&
                 result.hits > 0 &&
                 (() => {
-                  const weapS = selectedWeapon?.s || 4;
-                  const facingAV =
-                    targetFacing === "front"
+                  // Rolled once at resolve time (handleResolve → vehicleAP)
+                  const vap = result.vehicleAP;
+                  const weapS = vap ? vap.s : selectedWeapon?.s || 4;
+                  const facingAV = vap
+                    ? vap.av
+                    : targetFacing === "front"
                       ? targetAVF
                       : targetFacing === "side"
                         ? targetAVS
@@ -32271,7 +33037,7 @@ var ShootingResolver = function () {
                         ? "Side"
                         : "Rear";
                   const hits = result.hits;
-                  const apRolls = Array.from({ length: hits }, () => {
+                  const apRolls = vap ? vap.rolls : Array.from({ length: hits }, () => {
                     const die = Math.floor(Math.random() * 6) + 1;
                     const total = die + weapS;
                     let outcome;
@@ -32286,10 +33052,12 @@ var ShootingResolver = function () {
                   const penetrating = apRolls.filter(
                     (r) => r.outcome === "penetrating",
                   ).length;
-                  const vdtRolls = Array.from(
-                    { length: penetrating },
-                    () => Math.floor(Math.random() * 6) + 1,
-                  );
+                  const vdtRolls = vap
+                    ? vap.vdtRolls
+                    : Array.from(
+                        { length: penetrating },
+                        () => Math.floor(Math.random() * 6) + 1,
+                      );
                   const vdtResults = vdtRolls.map((r) => ({
                     roll: r,
                     result:
@@ -34233,6 +35001,7 @@ var ShootingResolver = function () {
         React.createElement(
           React.Fragment,
           null,
+          renderBattleTrackerBanner("assault"),
           React.createElement(
             "div",
             {

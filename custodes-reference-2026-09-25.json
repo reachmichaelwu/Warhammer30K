@@ -1,0 +1,1453 @@
+{
+  "date": "2026-09-25",
+  "catalogueRevision": 22,
+  "source": "https://github.com/BSData/horus-heresy-3rd-edition/blob/main/Legio%20Custodes.json",
+  "manifest": [
+    {
+      "name": "Horus Heresy 3rd Edition.json",
+      "sha": "19fa6cadbc373f170da7836653f53473c144e74a",
+      "url": "https://raw.githubusercontent.com/BSData/horus-heresy-3rd-edition/main/Horus%20Heresy%203rd%20Edition.json"
+    },
+    {
+      "name": "Legio Custodes.json",
+      "sha": "e54c98c1be48ee124b1b42826aaac8048efbc828",
+      "url": "https://raw.githubusercontent.com/BSData/horus-heresy-3rd-edition/main/Legio%20Custodes.json"
+    },
+    {
+      "name": "Special Rules.json",
+      "sha": "3e49fdbdbd9a0e4ae1ff46aad4039935fbc18de7",
+      "url": "https://raw.githubusercontent.com/BSData/horus-heresy-3rd-edition/main/Special%20Rules.json"
+    },
+    {
+      "name": "Traits.json",
+      "sha": "77cb8be20aecffdf3a7983d3b4683207645ba1b7",
+      "url": "https://raw.githubusercontent.com/BSData/horus-heresy-3rd-edition/main/Traits.json"
+    },
+    {
+      "name": "Wargear.json",
+      "sha": "0e72adc3c3139ad2c6d2a14a240fc11986ab9578",
+      "url": "https://raw.githubusercontent.com/BSData/horus-heresy-3rd-edition/main/Wargear.json"
+    },
+    {
+      "name": "Weapons.json",
+      "sha": "9376810cf2abacdc2918097b210ecb24c9f4d304",
+      "url": "https://raw.githubusercontent.com/BSData/horus-heresy-3rd-edition/main/Weapons.json"
+    }
+  ],
+  "units": [
+    {
+      "name": "Constantin Valdor",
+      "id": "9cbb-0abc-5c93-2afd",
+      "role": "Warlord",
+      "basePoints": 400,
+      "models": [
+        {
+          "name": "Constantin Valdor",
+          "constraints": {
+            "min": 1,
+            "max": 1
+          },
+          "points": 0,
+          "profiles": [
+            {
+              "name": "Constantin Valdor",
+              "Type": "Paragon (Unique)",
+              "M": "8",
+              "WS": "7",
+              "BS": "6",
+              "S": "5",
+              "T": "5",
+              "W": "6",
+              "I": "6",
+              "A": "6",
+              "LD": "12",
+              "CL": "10",
+              "WP": "10",
+              "IN": "10",
+              "SAV": "2+",
+              "INV": "4+"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tribune",
+      "id": "2aca-4d81-bede-c87f",
+      "role": "High Command",
+      "basePoints": 250,
+      "models": [
+        {
+          "name": "Tribune",
+          "constraints": {
+            "min": 1,
+            "max": 1
+          },
+          "points": 0,
+          "profiles": [
+            {
+              "name": "Tribune",
+              "Type": "Infantry (Command)",
+              "M": "8",
+              "WS": "7",
+              "BS": "5",
+              "S": "5",
+              "T": "5",
+              "W": "5",
+              "I": "6",
+              "A": "6",
+              "LD": "12",
+              "CL": "10",
+              "WP": "10",
+              "IN": "10",
+              "SAV": "2+",
+              "INV": "4+"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Shield Captain",
+      "id": "ead9-2ff9-9301-8c60",
+      "role": "Command",
+      "basePoints": 175,
+      "models": [
+        {
+          "name": "Shield Captain",
+          "constraints": {
+            "min": 1,
+            "max": 1
+          },
+          "points": 0,
+          "profiles": [
+            {
+              "name": "Shield Captain",
+              "Type": "Infantry (Command)",
+              "M": "8",
+              "WS": "6",
+              "BS": "5",
+              "S": "5",
+              "T": "5",
+              "W": "3",
+              "I": "5",
+              "A": "4",
+              "LD": "10",
+              "CL": "10",
+              "WP": "9",
+              "IN": "9",
+              "SAV": "2+",
+              "INV": "4+"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Aquilon Terminator Sodality",
+      "id": "656a-8563-512a-01bd",
+      "role": "Heavy Assault",
+      "basePoints": 0,
+      "models": [
+        {
+          "name": "Aquilon Terminator",
+          "constraints": {
+            "min": 3,
+            "max": 9
+          },
+          "points": 85,
+          "profiles": [
+            {
+              "name": "Aquilon Terminator",
+              "Type": "Infantry (Heavy)",
+              "M": "7",
+              "WS": "5",
+              "BS": "5",
+              "S": "5",
+              "T": "6",
+              "W": "3",
+              "I": "5",
+              "A": "3",
+              "LD": "10",
+              "CL": "10",
+              "WP": "8",
+              "IN": "8",
+              "SAV": "2+",
+              "INV": "4+"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Custodian Guard Sodality",
+      "id": "3125-22d7-c723-2737",
+      "role": "Troops",
+      "basePoints": 0,
+      "models": [
+        {
+          "name": "Custodian Guard",
+          "constraints": {
+            "min": 6,
+            "max": 12
+          },
+          "points": 45,
+          "profiles": [
+            {
+              "name": "Custodian Guard",
+              "Type": "Infantry",
+              "M": "8",
+              "WS": "5",
+              "BS": "5",
+              "S": "5",
+              "T": "5",
+              "W": "2",
+              "I": "5",
+              "A": "3",
+              "LD": "10",
+              "CL": "10",
+              "WP": "8",
+              "IN": "8",
+              "SAV": "2+",
+              "INV": "6+"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Sentinel Guard Sodality",
+      "id": "29e3-59e0-53e7-a5db",
+      "role": "Troops",
+      "basePoints": 0,
+      "models": [
+        {
+          "name": "Sentinel Guard",
+          "constraints": {
+            "min": 6,
+            "max": 12
+          },
+          "points": 40,
+          "profiles": [
+            {
+              "name": "Sentinel Guard",
+              "Type": "Infantry",
+              "M": "8",
+              "WS": "5",
+              "BS": "5",
+              "S": "5",
+              "T": "5",
+              "W": "2",
+              "I": "5",
+              "A": "3",
+              "LD": "10",
+              "CL": "10",
+              "WP": "8",
+              "IN": "8",
+              "SAV": "2+",
+              "INV": "5+"
+            }
+          ]
+        },
+        {
+          "name": "Sentinel Vexillarius",
+          "constraints": {
+            "max": 1,
+            "min": 0
+          },
+          "points": 70,
+          "profiles": [
+            {
+              "name": "Sentinel Vexillarius",
+              "Type": "Infantry",
+              "M": "8",
+              "WS": "5",
+              "BS": "5",
+              "S": "5",
+              "T": "5",
+              "W": "2",
+              "I": "5",
+              "A": "3",
+              "LD": "10",
+              "CL": "10",
+              "WP": "8",
+              "IN": "8",
+              "SAV": "2+",
+              "INV": "6+"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Contemptor-Achillus Dreadnought",
+      "id": "350c-637d-71de-9760",
+      "role": "War-engine",
+      "basePoints": 250,
+      "models": [
+        {
+          "name": "Contemptor-Achillus Dreadnought",
+          "constraints": {
+            "min": 1,
+            "max": 1
+          },
+          "points": 0,
+          "profiles": [
+            {
+              "name": "Contemptor-Achillus Dreadnought",
+              "Type": "Walker",
+              "M": "8",
+              "WS": "5",
+              "BS": "5",
+              "S": "8",
+              "T": "7",
+              "W": "6",
+              "I": "4",
+              "A": "5",
+              "LD": "12",
+              "CL": "10",
+              "WP": "9",
+              "IN": "5",
+              "SAV": "2+",
+              "INV": "5+"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Contemptor-Galatus Dreadnought",
+      "id": "5c1e-b656-3a3f-5014",
+      "role": "War-engine",
+      "basePoints": 225,
+      "models": [
+        {
+          "name": "Contemptor-Galatus Dreadnought",
+          "constraints": {
+            "min": 1,
+            "max": 1
+          },
+          "points": 0,
+          "profiles": [
+            {
+              "name": "Contemptor-Galatus Dreadnought",
+              "Type": "Walker",
+              "M": "8",
+              "WS": "5",
+              "BS": "5",
+              "S": "8",
+              "T": "7",
+              "W": "6",
+              "I": "4",
+              "A": "5",
+              "LD": "12",
+              "CL": "10",
+              "WP": "9",
+              "IN": "5",
+              "SAV": "2+",
+              "INV": "4+"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Telemon Heavy Dreadnought",
+      "id": "6132-aa94-be29-dedb",
+      "role": "War-engine",
+      "basePoints": 360,
+      "models": [
+        {
+          "name": "Telemon Heavy Dreadnought",
+          "constraints": {
+            "min": 1,
+            "max": 1
+          },
+          "points": 0,
+          "profiles": [
+            {
+              "name": "Telemon Heavy Dreadnought",
+              "Type": "Walker (Heavy)",
+              "M": "7",
+              "WS": "5",
+              "BS": "5",
+              "S": "9",
+              "T": "8",
+              "W": "8",
+              "I": "3",
+              "A": "3",
+              "LD": "12",
+              "CL": "10",
+              "WP": "9",
+              "IN": "3",
+              "SAV": "2+",
+              "INV": "4+"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Coronus Grav-Carrier",
+      "id": "40df-cbd0-f144-ccdb",
+      "role": "Heavy Transport",
+      "basePoints": 180,
+      "models": [
+        {
+          "name": "Coronus Grav-Carrier",
+          "constraints": {
+            "min": 1,
+            "max": 1
+          },
+          "points": 0,
+          "profiles": [
+            {
+              "name": "Coronus Grav-Carrier",
+              "Type": "Vehicle (Antigrav, Transport)",
+              "M": "12",
+              "BS": "5",
+              "Front Armour": "13",
+              "Side Armour": "13",
+              "Rear Armour": "11",
+              "HP": "8",
+              "Transport Capacity": "14",
+              "Access Points": "This Model has one Access Point on the Rear Facing."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Venatari Sodality",
+      "id": "6387-bce6-8417-20fa",
+      "role": "Recon",
+      "basePoints": 0,
+      "models": [
+        {
+          "name": "Venatari",
+          "constraints": {
+            "min": 3,
+            "max": 6
+          },
+          "points": 55,
+          "profiles": [
+            {
+              "name": "Venatari",
+              "Type": "Infantry (Antigrav, Light)",
+              "M": "14",
+              "WS": "5",
+              "BS": "5",
+              "S": "5",
+              "T": "5",
+              "W": "2",
+              "I": "5",
+              "A": "3",
+              "LD": "10",
+              "CL": "10",
+              "WP": "8",
+              "IN": "8",
+              "SAV": "3+",
+              "INV": "6+"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Gyrfalcon Jetbike Sodality",
+      "id": "5494-8bdd-6978-8d32",
+      "role": "Fast Attack",
+      "basePoints": 0,
+      "models": [
+        {
+          "name": "Gyrfalcon Agamatus",
+          "constraints": {
+            "min": 2,
+            "max": 10
+          },
+          "points": 70,
+          "profiles": [
+            {
+              "name": "Gyrfalcon Agamatus",
+              "Type": "Cavalry (Antigrav)",
+              "M": "16",
+              "WS": "5",
+              "BS": "5",
+              "S": "5",
+              "T": "5",
+              "W": "3",
+              "I": "5",
+              "A": "2",
+              "LD": "10",
+              "CL": "10",
+              "WP": "8",
+              "IN": "8",
+              "SAV": "3+",
+              "INV": "6+"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Pallas Grav-Attack",
+      "id": "cdf4-0738-9331-095c",
+      "role": "Fast Attack",
+      "basePoints": 105,
+      "models": [
+        {
+          "name": "Pallas Grav-Attack",
+          "constraints": {
+            "min": 1,
+            "max": 1
+          },
+          "points": 0,
+          "profiles": [
+            {
+              "name": "Pallas Grav-Attack",
+              "Type": "Vehicle (Antigrav, Rapid)",
+              "M": "16",
+              "BS": "5",
+              "Front Armour": "12",
+              "Side Armour": "11",
+              "Rear Armour": "11",
+              "HP": "4",
+              "Transport Capacity": "-",
+              "Access Points": "-"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Caladius Grav-Tank",
+      "id": "3cc2-9a68-9bc0-b695",
+      "role": "Armour",
+      "basePoints": 0,
+      "models": [
+        {
+          "name": "Caladius Grav-Tank",
+          "constraints": {
+            "min": 0,
+            "max": 1
+          },
+          "points": 225,
+          "profiles": [
+            {
+              "name": "Caladius Grav-Tank",
+              "Type": "Vehicle (Antigrav, Rapid)",
+              "M": "14",
+              "BS": "5",
+              "Front Armour": "13",
+              "Side Armour": "13",
+              "Rear Armour": "11",
+              "HP": "7",
+              "Transport Capacity": "-",
+              "Access Points": "-"
+            }
+          ]
+        },
+        {
+          "name": "Caladius Annihilator Grav-Tank",
+          "constraints": {
+            "min": 0,
+            "max": 1
+          },
+          "points": 235,
+          "profiles": [
+            {
+              "name": "Caladius Annihilator Grav-Tank",
+              "Type": "Vehicle (Antigrav, Rapid)",
+              "M": "14",
+              "BS": "5",
+              "Front Armour": "13",
+              "Side Armour": "13",
+              "Rear Armour": "11",
+              "HP": "7",
+              "Transport Capacity": "-",
+              "Access Points": "-"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Orion Assault Dropship",
+      "id": "0c29-b45c-d6e4-6a18",
+      "role": "Lord of War",
+      "basePoints": 600,
+      "models": [
+        {
+          "name": "Orion Assault Dropship",
+          "constraints": {
+            "min": 1,
+            "max": 1
+          },
+          "points": 0,
+          "profiles": [
+            {
+              "name": "Orion Assault Dropship",
+              "Type": "Vehicle (Transport, Super-heavy, Flyer)",
+              "M": "18",
+              "BS": "5",
+              "Front Armour": "13",
+              "Side Armour": "13",
+              "Rear Armour": "13",
+              "HP": "12",
+              "Transport Capacity": "26",
+              "Access Points": "This Model has one Access Point on the Rear Facing."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Ares Gunship",
+      "id": "0c44-ab22-006f-ebf3",
+      "role": "Lord of War",
+      "basePoints": 650,
+      "models": [
+        {
+          "name": "Ares Gunship",
+          "constraints": {
+            "min": 1,
+            "max": 1
+          },
+          "points": 0,
+          "profiles": [
+            {
+              "name": "Ares Gunship",
+              "Type": "Vehicle (Super-heavy, Flyer)",
+              "M": "18",
+              "BS": "5",
+              "Front Armour": "13",
+              "Side Armour": "13",
+              "Rear Armour": "13",
+              "HP": "12",
+              "Transport Capacity": "-",
+              "Access Points": "-"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Adrasite Guard Sodality",
+      "id": "4c44-6f8d-bd72-492f",
+      "role": "Elites",
+      "basePoints": 0,
+      "models": [
+        {
+          "name": "Adrasite Guard",
+          "constraints": {
+            "min": 6,
+            "max": 12
+          },
+          "points": 60,
+          "profiles": [
+            {
+              "name": "Adrasite Guard",
+              "Type": "Infantry",
+              "M": "8",
+              "WS": "5",
+              "BS": "5",
+              "S": "5",
+              "T": "5",
+              "W": "2",
+              "I": "5",
+              "A": "3",
+              "LD": "10",
+              "CL": "10",
+              "WP": "8",
+              "IN": "8",
+              "SAV": "2+",
+              "INV": "6+"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Pyrithite Guard Sodality",
+      "id": "c852-ce9b-5e8f-97d9",
+      "role": "Elites",
+      "basePoints": 0,
+      "models": [
+        {
+          "name": "Pyrithite Guard",
+          "constraints": {
+            "min": 6,
+            "max": 12
+          },
+          "points": 60,
+          "profiles": [
+            {
+              "name": "Pyrithite Guard",
+              "Type": "Infantry",
+              "M": "8",
+              "WS": "5",
+              "BS": "5",
+              "S": "5",
+              "T": "5",
+              "W": "2",
+              "I": "5",
+              "A": "3",
+              "LD": "10",
+              "CL": "10",
+              "WP": "8",
+              "IN": "8",
+              "SAV": "2+",
+              "INV": "6+"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Sagittarum Guard Sodality",
+      "id": "fdee-e061-c5a7-5f3f",
+      "role": "Support",
+      "basePoints": 0,
+      "models": [
+        {
+          "name": "Sagittarum Guard",
+          "constraints": {
+            "min": 6,
+            "max": 12
+          },
+          "points": 40,
+          "profiles": [
+            {
+              "name": "Sagittarum Guard",
+              "Type": "Infantry",
+              "M": "8",
+              "WS": "5",
+              "BS": "5",
+              "S": "5",
+              "T": "5",
+              "W": "2",
+              "I": "5",
+              "A": "2",
+              "LD": "10",
+              "CL": "10",
+              "WP": "8",
+              "IN": "8",
+              "SAV": "2+",
+              "INV": "6+"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Adjutorum Sodality",
+      "id": "1996-574f-1f43-7779",
+      "role": "Retinue",
+      "basePoints": 275,
+      "models": [
+        {
+          "name": "Vestarios",
+          "constraints": {
+            "min": 1,
+            "max": 1
+          },
+          "points": 0,
+          "profiles": [
+            {
+              "name": "Vestarios",
+              "Type": "Infantry (Sergeant)",
+              "M": "8",
+              "WS": "5",
+              "BS": "5",
+              "S": "5",
+              "T": "5",
+              "W": "2",
+              "I": "5",
+              "A": "3",
+              "LD": "10",
+              "CL": "10",
+              "WP": "9",
+              "IN": "9",
+              "SAV": "2+",
+              "INV": "5+"
+            }
+          ]
+        },
+        {
+          "name": "Signifier",
+          "constraints": {
+            "min": 1,
+            "max": 1
+          },
+          "points": 0,
+          "profiles": [
+            {
+              "name": "Signifier",
+              "Type": "Infantry",
+              "M": "8",
+              "WS": "5",
+              "BS": "5",
+              "S": "5",
+              "T": "5",
+              "W": "3",
+              "I": "5",
+              "A": "3",
+              "LD": "10",
+              "CL": "10",
+              "WP": "8",
+              "IN": "8",
+              "SAV": "2+",
+              "INV": "5+"
+            }
+          ]
+        },
+        {
+          "name": "Blade Champion",
+          "constraints": {
+            "min": 1,
+            "max": 1
+          },
+          "points": 0,
+          "profiles": [
+            {
+              "name": "Blade Champion",
+              "Type": "Infantry (Champion)",
+              "M": "8",
+              "WS": "6",
+              "BS": "5",
+              "S": "5",
+              "T": "5",
+              "W": "2",
+              "I": "5",
+              "A": "3",
+              "LD": "10",
+              "CL": "10",
+              "WP": "8",
+              "IN": "8",
+              "SAV": "2+",
+              "INV": "5+"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "weapons": [
+    {
+      "name": "The Apollonian Spear",
+      "kind": "Melee Weapon",
+      "IM": "I",
+      "AM": "A",
+      "SM": "+2",
+      "AP": "2",
+      "D": "2",
+      "Special Rules": "Critical Hit (5+), Duellist\u2019s Edge (2), Impact (AM)",
+      "Traits": "Power"
+    },
+    {
+      "name": "The Apollonian Spear",
+      "kind": "Ranged Weapon",
+      "R": "18",
+      "FP": "2",
+      "RS": "5",
+      "AP": "2",
+      "D": "2",
+      "Special Rules": "Suppressive (1)",
+      "Traits": "Assault, Bolt"
+    },
+    {
+      "name": "The Blade of Mercy",
+      "kind": "Melee Weapon",
+      "IM": "I",
+      "AM": "1",
+      "SM": "S",
+      "AP": "3",
+      "D": "*",
+      "Special Rules": "Precision (2+), Breaching (5+)",
+      "Traits": "Power"
+    },
+    {
+      "name": "Adrathic devastator",
+      "kind": "Ranged Weapon",
+      "R": "18",
+      "FP": "1",
+      "RS": "6",
+      "AP": "2",
+      "D": "4",
+      "Special Rules": "Rending (5+)",
+      "Traits": "Disintegrator"
+    },
+    {
+      "name": "Adrathic combi-destructor",
+      "kind": "Ranged Weapon",
+      "R": "12",
+      "FP": "2",
+      "RS": "5",
+      "AP": "2",
+      "D": "2",
+      "Special Rules": "Rending (6+)",
+      "Traits": "Disintegrator"
+    },
+    {
+      "name": "Infernus firebomb clusters",
+      "kind": "Ranged Weapon",
+      "R": "18",
+      "FP": "1",
+      "RS": "6",
+      "AP": "4",
+      "D": "2",
+      "Special Rules": "Blast (7\"), Panic (2), Limited (1)",
+      "Traits": "Flame"
+    },
+    {
+      "name": "Infernus incinerator",
+      "kind": "Ranged Weapon",
+      "R": "Template",
+      "FP": "1",
+      "RS": "6",
+      "AP": "4",
+      "D": "1",
+      "Special Rules": "Template, Panic (1)",
+      "Traits": "Flame"
+    },
+    {
+      "name": "Galatus warblade",
+      "kind": "Melee Weapon",
+      "IM": "I",
+      "AM": "A",
+      "SM": "S",
+      "AP": "2",
+      "D": "2",
+      "Special Rules": "Aflame (2), Reaping Blow (3)",
+      "Traits": "Power"
+    },
+    {
+      "name": "Galatus warblade",
+      "kind": "Ranged Weapon",
+      "R": "Template",
+      "FP": "1",
+      "RS": "6",
+      "AP": "4",
+      "D": "2",
+      "Special Rules": "Template, Panic (2)",
+      "Traits": "Flame"
+    },
+    {
+      "name": "Iliastus accelerator culverin",
+      "kind": "Ranged Weapon",
+      "R": "36",
+      "FP": "4",
+      "RS": "9",
+      "AP": "3",
+      "D": "2",
+      "Special Rules": "Breaching (5+), Rapid Tracking",
+      "Traits": "Auto"
+    },
+    {
+      "name": "Twin Iliastus accelerator cannon",
+      "kind": "Ranged Weapon",
+      "R": "60",
+      "FP": "6",
+      "RS": "8",
+      "AP": "3",
+      "D": "2",
+      "Special Rules": "Breaching (6+), Rapid Tracking",
+      "Traits": "Auto"
+    },
+    {
+      "name": "Twin Lastrum bolt cannon",
+      "kind": "Ranged Weapon",
+      "R": "36",
+      "FP": "6",
+      "RS": "6",
+      "AP": "4",
+      "D": "2",
+      "Special Rules": "-",
+      "Traits": "Bolt"
+    },
+    {
+      "name": "Adrastus bolt caliver - Bolt volley (Primary)",
+      "kind": "Ranged Weapon",
+      "R": "36",
+      "FP": "2",
+      "RS": "6",
+      "AP": "4",
+      "D": "2",
+      "Special Rules": "Heavy (FP), Combi",
+      "Traits": "Bolt"
+    },
+    {
+      "name": "Adrastus bolt caliver -  Adrathic beam (Secondary",
+      "kind": "Ranged Weapon",
+      "R": "24",
+      "FP": "1",
+      "RS": "6",
+      "AP": "2",
+      "D": "2",
+      "Special Rules": "Rending (6+), Limited (1), Combi",
+      "Traits": "Disintegrator"
+    },
+    {
+      "name": "Twin Corvae las-pulser",
+      "kind": "Ranged Weapon",
+      "R": "18",
+      "FP": "1",
+      "RS": "10",
+      "AP": "3",
+      "D": "3",
+      "Special Rules": "Armourbane, Armour-breaker (4+)",
+      "Traits": "Las"
+    },
+    {
+      "name": "Twin Arachnus blaze carronade - Burst Fire",
+      "kind": "Ranged Weapon",
+      "R": "48",
+      "FP": "6",
+      "RS": "7",
+      "AP": "3",
+      "D": "2",
+      "Special Rules": "Heavy (FP)",
+      "Traits": "Las"
+    },
+    {
+      "name": "Twin Arachnus blaze carronade - Concentrated fire",
+      "kind": "Ranged Weapon",
+      "R": "72",
+      "FP": "2",
+      "RS": "10",
+      "AP": "2",
+      "D": "2",
+      "Special Rules": "Ordnance (D), Armourbane",
+      "Traits": "Las"
+    },
+    {
+      "name": "Twin Arachnus storm carronade - Burst Fire",
+      "kind": "Ranged Weapon",
+      "R": "24",
+      "FP": "6",
+      "RS": "7",
+      "AP": "3",
+      "D": "2",
+      "Special Rules": "Heavy (FP)",
+      "Traits": "Las"
+    },
+    {
+      "name": "Twin Arachnus storm carronade - Concentrated fire",
+      "kind": "Ranged Weapon",
+      "R": "30",
+      "FP": "2",
+      "RS": "10",
+      "AP": "2",
+      "D": "2",
+      "Special Rules": "Heavy (D), Armourbane",
+      "Traits": "Las"
+    },
+    {
+      "name": "Arachnus storm cannon - Burst Fire",
+      "kind": "Ranged Weapon",
+      "R": "24",
+      "FP": "4",
+      "RS": "6",
+      "AP": "3",
+      "D": "2",
+      "Special Rules": "Heavy (FP)",
+      "Traits": "Las"
+    },
+    {
+      "name": "Arachnus storm cannon - Concentrated fire",
+      "kind": "Ranged Weapon",
+      "R": "30",
+      "FP": "2",
+      "RS": "9",
+      "AP": "2",
+      "D": "3",
+      "Special Rules": "Heavy (FP), Armourbane",
+      "Traits": "Las"
+    },
+    {
+      "name": "Kinetic destroyer",
+      "kind": "Ranged Weapon",
+      "R": "12",
+      "FP": "3",
+      "RS": "7",
+      "AP": "4",
+      "D": "1",
+      "Special Rules": "Breaching (5+)",
+      "Traits": "Assault"
+    },
+    {
+      "name": "Lastrum storm bolter",
+      "kind": "Ranged Weapon",
+      "R": "24",
+      "FP": "4",
+      "RS": "5",
+      "AP": "4",
+      "D": "1",
+      "Special Rules": "Shred (5+)",
+      "Traits": "Bolt"
+    },
+    {
+      "name": "Lastrum bolt cannon",
+      "kind": "Ranged Weapon",
+      "R": "36",
+      "FP": "3",
+      "RS": "6",
+      "AP": "4",
+      "D": "2",
+      "Special Rules": "-",
+      "Traits": "Bolt"
+    },
+    {
+      "name": "Twin Arachnus blaze cannon - Burst Fire",
+      "kind": "Ranged Weapon",
+      "R": "36",
+      "FP": "5",
+      "RS": "6",
+      "AP": "3",
+      "D": "1",
+      "Special Rules": "Heavy (FP)",
+      "Traits": "Las"
+    },
+    {
+      "name": "Twin Arachnus blaze cannon - Concentrated fire",
+      "kind": "Ranged Weapon",
+      "R": "48",
+      "FP": "2",
+      "RS": "9",
+      "AP": "2",
+      "D": "2",
+      "Special Rules": "Heavy (D), Armourbane",
+      "Traits": "Las"
+    },
+    {
+      "name": "Spiculus missile launcher",
+      "kind": "Ranged Weapon",
+      "R": "36",
+      "FP": "6",
+      "RS": "5",
+      "AP": "4",
+      "D": "1",
+      "Special Rules": "Breaching (6+), Suppressive (2)",
+      "Traits": "Missile"
+    },
+    {
+      "name": "Spiculus heavy missile pod",
+      "kind": "Ranged Weapon",
+      "R": "48",
+      "FP": "4",
+      "RS": "6",
+      "AP": "4",
+      "D": "2",
+      "Special Rules": "Breaching (5+), Suppressive (1)",
+      "Traits": "Missile"
+    },
+    {
+      "name": "Solarite power lance - Defensive strike",
+      "kind": "Melee Weapon",
+      "IM": "-1",
+      "AM": "A",
+      "SM": "S",
+      "AP": "2",
+      "D": "1",
+      "Special Rules": "Critical Hit (6+)",
+      "Traits": "Power"
+    },
+    {
+      "name": "Solarite power lance - Charging strike",
+      "kind": "Melee Weapon",
+      "IM": "+4",
+      "AM": "0",
+      "SM": "+5",
+      "AP": "2",
+      "D": "3",
+      "Special Rules": "Impact (AM), Critical Hit (6+), Armourbane",
+      "Traits": "Power"
+    },
+    {
+      "name": "Solarite power gauntlet",
+      "kind": "Melee Weapon",
+      "IM": "-3",
+      "AM": "A",
+      "SM": "+4",
+      "AP": "2",
+      "D": "2",
+      "Special Rules": "Critical Hit (6+)",
+      "Traits": "Power"
+    },
+    {
+      "name": "Paired Telemon caestus",
+      "kind": "Melee Weapon",
+      "IM": "I",
+      "AM": "+1",
+      "SM": "+3",
+      "AP": "2",
+      "D": "4",
+      "Special Rules": "Critical Hit (6+), Shock (Pinned), Armourbane",
+      "Traits": "Power"
+    },
+    {
+      "name": "Solarite power talon",
+      "kind": "Melee Weapon",
+      "IM": "I",
+      "AM": "A",
+      "SM": "S",
+      "AP": "2",
+      "D": "1",
+      "Special Rules": "Critical Hit (6+), Reaping Blow (2)",
+      "Traits": "Power"
+    },
+    {
+      "name": "Telemon caestus",
+      "kind": "Melee Weapon",
+      "IM": "I",
+      "AM": "A",
+      "SM": "+3",
+      "AP": "2",
+      "D": "3",
+      "Special Rules": "Critical Hit (6+), Shock (Pinned), Armourbane",
+      "Traits": "Power"
+    },
+    {
+      "name": "Achillus dreadspear",
+      "kind": "Ranged Weapon",
+      "R": "18",
+      "FP": "1",
+      "RS": "10",
+      "AP": "3",
+      "D": "2",
+      "Special Rules": "Armourbane, Armour-breaker (4+)",
+      "Traits": "Las"
+    },
+    {
+      "name": "Achillus dreadspear",
+      "kind": "Melee Weapon",
+      "IM": "I",
+      "AM": "A",
+      "SM": "+3",
+      "AP": "2",
+      "D": "3",
+      "Special Rules": "Armourbane, Impact (AM)",
+      "Traits": "Power"
+    },
+    {
+      "name": "Sentinel warblade",
+      "kind": "Ranged Weapon",
+      "R": "8",
+      "FP": "3",
+      "RS": "4",
+      "AP": "4",
+      "D": "1",
+      "Special Rules": "Shred (6+)",
+      "Traits": "Assault, Bolt"
+    },
+    {
+      "name": "Sentinel warblade",
+      "kind": "Melee Weapon",
+      "IM": "I",
+      "AM": "A",
+      "SM": "S",
+      "AP": "2",
+      "D": "1",
+      "Special Rules": "-",
+      "Traits": "Power"
+    },
+    {
+      "name": "Guardian spear",
+      "kind": "Ranged Weapon",
+      "R": "18",
+      "FP": "2",
+      "RS": "4",
+      "AP": "4",
+      "D": "1",
+      "Special Rules": "Shred (5+)",
+      "Traits": "Assault, Bolt"
+    },
+    {
+      "name": "Guardian spear",
+      "kind": "Melee Weapon",
+      "IM": "I",
+      "AM": "A",
+      "SM": "+1",
+      "AP": "2",
+      "D": "1",
+      "Special Rules": "Impact (AM)",
+      "Traits": "Power"
+    },
+    {
+      "name": "Adrasite spear ",
+      "kind": "Ranged Weapon",
+      "R": "12",
+      "FP": "1",
+      "RS": "5",
+      "AP": "2",
+      "D": "2",
+      "Special Rules": "Rending (6+)",
+      "Traits": "Assault, Disintegrator"
+    },
+    {
+      "name": "Adrasite spear ",
+      "kind": "Melee Weapon",
+      "IM": "I",
+      "AM": "A",
+      "SM": "+1",
+      "AP": "2",
+      "D": "1",
+      "Special Rules": "Impact (AM)",
+      "Traits": "Power"
+    },
+    {
+      "name": "Pyrithite spear",
+      "kind": "Ranged Weapon",
+      "R": "6",
+      "FP": "1",
+      "RS": "8",
+      "AP": "2",
+      "D": "2",
+      "Special Rules": "Melta (3)",
+      "Traits": "Assault, Melta"
+    },
+    {
+      "name": "Pyrithite spear",
+      "kind": "Melee Weapon",
+      "IM": "I",
+      "AM": "A",
+      "SM": "+1",
+      "AP": "2",
+      "D": "1",
+      "Special Rules": "Impact (AM)",
+      "Traits": "Power"
+    },
+    {
+      "name": "Verutum lance",
+      "kind": "Ranged Weapon",
+      "R": "8",
+      "FP": "1",
+      "RS": "5",
+      "AP": "4",
+      "D": "1",
+      "Special Rules": "Stun (1)",
+      "Traits": "Assault"
+    },
+    {
+      "name": "Verutum lance",
+      "kind": "Melee Weapon",
+      "IM": "I",
+      "AM": "A",
+      "SM": "+1",
+      "AP": "2",
+      "D": "1",
+      "Special Rules": "Precision (5+), Impact (AM",
+      "Traits": "Power"
+    },
+    {
+      "name": "Infernus firepike",
+      "kind": "Ranged Weapon",
+      "R": "Template",
+      "FP": "1",
+      "RS": "6",
+      "AP": "4",
+      "D": "1",
+      "Special Rules": "Template, Panic (2)",
+      "Traits": "Flame"
+    },
+    {
+      "name": "Eternity Spear",
+      "kind": "Ranged Weapon",
+      "R": "18",
+      "FP": "2",
+      "RS": "4",
+      "AP": "3",
+      "D": "1",
+      "Special Rules": "Shred (5+)",
+      "Traits": "Assault, Bolt"
+    },
+    {
+      "name": "Eternity Spear",
+      "kind": "Melee Weapon",
+      "IM": "I",
+      "AM": "A",
+      "SM": "+1",
+      "AP": "2",
+      "D": "1",
+      "Special Rules": "Aflame (2), Critical Hit (6+), Impact (AM), Shred (5+)",
+      "Traits": "-"
+    },
+    {
+      "name": "Eternity Blade",
+      "kind": "Melee Weapon",
+      "IM": "+1",
+      "AM": "A",
+      "SM": "+1",
+      "AP": "2",
+      "D": "1",
+      "Special Rules": "Aflame (2), Critical Hit (6+), Shred (4+), Duellist's Edge (1)",
+      "Traits": "-"
+    },
+    {
+      "name": "Neutronium cascade mine",
+      "kind": "Melee Weapon",
+      "IM": "-3",
+      "AM": "1",
+      "SM": "9",
+      "AP": "3",
+      "D": "3",
+      "Special Rules": "Armourbane, Annihilation Cascade (9), Detonation",
+      "Traits": "-"
+    },
+    {
+      "name": "Twin Iliastus accelerator fusil",
+      "kind": "Ranged Weapon",
+      "R": "24",
+      "FP": "4",
+      "RS": "7",
+      "AP": "3",
+      "D": "2",
+      "Special Rules": "Breaching (6+), Rapid Tracking",
+      "Traits": "Auto"
+    },
+    {
+      "name": "Twin neutronium cascade projector",
+      "kind": "Ranged Weapon",
+      "R": "Template",
+      "FP": "1",
+      "RS": "7",
+      "AP": "3",
+      "D": "2",
+      "Special Rules": "Template, Breaching (6+), Annihilation Cascade (7), Phage (T)",
+      "Traits": "Assault"
+    },
+    {
+      "name": "Neutronium magna-cascade cannon",
+      "kind": "Ranged Weapon",
+      "R": "Template",
+      "FP": "1",
+      "RS": "10",
+      "AP": "3",
+      "D": "3",
+      "Special Rules": "Template (Hellstorm), Breaching (4+), Annihilation Cascade (10), Phage (T)",
+      "Traits": "-"
+    },
+    {
+      "name": "Adrathic desolator",
+      "kind": "Ranged Weapon",
+      "R": "24",
+      "FP": "2",
+      "RS": "7",
+      "AP": "2",
+      "D": "4",
+      "Special Rules": "Rending (4+)",
+      "Traits": "Disintegrator"
+    },
+    {
+      "name": "Vaultsword",
+      "kind": "Melee Weapon",
+      "IM": "+1",
+      "AM": "+2",
+      "SM": "S",
+      "AP": "2",
+      "D": "1",
+      "Special Rules": "Duellist's Edge (1), Precision (4+)",
+      "Traits": "Power"
+    }
+  ]
+}

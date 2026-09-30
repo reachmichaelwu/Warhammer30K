@@ -558,11 +558,10 @@ function UnitSelectorModal({ presets, onSelect, selectedId, onClose, accentColor
             const iconType   = getUnitIconType(u.name);
             const legacyRules = u.legacyRules || ((typeof UNIT_LEGACY_RULES !== "undefined") ? UNIT_LEGACY_RULES[u.id] : null) || [];
             const rulesLine = legacyRules.slice(0, 4).join(" · ");
-            const statsLine  = isTarget
-              ? `T${u.t} ${u.w}W Sv${u.sv}+${u.inv !== "-" ? ` Inv${u.inv}+` : ""}${u.fnp !== "-" ? ` FNP${u.fnp}+` : ""} Ld${u.ld || "?"}`
-              : `${u.models} model${u.models > 1 ? "s" : ""} · BS${u.bs} · T${u.t} · Sv${u.sv}+`;
+            const statsLine = formatNewRecruitUnitStats(u);
             return React.createElement("button", {
               key: uid,
+              title: (u.modelProfiles || []).map(p => p.name + ": " + formatNewRecruitUnitStats(p.stats)).join("\n"),
               onClick: () => onSelect(u),
               style: {
                 display: "flex", alignItems: "center", gap: 10, textAlign: "left",
@@ -681,7 +680,7 @@ function WeaponSelector({ weapons, selectedWeaponName, onSelect }) {
         color: active ? (w.isLegion ? "#7a5a9a" : "#b8860b") : "#6a5e4e",
         transition: "all 0.15s ease", textAlign: "left",
         display: "flex", flexDirection: "column", gap: 2, minWidth: 120,
-      }}, React.createElement("div", {"style": { fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}, w.name, w.isLegion && React.createElement("span", {"style": { fontSize: 7, padding: "1px 4px", borderRadius: 3, background: "rgba(120,90,154,0.15)", color: "#7a5a9a", fontFamily: "'Share Tech Mono',serif", letterSpacing: 0.5, fontWeight: 700 }}, "LEGION")), React.createElement("div", {"style": { fontSize: 11, color: active ? (w.isLegion ? "#6a4a8a" : "#8b6508") : "#8a7e6e", letterSpacing: 0.5 }}, w.type, w.shots, "· S", w.s, "AP", w.ap, "D", w.damage))
+      }}, React.createElement("div", {"style": { fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}, w.name, w.isLegion && React.createElement("span", {"style": { fontSize: 7, padding: "1px 4px", borderRadius: 3, background: "rgba(120,90,154,0.15)", color: "#7a5a9a", fontFamily: "'Share Tech Mono',serif", letterSpacing: 0.5, fontWeight: 700 }}, "LEGION")), React.createElement("div", {"style": { fontSize: 11, color: active ? (w.isLegion ? "#6a4a8a" : "#8b6508") : "#8a7e6e", letterSpacing: 0.5 }}, w.type, w.shots, " · ", (typeof formatWeaponRange === "function" ? formatWeaponRange(w) : ""), " · S", w.s, "AP", w.ap, "D", w.damage))
     );
   };
   return (

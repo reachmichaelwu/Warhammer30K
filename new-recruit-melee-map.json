@@ -1,0 +1,852 @@
+{
+  "Achillus Dreadspear (Melee)": [
+    {
+      "id": "8222-6e91-ece3-194c",
+      "file": "Legio Custodes.json",
+      "name": "Achillus dreadspear"
+    }
+  ],
+  "Adrasite Spear": [
+    {
+      "id": "543f-8ffb-54b7-3908",
+      "file": "Legio Custodes.json",
+      "name": "Adrasite spear "
+    }
+  ],
+  "Anakatis Blades (pair)": [
+    {
+      "id": "c75c-97d5-4581-b361",
+      "file": "Word Bearers.json",
+      "name": "Anakatis blade "
+    }
+  ],
+  "Apollonian Spear (Melee)": [
+    {
+      "id": "70a0-484a-c0ac-2ade",
+      "file": "Legio Custodes.json",
+      "name": "The Apollonian Spear"
+    }
+  ],
+  "Arc Maul": [
+    {
+      "id": "b894-1cd3-80c7-86dc",
+      "file": "Legio Titanicus.json",
+      "name": "Arc maul"
+    }
+  ],
+  "Astartes Shotgun (melee)": [
+    {
+      "id": "a935-f18c-bd50-13f8",
+      "file": "Weapons.json",
+      "name": "Basic close combat weapon"
+    }
+  ],
+  "Bayonet (Bolt)": [
+    {
+      "id": "71e6-cbe2-7673-24f7",
+      "file": "Weapons.json",
+      "name": "Bayonet"
+    }
+  ],
+  "Black Sword": [
+    {
+      "id": "63e9-673a-4624-452b",
+      "file": "Imperial Fists.json",
+      "name": "The Black Sword"
+    }
+  ],
+  "Boarding Pistol": [
+    {
+      "id": "a935-f18c-bd50-13f8",
+      "file": "Weapons.json",
+      "name": "Basic close combat weapon"
+    }
+  ],
+  "Boarding Shield + Blade": [
+    {
+      "id": "a935-f18c-bd50-13f8",
+      "file": "Weapons.json",
+      "name": "Basic close combat weapon"
+    }
+  ],
+  "Chain Bayonet": [
+    {
+      "id": "4de6-8ad8-3d57-360e",
+      "file": "Weapons.json",
+      "name": "Chain bayonet"
+    }
+  ],
+  "Chain Glaive": [
+    {
+      "id": "0bcf-8755-0366-3e27",
+      "file": "Weapons.json",
+      "name": "Chainglaive"
+    }
+  ],
+  "Chainaxe": [
+    {
+      "id": "2d70-6a02-5104-edd2",
+      "file": "Weapons.json",
+      "name": "Chainaxe"
+    }
+  ],
+  "Chainaxe (pair)": [
+    {
+      "id": "2d70-6a02-5104-edd2",
+      "file": "Weapons.json",
+      "name": "Chainaxe"
+    }
+  ],
+  "Chainfist": [
+    {
+      "id": "0b21-9073-dffa-0df5",
+      "file": "Weapons.json",
+      "name": "Chainfist"
+    }
+  ],
+  "Chainglaive": [
+    {
+      "id": "0bcf-8755-0366-3e27",
+      "file": "Weapons.json",
+      "name": "Chainglaive"
+    }
+  ],
+  "Chainsword": [
+    {
+      "id": "d9c9-3e13-6cbc-fa26",
+      "file": "Weapons.json",
+      "name": "Chainsword"
+    }
+  ],
+  "Charnabal Sabre": [
+    {
+      "id": "bf3b-b74a-06fe-8796",
+      "file": "Weapons.json",
+      "name": "Charnabal sabre"
+    }
+  ],
+  "Cleaver of Slaughter": [
+    {
+      "id": "4ba8-ea10-7b16-9bd1",
+      "file": "Mechanicum.json",
+      "name": "Cleaver of Slaughter"
+    }
+  ],
+  "Close Combat Attack": [
+    {
+      "id": "a935-f18c-bd50-13f8",
+      "file": "Weapons.json",
+      "name": "Basic close combat weapon"
+    }
+  ],
+  "Close Combat Weapon": [
+    {
+      "id": "a935-f18c-bd50-13f8",
+      "file": "Weapons.json",
+      "name": "Basic close combat weapon"
+    }
+  ],
+  "Combat Blade": [
+    {
+      "id": "a935-f18c-bd50-13f8",
+      "file": "Weapons.json",
+      "name": "Basic close combat weapon"
+    }
+  ],
+  "Crozius Arcanum": [
+    {
+      "id": "0953-6695-3c1b-05ce",
+      "file": "Weapons.json",
+      "name": "Crozius arcanum"
+    }
+  ],
+  "Dawnbringer": [
+    {
+      "id": "442e-b3ed-0936-98c6",
+      "file": "Salamanders.json",
+      "name": "Dawnbringer"
+    }
+  ],
+  "Decimator Power Claw": [
+    {
+      "id": "825e-6bbe-65eb-5d32",
+      "file": "Mech Library.json",
+      "name": "Decimator claw"
+    }
+  ],
+  "Domitar Battle Fists": [
+    {
+      "id": "148f-4600-4d27-5121",
+      "file": "Mechanicum.json",
+      "name": "Domitar fists"
+    }
+  ],
+  "Dreadnought Close Combat Weapon": [
+    {
+      "id": "5c1b-ad8c-2b6a-9880",
+      "file": "Weapons.json",
+      "name": "Gravis power fist"
+    }
+  ],
+  "Dreadnought Power Fist": [
+    {
+      "id": "5c1b-ad8c-2b6a-9880",
+      "file": "Weapons.json",
+      "name": "Gravis power fist"
+    }
+  ],
+  "Eternity Blade": [
+    {
+      "id": "c92b-2ba0-686a-61a1",
+      "file": "Legio Custodes.json",
+      "name": "Eternity Blade"
+    }
+  ],
+  "Eternity Spear (Melee)": [
+    {
+      "id": "c1f9-7f23-632c-2733",
+      "file": "Legio Custodes.json",
+      "name": "Eternity Spear"
+    }
+  ],
+  "Eternity Spear (Melee, opt)": [
+    {
+      "id": "c1f9-7f23-632c-2733",
+      "file": "Legio Custodes.json",
+      "name": "Eternity Spear"
+    }
+  ],
+  "Falling-star Power Spear": [
+    {
+      "id": "6c78-0086-5a71-8f62",
+      "file": "Blood Angels.json",
+      "name": "Falling-star power spear"
+    }
+  ],
+  "Force Axe": [
+    {
+      "id": "a982-f5a5-a449-457a",
+      "file": "Weapons.json",
+      "name": "Force axe"
+    }
+  ],
+  "Force Staff": [
+    {
+      "id": "9b87-fdc9-fc21-e7f4",
+      "file": "Weapons.json",
+      "name": "Force staff"
+    }
+  ],
+  "Force Sword": [
+    {
+      "id": "b676-37a6-25b9-89be",
+      "file": "Weapons.json",
+      "name": "Force sword"
+    }
+  ],
+  "Forgebreaker": [
+    {
+      "id": "6976-aec9-c284-97c3",
+      "file": "Iron Hands.json",
+      "name": "Forgebreaker"
+    }
+  ],
+  "Galatus Warblade (Melee)": [
+    {
+      "id": "65ea-e1e0-1f4b-d918",
+      "file": "Legio Custodes.json",
+      "name": "Galatus warblade"
+    }
+  ],
+  "Gorechild (Chainaxe)": [
+    {
+      "id": "a9db-9e39-77ef-6efa",
+      "file": "World Eaters.json",
+      "name": "Gorechild Reforged"
+    }
+  ],
+  "Gorefather & Gorechild": [
+    {
+      "id": "65ac-97d1-dcc3-067b",
+      "file": "World Eaters.json",
+      "name": "Gorefather & Gorechild"
+    }
+  ],
+  "Graviton Ram": [
+    {
+      "id": "7460-2f27-e617-efca",
+      "file": "Mech Library.json",
+      "name": "Graviton ram"
+    }
+  ],
+  "Guardian Spear": [
+    {
+      "id": "aadd-d267-6930-be7e",
+      "file": "Legio Custodes.json",
+      "name": "Guardian spear"
+    }
+  ],
+  "Guardian Spear (Melee)": [
+    {
+      "id": "aadd-d267-6930-be7e",
+      "file": "Legio Custodes.json",
+      "name": "Guardian spear"
+    }
+  ],
+  "Gyges Siege Claw": [
+    {
+      "id": "0514-ef38-cbdb-bc11",
+      "file": "Questoris Familia.json",
+      "name": "Gyges siege claw"
+    }
+  ],
+  "Hand of Dominion (Fist)": [
+    {
+      "id": "a0e2-834d-d2fe-0014",
+      "file": "Ultramarines.json",
+      "name": "The Hand of Dominion"
+    }
+  ],
+  "Heavy Chainaxe": [
+    {
+      "id": "b31b-2021-270b-2a80",
+      "file": "Weapons.json",
+      "name": "Heavy chainaxe"
+    }
+  ],
+  "Heavy Chainsword": [
+    {
+      "id": "9df7-9396-9dee-63fd",
+      "file": "Weapons.json",
+      "name": "Heavy chainsword"
+    }
+  ],
+  "Hellcrusher Claws": [
+    {
+      "id": "5c7d-538a-3505-61b8",
+      "file": "Mechanicum.json",
+      "name": "Hellcrusher claws"
+    }
+  ],
+  "Illuminarum (Crozius)": [
+    {
+      "id": "d47f-4659-56d6-55bb",
+      "file": "Word Bearers.json",
+      "name": "lluminarum"
+    }
+  ],
+  "Illuminarum (Force)": [
+    {
+      "id": "d47f-4659-56d6-55bb",
+      "file": "Word Bearers.json",
+      "name": "lluminarum"
+    }
+  ],
+  "Khenetai Blade (pair)": [
+    {
+      "id": "f922-8ed8-f5f2-6e1f",
+      "file": "Thousand Sons.json",
+      "name": "Paired Achea pattern force sword"
+    }
+  ],
+  "Laer Blade": [
+    {
+      "id": "ccd6-4890-ee68-d712",
+      "file": "Emperor's Children.json",
+      "name": "Laeran Blade"
+    }
+  ],
+  "Laeran Blade": [
+    {
+      "id": "ccd6-4890-ee68-d712",
+      "file": "Emperor's Children.json",
+      "name": "Laeran Blade"
+    }
+  ],
+  "Leviathan Siege Claw": [
+    {
+      "id": "5cc5-908e-4d99-b755",
+      "file": "Weapons.json",
+      "name": "Leviathan siege claw"
+    }
+  ],
+  "Leviathan Siege Drill": [
+    {
+      "id": "694f-174a-dbac-6c43",
+      "file": "Weapons.json",
+      "name": "Leviathan siege drill"
+    }
+  ],
+  "Lightning Claw": [
+    {
+      "id": "99e7-5d4f-b2dd-9d95",
+      "file": "Weapons.json",
+      "name": "Lightning claw"
+    }
+  ],
+  "Lightning Claw (pair)": [
+    {
+      "id": "c11e-d806-35af-b041",
+      "file": "Weapons.json",
+      "name": "Pair of lightning claws"
+    }
+  ],
+  "Lightning Claws": [
+    {
+      "id": "c11e-d806-35af-b041",
+      "file": "Weapons.json",
+      "name": "Pair of lightning claws"
+    }
+  ],
+  "Lightning Claws (pair)": [
+    {
+      "id": "c11e-d806-35af-b041",
+      "file": "Weapons.json",
+      "name": "Pair of lightning claws"
+    }
+  ],
+  "Lion Sword": [
+    {
+      "id": "d2c3-aaec-2654-2243",
+      "file": "Dark Angels.json",
+      "name": "The Lion Sword"
+    }
+  ],
+  "Logos (Melee)": [
+    {
+      "id": "9876-c795-097e-5776",
+      "file": "Iron Warriors.json",
+      "name": "The Logos Array"
+    }
+  ],
+  "Mercy & Forgiveness (Claws)": [
+    {
+      "id": "b4b2-b7cd-b62c-d2da",
+      "file": "Night Lords.json",
+      "name": "Mercy and Forgiveness"
+    }
+  ],
+  "Misericordia": [
+    {
+      "id": "d789-df35-288c-f6d0",
+      "file": "Legio Custodes.json",
+      "name": "The Blade of Mercy"
+    }
+  ],
+  "Moonsilver Blade": [
+    {
+      "id": "2f14-4171-eda1-3b7b",
+      "file": "Blood Angels.json",
+      "name": "Moonsilver Blade"
+    }
+  ],
+  "Ogryn Charonite Claws": [
+    {
+      "id": "f050-8b66-f2d1-ff56",
+      "file": "Solar Auxilia.json",
+      "name": "Charonite claws"
+    }
+  ],
+  "Paired Saturnine Disruption Fists": [
+    {
+      "id": "1e88-c3a1-174e-1ddc",
+      "file": "Weapons.json",
+      "name": "Paired Saturnine Disruption Fists"
+    }
+  ],
+  "Paired Telemon Caestus (opt)": [
+    {
+      "id": "2582-0171-340c-5bdb",
+      "file": "Legio Custodes.json",
+      "name": "Paired Telemon caestus"
+    }
+  ],
+  "Paragon Blade": [
+    {
+      "id": "adb6-1c31-a7f9-5be5",
+      "file": "Weapons.json",
+      "name": "Paragon blade"
+    }
+  ],
+  "Power Axe": [
+    {
+      "id": "72e7-3f12-3b44-206b",
+      "file": "Weapons.json",
+      "name": "Power axe"
+    }
+  ],
+  "Power Dagger": [
+    {
+      "id": "acd7-604a-124e-bef9",
+      "file": "Weapons.json",
+      "name": "Power dagger"
+    }
+  ],
+  "Power Fist": [
+    {
+      "id": "1ac2-7865-9237-8752",
+      "file": "Weapons.json",
+      "name": "Power fist"
+    }
+  ],
+  "Power Fist (Talon)": [
+    {
+      "id": "1ac2-7865-9237-8752",
+      "file": "Weapons.json",
+      "name": "Power fist"
+    }
+  ],
+  "Power Lance (charge)": [
+    {
+      "id": "7aee-99e0-fbbe-fcc9",
+      "file": "Weapons.json",
+      "name": "Power lance"
+    }
+  ],
+  "Power Lash": [
+    {
+      "id": "0c26-fa08-5c28-867d",
+      "file": "Weapons.json",
+      "name": "Power lash"
+    }
+  ],
+  "Power Maul": [
+    {
+      "id": "d29d-e197-8e9a-c558",
+      "file": "Weapons.json",
+      "name": "Power maul"
+    }
+  ],
+  "Power Scythe": [
+    {
+      "id": "518c-c390-dbe3-d412",
+      "file": "Weapons.json",
+      "name": "Power scythe"
+    }
+  ],
+  "Power Spear (charge: AP2)": [
+    {
+      "id": "7aee-99e0-fbbe-fcc9",
+      "file": "Weapons.json",
+      "name": "Power lance"
+    }
+  ],
+  "Power Sword": [
+    {
+      "id": "b4c9-1636-e1a3-7033",
+      "file": "Weapons.json",
+      "name": "Power sword"
+    }
+  ],
+  "Pyrithite Spear": [
+    {
+      "id": "2c31-71dd-bf83-664a",
+      "file": "Legio Custodes.json",
+      "name": "Pyrithite spear"
+    }
+  ],
+  "Raven's Talons (pair)": [
+    {
+      "id": "d2af-1668-4298-8c2b",
+      "file": "Weapons.json",
+      "name": "Raven's Talons"
+    }
+  ],
+  "Saturnine Concussion Hammer": [
+    {
+      "id": "74f9-de9d-8866-1483",
+      "file": "Weapons.json",
+      "name": "Saturnine concussion hammer"
+    }
+  ],
+  "Saturnine Disruption Fist": [
+    {
+      "id": "ac11-12db-d413-2ae4",
+      "file": "Weapons.json",
+      "name": "Saturnine disruption fist"
+    },
+    {
+      "id": "7ef6-4745-e038-c93c",
+      "file": "Weapons.json",
+      "name": "Saturnine disruption fist"
+    }
+  ],
+  "Saturnine War Axe": [
+    {
+      "id": "0ef2-782e-37a7-6d5b",
+      "file": "Weapons.json",
+      "name": "Saturnine war axe"
+    }
+  ],
+  "Scorian Talons": [
+    {
+      "id": "19b9-5d4a-8d3b-cfc9",
+      "file": "Mechanicum.json",
+      "name": "Scorian talons"
+    }
+  ],
+  "Scyllax Combat Array": [
+    {
+      "id": "38cc-880d-ecaa-9a36",
+      "file": "Mechanicum.json",
+      "name": "Scyllax combat array"
+    }
+  ],
+  "Scythe of Silence": [
+    {
+      "id": "518c-c390-dbe3-d412",
+      "file": "Weapons.json",
+      "name": "Power scythe"
+    }
+  ],
+  "Sentinel Blade + Shield": [
+    {
+      "id": "135f-9da6-a46c-00ba",
+      "file": "Legio Custodes.json",
+      "name": "Sentinel warblade"
+    }
+  ],
+  "Sentinel Warblade (Melee)": [
+    {
+      "id": "135f-9da6-a46c-00ba",
+      "file": "Legio Custodes.json",
+      "name": "Sentinel warblade"
+    }
+  ],
+  "Shock Chargers (pair)": [
+    {
+      "id": "6c0a-6654-df92-5f42",
+      "file": "Mech Library.json",
+      "name": "Shock chargers"
+    }
+  ],
+  "Silence (Great Scythe)": [
+    {
+      "id": "f942-844b-759f-0c5b",
+      "file": "Death Guard.json",
+      "name": "Silence"
+    }
+  ],
+  "Silence (Scythe)": [
+    {
+      "id": "f942-844b-759f-0c5b",
+      "file": "Death Guard.json",
+      "name": "Silence"
+    }
+  ],
+  "Slaughterer Blades": [
+    {
+      "id": "1f22-8ee5-fa9d-33fb",
+      "file": "Mech Library.json",
+      "name": "Slaughterer blades"
+    }
+  ],
+  "Solarite Power Gauntlet (+5pts opt)": [
+    {
+      "id": "b8e0-3934-eb64-b463",
+      "file": "Imperial Fists.json",
+      "name": "Solarite Power Gauntlet"
+    },
+    {
+      "id": "d759-f6a1-1834-9132",
+      "file": "Legio Custodes.json",
+      "name": "Solarite power gauntlet"
+    },
+    {
+      "id": "5722-286a-611c-0509",
+      "file": "Weapons.json",
+      "name": "Solarite Power Gauntlet"
+    }
+  ],
+  "Solarite Power Lance (Charge)": [
+    {
+      "id": "a5f2-75ad-b314-9eb7",
+      "file": "Legio Custodes.json",
+      "name": "Solarite power lance - Charging strike"
+    }
+  ],
+  "Solarite Power Lance (Defend)": [
+    {
+      "id": "bac7-0b82-a22b-bb1f",
+      "file": "Legio Custodes.json",
+      "name": "Solarite power lance - Defensive strike"
+    }
+  ],
+  "Solarite Power Talon": [
+    {
+      "id": "96d3-bf3e-487a-66b1",
+      "file": "Legio Custodes.json",
+      "name": "Solarite power talon"
+    }
+  ],
+  "Solerite Power Gauntlet": [
+    {
+      "id": "b8e0-3934-eb64-b463",
+      "file": "Imperial Fists.json",
+      "name": "Solarite Power Gauntlet"
+    },
+    {
+      "id": "d759-f6a1-1834-9132",
+      "file": "Legio Custodes.json",
+      "name": "Solarite power gauntlet"
+    },
+    {
+      "id": "5722-286a-611c-0509",
+      "file": "Weapons.json",
+      "name": "Solarite Power Gauntlet"
+    }
+  ],
+  "Solerite Power Talon": [
+    {
+      "id": "96d3-bf3e-487a-66b1",
+      "file": "Legio Custodes.json",
+      "name": "Solarite power talon"
+    }
+  ],
+  "Storm's Teeth (Chainsword)": [
+    {
+      "id": "9375-98d0-95eb-f6aa",
+      "file": "Imperial Fists.json",
+      "name": "Storm's Teeth"
+    }
+  ],
+  "Sword of Balenight": [
+    {
+      "id": "db22-2478-d860-e4b1",
+      "file": "Space Wolves.json",
+      "name": "The Sword of Balenight"
+    }
+  ],
+  "Talon of Horus": [
+    {
+      "id": "8c20-0a53-9f0b-d957",
+      "file": "Sons of Horus.json",
+      "name": "The Warmaster's Talon"
+    },
+    {
+      "id": "c421-4c58-1544-1c50",
+      "file": "Sons of Horus.json",
+      "name": "The Warmaster's Talon"
+    }
+  ],
+  "Talon of Horus (Claw)": [
+    {
+      "id": "8c20-0a53-9f0b-d957",
+      "file": "Sons of Horus.json",
+      "name": "The Warmaster's Talon"
+    },
+    {
+      "id": "c421-4c58-1544-1c50",
+      "file": "Sons of Horus.json",
+      "name": "The Warmaster's Talon"
+    }
+  ],
+  "Telemon Caestus": [
+    {
+      "id": "a453-0b82-bf12-76b8",
+      "file": "Legio Custodes.json",
+      "name": "Telemon caestus"
+    }
+  ],
+  "The Axe of Helwinter": [
+    {
+      "id": "823a-612a-4e56-4e33",
+      "file": "Space Wolves.json",
+      "name": "The Axe of Helwinter"
+    }
+  ],
+  "The Blade Encarmine": [
+    {
+      "id": "7684-1933-0499-23c5",
+      "file": "Blood Angels.json",
+      "name": "The Blade Encarmine"
+    }
+  ],
+  "The Gladius Incandor": [
+    {
+      "id": "552c-4e2d-cc3e-13dd",
+      "file": "Ultramarines.json",
+      "name": "The Gladius Incandor"
+    }
+  ],
+  "The Pale Spear": [
+    {
+      "id": "a1f3-ee5d-4c9d-1aef",
+      "file": "Alpha Legion.json",
+      "name": "The Pale Spear"
+    }
+  ],
+  "The Spear of Telesto": [
+    {
+      "id": "ebe5-520c-6f72-347d",
+      "file": "Blood Angels.json",
+      "name": "Spear of Telesto"
+    }
+  ],
+  "Thunder Hammer": [
+    {
+      "id": "51fb-a2c2-3677-5a11",
+      "file": "Weapons.json",
+      "name": "Thunder hammer"
+    }
+  ],
+  "Ursarax Power Claws (pair)": [
+    {
+      "id": "6019-95c6-e43f-c81f",
+      "file": "Mechanicum.json",
+      "name": "Pair of Ursarax claws"
+    },
+    {
+      "id": "6e81-9414-ab61-c291",
+      "file": "Mechanicum.json",
+      "name": "Pair of Ursarax claws"
+    }
+  ],
+  "Verutum Lance (Melee)": [
+    {
+      "id": "26ff-268a-38d7-ea08",
+      "file": "Legio Custodes.json",
+      "name": "Verutum lance"
+    }
+  ],
+  "Vodian Sceptre": [
+    {
+      "id": "328d-c640-5fba-f5c1",
+      "file": "Mechanicum.json",
+      "name": "The Vodian Sceptre"
+    }
+  ],
+  "Vorax Power Blades": [
+    {
+      "id": "b305-11f0-96f1-4ce7",
+      "file": "Mech Library.json",
+      "name": "Pair of power blades"
+    }
+  ],
+  "White Tiger Dao": [
+    {
+      "id": "6d9d-0295-a860-42f7",
+      "file": "White Scars.json",
+      "name": "The White Tiger Dao"
+    }
+  ],
+  "Wolf Blade": [
+    {
+      "id": "d29d-4022-2c28-34d4",
+      "file": "Dark Angels.json",
+      "name": "The Wolf Blade"
+    }
+  ],
+  "Worldbreaker (Mace)": [
+    {
+      "id": "8817-bd0a-01d3-d469",
+      "file": "Sons of Horus.json",
+      "name": "Worldbreaker"
+    },
+    {
+      "id": "2774-b264-836c-98c6",
+      "file": "Sons of Horus.json",
+      "name": "Worldbreaker"
+    }
+  ]
+}

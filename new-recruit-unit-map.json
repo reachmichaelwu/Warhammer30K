@@ -1,0 +1,2570 @@
+{
+  "lion": {
+    "file": "Dark Angels.json",
+    "profileId": "fc34-5535-3a8f-32ea",
+    "profileName": "Lion El'Johnson",
+    "unitName": "Lion El'Jonson (I)"
+  },
+  "khan": {
+    "file": "White Scars.json",
+    "profileId": "40d7-0047-e9ab-b424",
+    "profileName": "Jaghatai Khan",
+    "unitName": "Jaghatai Khan (V)"
+  },
+  "russ": {
+    "file": "Space Wolves.json",
+    "profileId": "56db-f2f2-0b75-33ca",
+    "profileName": "Leman Russ",
+    "unitName": "Leman Russ (VI)"
+  },
+  "dorn": {
+    "file": "Imperial Fists.json",
+    "profileId": "7e4e-ce9c-24ba-1fdb",
+    "profileName": "Rogal Dorn",
+    "unitName": "Rogal Dorn (VII)"
+  },
+  "sanguinius": {
+    "file": "Blood Angels.json",
+    "profileId": "8552-2394-b46c-ed7d",
+    "profileName": "Sanguinius",
+    "unitName": "Sanguinius (IX)"
+  },
+  "ferrus": {
+    "file": "Iron Hands.json",
+    "profileId": "c07f-d734-761d-ef02",
+    "profileName": "Ferrus Manus",
+    "unitName": "Ferrus Manus (X)"
+  },
+  "guilliman": {
+    "file": "Ultramarines.json",
+    "profileId": "8007-b6e5-9a58-92cf",
+    "profileName": "Roboute Guilliman",
+    "unitName": "Roboute Guilliman (XIII)"
+  },
+  "vulkan": {
+    "file": "Salamanders.json",
+    "profileId": "524d-0ca4-b465-6c36",
+    "profileName": "Vulkan",
+    "unitName": "Vulkan (XVIII)"
+  },
+  "corax": {
+    "file": "Raven Guard.json",
+    "profileId": "ce77-ac4e-3b17-8420",
+    "profileName": "Corvus Corax",
+    "unitName": "Corvus Corax (XIX)"
+  },
+  "fulgrim": {
+    "file": "Emperor's Children.json",
+    "profileId": "290f-c8dd-0607-3ed5",
+    "profileName": "Fulgrim",
+    "unitName": "Fulgrim (III)"
+  },
+  "perturabo": {
+    "file": "Iron Warriors.json",
+    "profileId": "3b98-e35d-f573-1bc5",
+    "profileName": "Perturabo",
+    "unitName": "Perturabo (IV)"
+  },
+  "curze": {
+    "file": "Night Lords.json",
+    "profileId": "a6fc-e95a-426b-2aa8",
+    "profileName": "Konrad Curze",
+    "unitName": "Konrad Curze (VIII)"
+  },
+  "angron": {
+    "file": "World Eaters.json",
+    "profileId": "af57-d2bc-a333-3bc3",
+    "profileName": "Angron",
+    "unitName": "Angron (XII)"
+  },
+  "mortarion": {
+    "file": "Death Guard.json",
+    "profileId": "769a-de7d-61ee-a81f",
+    "profileName": "Mortarion",
+    "unitName": "Mortarion (XIV)"
+  },
+  "magnus": {
+    "file": "Thousand Sons.json",
+    "profileId": "aae0-3af0-8fe0-1466",
+    "profileName": "Magnus the Red",
+    "unitName": "Magnus the Red (XV)"
+  },
+  "horus": {
+    "file": "Sons of Horus.json",
+    "profileId": "7f09-c3d9-53f7-e577",
+    "profileName": "Horus",
+    "unitName": "Horus Lupercal (XVI)"
+  },
+  "lorgar": {
+    "file": "Word Bearers.json",
+    "profileId": "0360-2b75-07bc-4c7b",
+    "profileName": "Lorgar Aurelian",
+    "unitName": "Lorgar Aurelian (XVII)"
+  },
+  "alpharius": {
+    "file": "Alpha Legion.json",
+    "profileId": "8bec-78f6-f678-fa8e",
+    "profileName": "Alpharius",
+    "unitName": "Alpharius (XX)"
+  },
+  "praetor_pa": {
+    "file": "Legiones Astartes.json",
+    "profileId": "778f-7cd8-3172-9e70",
+    "profileName": "Praetor",
+    "unitName": "Praetor (Power Armour)"
+  },
+  "praetor_ta": {
+    "file": "Legiones Astartes.json",
+    "profileId": "a5d8-ad4b-bf2c-cb23",
+    "profileName": "Cataphractii Preator",
+    "unitName": "Praetor (Terminator)"
+  },
+  "praetor_sat": {
+    "file": "Legiones Astartes.json",
+    "profileId": "bb05-5cc6-b512-1692",
+    "profileName": "Saturnine Praetor",
+    "unitName": "Praetor (Saturnine)"
+  },
+  "centurion": {
+    "file": "Legiones Astartes.json",
+    "profileId": "68a5-6198-8a6e-7d3a",
+    "profileName": "Centurion",
+    "unitName": "Centurion"
+  },
+  "centurion_ta": {
+    "file": "Legiones Astartes.json",
+    "profileId": "8ed4-1b4d-61e0-1380",
+    "profileName": "Cataphractii Centurion",
+    "unitName": "Centurion (Terminator)"
+  },
+  "centurion_sat": {
+    "file": "Legiones Astartes.json",
+    "profileId": "ca0d-74c3-3c4b-3634",
+    "profileName": "Saturnine Centurion",
+    "unitName": "Centurion (Saturnine Terminator)"
+  },
+  "champion": {
+    "file": "Legiones Astartes.json",
+    "profileId": "676d-46b5-fc7a-0e01",
+    "profileName": "Legion Champion",
+    "unitName": "Legion Champion"
+  },
+  "master_signals": {
+    "file": "Legiones Astartes.json",
+    "profileId": "501b-d998-9c84-c0fd",
+    "profileName": "Master of Signals",
+    "unitName": "Master of Signals"
+  },
+  "vigilator": {
+    "file": "Legiones Astartes.json",
+    "profileId": "6583-4291-5772-f9b2",
+    "profileName": "Vigilator",
+    "unitName": "Vigilator"
+  },
+  "chaplain": {
+    "file": "Legiones Astartes.json",
+    "profileId": "3387-8bf6-0a1f-9222",
+    "profileName": "Chaplain",
+    "unitName": "Legion Chaplain"
+  },
+  "librarian": {
+    "file": "Legiones Astartes.json",
+    "profileId": "430f-9109-0fc4-4823",
+    "profileName": "Librarian",
+    "unitName": "Legion Librarian"
+  },
+  "herald": {
+    "file": "Legiones Astartes.json",
+    "profileId": "a7a3-f701-bc4e-e04e",
+    "profileName": "Herald",
+    "unitName": "Legion Herald"
+  },
+  "moritat": {
+    "file": "Legiones Astartes.json",
+    "profileId": "4569-e4ee-cc43-56e1",
+    "profileName": "Moritat",
+    "unitName": "Moritat"
+  },
+  "siege_breaker": {
+    "file": "Legiones Astartes.json",
+    "profileId": "c134-47b6-e069-4d52",
+    "profileName": "Siege Breaker",
+    "unitName": "Siege Breaker"
+  },
+  "forge_lord": {
+    "file": "Legiones Astartes.json",
+    "profileId": "e387-7f65-4483-9c4c",
+    "profileName": "Forge Lord",
+    "unitName": "Forge Lord"
+  },
+  "esoterist": {
+    "file": "Legiones Astartes.json",
+    "profileId": "1d8a-ecd6-c916-8dd5",
+    "profileName": "Esoterist",
+    "unitName": "Esoterist"
+  },
+  "praevian": {
+    "file": "Legiones Astartes.json",
+    "profileId": "9f88-7b15-eace-4b42",
+    "profileName": "Praevian",
+    "unitName": "Praevian"
+  },
+  "overseer": {
+    "file": "Legiones Astartes.json",
+    "profileId": "7836-42bd-2afe-6be8",
+    "profileName": "Overseer",
+    "unitName": "Overseer"
+  },
+  "optae": {
+    "file": "Legiones Astartes.json",
+    "profileId": "ee93-1662-c9db-ffa5",
+    "profileName": "Optae",
+    "unitName": "Optae"
+  },
+  "damocles_rhino": {
+    "file": "Legiones Astartes.json",
+    "profileId": "b41c-5369-c3ee-8da6",
+    "profileName": "Damocles Command Rhino",
+    "unitName": "Damocles Command Rhino"
+  },
+  "praetorian_cmd_jp": {
+    "file": "Legiones Astartes.json",
+    "profileId": "e322-5781-2049-6ce6",
+    "profileName": "Chosen w/Jump Pack",
+    "unitName": "Praetorian Command Squad (Jump Packs)"
+  },
+  "praetorian_cmd": {
+    "file": "Legiones Astartes.json",
+    "profileId": "2867-4edf-0313-1ca5",
+    "profileName": "Chosen",
+    "unitName": "Praetorian Command Squad"
+  },
+  "tartaros_cmd": {
+    "file": "Legiones Astartes.json",
+    "profileId": "cdee-b4cc-e7b1-23a3",
+    "profileName": "Tartaros Chosen",
+    "unitName": "Tartaros Terminator Command Squad"
+  },
+  "centurion_cmd": {
+    "file": "Legiones Astartes.json",
+    "profileId": "0d57-d2df-eae5-3137",
+    "profileName": "Veteran",
+    "unitName": "Centurion Command Squad"
+  },
+  "cataphractii_cmd": {
+    "file": "Legiones Astartes.json",
+    "profileId": "5ae4-c54c-ffce-8855",
+    "profileName": "Cataphractii Chosen",
+    "unitName": "Cataphractii Terminator Command Squad"
+  },
+  "saturnine_cmd": {
+    "file": "Legiones Astartes.json",
+    "profileId": "5c5c-2517-faf8-fc9a",
+    "profileName": "Saturnine Chosen",
+    "unitName": "Saturnine Terminator Command Squad"
+  },
+  "veteran": {
+    "file": "Legiones Astartes.json",
+    "profileId": "e737-c6bf-71e7-f2e2",
+    "profileName": "Veteran Legionary",
+    "unitName": "Veteran Tactical Squad"
+  },
+  "veteran_assault": {
+    "file": "Legiones Astartes.json",
+    "profileId": "4db0-5c43-9bc7-82e0",
+    "profileName": "Veteran Legionary",
+    "unitName": "Veteran Assault Squad"
+  },
+  "seeker": {
+    "file": "Legiones Astartes.json",
+    "profileId": "01c6-c5ec-1619-9951",
+    "profileName": "Seeker",
+    "unitName": "Seeker Squad"
+  },
+  "tactical": {
+    "file": "Legiones Astartes.json",
+    "profileId": "1335-5f58-6ff2-8cdd",
+    "profileName": "Legionary",
+    "unitName": "Tactical Squad"
+  },
+  "despoiler": {
+    "file": "Legiones Astartes.json",
+    "profileId": "f5ca-0752-fac9-b8c2",
+    "profileName": "Despoiler Legionary",
+    "unitName": "Despoiler Squad"
+  },
+  "breacher": {
+    "file": "Legiones Astartes.json",
+    "profileId": "f349-e714-ec2e-c90a",
+    "profileName": "Breacher Legionary",
+    "unitName": "Breacher Squad"
+  },
+  "assault": {
+    "file": "Legiones Astartes.json",
+    "profileId": "add7-e9dc-9076-1469",
+    "profileName": "Assault Legionary",
+    "unitName": "Assault Squad"
+  },
+  "tactical_support": {
+    "file": "Legiones Astartes.json",
+    "profileId": "808e-63b2-2be3-2095",
+    "profileName": "Legionary",
+    "unitName": "Tactical Support Squad"
+  },
+  "cataphractii": {
+    "file": "Legiones Astartes.json",
+    "profileId": "b09e-63c0-b8de-4b52",
+    "profileName": "Cataphractii Terminator",
+    "unitName": "Cataphractii Terminators"
+  },
+  "tartaros": {
+    "file": "Legiones Astartes.json",
+    "profileId": "5814-6358-7b63-6007",
+    "profileName": "Tartaros Terminator",
+    "unitName": "Tartaros Terminators"
+  },
+  "saturnine": {
+    "file": "Legiones Astartes.json",
+    "profileId": "7a00-4d27-27c7-7fb5",
+    "profileName": "Saturnine Terminator",
+    "unitName": "Saturnine Terminators"
+  },
+  "heavy_support": {
+    "file": "Legiones Astartes.json",
+    "profileId": "7b35-9c2e-4c06-bf77",
+    "profileName": "Legionary",
+    "unitName": "Heavy Support Squad"
+  },
+  "rapier_la": {
+    "file": "Legiones Astartes.json",
+    "profileId": "220d-a25a-fd27-54a1",
+    "profileName": "Rapier Carrier",
+    "unitName": "Rapier Battery (Legiones)"
+  },
+  "apothecary": {
+    "file": "Legiones Astartes.json",
+    "profileId": "3ac3-5b9a-fe4e-dbdd",
+    "profileName": "Apothecary",
+    "unitName": "Apothecary"
+  },
+  "techmarine": {
+    "file": "Legiones Astartes.json",
+    "profileId": "7db5-c340-71a3-889e",
+    "profileName": "Techmarine",
+    "unitName": "Techmarine"
+  },
+  "araknae": {
+    "file": "Legiones Astartes.json",
+    "profileId": "6cd5-ee99-2851-a7a3",
+    "profileName": "Araknae Quad Accelerator Platform",
+    "unitName": "Araknae Quad Accelerator"
+  },
+  "contemptor": {
+    "file": "Legiones Astartes.json",
+    "profileId": "09cc-04a1-362a-7cfd",
+    "profileName": "Contemptor Dreadnought",
+    "unitName": "Contemptor Dreadnought"
+  },
+  "leviathan": {
+    "file": "Legiones Astartes.json",
+    "profileId": "0630-53fc-023c-3072",
+    "profileName": "Leviathan Dreadnought",
+    "unitName": "Leviathan Dreadnought"
+  },
+  "deredeo": {
+    "file": "Legiones Astartes.json",
+    "profileId": "607c-5b94-f491-22b9",
+    "profileName": "Deredeo Dreadnought",
+    "unitName": "Deredeo Dreadnought"
+  },
+  "saturnine_dread": {
+    "file": "Legiones Astartes.json",
+    "profileId": "1d79-c4d4-ac14-dc8f",
+    "profileName": "Saturnine Dreadnought",
+    "unitName": "Saturnine Dreadnought"
+  },
+  "rhino": {
+    "file": "Legiones Astartes.json",
+    "profileId": "196a-7cdc-85d8-0d51",
+    "profileName": "Rhino",
+    "unitName": "Rhino"
+  },
+  "termite": {
+    "file": "Legiones Astartes.json",
+    "profileId": "9ddd-2feb-eb49-a01c",
+    "profileName": "Termite",
+    "unitName": "Termite"
+  },
+  "drop_pod": {
+    "file": "Legiones Astartes.json",
+    "profileId": "301f-4e7f-80be-4d07",
+    "profileName": "Drop Pod",
+    "unitName": "Drop Pod"
+  },
+  "land_raider": {
+    "file": "Legiones Astartes.json",
+    "profileId": "218c-cb59-ceed-cebb",
+    "profileName": "Land Raider Carrier",
+    "unitName": "Land Raider Carrier"
+  },
+  "spartan": {
+    "file": "Legiones Astartes.json",
+    "profileId": "5905-610b-0319-c8a3",
+    "profileName": "Spartan",
+    "unitName": "Spartan"
+  },
+  "dreadnought_drop_pod": {
+    "file": "Legiones Astartes.json",
+    "profileId": "5239-b766-f2ab-ef23",
+    "profileName": "Dreadnought Drop Pod",
+    "unitName": "Dreadnought Drop Pod"
+  },
+  "dreadclaw": {
+    "file": "Legiones Astartes.json",
+    "profileId": "df68-7b86-ffca-dd24",
+    "profileName": "Dreadclaw Drop Pod",
+    "unitName": "Dreadclaw Drop Pod"
+  },
+  "kharybdis": {
+    "file": "Legiones Astartes.json",
+    "profileId": "2123-757e-fda2-0134",
+    "profileName": "Kharybdis Assault Claw",
+    "unitName": "Kharybdis Assault Claw"
+  },
+  "predator": {
+    "file": "Legiones Astartes.json",
+    "profileId": "3e05-3bdc-7328-c224",
+    "profileName": "Predator",
+    "unitName": "Predator"
+  },
+  "sicaran": {
+    "file": "Legiones Astartes.json",
+    "profileId": "319b-bf92-5a78-f0da",
+    "profileName": "Sicaran",
+    "unitName": "Sicaran"
+  },
+  "sicaran_venator": {
+    "file": "Legiones Astartes.json",
+    "profileId": "86cb-2a1e-b0d8-5007",
+    "profileName": "Sicaran Venator",
+    "unitName": "Sicaran Venator"
+  },
+  "vindicator": {
+    "file": "Legiones Astartes.json",
+    "profileId": "c7a5-d9df-f3b7-a753",
+    "profileName": "Vindicator Siege Tank",
+    "unitName": "Vindicator Siege Tank"
+  },
+  "kratos": {
+    "file": "Legiones Astartes.json",
+    "profileId": "6184-d104-3191-5758",
+    "profileName": "Kratos Assault Tank",
+    "unitName": "Kratos Assault Tank"
+  },
+  "scorpius": {
+    "file": "Legiones Astartes.json",
+    "profileId": "d011-9280-334a-33f0",
+    "profileName": "Scorpius Missile Tank",
+    "unitName": "Scorpius Missile Tank"
+  },
+  "arquitor": {
+    "file": "Legiones Astartes.json",
+    "profileId": "b735-9ffe-6c91-b540",
+    "profileName": "Arquitor Bombard",
+    "unitName": "Arquitor Bombard"
+  },
+  "recon": {
+    "file": "Legiones Astartes.json",
+    "profileId": "5f5b-8466-7747-6f6f",
+    "profileName": "Recon Legionary",
+    "unitName": "Reconnaissance Squad"
+  },
+  "sabre": {
+    "file": "Legiones Astartes.json",
+    "profileId": "83f9-e0e6-3e57-ecfc",
+    "profileName": "Sabre",
+    "unitName": "Sabre"
+  },
+  "outrider": {
+    "file": "Legiones Astartes.json",
+    "profileId": "a3ad-5eec-1d90-29df",
+    "profileName": "Outrider",
+    "unitName": "Outrider Squadron"
+  },
+  "land_raider_exp": {
+    "file": "Legiones Astartes.json",
+    "profileId": "f5f1-967b-07e2-2dfa",
+    "profileName": "Land Raider Explorator",
+    "unitName": "Land Raider Explorator"
+  },
+  "tarantula": {
+    "file": "Legiones Astartes.json",
+    "profileId": "5f4e-654c-e9a6-1eed",
+    "profileName": "Tarantula Sentry Gun",
+    "unitName": "Tarantula Battery"
+  },
+  "xiphon": {
+    "file": "Legiones Astartes.json",
+    "profileId": "ef03-482f-1eeb-8591",
+    "profileName": "Xiphon Interceptor",
+    "unitName": "Xiphon Interceptor"
+  },
+  "storm_eagle": {
+    "file": "Legiones Astartes.json",
+    "profileId": "d777-b946-eb06-f8fd",
+    "profileName": "Storm Eagle",
+    "unitName": "Storm Eagle"
+  },
+  "fire_raptor": {
+    "file": "Legiones Astartes.json",
+    "profileId": "4e72-7900-e1f2-802b",
+    "profileName": "Fire Raptor",
+    "unitName": "Fire Raptor"
+  },
+  "scimitar_jetbike": {
+    "file": "Legiones Astartes.json",
+    "profileId": "d9bb-0751-caba-2b9d",
+    "profileName": "Scimitar Hunter",
+    "unitName": "Scimitar Jetbike Squadron"
+  },
+  "javelin": {
+    "file": "Legiones Astartes.json",
+    "profileId": "252d-4948-967b-a247",
+    "profileName": "Javelin Speeder",
+    "unitName": "Javelin Squadron"
+  },
+  "land_speeder": {
+    "file": "Legiones Astartes.json",
+    "profileId": "8b50-82d6-aded-cf10",
+    "profileName": "Land Speeder",
+    "unitName": "Land Speeder Squadron"
+  },
+  "cerberus": {
+    "file": "Legiones Astartes.json",
+    "profileId": "e7da-fd8f-5088-39c2",
+    "profileName": "Cerberus Heavy Tank Destroyer",
+    "unitName": "Cerberus Heavy Tank Destroyer"
+  },
+  "typhon": {
+    "file": "Legiones Astartes.json",
+    "profileId": "64ac-6285-4e96-7a3b",
+    "profileName": "Typhon Heavy Siege Tank",
+    "unitName": "Typhon Heavy Siege Tank"
+  },
+  "glaive": {
+    "file": "Legiones Astartes.json",
+    "profileId": "af76-432a-1421-e12f",
+    "profileName": "Glaive Super-Heavy Special Weapons Tank",
+    "unitName": "Glaive Super-Heavy"
+  },
+  "fellblade": {
+    "file": "Legiones Astartes.json",
+    "profileId": "1149-0d9a-dfd2-0f82",
+    "profileName": "Fellblade Super-Heavy Tank",
+    "unitName": "Fellblade Super-Heavy"
+  },
+  "falchion": {
+    "file": "Legiones Astartes.json",
+    "profileId": "d383-994f-c54b-5027",
+    "profileName": "Falchion Super-Heavy Tank Destroyer",
+    "unitName": "Falchion Super-Heavy"
+  },
+  "thunderhawk": {
+    "file": "Legiones Astartes.json",
+    "profileId": "87c2-48c6-931c-949f",
+    "profileName": "Thunderhawk Gunship",
+    "unitName": "Thunderhawk Gunship"
+  },
+  "daemon_greater": {
+    "file": "Daemons.json",
+    "profileId": "1c9b-2140-d179-ccf3",
+    "profileName": "Greater Daemon Beast",
+    "unitName": "Greater Daemon"
+  },
+  "daemon_lesser": {
+    "file": "Daemons.json",
+    "profileId": "8215-b9b3-9a35-464e",
+    "profileName": "Lesser Daemon",
+    "unitName": "Lesser Daemon"
+  },
+  "legate_cmd_sa": {
+    "file": "Solar Auxilia.json",
+    "profileId": "91af-c018-9c49-b5ca",
+    "profileName": "Legate Marshall",
+    "unitName": "Legatine Command Section"
+  },
+  "tactical_cmd_sa": {
+    "file": "Solar Auxilia.json",
+    "profileId": "e457-1269-aa39-69c4",
+    "profileName": "Auxilia Captain",
+    "unitName": "Tactical Command Section"
+  },
+  "line_cmd_sa": {
+    "file": "Solar Auxilia.json",
+    "profileId": "03c6-c26a-d824-60ed",
+    "profileName": "Troop Master",
+    "unitName": "Line Command Section"
+  },
+  "veletaris_cmd_sa": {
+    "file": "Solar Auxilia.json",
+    "profileId": "7c37-2e51-cf89-e5f8",
+    "profileName": "First Prime",
+    "unitName": "Veletaris Command Section"
+  },
+  "hermes_cmd_sa": {
+    "file": "Solar Auxilia.json",
+    "profileId": "aed7-86c8-f53f-16b3",
+    "profileName": "Hermes Lead",
+    "unitName": "Hermes Command Section"
+  },
+  "artillery_cmd_sa": {
+    "file": "Solar Auxilia.json",
+    "profileId": "90ed-b8f0-7758-57ff",
+    "profileName": "Ordnance Master",
+    "unitName": "Artillery Command Section"
+  },
+  "armoured_cmd_sa": {
+    "file": "Solar Auxilia.json",
+    "profileId": "19f1-e1d8-6ac8-53e7",
+    "profileName": "Command Tank",
+    "unitName": "Armoured Command Section"
+  },
+  "lasrifle": {
+    "file": "Solar Auxilia.json",
+    "profileId": "824b-e1c4-fe0b-c93e",
+    "profileName": "Auxilia",
+    "unitName": "Lasrifle Section"
+  },
+  "veletaris": {
+    "file": "Solar Auxilia.json",
+    "profileId": "6954-6685-bdb7-44d9",
+    "profileName": "Veletarii",
+    "unitName": "Veletaris Storm Section"
+  },
+  "veletaris_vanguard_sa": {
+    "file": "Solar Auxilia.json",
+    "profileId": "37c8-d571-1d68-ddd4",
+    "profileName": "Veletarii",
+    "unitName": "Veletaris Vanguard Section"
+  },
+  "charonite_sa": {
+    "file": "Solar Auxilia.json",
+    "profileId": "8739-f535-a73c-eddc",
+    "profileName": "Charonite ogryn",
+    "unitName": "Charonite Ogryn Section"
+  },
+  "rapier": {
+    "file": "Solar Auxilia.json",
+    "profileId": "16a8-1150-14f6-48f6",
+    "profileName": "Rapier Carrier",
+    "unitName": "Auxilia Rapier Section"
+  },
+  "basilisk_sa": {
+    "file": "Solar Auxilia.json",
+    "profileId": "7619-ac46-ce6b-c822",
+    "profileName": "Basilisk",
+    "unitName": "Basilisk Artillery Tank"
+  },
+  "medusa_sa": {
+    "file": "Solar Auxilia.json",
+    "profileId": "d64f-b818-ee78-10a9",
+    "profileName": "Basilisk",
+    "unitName": "Medusa Artillery Tank"
+  },
+  "aethon_sa": {
+    "file": "Solar Auxilia.json",
+    "profileId": "d847-29d1-035d-463c",
+    "profileName": "Aethon Heavy Sentinel",
+    "unitName": "Aethon Heavy Sentinel Sqdn"
+  },
+  "hermes_light_sa": {
+    "file": "Solar Auxilia.json",
+    "profileId": "d3f2-8912-1a6b-78ee",
+    "profileName": "Hermes Light Sentinel",
+    "unitName": "Hermes Light Sentinel Sqdn"
+  },
+  "hermes_vel_sa": {
+    "file": "Solar Auxilia.json",
+    "profileId": "87c8-77ba-852e-fd7a",
+    "profileName": "Hermes Veletaris Sentinel",
+    "unitName": "Hermes Veletaris Squadron"
+  },
+  "primaris_lightning_sa": {
+    "file": "Solar Auxilia.json",
+    "profileId": "d61a-9f1b-f8ef-aafb",
+    "profileName": "Primaris-Lightning",
+    "unitName": "Primaris-Lightning Strike Fighter"
+  },
+  "thunderbolt_sa": {
+    "file": "Solar Auxilia.json",
+    "profileId": "12ad-b8af-7f1f-0ac5",
+    "profileName": "Thunderbolt",
+    "unitName": "Thunderbolt Heavy Fighter"
+  },
+  "arvus_sa": {
+    "file": "Solar Auxilia.json",
+    "profileId": "078e-85d4-4c66-b20d",
+    "profileName": "Arvus Lighter",
+    "unitName": "Arvus Lighter"
+  },
+  "dracosan_sa": {
+    "file": "Solar Auxilia.json",
+    "profileId": "857f-b563-6eba-0cd1",
+    "profileName": "Dracosan",
+    "unitName": "Dracosan Armoured Transport"
+  },
+  "leman_russ_strike_sa": {
+    "file": "Solar Auxilia.json",
+    "profileId": "8974-5d41-88c6-5a8b",
+    "profileName": "Leman Russ Strike Tank",
+    "unitName": "Leman Russ Strike Tank"
+  },
+  "leman_russ_assault_sa": {
+    "file": "Solar Auxilia.json",
+    "profileId": "5aaa-e6f7-d666-055b",
+    "profileName": "Leman Russ Assault Tank",
+    "unitName": "Leman Russ Assault Tank"
+  },
+  "malcador_sa": {
+    "file": "Solar Auxilia.json",
+    "profileId": "ea69-e7b4-d5f4-a2dc",
+    "profileName": "Malcador",
+    "unitName": "Malcador Heavy Tank"
+  },
+  "malcador_infernus_sa": {
+    "file": "Solar Auxilia.json",
+    "profileId": "a110-5e56-551c-1896",
+    "profileName": "Malcador Infernus",
+    "unitName": "Malcador Infernus"
+  },
+  "valdor_sa": {
+    "file": "Solar Auxilia.json",
+    "profileId": "0091-544b-3cbb-c342",
+    "profileName": "Valdor Tank Destroyer",
+    "unitName": "Valdor Tank Destroyer"
+  },
+  "stormhammer_sa": {
+    "file": "Solar Auxilia.json",
+    "profileId": "cc91-5717-394c-adca",
+    "profileName": "Stormhammer",
+    "unitName": "Stormhammer Super-Heavy"
+  },
+  "valdor_c": {
+    "file": "Legio Custodes.json",
+    "profileId": "7651-dd1b-abd8-d756",
+    "profileName": "Constantin Valdor",
+    "unitName": "Constantin Valdor"
+  },
+  "tribune_c": {
+    "file": "Legio Custodes.json",
+    "profileId": "19d6-60b0-5514-750e",
+    "profileName": "Tribune",
+    "unitName": "Tribune"
+  },
+  "shield_captain_c": {
+    "file": "Legio Custodes.json",
+    "profileId": "99ca-46e9-d753-65e9",
+    "profileName": "Shield Captain",
+    "unitName": "Shield Captain"
+  },
+  "custodian_guard_c": {
+    "file": "Legio Custodes.json",
+    "profileId": "67d0-1fb6-0f01-9ca9",
+    "profileName": "Custodian Guard",
+    "unitName": "Custodian Guard Sodality"
+  },
+  "sentinel_guard_c": {
+    "file": "Legio Custodes.json",
+    "profileId": "6a15-472e-369d-4a4d",
+    "profileName": "Sentinel Guard",
+    "unitName": "Sentinel Guard Sodality"
+  },
+  "aquilon_c": {
+    "file": "Legio Custodes.json",
+    "profileId": "f90d-62ca-95d1-7a3f",
+    "profileName": "Aquilon Terminator",
+    "unitName": "Aquilon Terminator Sodality"
+  },
+  "telemon_c": {
+    "file": "Legio Custodes.json",
+    "profileId": "7413-d8d7-14f5-a509",
+    "profileName": "Telemon Heavy Dreadnought",
+    "unitName": "Telemon Heavy Dreadnought"
+  },
+  "contemptor_achillus_c": {
+    "file": "Legio Custodes.json",
+    "profileId": "31da-d3c9-35c4-6911",
+    "profileName": "Contemptor-Achillus Dreadnought",
+    "unitName": "Contemptor-Achillus Dreadnought"
+  },
+  "contemptor_galatus_c": {
+    "file": "Legio Custodes.json",
+    "profileId": "5cd1-fbce-3e1c-d50b",
+    "profileName": "Contemptor-Galatus Dreadnought",
+    "unitName": "Contemptor-Galatus Dreadnought"
+  },
+  "gyrfalcon_c": {
+    "file": "Legio Custodes.json",
+    "profileId": "fc95-3edd-4409-aad5",
+    "profileName": "Gyrfalcon Agamatus",
+    "unitName": "Gyrfalcon Jetbike Sodality"
+  },
+  "pallas_c": {
+    "file": "Legio Custodes.json",
+    "profileId": "94f9-ba54-0ddc-d01c",
+    "profileName": "Pallas Grav-Attack",
+    "unitName": "Pallas Grav-attack"
+  },
+  "coronus_c": {
+    "file": "Legio Custodes.json",
+    "profileId": "9747-ac9b-fc02-9021",
+    "profileName": "Coronus Grav-Carrier",
+    "unitName": "Coronus Grav-carrier"
+  },
+  "caladius_c": {
+    "file": "Legio Custodes.json",
+    "profileId": "b63e-a102-fba7-f8d5",
+    "profileName": "Caladius Grav-Tank",
+    "unitName": "Caladius Grav-tank"
+  },
+  "orion_c": {
+    "file": "Legio Custodes.json",
+    "profileId": "7ab7-c323-48ed-5581",
+    "profileName": "Orion Assault Dropship",
+    "unitName": "Orion Assault Dropship"
+  },
+  "ares_c": {
+    "file": "Legio Custodes.json",
+    "profileId": "b29a-331a-9f40-29bc",
+    "profileName": "Ares Gunship",
+    "unitName": "Ares Gunship"
+  },
+  "adrasite_guard_c": {
+    "file": "Legio Custodes.json",
+    "profileId": "5c95-23c9-6cf1-a700",
+    "profileName": "Adrasite Guard",
+    "unitName": "Adrasite Guard Sodality"
+  },
+  "pyrithite_guard_c": {
+    "file": "Legio Custodes.json",
+    "profileId": "e0e7-c8e3-1c58-edac",
+    "profileName": "Pyrithite Guard",
+    "unitName": "Pyrithite Guard Sodality"
+  },
+  "sagittarum": {
+    "file": "Legio Custodes.json",
+    "profileId": "8fb0-8e2a-97c8-844f",
+    "profileName": "Sagittarum Guard",
+    "unitName": "Sagittarum Guard Sodality"
+  },
+  "venatari_c": {
+    "file": "Legio Custodes.json",
+    "profileId": "63bc-af6d-1841-19e8",
+    "profileName": "Venatari",
+    "unitName": "Venatari Sodality"
+  },
+  "ogryn": {
+    "file": "Solar Auxilia.json",
+    "profileId": "8739-f535-a73c-eddc",
+    "profileName": "Charonite ogryn",
+    "unitName": "Ogryn Charonite (Allied)"
+  },
+  "archmagos_tm": {
+    "file": "Mechanicum.json",
+    "profileId": "3c15-4d03-1c0e-1d6b",
+    "profileName": "Archmagos",
+    "unitName": "Archmagos"
+  },
+  "archmagos_abeyant_tm": {
+    "file": "Mechanicum.json",
+    "profileId": "f975-3452-645d-a7e3",
+    "profileName": "Archmagos on Abeyant",
+    "unitName": "Archmagos on Abeyant"
+  },
+  "scoria_mm": {
+    "file": "Mechanicum.json",
+    "profileId": "a891-2a9a-723a-6092",
+    "profileName": "Anacharis Scoria",
+    "unitName": "Archmagos Scoria"
+  },
+  "draykavac_mm": {
+    "file": "Mechanicum.json",
+    "profileId": "d8a8-ada2-33d4-d888",
+    "profileName": "Archmagos Draykavac",
+    "unitName": "Archmagos Draykavac"
+  },
+  "magos_tm": {
+    "file": "Mechanicum.json",
+    "profileId": "795f-50f7-decf-c1c1",
+    "profileName": "Magos",
+    "unitName": "Magos"
+  },
+  "magos_abeyant_tm": {
+    "file": "Mechanicum.json",
+    "profileId": "3f71-d79f-f8de-26c3",
+    "profileName": "Magos on Abeyant",
+    "unitName": "Magos on Abeyant"
+  },
+  "arcuitor_tm": {
+    "file": "Mechanicum.json",
+    "profileId": "edbd-bbc8-17b4-a372",
+    "profileName": "Arcuitor",
+    "unitName": "Arcuitor Magisterium"
+  },
+  "scyllax_tm": {
+    "file": "Mechanicum.json",
+    "profileId": "1966-333c-549c-c9e1",
+    "profileName": "Scyllax",
+    "unitName": "Scyllax Guardian Maniple"
+  },
+  "secutor_tm": {
+    "file": "Mechanicum.json",
+    "profileId": "47de-4cdf-e436-8545",
+    "profileName": "Secutor",
+    "unitName": "Myrmidon Secutor Host"
+  },
+  "tech_priest_tm": {
+    "file": "Mechanicum.json",
+    "profileId": "7159-35f7-3d36-9e2b",
+    "profileName": "Tech-Priest",
+    "unitName": "Tech-Priest"
+  },
+  "tech_thrall_cov_tm": {
+    "file": "Mechanicum.json",
+    "profileId": "4370-1789-f524-280c",
+    "profileName": "Tech-Thrall",
+    "unitName": "Tech-Thrall Covenant"
+  },
+  "thallax_full_tm": {
+    "file": "Mechanicum.json",
+    "profileId": "6ea4-2de6-ca0a-68d6",
+    "profileName": "Thallax",
+    "unitName": "Thallax Cohort (Full)"
+  },
+  "thallax": {
+    "file": "Mechanicum.json",
+    "profileId": "6ea4-2de6-ca0a-68d6",
+    "profileName": "Thallax",
+    "unitName": "Thallax Cohort"
+  },
+  "tech_thrall": {
+    "file": "Mechanicum.json",
+    "profileId": "4370-1789-f524-280c",
+    "profileName": "Tech-Thrall",
+    "unitName": "Tech-Thrall Adsecularis"
+  },
+  "ursarax_tm": {
+    "file": "Mechanicum.json",
+    "profileId": "c85f-7be6-55eb-7056",
+    "profileName": "Ursarax",
+    "unitName": "Ursarax Cohort"
+  },
+  "echidnax_tm": {
+    "file": "Mechanicum.json",
+    "profileId": "e0ac-9163-722d-c1df",
+    "profileName": "Echidnax",
+    "unitName": "Echidnax Servo Maniple"
+  },
+  "destructor_tm": {
+    "file": "Mechanicum.json",
+    "profileId": "ec51-6679-10d9-2c14",
+    "profileName": "Destructor",
+    "unitName": "Myrmidon Destructor Host"
+  },
+  "myrmidon_dest": {
+    "file": "Mechanicum.json",
+    "profileId": "ec51-6679-10d9-2c14",
+    "profileName": "Destructor",
+    "unitName": "Myrmidon Destructor"
+  },
+  "domitar_tm": {
+    "file": "Mechanicum.json",
+    "profileId": "d344-8f43-9553-1910",
+    "profileName": "Domitar",
+    "unitName": "Domitar Battle Maniple"
+  },
+  "castellax_dest_tm": {
+    "file": "Mechanicum.json",
+    "profileId": "5b06-97e7-2f56-8988",
+    "profileName": "Castellax",
+    "unitName": "Castellax Destructor Maniple"
+  },
+  "castellax_battle_tm": {
+    "file": "Mechanicum.json",
+    "profileId": "ae78-60ff-b8a0-b835",
+    "profileName": "Castellax",
+    "unitName": "Castellax Battle Maniple"
+  },
+  "thanatar_siege_tm": {
+    "file": "Mechanicum.json",
+    "profileId": "679b-45bf-4615-6d1d",
+    "profileName": "Thanatar",
+    "unitName": "Thanatar Siege Maniple"
+  },
+  "armiger_tm": {
+    "file": "Mechanicum.json",
+    "profileId": "51bf-e7ea-41ca-3453",
+    "profileName": "Armiger Moirax",
+    "unitName": "Armiger Moirax"
+  },
+  "decimator_mm": {
+    "file": "Mechanicum.json",
+    "profileId": "38e1-a2a9-57d3-b612",
+    "profileName": "Decimator",
+    "unitName": "Decimator"
+  },
+  "blood_slaughterer_mm": {
+    "file": "Mechanicum.json",
+    "profileId": "1d63-2bc3-4fa9-b3e4",
+    "profileName": "Blood Slaughterer",
+    "unitName": "Blood Slaughterer"
+  },
+  "castellax": {
+    "file": "Mechanicum.json",
+    "profileId": "ae78-60ff-b8a0-b835",
+    "profileName": "Castellax",
+    "unitName": "Castellax Battle-Automata"
+  },
+  "thanatar": {
+    "file": "Mechanicum.json",
+    "profileId": "679b-45bf-4615-6d1d",
+    "profileName": "Thanatar",
+    "unitName": "Thanatar Siege-Automata"
+  },
+  "vorax": {
+    "file": "Mechanicum.json",
+    "profileId": "3b65-08f7-fa6d-37c4",
+    "profileName": "Vorax",
+    "unitName": "Vorax Battle-Automata"
+  },
+  "triaros_tm": {
+    "file": "Mechanicum.json",
+    "profileId": "5dcb-834e-2cbd-c974",
+    "profileName": "Triaros",
+    "unitName": "Triaros Armoured Conveyor"
+  },
+  "brass_scorpion_mm": {
+    "file": "Mechanicum.json",
+    "profileId": "a41e-ba06-f73e-fa84",
+    "profileName": "Brass Scorpion",
+    "unitName": "Brass Scorpion"
+  },
+  "kytan_mm": {
+    "file": "Mechanicum.json",
+    "profileId": "32dc-4c7e-4549-19e8",
+    "profileName": "Kytan",
+    "unitName": "Kytan Daemon Engine"
+  },
+  "custodian_guard": {
+    "file": "Legio Custodes.json",
+    "profileId": "67d0-1fb6-0f01-9ca9",
+    "profileName": "Custodian Guard",
+    "unitName": "Custodian Guard"
+  },
+  "aquilon": {
+    "file": "Legio Custodes.json",
+    "profileId": "f90d-62ca-95d1-7a3f",
+    "profileName": "Aquilon Terminator",
+    "unitName": "Aquilon Terminators"
+  },
+  "caladius": {
+    "file": "Legio Custodes.json",
+    "profileId": "b63e-a102-fba7-f8d5",
+    "profileName": "Caladius Grav-Tank",
+    "unitName": "Caladius Grav-Tank"
+  },
+  "corswain": {
+    "file": "Dark Angels.json",
+    "profileId": "4e3c-f62e-3bf6-bdc9",
+    "profileName": "Corswain",
+    "unitName": "Corswain (I - High Cmd)"
+  },
+  "marduk_sedras": {
+    "file": "Dark Angels.json",
+    "profileId": "03cf-486a-0bef-4c02",
+    "profileName": "Marduk Sedras",
+    "unitName": "Marduk Sedras (I - High Cmd)"
+  },
+  "deathwing_comp": {
+    "file": "Dark Angels.json",
+    "profileId": "1908-f6a7-dab1-8040",
+    "profileName": "Deathwing Companion",
+    "unitName": "Deathwing Companion (I - Elite)"
+  },
+  "dreadwing_inter": {
+    "file": "Dark Angels.json",
+    "profileId": "311f-894e-8b2f-f776",
+    "profileName": "Interemptor",
+    "unitName": "Dreadwing Interemptor (I - Troops)"
+  },
+  "inner_circle_knight": {
+    "file": "Dark Angels.json",
+    "profileId": "f02a-ca40-76e4-8ee3",
+    "profileName": "Order Cenobite",
+    "unitName": "Inner Circle Knight Cenobite (I - Elite)"
+  },
+  "eidolon": {
+    "file": "Emperor's Children.json",
+    "profileId": "2e05-5c4b-7709-f403",
+    "profileName": "Lord Commander Eidolon",
+    "unitName": "Lord Cdr Eidolon (III - High Cmd)"
+  },
+  "lucius": {
+    "file": "Emperor's Children.json",
+    "profileId": "af4c-24fd-ddee-fb6f",
+    "profileName": "Captain Lucius",
+    "unitName": "Captain Lucius (III - Cmd)"
+  },
+  "saul_tarvitz": {
+    "file": "Emperor's Children.json",
+    "profileId": "c6ff-e38a-5bbc-ca8d",
+    "profileName": "Saul Tarvitz",
+    "unitName": "Saul Tarvitz (III - Cmd)"
+  },
+  "phoenix_term": {
+    "file": "Emperor's Children.json",
+    "profileId": "36ff-f0a8-dd16-a309",
+    "profileName": "Phoenix Terminator",
+    "unitName": "Phoenix Terminator (III - H.Assault)"
+  },
+  "palatine_blade": {
+    "file": "Emperor's Children.json",
+    "profileId": "23c4-f6e7-5261-e202",
+    "profileName": "Palatine Warrior",
+    "unitName": "Palatine Blade (III - Elite)"
+  },
+  "kakophoni": {
+    "file": "Emperor's Children.json",
+    "profileId": "47d7-231a-6601-7ce1",
+    "profileName": "Chora",
+    "unitName": "Kakophoni (III - Support)"
+  },
+  "warsmith": {
+    "file": "Iron Warriors.json",
+    "profileId": "8700-f29c-da93-754e",
+    "profileName": "Warsmith",
+    "unitName": "Warsmith (IV - High Cmd)"
+  },
+  "tyrant_siege_term": {
+    "file": "Iron Warriors.json",
+    "profileId": "95e6-7130-9305-fb88",
+    "profileName": "Tyrant",
+    "unitName": "Tyrant Siege Terminator (IV - H.Assault)"
+  },
+  "domitar_ferrum": {
+    "file": "Iron Warriors.json",
+    "profileId": "afdc-6454-f249-34f3",
+    "profileName": "Domitar-ferrum",
+    "unitName": "Domitar-Ferrum Iron Circle (IV - War Engine)"
+  },
+  "qin_xa": {
+    "file": "White Scars.json",
+    "profileId": "8da9-7f3d-2e61-213f",
+    "profileName": "Qin Xa",
+    "unitName": "Qin Xa (V - High Cmd)"
+  },
+  "hibou_khan": {
+    "file": "White Scars.json",
+    "profileId": "b074-b4c8-a8b7-2137",
+    "profileName": "Hibou Khan",
+    "unitName": "Hibou Khan (V - Cmd)"
+  },
+  "stormseer": {
+    "file": "White Scars.json",
+    "profileId": "aa36-64a0-92d4-22ae",
+    "profileName": "Stormseer",
+    "unitName": "Stormseer (V - Cmd)"
+  },
+  "keshig_rider": {
+    "file": "White Scars.json",
+    "profileId": "919c-d310-11d1-e872",
+    "profileName": "Keshing Rider",
+    "unitName": "Keshig Rider (V - Fast Attack)"
+  },
+  "kharash": {
+    "file": "White Scars.json",
+    "profileId": "0ba9-041c-7e52-3487",
+    "profileName": "Kharash",
+    "unitName": "Kharash Ebon Keshig (V - Elite)"
+  },
+  "kyzagan": {
+    "file": "White Scars.json",
+    "profileId": "e449-31d6-ef09-8bbe",
+    "profileName": "Kyzagan",
+    "unitName": "Kyzagan Assault Speeder (V - Recon)"
+  },
+  "hvarl": {
+    "file": "Space Wolves.json",
+    "profileId": "2419-5d73-8631-f262",
+    "profileName": "Hvarl Red-Blade",
+    "unitName": "Hvarl Red-Blade (VI - High Cmd)"
+  },
+  "geigor": {
+    "file": "Space Wolves.json",
+    "profileId": "d005-ae99-9b77-3dab",
+    "profileName": "Geigor Fell-Hand",
+    "unitName": "Geigor Fell-Hand (VI - Cmd)"
+  },
+  "caster_of_runes": {
+    "file": "Space Wolves.json",
+    "profileId": "72df-ed67-ed1d-4aa9",
+    "profileName": "Caster of Runes",
+    "unitName": "Caster of Runes (VI - Cmd)"
+  },
+  "varagyr": {
+    "file": "Space Wolves.json",
+    "profileId": "cee3-190b-618a-6ee8",
+    "profileName": "Varagyr",
+    "unitName": "Varagyr Wolf Guard (VI - H.Assault)"
+  },
+  "deathsworn": {
+    "file": "Space Wolves.json",
+    "profileId": "9632-b977-8572-c46d",
+    "profileName": "Deathsworn",
+    "unitName": "Deathsworn (VI - Elite)"
+  },
+  "grey_slayer": {
+    "file": "Space Wolves.json",
+    "profileId": "9ebe-f963-0acf-22e4",
+    "profileName": "Grey Slayer",
+    "unitName": "Grey Slayer Pack (VI - Troops)"
+  },
+  "sigismund": {
+    "file": "Imperial Fists.json",
+    "profileId": "d7ec-110a-6ab4-613a",
+    "profileName": "Sigismund",
+    "unitName": "Sigismund (VII - High Cmd)"
+  },
+  "fafnir_rann": {
+    "file": "Imperial Fists.json",
+    "profileId": "ef22-33ee-09c0-262f",
+    "profileName": "Fafnir Rann",
+    "unitName": "Fafnir Rann (VII - High Cmd)"
+  },
+  "evander_garrius": {
+    "file": "Imperial Fists.json",
+    "profileId": "5d3e-b21a-f71d-b2e2",
+    "profileName": "Evander Garrius ",
+    "unitName": "Evander Garrius (VII - High Cmd)"
+  },
+  "camba_diaz": {
+    "file": "Imperial Fists.json",
+    "profileId": "c14d-9d7e-acfb-8b9b",
+    "profileName": "Camba Diaz",
+    "unitName": "Camba Diaz (VII - Cmd)"
+  },
+  "alexis_polux": {
+    "file": "Imperial Fists.json",
+    "profileId": "43da-2a5c-4b79-cc98",
+    "profileName": "Alexis Polux",
+    "unitName": "Alexis Polux (VII - Cmd)"
+  },
+  "templar_brethren": {
+    "file": "Imperial Fists.json",
+    "profileId": "c412-f8b2-987d-614e",
+    "profileName": "Templar Brethren",
+    "unitName": "Templar Brethren (VII - Elite)"
+  },
+  "phalanx_warder": {
+    "file": "Imperial Fists.json",
+    "profileId": "e8bb-19e5-a1df-38b3",
+    "profileName": "Phalanx Warder",
+    "unitName": "Phalanx Warder (VII - Troops)"
+  },
+  "sevatar": {
+    "file": "Night Lords.json",
+    "profileId": "1752-25a6-12bc-c51f",
+    "profileName": "Sevatar",
+    "unitName": "Sevatar (VIII - High Cmd)"
+  },
+  "contekar": {
+    "file": "Night Lords.json",
+    "profileId": "fa47-5dba-4e80-846c",
+    "profileName": "Contekar",
+    "unitName": "Contekar Terminator (VIII - H.Assault)"
+  },
+  "executioner_nl": {
+    "file": "Night Lords.json",
+    "profileId": "9601-8391-1bb4-199f",
+    "profileName": "Executioner",
+    "unitName": "Night Lords Executioner (VIII - Troops)"
+  },
+  "night_raptor": {
+    "file": "Night Lords.json",
+    "profileId": "9a7d-6598-97a0-bde4",
+    "profileName": "Night Raptor",
+    "unitName": "Night Raptor (VIII - Fast Attack)"
+  },
+  "raldoron": {
+    "file": "Blood Angels.json",
+    "profileId": "1723-ea0b-51e4-76e7",
+    "profileName": "Raldoron",
+    "unitName": "Raldoron (IX - High Cmd)"
+  },
+  "dom_zephon": {
+    "file": "Blood Angels.json",
+    "profileId": "9a97-bf02-e28c-bd79",
+    "profileName": "Dominion Zephon",
+    "unitName": "Dominion Zephon (IX - Cmd)"
+  },
+  "aster_crohne": {
+    "file": "Blood Angels.json",
+    "profileId": "629d-566c-d9c5-4982",
+    "profileName": "Aster Chrone",
+    "unitName": "Aster Crohne (IX - Cmd)"
+  },
+  "crimson_paladin": {
+    "file": "Blood Angels.json",
+    "profileId": "f7ca-bf1e-4c33-0582",
+    "profileName": "Crimson Paladin",
+    "unitName": "Crimson Paladin (IX - Elite)"
+  },
+  "dawnbreaker": {
+    "file": "Blood Angels.json",
+    "profileId": "ec22-3c3e-1afe-f99c",
+    "profileName": "Dawnbreaker",
+    "unitName": "Dawnbreaker Guard (IX - Fast Attack)"
+  },
+  "dawnbreaker_cohort": {
+    "file": "Blood Angels.json",
+    "profileId": "ec22-3c3e-1afe-f99c",
+    "profileName": "Dawnbreaker",
+    "unitName": "Dawnbreaker Cohort (IX - Elite)"
+  },
+  "erelim": {
+    "file": "Blood Angels.json",
+    "profileId": "5684-f263-2c5e-acdf",
+    "profileName": "Erelim",
+    "unitName": "Erelim Assault (IX - Troops)"
+  },
+  "contemp_incaendius": {
+    "file": "Blood Angels.json",
+    "profileId": "4810-ab7a-2108-1d04",
+    "profileName": "Contemptor-Incaendius Dreadnought",
+    "unitName": "Contemptor-Incaendius (IX - War Engine)"
+  },
+  "shadrak_meduson": {
+    "file": "Iron Hands.json",
+    "profileId": "016e-ff38-614a-3775",
+    "profileName": "Shadrak Meduson",
+    "unitName": "Shadrak Meduson (X - High Cmd)"
+  },
+  "iron_father": {
+    "file": "Iron Hands.json",
+    "profileId": "ca21-fd6e-fbb7-c84f",
+    "profileName": "Iron Father",
+    "unitName": "Iron Father (X - High Cmd)"
+  },
+  "gorgon_term": {
+    "file": "Iron Hands.json",
+    "profileId": "fcf1-9242-2fbe-9286",
+    "profileName": "Gorgon Terminator",
+    "unitName": "Gorgon Terminator (X - H.Assault)"
+  },
+  "immortal_ih": {
+    "file": "Iron Hands.json",
+    "profileId": "087c-e337-8a83-ff3f",
+    "profileName": "Immortal",
+    "unitName": "Immortal (X - Troops)"
+  },
+  "kharn": {
+    "file": "World Eaters.json",
+    "profileId": "48d2-d5b9-500b-6788",
+    "profileName": "Kharn the Bloody",
+    "unitName": "Khârn the Bloody (XII - High Cmd)"
+  },
+  "lotara_sarrin": {
+    "file": "World Eaters.json",
+    "profileId": "449a-ae67-1964-ecee",
+    "profileName": "Lotara Sarrin",
+    "unitName": "Lotara Sarrin (XII - Cmd)"
+  },
+  "red_butcher": {
+    "file": "World Eaters.json",
+    "profileId": "4cdf-ffe7-95ce-4080",
+    "profileName": "Red Butcher",
+    "unitName": "Red Butcher (XII - H.Assault)"
+  },
+  "rampager": {
+    "file": "World Eaters.json",
+    "profileId": "91a7-32e2-6c5d-11b0",
+    "profileName": "Rampager",
+    "unitName": "Rampager (XII - Elite)"
+  },
+  "remus_ventanus": {
+    "file": "Ultramarines.json",
+    "profileId": "2b45-a049-f298-0b65",
+    "profileName": "Remus Ventanus",
+    "unitName": "Remus Ventanus (XIII - High Cmd)"
+  },
+  "invictarus_suz": {
+    "file": "Ultramarines.json",
+    "profileId": "068a-5c6a-c809-029e",
+    "profileName": "Suzerain",
+    "unitName": "Invictarus Suzerain (XIII - Elite)"
+  },
+  "praetorian_um": {
+    "file": "Ultramarines.json",
+    "profileId": "dec5-3873-7048-b2fb",
+    "profileName": "Praetorian",
+    "unitName": "Praetorian Guard (XIII - Troops)"
+  },
+  "calas_typhon": {
+    "file": "Death Guard.json",
+    "profileId": "d09e-5ca6-ec02-3c68",
+    "profileName": "Calas Typhon",
+    "unitName": "Calas Typhon (XIV - High Cmd)"
+  },
+  "deathshroud": {
+    "file": "Death Guard.json",
+    "profileId": "f125-29e2-9363-467d",
+    "profileName": "Deathshroud",
+    "unitName": "Deathshroud Terminator (XIV - H.Assault)"
+  },
+  "grave_warden": {
+    "file": "Death Guard.json",
+    "profileId": "32cb-6632-4816-6f92",
+    "profileName": "Grave Warden",
+    "unitName": "Grave Warden Terminator (XIV - H.Assault)"
+  },
+  "ahriman": {
+    "file": "Thousand Sons.json",
+    "profileId": "69f8-1a11-28f0-74ee",
+    "profileName": "Ahzek Ahriman",
+    "unitName": "Ahzek Ahriman (XV - High Cmd)"
+  },
+  "magistus_amon": {
+    "file": "Thousand Sons.json",
+    "profileId": "253d-02a2-92b0-c8ea",
+    "profileName": "Magistus Amon",
+    "unitName": "Magistus Amon (XV - Cmd)"
+  },
+  "prosperine_sorc": {
+    "file": "Thousand Sons.json",
+    "profileId": "434a-ff0c-7cfe-3bc2",
+    "profileName": "Prosperine Sorcerer",
+    "unitName": "Prosperine Sorcerer (XV - Cmd)"
+  },
+  "sekhmet": {
+    "file": "Thousand Sons.json",
+    "profileId": "77df-bf66-7cd6-cc08",
+    "profileName": "Sekhmet",
+    "unitName": "Sekhmet Terminator (XV - H.Assault)"
+  },
+  "khenetai_blade": {
+    "file": "Thousand Sons.json",
+    "profileId": "21cd-7a54-9083-f94c",
+    "profileName": "Khenetai Blade",
+    "unitName": "Khenetai Blade Cult (XV - Elite)"
+  },
+  "castellax_achea": {
+    "file": "Thousand Sons.json",
+    "profileId": "616d-0041-de47-322f",
+    "profileName": "Castellax-Achea",
+    "unitName": "Castellax-Achea Automata (XV - War Engine)"
+  },
+  "contemp_osiron": {
+    "file": "Thousand Sons.json",
+    "profileId": "6fa6-595e-0d36-f4bc",
+    "profileName": "Contemptor-Osiron Dreadnought",
+    "unitName": "Contemptor-Osiron (XV - War Engine)"
+  },
+  "ezekyle_abaddon": {
+    "file": "Sons of Horus.json",
+    "profileId": "5b5d-14fa-b780-38a6",
+    "profileName": "Ezekyle Abaddon",
+    "unitName": "Ezekyle Abaddon (XVI - High Cmd)"
+  },
+  "little_horus": {
+    "file": "Sons of Horus.json",
+    "profileId": "88b3-6f52-9636-9a29",
+    "profileName": "Horus Aximand ",
+    "unitName": "'Little' Horus Aximand (XVI - High Cmd)"
+  },
+  "tybalt_marr": {
+    "file": "Sons of Horus.json",
+    "profileId": "21ea-e1a2-54c9-5b68",
+    "profileName": "Tybalt Marr",
+    "unitName": "Tybalt Marr (XVI - Cmd)"
+  },
+  "vheren_ash": {
+    "file": "Sons of Horus.json",
+    "profileId": "f0f5-4b75-d429-99bd",
+    "profileName": "Vheren Ashurhaddon",
+    "unitName": "Vheren Ashurhaddon (XVI - Cmd)"
+  },
+  "garviel_loken": {
+    "file": "Sons of Horus.json",
+    "profileId": "0fec-00e1-e665-9e4a",
+    "profileName": "Garviel Loken",
+    "unitName": "Garviel Loken (XVI - High Cmd)"
+  },
+  "maloghurst": {
+    "file": "Sons of Horus.json",
+    "profileId": "b645-ab6d-8405-be8d",
+    "profileName": "Maloghurst the Twisted",
+    "unitName": "Maloghurst the Twisted (XVI - Cmd)"
+  },
+  "dark_emissary": {
+    "file": "Sons of Horus.json",
+    "profileId": "c7ff-55bb-f502-4a44",
+    "profileName": "Dark Emmissary",
+    "unitName": "Dark Emissary (XVI - Cmd)"
+  },
+  "justaerin": {
+    "file": "Sons of Horus.json",
+    "profileId": "1b2d-763c-60e5-069a",
+    "profileName": "Justaerin",
+    "unitName": "Justaerin Terminator (XVI - H.Assault)"
+  },
+  "reaver_soh": {
+    "file": "Sons of Horus.json",
+    "profileId": "7403-fbb2-c739-6978",
+    "profileName": "Reaver",
+    "unitName": "Reaver Attack Squad (XVI - Elite)"
+  },
+  "kor_phaeron": {
+    "file": "Word Bearers.json",
+    "profileId": "25c6-0801-572c-bec7",
+    "profileName": "Kor Phaeron ",
+    "unitName": "Kor Phaeron (XVII - High Cmd)"
+  },
+  "erebus": {
+    "file": "Word Bearers.json",
+    "profileId": "4621-1f18-e3f9-ef71",
+    "profileName": "Erebus",
+    "unitName": "Erebus (XVII - Cmd)"
+  },
+  "argel_tal": {
+    "file": "Word Bearers.json",
+    "profileId": "5d5f-5b09-968a-06e4",
+    "profileName": "Argel Tal",
+    "unitName": "Argel Tal (XVII - Cmd)"
+  },
+  "zardu_layak": {
+    "file": "Word Bearers.json",
+    "profileId": "71f0-d3f2-2b83-abbf",
+    "profileName": "Zardu Layak ",
+    "unitName": "Zardu Layak (XVII - Cmd)"
+  },
+  "dark_brethren": {
+    "file": "Word Bearers.json",
+    "profileId": "1ebb-5bc6-410c-5e26",
+    "profileName": "Dark Brethren",
+    "unitName": "Dark Brethren Gal Vorbak (XVII - Elite)"
+  },
+  "anakatis_kul": {
+    "file": "Word Bearers.json",
+    "profileId": "1234-497a-328a-cc7b",
+    "profileName": "Anakatis Kul",
+    "unitName": "Anakatis Kul Blade-Slaves (XVII - Elite)"
+  },
+  "phraetus_conclave": {
+    "file": "Word Bearers.json",
+    "profileId": "d98e-333e-8785-a1db",
+    "profileName": "Phraetus Anointed",
+    "unitName": "Phraetus Anointed Conclave (XVII - Elite)"
+  },
+  "mhara_gal": {
+    "file": "Word Bearers.json",
+    "profileId": "4a1a-7544-14ee-33a7",
+    "profileName": "Mhara Gal Dreadnought",
+    "unitName": "Mhara Gal Dreadnought (XVII - War Engine)"
+  },
+  "incendiary_wb": {
+    "file": "Word Bearers.json",
+    "profileId": "945e-fcf1-814f-dbf9",
+    "profileName": "Incendiary",
+    "unitName": "Incendiary (XVII - Troops)"
+  },
+  "firedrake": {
+    "file": "Salamanders.json",
+    "profileId": "0a6f-4ea6-a07f-6c6e",
+    "profileName": "Firedrake",
+    "unitName": "Firedrake Terminator (XVIII - H.Assault)"
+  },
+  "pyroclast": {
+    "file": "Salamanders.json",
+    "profileId": "6529-a162-1db3-2928",
+    "profileName": "Pyroclast",
+    "unitName": "Pyroclast (XVIII - Support)"
+  },
+  "kaedes_nex": {
+    "file": "Raven Guard.json",
+    "profileId": "5361-0bb4-cb98-59d4",
+    "profileName": "Kaedes Nex",
+    "unitName": "Kaedes Nex (XIX - Cmd)"
+  },
+  "mor_deythan": {
+    "file": "Raven Guard.json",
+    "profileId": "4d06-550c-fd48-2bac",
+    "profileName": "Mor Deythan",
+    "unitName": "Mor Deythan (XIX - Recon)"
+  },
+  "dark_fury_rg": {
+    "file": "Raven Guard.json",
+    "profileId": "7308-7879-74b0-c7ff",
+    "profileName": "Dark Fury",
+    "unitName": "Dark Fury Assault (XIX - Fast Attack)"
+  },
+  "armillus_dynat": {
+    "file": "Alpha Legion.json",
+    "profileId": "56c3-ab3f-e0ae-d5c8",
+    "profileName": "Armillus Dynat",
+    "unitName": "Armillus Dynat (XX - High Cmd)"
+  },
+  "saboteur": {
+    "file": "Alpha Legion.json",
+    "profileId": "0ebf-259a-00bf-4cc2",
+    "profileName": "Saboteur",
+    "unitName": "Saboteur (XX - Cmd)"
+  },
+  "exodus_al": {
+    "file": "Alpha Legion.json",
+    "profileId": "cf59-c0b9-c80f-a1b3",
+    "profileName": "Exodus",
+    "unitName": "Exodus (XX - Cmd)"
+  },
+  "headhunter": {
+    "file": "Alpha Legion.json",
+    "profileId": "e514-7952-3896-dd40",
+    "profileName": "Headhunter",
+    "unitName": "Headhunter (XX - Recon)"
+  },
+  "lernaean": {
+    "file": "Alpha Legion.json",
+    "profileId": "ebc6-5deb-f492-53fc",
+    "profileName": "Lernaean",
+    "unitName": "Lernaean Terminator (XX - H.Assault)"
+  },
+  "mounted_praetor_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "b3ed-ceb5-4507-85f1",
+    "profileName": "Outrider Praetor",
+    "unitName": "Mounted Praetor [Legacy]"
+  },
+  "mounted_centurion_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "526a-2b4b-4d11-9b6c",
+    "profileName": "Outrider Centurion",
+    "unitName": "Mounted Centurion [Legacy]"
+  },
+  "librarian_jump_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "17ae-853a-4244-a33e",
+    "profileName": "Librarian with Jump Pack",
+    "unitName": "Librarian with Jump Pack [Legacy]"
+  },
+  "mounted_librarian_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "0724-6d12-4f41-afd2",
+    "profileName": "Outrider Librarian",
+    "unitName": "Mounted Librarian [Legacy]"
+  },
+  "librarian_term_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "6808-be93-4cf3-b00b",
+    "profileName": "Cataphractii Librarian",
+    "unitName": "Librarian in Terminator Armour [Legacy]"
+  },
+  "esoterist_jump_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "59dc-64ad-41be-859b",
+    "profileName": "Esoterist with Jump Pack",
+    "unitName": "Esoterist with Jump Pack [Legacy]"
+  },
+  "mounted_esoterist_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "9dd9-2796-4072-91d0",
+    "profileName": "Outrider Esoterist",
+    "unitName": "Mounted Esoterist [Legacy]"
+  },
+  "esoterist_term_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "e59c-5d2e-486b-b9ce",
+    "profileName": "Cataphractii Esoterist",
+    "unitName": "Esoterist in Terminator Armour [Legacy]"
+  },
+  "champion_jump_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "ec3f-0b61-45bb-be94",
+    "profileName": "Legion Champion with Jump Pack",
+    "unitName": "Legion Champion with Jump Pack [Legacy]"
+  },
+  "mounted_champion_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "1e18-f160-4966-b2a4",
+    "profileName": "Outrider Legion Champion",
+    "unitName": "Mounted Legion Champion [Legacy]"
+  },
+  "champion_term_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "4199-27ec-4c7a-90c0",
+    "profileName": "Cataphractii Legion Champion",
+    "unitName": "Legion Champion in Terminator Armour [Legacy]"
+  },
+  "chaplain_jump_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "8512-2030-4d1c-8ba8",
+    "profileName": "Chaplain with Jump Pack",
+    "unitName": "Chaplain with Jump Pack [Legacy]"
+  },
+  "mounted_chaplain_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "6455-6e39-4c23-968f",
+    "profileName": "Outrider Chaplain",
+    "unitName": "Mounted Chaplain [Legacy]"
+  },
+  "chaplain_term_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "5a74-5ca8-484b-8bd3",
+    "profileName": "Cataphractii Chaplain",
+    "unitName": "Chaplain in Terminator Armour [Legacy]"
+  },
+  "herald_jump_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "a516-82e2-4d06-8d28",
+    "profileName": "Herald with Jump Pack",
+    "unitName": "Herald with Jump Pack [Legacy]"
+  },
+  "mounted_herald_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "f41a-a760-4757-9321",
+    "profileName": "Outrider Herald",
+    "unitName": "Mounted Herald [Legacy]"
+  },
+  "herald_term_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "93fa-3fb6-414d-b4bc",
+    "profileName": "Cataphractii Herald",
+    "unitName": "Herald in Terminator Armour [Legacy]"
+  },
+  "siege_breaker_jump_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "d996-9ab6-4662-b839",
+    "profileName": "Siege Breaker with Jump Pack",
+    "unitName": "Siege Breaker with Jump Pack [Legacy]"
+  },
+  "mounted_siege_breaker_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "79fe-3486-4ec2-af96",
+    "profileName": "Outrider Siege Breaker",
+    "unitName": "Mounted Siege Breaker [Legacy]"
+  },
+  "siege_breaker_term_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "de43-1e67-46df-89bd",
+    "profileName": "Cataphractii Siege Breaker",
+    "unitName": "Siege Breaker in Terminator Armour [Legacy]"
+  },
+  "master_signals_jump_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "55cb-7989-42e4-8d57",
+    "profileName": "Master of Signals with Jump Pack",
+    "unitName": "Master of Signals with Jump Pack [Legacy]"
+  },
+  "mounted_master_signals_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "2f18-cc59-4e43-a2e4",
+    "profileName": "Outrider Master of Signals",
+    "unitName": "Mounted Master of Signals [Legacy]"
+  },
+  "moritat_mortalis_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "712d-cc05-4b7f-9eb5",
+    "profileName": "Moritat Mortalis",
+    "unitName": "Moritat Mortalis [Legacy]"
+  },
+  "forge_lord_mounted_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "72a3-556a-4a46-98e8",
+    "profileName": "Outrider Forge Lord",
+    "unitName": "Mounted Forge Lord [Legacy]"
+  },
+  "forge_lord_term_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "1681-83e8-4b5f-9098",
+    "profileName": "Cataphractii Forge Lord",
+    "unitName": "Forge Lord in Terminator Armour [Legacy]"
+  },
+  "primus_medicae_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "e24e-3738-4897-9d16",
+    "profileName": "Primus Medicae",
+    "unitName": "Primus Medicae [Legacy]"
+  },
+  "mounted_primus_medicae_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "8e28-dc6f-405a-9c30",
+    "profileName": "Outrider Primus Medicae",
+    "unitName": "Mounted Primus Medicae [Legacy]"
+  },
+  "primus_medicae_term_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "a198-a6cf-407f-98a6",
+    "profileName": "Cataphractii Primus Medicae",
+    "unitName": "Primus Medicae in Terminator Armour [Legacy]"
+  },
+  "delegatus_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "d67c-daa9-4c7c-825e",
+    "profileName": "Delegatus",
+    "unitName": "Delegatus [Legacy]"
+  },
+  "mounted_delegatus_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "24fe-6527-4706-9acf",
+    "profileName": "Outrider Delegatus",
+    "unitName": "Mounted Delegatus [Legacy]"
+  },
+  "delegatus_term_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "590f-8896-4ca4-bde8",
+    "profileName": "Cataphractii Delegatus",
+    "unitName": "Delegatus in Terminator Armour [Legacy]"
+  },
+  "mortificator_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "358d-1733-4e40-8d68",
+    "profileName": "Mortificator",
+    "unitName": "Mortificator [Legacy]"
+  },
+  "mortificator_term_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "9134-1b9b-4d8d-abbd",
+    "profileName": "Cataphractii Mortificator",
+    "unitName": "Mortificator in Terminator Armour [Legacy]"
+  },
+  "warmonger_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "fc13-aed4-489e-98ce",
+    "profileName": "Warmonger",
+    "unitName": "Warmonger [Legacy]"
+  },
+  "warmonger_term_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "213b-e539-42df-9706",
+    "profileName": "Cataphractii Warmonger",
+    "unitName": "Warmonger in Terminator Armour [Legacy]"
+  },
+  "pathfinder_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "4654-6539-4edb-bb0a",
+    "profileName": "Pathfinder",
+    "unitName": "Pathfinder [Legacy]"
+  },
+  "armistos_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "01bf-a5a3-4a8e-a8b9",
+    "profileName": "Armistos",
+    "unitName": "Armistos [Legacy]"
+  },
+  "praetorian_cmd_scimitar_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "4622-ce47-49eb-809d",
+    "profileName": "Scimitar Chosen",
+    "unitName": "Praetorian Command Squad on Scimitar Jetbikes [Legacy]"
+  },
+  "outrider_praetorian_cmd_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "4872-eed9-4d83-9e2b",
+    "profileName": "Outrider Chosen",
+    "unitName": "Outrider Praetorian Command Squad [Legacy]"
+  },
+  "veteran_breacher_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "0f07-ec10-4bca-8312",
+    "profileName": "Breacher Veteran",
+    "unitName": "Veteran Breacher Squad [Legacy]"
+  },
+  "veteran_heavy_support_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "ad43-4ee4-4f97-b3ec",
+    "profileName": "Support Veteran",
+    "unitName": "Veteran Heavy Support Squad [Legacy]"
+  },
+  "mortalis_destroyer_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "7ee7-9d90-4533-b0aa",
+    "profileName": "Mortalis Destroyer",
+    "unitName": "Mortalis Destroyer Squad [Legacy]"
+  },
+  "destroyer_assault_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "8289-ffff-4b07-9273",
+    "profileName": "Assault Destroyer",
+    "unitName": "Destroyer Assault Squad [Legacy]"
+  },
+  "tartaros_siege_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "9e88-1393-4b9f-bb9f",
+    "profileName": "Tartaros Terminator",
+    "unitName": "Tartaros Terminator Siege Squad [Legacy]"
+  },
+  "indomitus_terminator_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "ec09-1ff2-4440-82bd",
+    "profileName": "Indomitus Terminator",
+    "unitName": "Indomitus Terminator Squad [Legacy]"
+  },
+  "castra_ferrum_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "f02a-7801-4178-9c75",
+    "profileName": "Castra Ferrum Dreadnought",
+    "unitName": "Castra Ferrum Dreadnought [Legacy]"
+  },
+  "land_raider_achilles_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "21e4-7e11-4fe1-80e3",
+    "profileName": "Land Raider Achilles",
+    "unitName": "Land Raider Achilles [Legacy]"
+  },
+  "caestus_assault_ram_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "8516-e396-49af-aed3",
+    "profileName": "Caestus Assault Ram",
+    "unitName": "Caestus Assault Ram [Legacy]"
+  },
+  "attack_bike_squadron_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "22ab-3237-4d3a-ae8e",
+    "profileName": "Attack Bike",
+    "unitName": "Attack Bike Squadron [Legacy]"
+  },
+  "scout_squad_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "b369-1827-46ab-854a",
+    "profileName": "Scout",
+    "unitName": "Scout Squad [Legacy]"
+  },
+  "legion_basilisk_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "a713-9bf6-46a3-b31a",
+    "profileName": "Legion Basilisk",
+    "unitName": "Legion Basilisk [Legacy]"
+  },
+  "legion_medusa_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "95d9-bca5-4c37-a683",
+    "profileName": "Legion Medusa",
+    "unitName": "Legion Medusa [Legacy]"
+  },
+  "thunderhawk_transporter_legacy": {
+    "file": "Legiones Astartes.json",
+    "profileId": "cf50-c56d-4100-90a9",
+    "profileName": "Thunderhawk Transporter",
+    "unitName": "Thunderhawk Transporter [Legacy]"
+  },
+  "da_cataphractii_deathwing_comp_legacy": {
+    "file": "Dark Angels.json",
+    "profileId": "c1b1-60e1-fb29-0386",
+    "profileName": "Cataphractii Companion",
+    "unitName": "Cataphractii Deathwing Companions [Legacy]"
+  },
+  "da_tartaros_deathwing_comp_legacy": {
+    "file": "Dark Angels.json",
+    "profileId": "fd46-14ec-1229-e3ca",
+    "profileName": "Tartaros Companion",
+    "unitName": "Tartaros Deathwing Companions [Legacy]"
+  },
+  "da_broken_claws_legacy": {
+    "file": "Dark Angels.json",
+    "profileId": "f230-99f9-b71b-29b8",
+    "profileName": "Order Cenobite",
+    "unitName": "Inner Circle Knights Cenobium - Broken Claws [Legacy]"
+  },
+  "da_excindio_legacy": {
+    "file": "Dark Angels.json",
+    "profileId": "65fe-f798-3feb-6a0d",
+    "profileName": "Excindio Battle-automata",
+    "unitName": "Excindio Battle-automata [Legacy]"
+  },
+  "da_firewing_enigmatus_legacy": {
+    "file": "Dark Angels.json",
+    "profileId": "0c50-b9db-de3f-20c4",
+    "profileName": "Firewing Enigmatii",
+    "unitName": "Firewing Enigmatus Cabal [Legacy]"
+  },
+  "ec_palatine_aquilae_legacy": {
+    "file": "Emperor's Children.json",
+    "profileId": "5566-6d85-4dcf-be82",
+    "profileName": "Palatine Warrior with Jump Pack",
+    "unitName": "Palatine Blade Aquilae Squad [Legacy]"
+  },
+  "rylanor_legacy": {
+    "file": "Emperor's Children.json",
+    "profileId": "44f4-bf7c-458a-b3f0",
+    "profileName": "Rylanor",
+    "unitName": "Rylanor the Unyielding [Legacy]"
+  },
+  "ec_sun_killers_legacy": {
+    "file": "Emperor's Children.json",
+    "profileId": "6ffd-e3f4-4680-8fee",
+    "profileName": "Sun Killer",
+    "unitName": "Sun Killer Squad [Legacy]"
+  },
+  "iw_warsmith_artificer_legacy": {
+    "file": "Iron Warriors.json",
+    "profileId": "0549-b84d-415b-9a5e",
+    "profileName": "Warsmith in Artificer Armour",
+    "unitName": "Warsmith in Artificer Armour [Legacy]"
+  },
+  "narik_dreygur_legacy": {
+    "file": "Iron Warriors.json",
+    "profileId": "65b0-63ac-43b9-aa24",
+    "profileName": "Nârik Dreygur",
+    "unitName": "Narik Dreygur [Legacy]"
+  },
+  "iw_dominator_cohort_legacy": {
+    "file": "Iron Warriors.json",
+    "profileId": "218f-ac92-4c68-a2cf",
+    "profileName": "Dominator",
+    "unitName": "Dominator Cohort [Legacy]"
+  },
+  "iw_iron_havocs_legacy": {
+    "file": "Iron Warriors.json",
+    "profileId": "e3b4-1a48-4c2f-a92d",
+    "profileName": "Iron Havoc",
+    "unitName": "Iron Havocs [Legacy]"
+  },
+  "the_tormentor_legacy": {
+    "file": "Iron Warriors.json",
+    "profileId": "a7d0-2747-4e92-ae86",
+    "profileName": "The Tormentor",
+    "unitName": "The Tormentor [Legacy]"
+  },
+  "ws_stormseer_jump_legacy": {
+    "file": "White Scars.json",
+    "profileId": "f736-7ee8-0832-5006",
+    "profileName": "Stormseer with Jump Pack",
+    "unitName": "Stormseer with Jump Pack [Legacy]"
+  },
+  "ws_mounted_stormseer_legacy": {
+    "file": "White Scars.json",
+    "profileId": "c183-c4fe-0bf6-1fc0",
+    "profileName": "Outrider Stormseer",
+    "unitName": "Mounted Stormseer [Legacy]"
+  },
+  "ws_stormseer_term_legacy": {
+    "file": "White Scars.json",
+    "profileId": "ee00-cb00-284d-5165",
+    "profileName": "Stormseer in Terminator Armour",
+    "unitName": "Stormseer in Terminator Armour [Legacy]"
+  },
+  "ws_falcons_claws_legacy": {
+    "file": "White Scars.json",
+    "profileId": "b426-5948-8431-18ff",
+    "profileName": "Falcon's Claw",
+    "unitName": "Falcon's Claws [Legacy]"
+  },
+  "ws_dark_sons_death_legacy": {
+    "file": "White Scars.json",
+    "profileId": "62af-5ac8-0fe2-8555",
+    "profileName": "Dark Son",
+    "unitName": "Dark Sons of Death [Legacy]"
+  },
+  "sw_caster_jump_legacy": {
+    "file": "Space Wolves.json",
+    "profileId": "451f-f690-4874-90e4",
+    "profileName": "Caster of Runes with Jump Pack",
+    "unitName": "Caster of Runes with Jump Pack [Legacy]"
+  },
+  "sw_mounted_caster_legacy": {
+    "file": "Space Wolves.json",
+    "profileId": "0d82-d526-4525-9aea",
+    "profileName": "Outrider Caster of Runes",
+    "unitName": "Mounted Caster of Runes [Legacy]"
+  },
+  "sw_caster_term_legacy": {
+    "file": "Space Wolves.json",
+    "profileId": "4ff5-468c-4102-9ed7",
+    "profileName": "Caster of Runes in Terminator Armour",
+    "unitName": "Caster of Runes in Terminator Armour [Legacy]"
+  },
+  "sw_speaker_dead_legacy": {
+    "file": "Space Wolves.json",
+    "profileId": "7f6d-17d9-47e0-ade8",
+    "profileName": "Speaker of the Dead",
+    "unitName": "Speaker of the Dead [Legacy]"
+  },
+  "sw_mounted_speaker_dead_legacy": {
+    "file": "Space Wolves.json",
+    "profileId": "14ae-ba08-4d2f-b658",
+    "profileName": "Outrider Speaker of the Dead",
+    "unitName": "Mounted Speaker of the Dead [Legacy]"
+  },
+  "sw_speaker_dead_term_legacy": {
+    "file": "Space Wolves.json",
+    "profileId": "e094-ae12-45cf-9962",
+    "profileName": "Speaker of the Dead in Terminator Armour",
+    "unitName": "Speaker of the Dead in Terminator Armour [Legacy]"
+  },
+  "sw_jorlund_hunters_legacy": {
+    "file": "Space Wolves.json",
+    "profileId": "89f1-75c8-4800-9a4a",
+    "profileName": "Hunter",
+    "unitName": "Jorlund Hunter Pack [Legacy]"
+  },
+  "sw_fenrisian_wolves_legacy": {
+    "file": "Space Wolves.json",
+    "profileId": "808a-1947-4858-97d2",
+    "profileName": "Fenrisian Wolf",
+    "unitName": "Fenrisian Wolf Pack [Legacy]"
+  },
+  "if_huscarl_retinue_legacy": {
+    "file": "Imperial Fists.json",
+    "profileId": "8f3c-df94-47f4-a0bc",
+    "profileName": "Huscarl Terminator",
+    "unitName": "Huscarl Terminator Retinue [Legacy]"
+  },
+  "aetos_dios_legacy": {
+    "file": "Imperial Fists.json",
+    "profileId": "a5fb-9382-48dc-a233",
+    "profileName": "Ætos Dios",
+    "unitName": "Aetos Dios [Legacy]"
+  },
+  "nl_atramentar_flay_clade_legacy": {
+    "file": "Night Lords.json",
+    "profileId": "b34c-0be3-4f64-aac7",
+    "profileName": "Atramentar",
+    "unitName": "Atramentar Flay-clade [Legacy]"
+  },
+  "ba_sanguinary_guard_legacy": {
+    "file": "Blood Angels.json",
+    "profileId": "a2af-2c82-4629-8677",
+    "profileName": "Sanguinary Guard",
+    "unitName": "Sanguinary Guard [Legacy]"
+  },
+  "ba_ofanim_court_legacy": {
+    "file": "Blood Angels.json",
+    "profileId": "7838-19ae-466e-a12d",
+    "profileName": "Ofanim",
+    "unitName": "Ofanim Court [Legacy]"
+  },
+  "ba_ofanim_jump_legacy": {
+    "file": "Blood Angels.json",
+    "profileId": "c5e5-9bec-4adf-8d86",
+    "profileName": "Ofanim with Jump Pack",
+    "unitName": "Ofanim Court with Jump Packs [Legacy]"
+  },
+  "ih_iron_father_artificer_legacy": {
+    "file": "Iron Hands.json",
+    "profileId": "bb55-2126-4a64-830c",
+    "profileName": "Iron Father in Artificer Armour",
+    "unitName": "Iron Father in Artificer Armour [Legacy]"
+  },
+  "ih_morlock_terminators_legacy": {
+    "file": "Iron Hands.json",
+    "profileId": "8a28-fbc9-4650-b662",
+    "profileName": "Morlock",
+    "unitName": "Morlock Terminator Squad [Legacy]"
+  },
+  "we_red_hand_mortalis_legacy": {
+    "file": "World Eaters.json",
+    "profileId": "0897-39ca-4180-8397",
+    "profileName": "Blood Bonded",
+    "unitName": "Red Hand Destroyer Mortalis Squad [Legacy]"
+  },
+  "we_red_hand_assault_legacy": {
+    "file": "World Eaters.json",
+    "profileId": "e7b9-bd6f-416d-9cbc",
+    "profileName": "Blood Bonded with Jump Pack",
+    "unitName": "Red Hand Destroyer Assault Squad [Legacy]"
+  },
+  "um_locutarus_legacy": {
+    "file": "Ultramarines.json",
+    "profileId": "0210-d259-48bf-97ad",
+    "profileName": "Locutarus",
+    "unitName": "Locutarus Storm Squad [Legacy]"
+  },
+  "um_fulmentarus_legacy": {
+    "file": "Ultramarines.json",
+    "profileId": "a076-a382-4111-9db3",
+    "profileName": "Fulmentarus Terminator",
+    "unitName": "Fulmentarus Terminator Squad [Legacy]"
+  },
+  "um_nemesis_destroyers_legacy": {
+    "file": "Ultramarines.json",
+    "profileId": "b7a7-b706-402c-86c3",
+    "profileName": "Nemesis Destroyer",
+    "unitName": "Nemesis Destroyer Squad [Legacy]"
+  },
+  "honoured_telemechrus_legacy": {
+    "file": "Ultramarines.json",
+    "profileId": "cdca-81c5-4d3d-80c6",
+    "profileName": "Honoured Telemechrus",
+    "unitName": "Honoured Telemechrus [Legacy]"
+  },
+  "dg_mortus_poisoners_legacy": {
+    "file": "Death Guard.json",
+    "profileId": "a8ad-c0d8-44ea-986e",
+    "profileName": "Mortus Poisoner",
+    "unitName": "Mortus Poisoner Squad [Legacy]"
+  },
+  "ts_numerologist_cabal_legacy": {
+    "file": "Thousand Sons.json",
+    "profileId": "4e1d-d5ef-4d18-830d",
+    "profileName": "Life Ward",
+    "unitName": "Numerologist Cabal [Legacy]"
+  },
+  "ts_ammitara_cabal_legacy": {
+    "file": "Thousand Sons.json",
+    "profileId": "6030-130e-427f-b075",
+    "profileName": "Intercessor",
+    "unitName": "Ammitara Occult Intercession Cabal [Legacy]"
+  },
+  "soh_dark_emissary_term_legacy": {
+    "file": "Sons of Horus.json",
+    "profileId": "86fa-bbe2-4cdb-99f0",
+    "profileName": "Dark Emissary in Terminator Armour",
+    "unitName": "Dark Emissary in Terminator Armour [Legacy]"
+  },
+  "soh_chieftains_legacy": {
+    "file": "Sons of Horus.json",
+    "profileId": "c0cf-3552-4577-98e9",
+    "profileName": "Chieftain",
+    "unitName": "Chieftain Squad [Legacy]"
+  },
+  "soh_reaver_aggressors_legacy": {
+    "file": "Sons of Horus.json",
+    "profileId": "e013-bc6f-4f34-89cd",
+    "profileName": "Reaver with Jump Pack",
+    "unitName": "Reaver Aggressor Squad [Legacy]"
+  },
+  "wb_diabolist_legacy": {
+    "file": "Word Bearers.json",
+    "profileId": "72a1-32c1-4f96-b447",
+    "profileName": "Diabolist",
+    "unitName": "Diabolist [Legacy]"
+  },
+  "wb_diabolist_term_legacy": {
+    "file": "Word Bearers.json",
+    "profileId": "8078-274f-4814-833b",
+    "profileName": "Cataphractii Diabolist",
+    "unitName": "Diabolist in Terminator Armour [Legacy]"
+  },
+  "wb_mounted_diabolist_legacy": {
+    "file": "Word Bearers.json",
+    "profileId": "5498-22c4-411c-a00d",
+    "profileName": "Outrider Diabolist",
+    "unitName": "Mounted Diabolist [Legacy]"
+  },
+  "wb_procurators_legacy": {
+    "file": "Word Bearers.json",
+    "profileId": "3e9f-d114-406b-8a2c",
+    "profileName": "Procurator",
+    "unitName": "Procurators [Legacy]"
+  },
+  "wb_procurators_jump_legacy": {
+    "file": "Word Bearers.json",
+    "profileId": "f8e9-096e-3939-8c48",
+    "profileName": "Procurator with Jump Pack",
+    "unitName": "Procurators with Jump Packs [Legacy]"
+  },
+  "cassian_dracos_legacy": {
+    "file": "Salamanders.json",
+    "profileId": "b4f1-4c01-b606-8b4a",
+    "profileName": "Cassian Dracos Reborn",
+    "unitName": "Cassian Dracos Reborn [Legacy]"
+  },
+  "sal_adherents_legacy": {
+    "file": "Salamanders.json",
+    "profileId": "e188-d283-46be-00ce",
+    "profileName": "Adherent",
+    "unitName": "Adherents Squad [Legacy]"
+  },
+  "sal_sanctifiers_legacy": {
+    "file": "Salamanders.json",
+    "profileId": "7974-f8cf-2219-c7de",
+    "profileName": "Sanctifier",
+    "unitName": "Sanctifier Squad [Legacy]"
+  },
+  "rg_deliverers_legacy": {
+    "file": "Raven Guard.json",
+    "profileId": "d287-b533-43d7-8180",
+    "profileName": "Deliverer",
+    "unitName": "Deliverers Squad [Legacy]"
+  },
+  "autilon_skorr_legacy": {
+    "file": "Alpha Legion.json",
+    "profileId": "7b87-49fa-538a-fe65",
+    "profileName": "Autilon Skorr",
+    "unitName": "Autilon Skorr [Legacy]"
+  },
+  "al_effrit_legacy": {
+    "file": "Alpha Legion.json",
+    "profileId": "f3dd-6f32-dca1-c6b7",
+    "profileName": "Disruptor",
+    "unitName": "Effrit Disruption Cadre [Legacy]"
+  },
+  "nathaniel_garro_legacy": {
+    "file": "Knights-Errant.json",
+    "profileId": "9aaf-c297-4bc2-b48e",
+    "profileName": "Nathaniel Garro",
+    "unitName": "Nathaniel Garro [Legacy]"
+  },
+  "tylos_rubio_legacy": {
+    "file": "Knights-Errant.json",
+    "profileId": "f993-0111-4f80-9789",
+    "profileName": "Tylos Rubio",
+    "unitName": "Tylos Rubio [Legacy]"
+  },
+  "aevos_jovan_legacy": {
+    "file": "Solar Auxilia.json",
+    "profileId": "3160-6d52-5975-2538",
+    "profileName": "Aevos Jovan",
+    "unitName": "Surgeon-Primus Aevos Jovan [Legacy]"
+  },
+  "expeditionary_navigator_legacy": {
+    "file": "Solar Auxilia.json",
+    "profileId": "e4c3-6d2c-e386-7e19",
+    "profileName": "Expeditionary Navigator",
+    "unitName": "Expeditionary Navigator [Legacy]"
+  },
+  "davinite_lodge_priest_legacy": {
+    "file": "Solar Auxilia.json",
+    "profileId": "97da-bc02-0d6e-9d87",
+    "profileName": "Davinite Lodge Priest",
+    "unitName": "Davinite Lodge Priest [Legacy]"
+  },
+  "companion_section_legacy": {
+    "file": "Solar Auxilia.json",
+    "profileId": "15be-77f9-0d94-0c3a",
+    "profileName": "Companion",
+    "unitName": "Companion Section [Legacy]"
+  },
+  "medicae_section_legacy": {
+    "file": "Solar Auxilia.json",
+    "profileId": "2b72-17b4-a123-4dbb",
+    "profileName": "Medicae Auxiliary",
+    "unitName": "Medicae Section [Legacy]"
+  },
+  "cyclops_demolition_legacy": {
+    "file": "Solar Auxilia.json",
+    "profileId": "9b65-6da6-7087-bcf8",
+    "profileName": "Cyclops",
+    "unitName": "Cyclops Demolition Vehicle [Legacy]"
+  },
+  "aurox_transport_legacy": {
+    "file": "Solar Auxilia.json",
+    "profileId": "8e4a-9248-5ec8-b020",
+    "profileName": "Aurox Transport",
+    "unitName": "Aurox Transport [Legacy]"
+  },
+  "sa_tarantula_section_legacy": {
+    "file": "Solar Auxilia.json",
+    "profileId": "26bc-f1a0-e180-e485",
+    "profileName": "Tarantula Sentry Gun",
+    "unitName": "Tarantula Section [Legacy]"
+  },
+  "carnodon_legacy": {
+    "file": "Solar Auxilia.json",
+    "profileId": "7d2f-0b1c-a4c6-c6f7",
+    "profileName": "Carnodon Strike Tank",
+    "unitName": "Carnodon Strike Tank [Legacy]"
+  },
+  "avenger_strike_fighter_legacy": {
+    "file": "Solar Auxilia.json",
+    "profileId": "d1c5-18c1-6edd-53c6",
+    "profileName": "Avenger Strike Fighter",
+    "unitName": "Avenger Strike Fighter [Legacy]"
+  },
+  "destroyer_tank_hunter_legacy": {
+    "file": "Solar Auxilia.json",
+    "profileId": "4d4f-5d96-1ecd-edc2",
+    "profileName": "Destroyer Tank Hunter",
+    "unitName": "Destroyer Tank Hunter [Legacy]"
+  },
+  "thunderer_siege_tank_legacy": {
+    "file": "Solar Auxilia.json",
+    "profileId": "0c1e-df0d-70d8-ad18",
+    "profileName": "Thunderer Siege Tank",
+    "unitName": "Thunderer Siege Tank [Legacy]"
+  },
+  "minotaur_artillery_tank_legacy": {
+    "file": "Solar Auxilia.json",
+    "profileId": "142c-6ff3-7074-9e91",
+    "profileName": "Minotaur Artillery Tank",
+    "unitName": "Minotaur Artillery Tank [Legacy]"
+  },
+  "macharius_legacy": {
+    "file": "Solar Auxilia.json",
+    "profileId": "3315-dab2-bca7-f428",
+    "profileName": "Macharius Heavy Tank",
+    "unitName": "Macharius Heavy Tank [Legacy]"
+  },
+  "praetor_launcher_legacy": {
+    "file": "Solar Auxilia.json",
+    "profileId": "6e6d-17e7-1c16-1cf3",
+    "profileName": "Praetor",
+    "unitName": "Praetor Armoured Assault Launcher [Legacy]"
+  },
+  "crassus_transport_legacy": {
+    "file": "Solar Auxilia.json",
+    "profileId": "b68c-bc6e-9a9d-4b10",
+    "profileName": "Crassus ",
+    "unitName": "Crassus Armoured Assault Transport [Legacy]"
+  },
+  "baneblade_legacy": {
+    "file": "Solar Auxilia.json",
+    "profileId": "b6f5-225c-b86b-d3f9",
+    "profileName": "Baneblade Super-heavy Battle Tank",
+    "unitName": "Baneblade [Legacy]"
+  },
+  "hellhammer_legacy": {
+    "file": "Solar Auxilia.json",
+    "profileId": "6611-35b7-17f9-e1ba",
+    "profileName": "Hellhammer ",
+    "unitName": "Hellhammer [Legacy]"
+  },
+  "banehammer_legacy": {
+    "file": "Solar Auxilia.json",
+    "profileId": "4a21-4a1c-45a4-d065",
+    "profileName": "Banehammer",
+    "unitName": "Banehammer [Legacy]"
+  },
+  "stormlord_legacy": {
+    "file": "Solar Auxilia.json",
+    "profileId": "e868-09ef-af7d-3e5e",
+    "profileName": "Stormlord ",
+    "unitName": "Stormlord [Legacy]"
+  },
+  "stormblade_legacy": {
+    "file": "Solar Auxilia.json",
+    "profileId": "3fa9-67e4-27dd-a602",
+    "profileName": "Stormblade",
+    "unitName": "Stormblade [Legacy]"
+  },
+  "shadowsword_legacy": {
+    "file": "Solar Auxilia.json",
+    "profileId": "dd6e-1dd7-c32b-17c5",
+    "profileName": "Shadowsword ",
+    "unitName": "Shadowsword [Legacy]"
+  },
+  "stormsword_legacy": {
+    "file": "Solar Auxilia.json",
+    "profileId": "0343-f013-8d02-5116",
+    "profileName": "Stormsword",
+    "unitName": "Stormsword [Legacy]"
+  },
+  "marauder_bomber_legacy": {
+    "file": "Solar Auxilia.json",
+    "profileId": "be6e-21b4-632a-8de6",
+    "profileName": "Marauder Bomber",
+    "unitName": "Marauder Bomber [Legacy]"
+  },
+  "marauder_destroyer_legacy": {
+    "file": "Solar Auxilia.json",
+    "profileId": "e008-491a-ce87-f325",
+    "profileName": "Marauder Bomber",
+    "unitName": "Marauder Destroyer [Legacy]"
+  },
+  "tech_thrall_defence_legacy": {
+    "file": "Mechanicum.json",
+    "profileId": "d863-d100-242c-c210",
+    "profileName": "Tech-Thrall",
+    "unitName": "Tech-thrall Defence Covenant [Legacy]"
+  },
+  "arlatax_maniple_legacy": {
+    "file": "Mechanicum.json",
+    "profileId": "938b-c985-ab04-1362",
+    "profileName": "Arlatax",
+    "unitName": "Arlatax Battle Maniple [Legacy]"
+  },
+  "mechanicum_termite_legacy": {
+    "file": "Mechanicum.json",
+    "profileId": "b3fc-b41a-206d-03ca",
+    "profileName": "Mechanicum Termite",
+    "unitName": "Mechanicum Termite [Legacy]"
+  },
+  "mechanicum_tarantula_legacy": {
+    "file": "Mechanicum.json",
+    "profileId": "1e6c-f519-0843-2564",
+    "profileName": "Mechanicum Tarantula Sentry Gun",
+    "unitName": "Mechanicum Tarantula Battery [Legacy]"
+  },
+  "macrocarid_explorator_legacy": {
+    "file": "Mechanicum.json",
+    "profileId": "8a05-4b87-b4b0-b32e",
+    "profileName": "Macrocarid Explorator",
+    "unitName": "Macrocarid Explorator [Legacy]"
+  },
+  "ordinatus_ulator_legacy": {
+    "file": "Mechanicum.json",
+    "profileId": "fef8-6deb-9ff0-e9e6",
+    "profileName": "Carriage",
+    "unitName": "Ordinatus Ulator [Legacy]"
+  },
+  "ordinatus_sagittar_legacy": {
+    "file": "Mechanicum.json",
+    "profileId": "2d50-490f-6151-82ac",
+    "profileName": "Carriage",
+    "unitName": "Ordinatus Sagittar [Legacy]"
+  },
+  "ordinatus_aktaeus_legacy": {
+    "file": "Mechanicum.json",
+    "profileId": "903e-6928-c1ca-a0fd",
+    "profileName": "Carriage",
+    "unitName": "Ordinatus Aktaeus [Legacy]"
+  },
+  "vengeance_weapon_battery_legacy": {
+    "file": "Battlefield Fortifications.json",
+    "profileId": "9d0d-1800-f3de-0e2d",
+    "profileName": "Vengeance Weapon Battery",
+    "unitName": "Vengeance Weapon Battery [Legacy]"
+  },
+  "hammerfall_bunker_legacy": {
+    "file": "Battlefield Fortifications.json",
+    "profileId": "0830-2a90-58ff-ff33",
+    "profileName": "Hammerfall Bunker",
+    "unitName": "Hammerfall Bunker [Legacy]"
+  },
+  "void_shield_generator_legacy": {
+    "file": "Battlefield Fortifications.json",
+    "profileId": "3dfd-a5a5-821c-5812",
+    "profileName": "Void Shield Generator",
+    "unitName": "Void Shield Generator [Legacy]"
+  },
+  "skyshield_landing_pad_legacy": {
+    "file": "Battlefield Fortifications.json",
+    "profileId": "d576-588d-fbc9-cdbf",
+    "profileName": "Skyshield Landing Pad",
+    "unitName": "Skyshield Landing Pad [Legacy]"
+  },
+  "aegis_defence_line_legacy": {
+    "file": "Battlefield Fortifications.json",
+    "profileId": "01b3-ee46-9647-f7e7",
+    "profileName": "Aegis Defence Line",
+    "unitName": "Aegis Defence Line [Legacy]"
+  },
+  "firestorm_redoubt_legacy": {
+    "file": "Battlefield Fortifications.json",
+    "profileId": "efe2-f321-3878-a567",
+    "profileName": "Firestorm Redoubt",
+    "unitName": "Firestorm Redoubt [Legacy]"
+  },
+  "fortress_redemption_legacy": {
+    "file": "Battlefield Fortifications.json",
+    "profileId": "31d3-b397-ac18-3c71",
+    "profileName": "Fortress of Redemption",
+    "unitName": "Fortress of Redemption [Legacy]"
+  },
+  "aquila_strongpoint_legacy": {
+    "file": "Battlefield Fortifications.json",
+    "profileId": "c868-0454-b5ad-f300",
+    "profileName": "Aquila Strongpoint",
+    "unitName": "Aquila Strongpoint [Legacy]"
+  },
+  "primus_redoubt_legacy": {
+    "file": "Battlefield Fortifications.json",
+    "profileId": "0dc4-066e-fcb8-8683",
+    "profileName": "Primus Redoubt",
+    "unitName": "Primus Redoubt [Legacy]"
+  },
+  "infernus_abomination_legacy": {
+    "file": "Cults Abominatio.json",
+    "profileId": "9102-ecc1-b0f6-b3c0",
+    "profileName": "Infernus Abomination",
+    "unitName": "Infernus Abomination [Legacy]"
+  }
+}
