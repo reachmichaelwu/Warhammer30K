@@ -12,6 +12,7 @@ Browser-based toolkit for **Warhammer: The Horus Heresy — Age of Darkness (3rd
 - **Charge Resolver** — Charge distance, overwatch, melee combat with WS comparison charts
 - **Challenge Sub-Phase** — Character challenges with gambits
 - **VP Tracking** — Primary and secondary objective scoring
+- **PanzerHammer** — Separate turn-based hex battle using units from this repository. Open it from the PanzerHammer link on the toolkit, or at `panzerhammer/index.html`. It does not replace the army builder or resolvers. See `panzerhammer/README.md`.
 
 ## Deploy on GitHub Pages
 

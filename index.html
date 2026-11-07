@@ -65,6 +65,26 @@
   </style>
 </head>
 <body>
+  <a class="panzerhammer-entry" href="panzerhammer/index.html">PanzerHammer</a>
+  <style>
+    .panzerhammer-entry {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 200000;
+      padding: 8px 12px;
+      border: 1px solid #d4b36a;
+      border-radius: 999px;
+      background: rgba(12, 10, 6, 0.88);
+      color: #f3e6c4;
+      font-family: "Share Tech Mono", ui-monospace, monospace;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-decoration: none;
+      text-transform: uppercase;
+    }
+    .panzerhammer-entry:hover { background: #3a2e16; }
+  </style>
   <!-- Mobile / iOS-frame detection — runs BEFORE the app so body classes
        are already set when CSS resolves and React mounts. -->
   <script src="18-mobile-detect.js?v=warroom-game-2"></script>
